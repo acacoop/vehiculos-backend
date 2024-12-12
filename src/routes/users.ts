@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { getUserById, getAllUsers, addUser } from "../services/userService";
+import { getUserById, getAllUsers, addUser } from "../services/usersService";
 import { User } from "../interfaces/user";
 
 const router = express.Router();

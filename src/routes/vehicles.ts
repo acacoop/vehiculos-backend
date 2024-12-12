@@ -3,7 +3,7 @@ import {
   getVehicleById,
   getAllVehicles,
   addVehicle,
-} from "../services/vehicleService";
+} from "../services/vehiclesService";
 
 const router = express.Router();
 

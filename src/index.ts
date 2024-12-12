@@ -3,8 +3,8 @@ dotenv.config();
 
 import express, { Request, Response } from "express";
 
-import userRoutes from "./routes/user";
-import vehicleRoutes from "./routes/vehicle";
+import userRoutes from "./routes/users";
+import vehicleRoutes from "./routes/vehicles";
 
 const app = express();
 const PORT = process.env.PORT || 3000;

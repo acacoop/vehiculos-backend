@@ -32,9 +32,6 @@ export const oneOrNone = async <T>(
 ): Promise<T | undefined> => {
   try {
     const { rows } = await pool.query(text, params);
-    if (rows.length === 0) {
-      return undefined;
-    }
     return rows[0];
   } catch (error) {
     console.log(error);
