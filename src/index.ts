@@ -5,6 +5,7 @@ import express, { Request, Response } from "express";
 
 import userRoutes from "./routes/users";
 import vehicleRoutes from "./routes/vehicles";
+import assignmentRoutes from "./routes/assignments";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,6 +17,7 @@ app.get("/", (req: Request, res: Response) => {
 app.use(express.json());
 app.use("/users", userRoutes);
 app.use("/vehicles", vehicleRoutes);
+app.use("/assignments", assignmentRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

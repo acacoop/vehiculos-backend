@@ -38,10 +38,10 @@ VALUES (
         2022
     );
 
--- Insert sample data into persons
+-- Insert sample data into users
 
 INSERT INTO
-    persons (
+    users (
         first_name,
         last_name,
         dni,
@@ -75,7 +75,7 @@ VALUES (
 -- Insert sample data into assignments
 
 INSERT INTO
-    assignments (person_id, vehicle_id)
+    assignments (user_id, vehicle_id)
 VALUES (1, 1), -- Maximo Gismondi assigned to Toyota Corolla
     (2, 2), -- Elias Federico Bourda Jorge assigned to Ford Focus
     (3, 3), -- Manuel Regiardo assigned to Chevrolet Cruze

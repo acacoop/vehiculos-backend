@@ -29,12 +29,12 @@ export const some = async <T>(
 export const oneOrNone = async <T>(
   text: string,
   params?: unknown[]
-): Promise<T | undefined> => {
+): Promise<T | null> => {
   try {
     const { rows } = await pool.query(text, params);
     return rows[0];
   } catch (error) {
     console.log(error);
-    return undefined;
+    return null;
   }
 };

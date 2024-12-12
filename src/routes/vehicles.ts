@@ -20,6 +20,11 @@ router.get("/", async (req: Request, res: Response) => {
 // GET: Fetch a vechicle by id
 router.get("/:id", async (req: Request, res: Response) => {
   const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid id" });
+    return;
+  }
+
   try {
     const vehicle = await getVehicleById(id);
     if (!vehicle) {

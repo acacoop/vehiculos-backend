@@ -1,5 +1,5 @@
 SELECT * FROM vehicles;
 
-SELECT * FROM persons;
+SELECT * FROM users;
 
 SELECT * FROM assignments;

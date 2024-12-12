@@ -17,6 +17,11 @@ router.get("/", async (req: Request, res: Response) => {
 // GET: Fetch a user by id
 router.get("/:id", async (req: Request, res: Response) => {
   const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid id" });
+    return;
+  }
+
   try {
     const user = await getUserById(id);
 
