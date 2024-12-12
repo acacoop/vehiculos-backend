@@ -12,3 +12,32 @@ export const query = async (text: string, params?: unknown[]) => {
   const result = await pool.query(text, params);
   return result.rows;
 };
+
+export const some = async <T>(
+  text: string,
+  params?: unknown[]
+): Promise<T[]> => {
+  try {
+    const { rows } = await pool.query(text, params);
+    return rows;
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+};
+
+export const oneOrNone = async <T>(
+  text: string,
+  params?: unknown[]
+): Promise<T | undefined> => {
+  try {
+    const { rows } = await pool.query(text, params);
+    if (rows.length === 0) {
+      return undefined;
+    }
+    return rows[0];
+  } catch (error) {
+    console.log(error);
+    return undefined;
+  }
+};
