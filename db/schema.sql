@@ -1,9 +1,3 @@
--- Drop the database if it exists (requires connecting to a different database)
-DROP DATABASE IF EXISTS vehicles_db;
-
--- Create the database
-CREATE DATABASE vehicles_db;
-
 -- Connect to the database
 CREATE TABLE vehicles (
     id bigint primary key generated always as identity,

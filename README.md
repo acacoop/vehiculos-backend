@@ -2,55 +2,119 @@
 
 Backend para aplicación de gestión interna de la flota.
 
-## Base de datos
+## Features
 
-Conectado a una base de datos PostgreSQL.
+- User management (create, read, update, delete users).
+- Vehicle tracking for maintance and reservation.
+- Document storage for vehicles and users.
+- Authentication and authorization with Entra ID.
 
-Para correr la base de datos en un contenedor de Docker, ejecutar el siguiente comando:
+## Technologies
 
-CHEQUEAR
+### Backend
+
+- **[Node.js](https://nodejs.org/)**: JavaScript runtime for server-side development. This is the core of the backend.
+- **[Express](https://expressjs.com/)**: Web framework for Node.js. It provides a set of features like routing, middleware, and error handling.
+- **[PostgreSQL](https://www.postgresql.org/)**: Open-source relational database. It is used to store the application data.
+- **[TypeScript](https://www.typescriptlang.org/)**: Typed JavaScript superset. It is used to write the backend code.
+- **TBD - [TypeORM](https://typeorm.io/)**: ORM for TypeScript and JavaScript. It is used to interact with the PostgreSQL database and map the entities to database tables.
+- **TBD - [Passport.js](http://www.passportjs.org/)**: Authentication middleware for Node.js. It is used to authenticate users with Entra ID.
+
+### Frontend
+
+- **[React](https://reactjs.org/)**: JavaScript library for building user interfaces. Used for the web version of the application.
+- **[React Native](https://reactnative.dev/)**: JavaScript framework for building native mobile applications. For the mobile version of the application.
+- **[Expo](https://expo.dev/)**: Framework and platform for universal React applications. It is used to build the mobile application.
+- **TBD - [Material-UI](https://material-ui.com/)**: React components that implement Google's Material Design. It is used for the web application's UI.
+
+## Prerequisites
+
+Make sure you have the following installed:
+
+- [Node.js](https://nodejs.org/) (v16 or later)
+- [PostgreSQL](https://www.postgresql.org/) (v12 or later)
+- [npm](https://www.npmjs.com/)
+
+## Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/your-username/vehiculos-backend.git
+   cd vehiculos-backend
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+3. Set up the environment variables:
+   Create a `.env` file in the root directory and provide the following variables:
+
+   ```env
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_USER=your_db_user
+   DB_PASSWORD=your_db_password
+   DB_NAME=vehicles_db
+   PORT=3000
+   ```
+
+4. Initialize the database:
+   Create and configure the PostgreSQL database schema (SQL scripts or migrations).
+
+   ```bash
+    psql -U your_db_user -d vehicles_db -a -f db/schema.sql
+    ```
+
+    There is a sample data file that can be loaded into the database:
+
+    ```bash
+    psql -U your_db_user -d vehicles_db -a -f db/sample_data.sql
+    ```
+
+5. Compile the TypeScript code:
+
+   ```bash
+   npm run build
+   ```
+
+## Development
+
+During development, use the following command to start the application with hot-reloading:
 
 ```bash
-docker run --name vehiculos-db -e POSTGRES_PASSWORD=vehiculos -e POSTGRES_DB=vehiculos -p 5432:5432 -d postgres
+npm run dev
 ```
 
-Luego para conectarse a la base de datos, ejecutar el siguiente comando:
+## Production
 
-```bash
-docker exec -it vehiculos-db psql -U postgres
+1. Build the project:
+
+   ```bash
+   npm run build
+   ```
+
+2. Start the server:
+
+   ```bash
+   npm start
+   ```
+
+## Project Structure
+
+```plaintext
+vehiculos-backend/
+├── src/
+│   ├── interfaces/    # TypeScript interfaces
+│   ├── routes/        # Express routes
+│   ├── services/      # Business logic and data access
+│   ├── db.ts          # Database connection
+│   └── index.ts       # Entry point
+├── dist/              # Compiled JavaScript files
+├── .env               # Environment variables
+├── package.json       # Project metadata and scripts
+└── tsconfig.json      # TypeScript configuration
 ```
-
-Para crear la base de datos, ejecutar el siguiente comando:
-
-```sql
-CREATE DATABASE vehicles;
-```
-
-Luego para levantar el esquema de la base de datos, ejecutar el siguiente comando:
-
-```bash
-psql -h localhost -U postgres -d vehicles -a -f ./db/schema.sql
-```
-
-Hay un script que carga datos de prueba en la base de datos, ejecutar el siguiente comando:
-
-```bash
-psql -h localhost -U postgres -d vehicles -a -f ./db/sample_data.sql
-```
-
-Para hacer queries a la base de datos, ejecutar el siguiente comando:
-
-```bash
-psql -h localhost -U postgres -d vehicles
-
-SELECT * FROM vehicles;
-...
-```
-
-O podemos pasarle un archivo con queries SQL:
-
-```bash
-psql -h localhost -U postgres -d vehicles -a -f ./db/query.sql
-```
-
-Si queremos conectarnos a la base de datos con un cliente gráfico, podemos usar DBeaver.
