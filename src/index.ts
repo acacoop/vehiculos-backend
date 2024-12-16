@@ -1,14 +1,12 @@
-import dotenv from "dotenv";
-dotenv.config();
-
+process.loadEnvFile();
 import express, { Request, Response } from "express";
 
 import userRoutes from "./routes/users";
 import vehicleRoutes from "./routes/vehicles";
 import assignmentRoutes from "./routes/assignments";
+import { APP_PORT } from "./config/env.config";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello World Vehiculos");
@@ -19,6 +17,6 @@ app.use("/users", userRoutes);
 app.use("/vehicles", vehicleRoutes);
 app.use("/assignments", assignmentRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(APP_PORT, () => {
+  console.log(`Server is running on http://localhost:${APP_PORT}`);
 });
