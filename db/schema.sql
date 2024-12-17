@@ -4,7 +4,8 @@ CREATE TABLE vehicles (
     license_plate text not null unique,
     brand text not null,
     model text not null,
-    year integer not null
+    year integer not null,
+    img_url text not null
 );
 
 -- Create the users table
