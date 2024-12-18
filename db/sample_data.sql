@@ -5,37 +5,43 @@ INSERT INTO
         license_plate,
         brand,
         model,
-        year
+        year,
+        img_url
     )
 VALUES (
         'AB123CD',
         'Toyota',
         'Corolla',
-        2018
+        2018,
+        'toyota_corolla.jpg'
     ),
     (
         'ABC123',
         'Ford',
         'Focus',
-        2019
+        2019,
+        'ford_focus.jpg'
     ),
     (
         'AB456EF',
         'Chevrolet',
         'Cruze',
-        2020
+        2020,
+        'chevrolet_cruze.jpg'
     ),
     (
         'DEF456',
         'Honda',
         'Civic',
-        2021
+        2021,
+        'honda_civic.jpg'
     ),
     (
         'GHI789',
         'Volkswagen',
         'Golf',
-        2022
+        2022,
+        'volkswagen_golf.jpg'
     );
 
 -- Insert sample data into users
@@ -76,10 +82,9 @@ VALUES (
 
 INSERT INTO
     assignments (user_id, vehicle_id)
-VALUES (1, 1), -- Maximo Gismondi assigned to Toyota Corolla
-    (2, 2), -- Elias Federico Bourda Jorge assigned to Ford Focus
-    (3, 3), -- Manuel Regiardo assigned to Chevrolet Cruze
-    (4, 4), -- Gabriel Ayrton Iglesias D'Orazio assigned to Honda Civic
-    (1, 5), -- Maximo Gismondi also assigned to Volkswagen Golf
+VALUES (1, 1),
+    (2, 2),
+    (3, 3),
+    (4, 4),
+    (1, 5),
     (2, 5);
--- Elias Federico Bourda Jorge also assigned to Volkswagen Golf
