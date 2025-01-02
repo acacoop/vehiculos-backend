@@ -4,6 +4,8 @@ import {
   getAllVehicles,
   addVehicle,
 } from "../services/vehiclesService";
+import { VehicleSchema } from "../schemas/vehicle";
+import { Vehicle } from "../interfaces/vehicle";
 
 const router = express.Router();
 
@@ -39,7 +41,7 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 // POST: Add a new vehicle
 router.post("/", async (req: Request, res: Response) => {
-  const vehicle = req.body;
+  const vehicle: Vehicle = VehicleSchema.parse(req.body);
 
   try {
     const newVehicle = await addVehicle(vehicle);

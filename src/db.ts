@@ -15,10 +15,10 @@ const pool = new Pool({
   database: DB_NAME,
 });
 
-export const query = async (text: string, params?: unknown[]) => {
-  const result = await pool.query(text, params);
-  return result.rows;
-};
+// export const query = async (text: string, params?: unknown[]) => {
+//   const result = await pool.query(text, params);
+//   return result.rows;
+// };
 
 export const some = async <T>(
   text: string,

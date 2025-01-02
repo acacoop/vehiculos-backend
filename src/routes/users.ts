@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import { getUserById, getAllUsers, addUser } from "../services/usersService";
 import { User } from "../interfaces/user";
+import { UserSchema } from "../schemas/user";
 
 const router = express.Router();
 
@@ -38,7 +39,7 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 // POST: Add a new user
 router.post("/", async (req: Request, res: Response) => {
-  const user: User = req.body;
+  const user: User = UserSchema.parse(req.body);
 
   try {
     const newUser = await addUser(user);

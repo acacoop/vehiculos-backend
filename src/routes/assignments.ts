@@ -50,8 +50,6 @@ router.get("/vehicle/:id", async (req: Request, res: Response) => {
   }
 });
 
-export default router;
-
 // POST: Create a new assignment
 router.post("/", async (req: Request, res: Response) => {
   const { userId, vehicleId } = req.body;
@@ -67,3 +65,5 @@ router.post("/", async (req: Request, res: Response) => {
     res.status(500).json({ error: `Internal Server Error: ${error}` });
   }
 });
+
+export default router;

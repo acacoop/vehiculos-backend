@@ -26,6 +26,7 @@ export const getUserByDni = async (dni: string): Promise<User | null> => {
 
 export const addUser = async (user: User): Promise<User | null> => {
   const { firstName, lastName, dni, email } = user;
+
   const sql = `INSERT INTO users (first_name, last_name, dni, email) VALUES ($1, $2, $3, $4) RETURNING *`;
   const params = [firstName, lastName, dni, email];
   return await oneOrNone<User>(sql, params);

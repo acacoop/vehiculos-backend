@@ -24,3 +24,13 @@ CREATE TABLE assignments (
     vehicle_id bigint not null references vehicles (id),
     unique (user_id, vehicle_id)
 );
+
+-- Create the reservations table
+CREATE TABLE reservations (
+    id bigint primary key generated always as identity,
+    user_id bigint not null references users (id),
+    vehicle_id bigint not null references vehicles (id),
+    start_date date not null,
+    end_date date not null,
+    recurrence_pattern text
+);
