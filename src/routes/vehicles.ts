@@ -3,9 +3,11 @@ import {
   getVehicleById,
   getAllVehicles,
   addVehicle,
+  getVehicleByLicensePlate,
 } from "../services/vehiclesService";
 import { VehicleSchema } from "../schemas/vehicle";
 import { Vehicle } from "../interfaces/vehicle";
+import { licensePlateRegex } from "../schemas/validations";
 
 const router = express.Router();
 
@@ -38,6 +40,31 @@ router.get("/:id", async (req: Request, res: Response) => {
     res.status(500).json({ error: `Internal Server Error: ${error}` });
   }
 });
+
+// GET: Fetch a vechicle by license plate
+
+router.get(
+  "/licensePlate/:licensePlate",
+  async (req: Request, res: Response) => {
+    const licensePlate = req.params.licensePlate;
+
+    if (!licensePlateRegex.test(licensePlate)) {
+      res.status(400).json({ error: "Invalid license plate" });
+      return;
+    }
+
+    try {
+      const vehicle = await getVehicleByLicensePlate(licensePlate);
+      if (!vehicle) {
+        res.status(404).json({ error: "Vehicle not found" });
+        return;
+      }
+      res.status(200).json(vehicle);
+    } catch (error) {
+      res.status(500).json({ error: `Internal Server Error: ${error}` });
+    }
+  }
+);
 
 // POST: Add a new vehicle
 router.post("/", async (req: Request, res: Response) => {
