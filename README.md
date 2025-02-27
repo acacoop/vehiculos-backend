@@ -89,6 +89,8 @@ During development, use the following command to start the application with hot-
 npm run dev
 ```
 
+Also, you can create a vscode tunnel to the backend server in order to debug the application in mobile when the LAN is not available. In order to do that, go to the `ports` tab and click on the `Forward a Port` button. Then, select the port (port 3000 in this case) and click on the `Forward` button. The tunnel will require GitHub authentication. After that, set it to public and copy the URL. Finally, replace the `localhost` with the copied URL in the mobile application.
+
 ## Production
 
 1. Build the project:
