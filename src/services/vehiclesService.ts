@@ -15,15 +15,15 @@ export const getVehicleById = async (id: number): Promise<Vehicle | null> => {
 };
 
 export const getVehicleByLicensePlate = async (
-  licensePlate: string
+  licensePlate: string,
 ): Promise<Vehicle | null> => {
   const sql = `${BASE_SELECT} WHERE license_plate = $1`;
   return await oneOrNone<Vehicle>(sql, [licensePlate]);
 };
 
 export const addVehicle = async (vehicle: Vehicle): Promise<Vehicle | null> => {
-  const { licensePlate, brand, model, year } = vehicle;
-  const sql = `INSERT INTO vehicles (license_plate, brand, model, year) VALUES ($1, $2, $3, $4, $5) RETURNING *`;
-  const params = [licensePlate, brand, model, year];
+  const { licensePlate, brand, model, year, imgUrl } = vehicle;
+  const sql = `INSERT INTO vehicles (license_plate, brand, model, year, img_url) VALUES ($1, $2, $3, $4, $5) RETURNING *`;
+  const params = [licensePlate, brand, model, year, imgUrl];
   return await oneOrNone<Vehicle>(sql, params);
 };
