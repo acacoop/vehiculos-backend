@@ -4,10 +4,10 @@ import {
   getAllVehicles,
   addVehicle,
   getVehicleByLicensePlate,
-} from "../services/vehiclesService";
-import { VehicleSchema } from "../schemas/vehicle";
-import { Vehicle } from "../interfaces/vehicle";
-import { licensePlateRegex } from "../schemas/validations";
+} from "../../services/vehicles/vehiclesService";
+import { VehicleSchema } from "../../schemas/vehicle";
+import { Vehicle } from "../../interfaces/vehicles/vehicle";
+import { licensePlateRegex } from "../../schemas/validations";
 
 const router = express.Router();
 

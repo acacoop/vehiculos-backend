@@ -1,9 +1,9 @@
-import { oneOrNone, some } from "../db";
-import { Assignment } from "../interfaces/assignment";
+import { oneOrNone, some } from "../../db";
+import { Assignment } from "../../interfaces/vehicles/assignment";
 import { BASE_SELECT as VEHICLES_BASE_SELECT } from "./vehiclesService";
-import { Vehicle } from "../interfaces/vehicle";
-import { BASE_SELECT as USERS_BASE_SELECT } from "./usersService";
-import { User } from "../interfaces/user";
+import { Vehicle } from "../../interfaces/vehicles/vehicle";
+import { BASE_SELECT as USERS_BASE_SELECT } from "../usersService";
+import { User } from "../../interfaces/user";
 
 export const BASE_SELECT =
   "SELECT id, vehicle_id as vehicleId, user_id as userId FROM assignments";
@@ -14,21 +14,21 @@ export const getAllAssignments = async (): Promise<Assignment[]> => {
 };
 
 export const getAssignmentsByUserId = async (
-  userId: number
+  userId: number,
 ): Promise<Assignment[]> => {
   const sql = `${BASE_SELECT} WHERE user_id = $1`;
   return some<Assignment>(sql, [userId]);
 };
 
 export const getAssignmentsByVehicleId = async (
-  vehicleId: number
+  vehicleId: number,
 ): Promise<Assignment[]> => {
   const sql = `${BASE_SELECT} WHERE vehicle_id = $1`;
   return some<Assignment>(sql, [vehicleId]);
 };
 
 export const getVehiclesAssignedByUserId = async (
-  userId: number
+  userId: number,
 ): Promise<Vehicle[]> => {
   const sql = `
     ${VEHICLES_BASE_SELECT}
@@ -39,7 +39,7 @@ export const getVehiclesAssignedByUserId = async (
 };
 
 export const getUsersAssignedByVehicleId = async (
-  id: number
+  id: number,
 ): Promise<User[]> => {
   const sql = `
     ${USERS_BASE_SELECT}
@@ -51,7 +51,7 @@ export const getUsersAssignedByVehicleId = async (
 
 export const isVehicleAssignedToUser = async (
   userId: number,
-  vehicleId: number
+  vehicleId: number,
 ): Promise<boolean> => {
   const sql = `${BASE_SELECT} WHERE user_id = $1 AND vehicle_id = $2`;
   const params = [userId, vehicleId];
@@ -61,7 +61,7 @@ export const isVehicleAssignedToUser = async (
 
 export const addAssignment = async (
   userId: number,
-  vehicleId: number
+  vehicleId: number,
 ): Promise<Assignment | null> => {
   const sql = `INSERT INTO assignments (user_id, vehicle_id) VALUES ($1, $2) RETURNING *`;
   const params = [userId, vehicleId];

@@ -3,7 +3,7 @@ import { parseStringToWeekDays } from "../interfaces/weekday";
 
 // Define the schema for the user object
 export const ReservationSchema = z.object({
-  id: z.number().optional().default(0),
+  id: z.number().default(0),
   vehicleId: z.number(),
   userId: z.number(),
   startDate: z.date(),

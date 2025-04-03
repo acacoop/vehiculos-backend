@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS reservations (
 
 
 -- Create the maintenance categories table
-CREATE TABLE IF NOT EXISTS maintenance_categories (
+CREATE TABLE IF NOT EXISTS maintenance_category (
     id bigint primary key generated always as identity,
     name text not null
 );
@@ -54,10 +54,10 @@ CREATE TABLE IF NOT EXISTS maintenance_categories (
 -- Create the maintenance table
 CREATE TABLE IF NOT EXISTS maintenance (
     id bigint primary key generated always as identity,
-    category_id bigint not null references maintenance_categories (id),
+    category_id bigint not null references maintenance_category (id),
     name text not null,
     img_name text not null
-)
+);
 
 
 
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS assigned_maintenance (
     maintenance_id bigint not null references maintenance (id),
     kilometers_frequency integer not null,
     recurrence_pattern text
-)
+);
 
 
 
@@ -80,4 +80,4 @@ CREATE TABLE IF NOT EXISTS maintenance_history (
     date date not null,
     kilometers integer not null,
     observations text
-)
+);

@@ -3,7 +3,7 @@ import { licensePlateRegex } from "./validations";
 
 // Define the schema for the user object
 export const VehicleSchema = z.object({
-  id: z.number().optional().default(0),
+  id: z.number().default(0),
   licensePlate: z.string().regex(licensePlateRegex),
   brand: z.string(),
   model: z.string(),

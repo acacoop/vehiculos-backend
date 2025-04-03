@@ -1,5 +1,5 @@
-import { oneOrNone, some } from "../db";
-import { Vehicle } from "../interfaces/vehicle";
+import { oneOrNone, some } from "../../db";
+import { Vehicle } from "../../interfaces/vehicles/vehicle";
 
 export const BASE_SELECT =
   "SELECT v.id, v.license_plate as licensePlate, v.brand, v.model, v.year, v.img_url as imgUrl FROM vehicles v";
