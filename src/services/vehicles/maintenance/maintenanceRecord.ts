@@ -7,7 +7,7 @@ const BASE_SELECT = `
         mr.user_id as userId,
         mr.date,
         mr.kilometers,
-        mr.observations,
+        mr.notes,
         mr.assigned_maintenance_id,
         am.vehicle_id as vehicleId,
         m.name as maintenanceName,
@@ -30,7 +30,7 @@ const BASE_SELECT = `
 
 const BASE_INSERT = `
     INSERT INTO maintenance_record
-        (user_id, date, kilometers, observations, assigned_maintenance_id)
+        (user_id, date, kilometers, notes, assigned_maintenance_id)
     VALUES ($1, $2, $3, $4, $5)
     `;
 
@@ -56,7 +56,7 @@ export const addMaintenanceRecord = async (
     maintenanceRecord.userId,
     maintenanceRecord.date,
     maintenanceRecord.kilometer,
-    maintenanceRecord.observations,
+    maintenanceRecord.notes,
     maintenanceRecord.assignedMaintenanceId,
   ];
   const [newMaintenanceRecord] = await some(query, values);

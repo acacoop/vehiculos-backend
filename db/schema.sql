@@ -79,5 +79,5 @@ CREATE TABLE IF NOT EXISTS maintenance_history (
     user_id bigint not null references users (id),
     date date not null,
     kilometers integer not null,
-    observations text
+    notes text
 );

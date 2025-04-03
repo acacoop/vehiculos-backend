@@ -4,5 +4,5 @@ export interface MaintenanceRecord {
   userId: number;
   date: Date;
   kilometer: number;
-  observations: string;
+  notes: string;
 }

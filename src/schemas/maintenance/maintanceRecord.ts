@@ -7,5 +7,5 @@ export const MaintenanceRecordSchema = z.object({
   userId: z.number(),
   date: z.date().default(new Date()),
   kilometer: z.number(),
-  observations: z.string().default(""),
+  notes: z.string().default(""),
 });
