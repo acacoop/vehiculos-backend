@@ -42,7 +42,6 @@ router.get("/:id", async (req: Request, res: Response) => {
 });
 
 // GET: Fetch a vechicle by license plate
-
 router.get(
   "/licensePlate/:licensePlate",
   async (req: Request, res: Response) => {
@@ -63,7 +62,7 @@ router.get(
     } catch (error) {
       res.status(500).json({ error: `Internal Server Error: ${error}` });
     }
-  }
+  },
 );
 
 // POST: Add a new vehicle
