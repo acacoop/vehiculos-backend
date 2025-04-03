@@ -3,12 +3,11 @@ import { AssignedMaintenance } from "../../../interfaces/vehicles/maintenance/as
 
 const BASE_SELECT = `SELECT 
     am.id,
-    am.vehicle_id as vehicleId,
-    m.name as maintenanceName,
-    m.img_name as maintenanceImgName,
-    mc.name as maintenanceCategoryName,
-    am.kilometers_frequency as kilometersFrequency, 
-    am.recurrence_pattern as recurrencePattern 
+    m.name as maintenance_name,
+    m.img_name as maintenance_img_name,
+    mc.name as maintenance_category_name,
+    am.kilometers_frequency, 
+    am.recurrence_pattern 
   FROM 
     assigned_maintenance as am 
     INNER JOIN 
