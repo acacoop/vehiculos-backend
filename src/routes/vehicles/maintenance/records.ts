@@ -4,7 +4,7 @@ import {
   addMaintenanceRecord,
   getAllMaintenanceRecords,
   getMaintenanceRecordsByAssignedMaintenanceId,
-} from "../../../services/vehicles/maintenance/maintenanceRecord";
+} from "../../../services/vehicles/maintenance/records";
 
 const router = express.Router();
 

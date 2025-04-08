@@ -2,7 +2,7 @@ import express, { Request, Response } from "express";
 import {
   associateMaintenanceWithVehicle,
   getMaintenancesByVehicleId,
-} from "../../../services/vehicles/maintenance/assignedMaintenanceService";
+} from "../../../services/vehicles/maintenance/assignations";
 import { AssignedMaintenanceSchema } from "../../../schemas/maintenance/assignMaintance";
 
 const router = express.Router();

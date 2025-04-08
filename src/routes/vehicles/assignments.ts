@@ -4,7 +4,7 @@ import {
   getAllAssignments,
   getUsersAssignedByVehicleId,
   getVehiclesAssignedByUserId,
-} from "../../services/vehicles/assignmentsService";
+} from "../../services/vehicles/assignments";
 
 const router = express.Router();
 

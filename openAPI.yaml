@@ -1,0 +1,284 @@
+openapi: 3.0.3
+info:
+  title: Vehicle Management API
+  version: 1.0.0
+  description: API for managing users, vehicles, assignments, and maintenance operations.
+
+paths:
+  # USERS
+  /users:
+    get:
+      summary: Get all users
+      tags: [Users]
+      responses:
+        "200": { description: List of users }
+    post:
+      summary: Create a user
+      tags: [Users]
+      responses:
+        "201": { description: User created }
+
+  /users/{id}:
+    get:
+      summary: Get a user by ID
+      tags: [Users]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: User found }
+        "404": { description: User not found }
+    delete:
+      summary: Delete a user (logical delete)
+      tags: [Users]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: User deleted }
+
+  # VEHICLES
+  /vehicles:
+    get:
+      summary: Get all vehicles
+      tags: [Vehicles]
+      responses:
+        "200": { description: List of vehicles }
+    post:
+      summary: Create a vehicle
+      tags: [Vehicles]
+      responses:
+        "201": { description: Vehicle created }
+
+  /vehicles/{id}:
+    get:
+      summary: Get a vehicle by ID
+      tags: [Vehicles]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Vehicle found }
+        "404": { description: Vehicle not found }
+    delete:
+      summary: Delete a vehicle (logical delete)
+      tags: [Vehicles]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: Vehicle deleted }
+
+  /vehicles/licensePlate/{licensePlate}:
+    get:
+      summary: Get a vehicle by license plate
+      tags: [Vehicles]
+      parameters:
+        - name: licensePlate
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Vehicle found }
+        "404": { description: Vehicle not found }
+
+  # ASSIGNMENTS
+  /assignments:
+    get:
+      summary: Get all assignments
+      tags: [Assignments]
+      responses:
+        "200": { description: List of assignments }
+    post:
+      summary: Create an assignment
+      tags: [Assignments]
+      responses:
+        "201": { description: Assignment created }
+
+  /assignments/{id}:
+    delete:
+      summary: Delete an assignment (logical delete)
+      tags: [Assignments]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: Assignment deleted }
+
+  /assignments/user/{id}:
+    get:
+      summary: Get all vehicles assigned to a user
+      tags: [Assignments]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: List of vehicles }
+
+  /assignments/vehicle/{id}:
+    get:
+      summary: Get all users assigned to a vehicle
+      tags: [Assignments]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: List of users }
+
+  # MAINTENANCE CATEGORIES
+  /maintenance/categories:
+    get:
+      summary: Get all maintenance categories
+      tags: [Maintenance - Categories]
+      responses:
+        "200": { description: List of categories }
+    post:
+      summary: Create a maintenance category
+      tags: [Maintenance - Categories]
+      responses:
+        "201": { description: Category created }
+
+  /maintenance/categories/{id}:
+    get:
+      summary: Get a maintenance category by ID
+      tags: [Maintenance - Categories]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Category found }
+        "404": { description: Category not found }
+    delete:
+      summary: Delete a maintenance category (logical delete)
+      tags: [Maintenance - Categories]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: Category deleted }
+
+  # MAINTENANCE POSIBLES
+  /maintenance/posibles:
+    get:
+      summary: Get all possible maintenances
+      tags: [Maintenance - Posibles]
+      responses:
+        "200": { description: List of possibles }
+    post:
+      summary: Create a possible maintenance
+      tags: [Maintenance - Posibles]
+      responses:
+        "201": { description: Possible created }
+
+  /maintenance/posibles/{id}:
+    get:
+      summary: Get a possible maintenance by ID
+      tags: [Maintenance - Posibles]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Possible found }
+        "404": { description: Possible not found }
+    delete:
+      summary: Delete a possible maintenance (logical delete)
+      tags: [Maintenance - Posibles]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: Possible deleted }
+
+  # MAINTENANCE ASSIGNATIONS
+  /maintenance/assignations:
+    get:
+      summary: Get all maintenance assignations
+      tags: [Maintenance - Assignations]
+      responses:
+        "200": { description: List of assignations }
+    post:
+      summary: Create a maintenance assignation
+      tags: [Maintenance - Assignations]
+      responses:
+        "201": { description: Assignation created }
+
+  /maintenance/assignations/{id}:
+    get:
+      summary: Get a maintenance assignation by ID
+      tags: [Maintenance - Assignations]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Assignation found }
+        "404": { description: Assignation not found }
+    delete:
+      summary: Delete a maintenance assignation (logical delete)
+      tags: [Maintenance - Assignations]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: Assignation deleted }
+
+  # MAINTENANCE REGISTER
+  /maintenance/record:
+    get:
+      summary: Get all maintenance records
+      tags: [Maintenance - Record]
+      responses:
+        "200": { description: List of maintenance records }
+    post:
+      summary: Record a maintenance event
+      tags: [Maintenance - Record]
+      responses:
+        "201": { description: Maintenance recorded }
+
+  /maintenance/record/{id}:
+    get:
+      summary: Get a maintenance record by ID
+      tags: [Maintenance - Record]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Record found }
+        "404": { description: Record not found }
+    delete:
+      summary: Delete a maintenance record (logical delete)
+      tags: [Maintenance - Record]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: Record deleted }
