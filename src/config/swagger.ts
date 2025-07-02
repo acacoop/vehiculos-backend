@@ -5,7 +5,7 @@ import path from 'path';
 import { Express } from 'express';
 
 // Load OpenAPI spec from YAML file
-const openApiSpec = YAML.load(path.join(__dirname, '../openAPI.yaml'));
+const openApiSpec = YAML.load(path.join(__dirname, '../../openAPI.yaml'));
 
 // Swagger configuration
 const swaggerOptions: swaggerJSDoc.Options = {
