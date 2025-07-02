@@ -1,7 +1,7 @@
 import { oneOrNone, some } from "../../db";
-import { Assignment } from "../../interfaces/vehicles/assignment";
+import { Assignment } from "../../interfaces/assignment";
 import { BASE_SELECT as VEHICLES_BASE_SELECT } from "./vehiclesService";
-import { Vehicle } from "../../interfaces/vehicles/vehicle";
+import { Vehicle } from "../../interfaces/vehicle";
 import { BASE_SELECT as USERS_BASE_SELECT } from "../usersService";
 import { User } from "../../interfaces/user";
 

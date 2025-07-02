@@ -1,0 +1,63 @@
+# Docker Compose for Vehiculos Application
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: vehiculos-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: vehicles_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./db/vehicles.sql:/docker-entrypoint-initdb.d/02-vehicles.sql
+      - ./db/sample_data.sql:/docker-entrypoint-initdb.d/sample_data.sql
+      - ./db/migrate_to_uuid.sql:/docker-entrypoint-initdb.d/migrate_to_uuid.sql
+    networks:
+      - vehiculos-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d vehicles_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Node.js Backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vehiculos-backend
+    restart: unless-stopped
+    environment:
+      APP_PORT: 3000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: vehicles_db
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - vehiculos-network
+    volumes:
+      - ./logs:/app/logs  # Optional: for logs if you add logging
+
+# Named volumes
+volumes:
+  postgres_data:
+    driver: local
+
+# Networks
+networks:
+  vehiculos-network:
+    driver: bridge

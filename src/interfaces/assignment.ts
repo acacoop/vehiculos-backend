@@ -1,7 +1,5 @@
-export interface Reservation {
+export interface Assignment {
   id: string; // UUID
   vehicleId: string; // UUID
   userId: string; // UUID
-  startDate: Date;
-  endDate: Date;
 }

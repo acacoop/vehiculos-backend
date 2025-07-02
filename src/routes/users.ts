@@ -1,57 +1,32 @@
-import express, { Request, Response } from "express";
-import { getUserById, getAllUsers, addUser } from "../services/usersService";
-import { User } from "../interfaces/user";
+import { Router } from "express";
+import { usersController } from "../controllers/usersController";
+import { validateSchema, validateId } from "../middleware/errorHandler";
 import { UserSchema } from "../schemas/user";
 
-const router = express.Router();
+const router = Router();
 
-// GET: Fetch all users
-router.get("/", async (req: Request, res: Response) => {
-  try {
-    const users = await getAllUsers();
-    res.status(200).json(users);
-  } catch (error) {
-    res.status(500).json({ error: `Internal Server Error: ${error}` });
-  }
-});
+// GET /users - Get all users with pagination
+router.get("/", usersController.getAll);
 
-// GET: Fetch a user by id
-router.get("/:id", async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
-  if (isNaN(id)) {
-    res.status(400).json({ error: "Invalid id" });
-    return;
-  }
+// GET /users/:id - Get user by ID
+router.get("/:id", validateId, usersController.getById);
 
-  try {
-    const user = await getUserById(id);
+// GET /users/email/:email - Get user by email
+router.get("/email/:email", usersController.getUserByEmail);
 
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
+// GET /users/dni/:dni - Get user by DNI
+router.get("/dni/:dni", usersController.getUserByDni);
 
-    res.status(200).json(user);
-  } catch (error) {
-    res.status(500).json({ error: `Internal Server Error: ${error}` });
-  }
-});
+// POST /users - Create new user
+router.post("/", validateSchema(UserSchema), usersController.create);
 
-// POST: Add a new user
-router.post("/", async (req: Request, res: Response) => {
-  const user: User = UserSchema.parse(req.body);
+// PUT /users/:id - Update user (replace)
+router.put("/:id", validateId, validateSchema(UserSchema.partial()), usersController.update);
 
-  try {
-    const newUser = await addUser(user);
-    if (!newUser) {
-      res.status(400).json({ error: "User not created" });
-      return;
-    }
+// PATCH /users/:id - Partial update user
+router.patch("/:id", validateId, validateSchema(UserSchema.partial()), usersController.patch);
 
-    res.status(201).json(newUser);
-  } catch (error) {
-    res.status(500).json({ error: `Internal Server Error: ${error}` });
-  }
-});
+// DELETE /users/:id - Delete user
+router.delete("/:id", validateId, usersController.delete);
 
 export default router;

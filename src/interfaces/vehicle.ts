@@ -1,5 +1,5 @@
 export interface Vehicle {
-  id: number;
+  id: string; // UUID
   licensePlate: string;
   brand: string;
   model: string;
