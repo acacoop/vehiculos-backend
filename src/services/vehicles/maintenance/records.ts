@@ -1,64 +1,53 @@
-import { some } from "../../../db";
-import { MaintenanceRecord } from "../../../interfaces/vehicles/maintenance/maintenance_record";
+import { some, oneOrNone } from "../../../db";
+import { MaintenanceRecord } from "../../../interfaces/maintenance";
 
 const BASE_SELECT = `
     SELECT
         mr.id,
+        mr.assigned_maintenance_id as assignedMaintenanceId,
         mr.user_id as userId,
         mr.date,
         mr.kilometers,
-        mr.notes,
-        mr.assigned_maintenance_id,
-        am.vehicle_id as vehicleId,
-        m.name as maintenanceName,
-        mc.name as maintenanceCategoryName
+        mr.notes
     FROM
-        maintenance_record as mr
-        INNER JOIN
-            assigned_maintenance as am
-        ON
-            mr.assigned_maintenance_id = am.id
-        INNER JOIN
-            maintenance as m
-        ON
-            am.maintenance_id = m.id
-        INNER JOIN
-            maintenance_category as mc
-        ON
-            m.category_id = mc.id
-    `;
+        maintenance_records mr`;
 
-const BASE_INSERT = `
-    INSERT INTO maintenance_record
-        (user_id, date, kilometers, notes, assigned_maintenance_id)
-    VALUES ($1, $2, $3, $4, $5)
-    `;
-
-export const getAllMaintenanceRecords = async () => {
-  const query = `${BASE_SELECT}`;
-  const maintenanceRecords = await some(query, []);
-  return maintenanceRecords;
+export const getMaintenanceRecordsByVehicle = async (
+  vehicleId: string
+): Promise<MaintenanceRecord[]> => {
+  const sql = `${BASE_SELECT} 
+    INNER JOIN assigned_maintenances am ON mr.assigned_maintenance_id = am.id
+    WHERE am.vehicle_id = $1`;
+  return some<MaintenanceRecord>(sql, [vehicleId]);
 };
 
-export const getMaintenanceRecordsByAssignedMaintenanceId = async (
-  assignedMaintenanceId: number,
-) => {
-  const query = `${BASE_SELECT} WHERE mr.assigned_maintenance_id = $1`;
-  const maintenanceRecords = await some(query, [assignedMaintenanceId]);
-  return maintenanceRecords;
+export const getMaintenanceRecordById = async (
+  id: string
+): Promise<MaintenanceRecord | null> => {
+  const sql = `${BASE_SELECT} WHERE mr.id = $1`;
+  return oneOrNone<MaintenanceRecord>(sql, [id]);
 };
 
 export const addMaintenanceRecord = async (
-  maintenanceRecord: MaintenanceRecord,
-) => {
-  const query = `${BASE_INSERT} RETURNING *`;
-  const values = [
-    maintenanceRecord.userId,
-    maintenanceRecord.date,
-    maintenanceRecord.kilometer,
-    maintenanceRecord.notes,
-    maintenanceRecord.assignedMaintenanceId,
-  ];
-  const [newMaintenanceRecord] = await some(query, values);
-  return newMaintenanceRecord;
+  maintenanceRecord: MaintenanceRecord
+): Promise<MaintenanceRecord | null> => {
+  const { assignedMaintenanceId, userId, date, kilometers, notes } = maintenanceRecord;
+  
+  const query = `INSERT INTO maintenance_records (assigned_maintenance_id, user_id, date, kilometers, notes) 
+                 VALUES ($1, $2, $3, $4, $5) RETURNING *`;
+  const params = [assignedMaintenanceId, userId, date, kilometers, notes];
+  
+  return oneOrNone<MaintenanceRecord>(query, params);
+};
+
+export const getAllMaintenanceRecords = async (): Promise<MaintenanceRecord[]> => {
+  const sql = `${BASE_SELECT}`;
+  return some<MaintenanceRecord>(sql);
+};
+
+export const getMaintenanceRecordsByAssignedMaintenanceId = async (
+  assignedMaintenanceId: string
+): Promise<MaintenanceRecord[]> => {
+  const sql = `${BASE_SELECT} WHERE mr.assigned_maintenance_id = $1`;
+  return some<MaintenanceRecord>(sql, [assignedMaintenanceId]);
 };

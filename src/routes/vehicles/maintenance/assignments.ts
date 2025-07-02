@@ -1,22 +1,18 @@
 import express, { Request, Response } from "express";
-import {
-  associateMaintenanceWithVehicle,
-  getMaintenancesByVehicleId,
-} from "../../../services/vehicles/maintenance/assignations";
+
 import { AssignedMaintenanceSchema } from "../../../schemas/maintenance/assignMaintance";
+import { AssignedMaintenance } from "../../../interfaces/maintenance";
+import { validateId } from "../../../middleware/validation";
+import { assignMaintenance, getAssignedMaintenancesByVehicle } from "../../../services/vehicles/maintenance/assignations";
 
 const router = express.Router();
 
 // GET: Fetch all maintenance for a specific vehicle
-router.get("/:vehicle_id", async (req: Request, res: Response) => {
-  const vehicleId = parseInt(req.params.vehicle_id);
-  if (isNaN(vehicleId)) {
-    res.status(400).json({ error: "Invalid vehicle ID" });
-    return;
-  }
+router.get("/:vehicle_id", validateId, async (req: Request, res: Response) => {
+  const vehicleId = req.params.vehicle_id;
 
   try {
-    const maintenanceRecords = await getMaintenancesByVehicleId(vehicleId);
+    const maintenanceRecords = await getAssignedMaintenancesByVehicle(vehicleId);
     res.status(200).json(maintenanceRecords);
   } catch (error) {
     res.status(500).json({ error: `Internal Server Error: ${error}` });
@@ -25,12 +21,11 @@ router.get("/:vehicle_id", async (req: Request, res: Response) => {
 
 // POST: Associate a maintenance with a vehicle
 router.post("/", async (req: Request, res: Response) => {
-  const assignedMaintenance = AssignedMaintenanceSchema.parse(req.body);
+  const assignedMaintenance: AssignedMaintenance = AssignedMaintenanceSchema.parse(req.body);
 
   try {
-    // Assuming you have a function to associate maintenance with a vehicle
-    await associateMaintenanceWithVehicle(assignedMaintenance);
-    res.status(201).json({ message: "Maintenance associated successfully" });
+    const result = await assignMaintenance(assignedMaintenance);
+    res.status(201).json(result);
   } catch (error) {
     res.status(500).json({ error: `Internal Server Error: ${error}` });
   }

@@ -172,19 +172,3 @@ export const validateSchema = (schema: ZodSchema) => {
     }
   };
 };
-
-// ID validation middleware (now for UUIDs)
-export const validateId = (req: Request, res: Response, next: NextFunction) => {
-  const id = req.params.id;
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  
-  if (!uuidRegex.test(id)) {
-    throw new AppError(
-      'The provided ID must be a valid UUID',
-      400,
-      'https://example.com/problems/invalid-uuid',
-      'Invalid UUID Format'
-    );
-  }
-  next();
-};

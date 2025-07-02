@@ -10,18 +10,21 @@ export interface Maintenance {
 }
 
 export interface AssignedMaintenance {
-  id: string; // UUID
+  id?: string; // UUID
   vehicleId: string; // UUID
   maintenanceId: string; // UUID
-  kilometersFrequency: number;
-  daysFrecuency: number;
+  kilometersFrequency?: number;
+  daysFrequency?: number;
+  // Additional fields from JOIN with maintenances table
+  maintenance_name?: string;
+  maintenance_category_name?: string;
 }
 
 export interface MaintenanceRecord {
-  id: string; // UUID
+  id?: string; // UUID 
   assignedMaintenanceId: string; // UUID
   userId: string; // UUID
   date: Date;
-  kilometer: number;
-  notes: string;
+  kilometers: number;
+  notes?: string;
 }

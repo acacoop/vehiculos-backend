@@ -9,6 +9,7 @@ import {
 } from "../services/reservationsService";
 import { ReservationSchema } from "../schemas/reservation";
 import { Reservation } from "../interfaces/reservation";
+import { validateId } from "../middleware/validation";
 
 const router = express.Router();
 
@@ -23,12 +24,8 @@ router.get("/", async (req: Request, res: Response) => {
 });
 
 // GET: Fetch reservations for a specific user
-router.get("/user/:id", async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
-  if (isNaN(id)) {
-    res.status(400).json({ error: "Invalid id" });
-    return;
-  }
+router.get("/user/:id", validateId, async (req: Request, res: Response) => {
+  const id = req.params.id;
 
   try {
     const vehicles = await getReservationsByUserId(id);
@@ -39,12 +36,8 @@ router.get("/user/:id", async (req: Request, res: Response) => {
 });
 
 // GET: Fetch reservations for a specific vehicle
-router.get("/vehicle/:id", async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
-  if (isNaN(id)) {
-    res.status(400).json({ error: "Invalid id" });
-    return;
-  }
+router.get("/vehicle/:id", validateId, async (req: Request, res: Response) => {
+  const id = req.params.id;
 
   try {
     const vehicles = await getReservationsByVehicleId(id);
@@ -54,13 +47,9 @@ router.get("/vehicle/:id", async (req: Request, res: Response) => {
   }
 });
 
-// GET: Fetch reservations for all vehicles assigned to a specific user
-router.get("/user/:id/assigned", async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
-  if (isNaN(id)) {
-    res.status(400).json({ error: "Invalid id" });
-    return;
-  }
+// GET: Fetch reservations for all vehicles assigned to a specific user  
+router.get("/user/:id/assigned", validateId, async (req: Request, res: Response) => {
+  const id = req.params.id;
 
   try {
     const vehicles = await getReservatiosOfAssignedVehiclesByUserId(id);
@@ -71,12 +60,8 @@ router.get("/user/:id/assigned", async (req: Request, res: Response) => {
 });
 
 // GET: Fetch reservations for a specific user that are scheduled for today
-router.get("/user/:id/today", async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
-  if (isNaN(id)) {
-    res.status(400).json({ error: "Invalid id" });
-    return;
-  }
+router.get("/user/:id/today", validateId, async (req: Request, res: Response) => {
+  const id = req.params.id;
 
   try {
     const vehicles = await getTodayReservationsByUserId(id);

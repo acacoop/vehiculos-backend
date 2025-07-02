@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { vehiclesController } from "../controllers/vehiclesController";
-import { validateSchema, validateId, AppError } from "../middleware/errorHandler";
+import { validateSchema, AppError } from "../middleware/errorHandler";
+import { validateId } from "../middleware/validation";
 import { VehicleSchema } from "../schemas/vehicle";
 import { licensePlateRegex } from "../schemas/validations";
 

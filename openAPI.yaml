@@ -3,24 +3,15 @@ info:
   title: Vehicle Management API
   version: 2.0.0
   description: |
-    Secure and scalable API f    put:
-      summary: Update user
-      tags: [Users]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuidg users, vehicles, assignments, and maintenance operations.
-    
+    Secure and scalable API for managing users, vehicles, assignments, and maintenance operations.
+
     ## Features
     - RESTful endpoints with consistent plural naming
     - Comprehensive error handling
     - Input validation and sanitization
     - Pagination support
     - Security headers and rate limiting
-    
+
     ## Authentication
     Currently using basic security measures. OAuth2/JWT implementation pending.
 
@@ -81,7 +72,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserListResponse'
+                $ref: "#/components/schemas/UserListResponse"
     post:
       summary: Create a new user
       tags: [Users]
@@ -90,18 +81,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserInput'
+              $ref: "#/components/schemas/UserInput"
       responses:
         "201":
           description: User created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserResponse'
+                $ref: "#/components/schemas/UserResponse"
         "400":
-          $ref: '#/components/responses/BadRequest'
+          $ref: "#/components/responses/BadRequest"
         "409":
-          $ref: '#/components/responses/Conflict'
+          $ref: "#/components/responses/Conflict"
 
   /users/{id}:
     get:
@@ -120,9 +111,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserResponse'
+                $ref: "#/components/schemas/UserResponse"
         "404":
-          $ref: '#/components/responses/NotFound'
+          $ref: "#/components/responses/NotFound"
     put:
       summary: Update user (full replacement)
       tags: [Users]
@@ -138,12 +129,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserUpdateInput'
+              $ref: "#/components/schemas/UserUpdateInput"
       responses:
         "200":
           description: User updated successfully
         "404":
-          $ref: '#/components/responses/NotFound'
+          $ref: "#/components/responses/NotFound"
     patch:
       summary: Partially update user
       tags: [Users]
@@ -159,14 +150,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserUpdateInput'
+              $ref: "#/components/schemas/UserUpdateInput"
       responses:
         "200":
           description: User partially updated successfully
         "400":
-          $ref: '#/components/responses/ValidationError'
+          $ref: "#/components/responses/ValidationError"
         "404":
-          $ref: '#/components/responses/NotFound'
+          $ref: "#/components/responses/NotFound"
     delete:
       summary: Delete user
       tags: [Users]
@@ -241,7 +232,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VehicleListResponse'
+                $ref: "#/components/schemas/VehicleListResponse"
     post:
       summary: Create a new vehicle
       tags: [Vehicles]
@@ -250,14 +241,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/VehicleInput'
+              $ref: "#/components/schemas/VehicleInput"
       responses:
         "201":
           description: Vehicle created successfully
         "400":
-          $ref: '#/components/responses/BadRequest'
+          $ref: "#/components/responses/BadRequest"
         "409":
-          $ref: '#/components/responses/Conflict'
+          $ref: "#/components/responses/Conflict"
 
   /vehicles/{id}:
     get:
@@ -290,12 +281,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/VehicleInput'
+              $ref: "#/components/schemas/VehicleInput"
       responses:
         "200":
           description: Vehicle updated successfully
         "404":
-          $ref: '#/components/responses/NotFound'
+          $ref: "#/components/responses/NotFound"
     patch:
       summary: Partially update vehicle
       tags: [Vehicles]
@@ -311,14 +302,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/VehicleInput'
+              $ref: "#/components/schemas/VehicleInput"
       responses:
         "200":
           description: Vehicle partially updated successfully
         "400":
-          $ref: '#/components/responses/ValidationError'
+          $ref: "#/components/responses/ValidationError"
         "404":
-          $ref: '#/components/responses/NotFound'
+          $ref: "#/components/responses/NotFound"
     delete:
       summary: Delete vehicle
       tags: [Vehicles]
@@ -345,14 +336,14 @@ paths:
           required: true
           schema:
             type: string
-            pattern: '^[A-Z]{3}[0-9]{3}$'
+            pattern: "^[A-Z]{3}[0-9]{3}$"
       responses:
         "200":
           description: Vehicle found
         "400":
-          $ref: '#/components/responses/BadRequest'
+          $ref: "#/components/responses/BadRequest"
         "404":
-          $ref: '#/components/responses/NotFound'
+          $ref: "#/components/responses/NotFound"
 
 components:
   schemas:
@@ -390,7 +381,7 @@ components:
 
     ValidationProblemDetails:
       allOf:
-        - $ref: '#/components/schemas/ProblemDetails'
+        - $ref: "#/components/schemas/ProblemDetails"
         - type: object
           properties:
             errors:
@@ -465,7 +456,7 @@ components:
 
     UserUpdateInput:
       allOf:
-        - $ref: '#/components/schemas/UserInput'
+        - $ref: "#/components/schemas/UserInput"
 
     Vehicle:
       type: object
@@ -476,7 +467,7 @@ components:
           example: "650e8400-e29b-41d4-a716-446655440001"
         licensePlate:
           type: string
-          pattern: '^[A-Z]{3}[0-9]{3}$'
+          pattern: "^[A-Z]{3}[0-9]{3}$"
           example: "ABC123"
         brand:
           type: string
@@ -506,7 +497,7 @@ components:
       properties:
         licensePlate:
           type: string
-          pattern: '^[A-Z]{3}[0-9]{3}$'
+          pattern: "^[A-Z]{3}[0-9]{3}$"
         brand:
           type: string
           minLength: 1
@@ -541,7 +532,7 @@ components:
         data:
           type: object
         pagination:
-          $ref: '#/components/schemas/Pagination'
+          $ref: "#/components/schemas/Pagination"
 
     Pagination:
       type: object
@@ -561,43 +552,43 @@ components:
 
     UserResponse:
       allOf:
-        - $ref: '#/components/schemas/ApiResponse'
+        - $ref: "#/components/schemas/ApiResponse"
         - type: object
           properties:
             data:
-              $ref: '#/components/schemas/User'
+              $ref: "#/components/schemas/User"
 
     UserListResponse:
       allOf:
-        - $ref: '#/components/schemas/ApiResponse'
+        - $ref: "#/components/schemas/ApiResponse"
         - type: object
           properties:
             data:
               type: array
               items:
-                $ref: '#/components/schemas/User'
+                $ref: "#/components/schemas/User"
 
     VehicleResponse:
       allOf:
-        - $ref: '#/components/schemas/ApiResponse'
+        - $ref: "#/components/schemas/ApiResponse"
         - type: object
           properties:
             data:
-              $ref: '#/components/schemas/Vehicle'
+              $ref: "#/components/schemas/Vehicle"
 
     VehicleListResponse:
       allOf:
-        - $ref: '#/components/schemas/ApiResponse'
+        - $ref: "#/components/schemas/ApiResponse"
         - type: object
           properties:
             data:
               type: array
               items:
-                $ref: '#/components/schemas/Vehicle'
+                $ref: "#/components/schemas/Vehicle"
 
     ErrorResponse:
       allOf:
-        - $ref: '#/components/schemas/ApiResponse'
+        - $ref: "#/components/schemas/ApiResponse"
         - type: object
           properties:
             status:
@@ -620,35 +611,34 @@ components:
       content:
         application/problem+json:
           schema:
-            $ref: '#/components/schemas/ValidationProblemDetails'
-    
+            $ref: "#/components/schemas/ValidationProblemDetails"
+
     NotFound:
       description: Resource not found
       content:
         application/problem+json:
           schema:
-            $ref: '#/components/schemas/ProblemDetails'
-    
+            $ref: "#/components/schemas/ProblemDetails"
+
     Conflict:
       description: Resource already exists
       content:
         application/problem+json:
           schema:
-            $ref: '#/components/schemas/ProblemDetails'
-    
+            $ref: "#/components/schemas/ProblemDetails"
+
     InternalServerError:
       description: Internal server error
       content:
         application/problem+json:
           schema:
-            $ref: '#/components/schemas/ProblemDetails'
+            $ref: "#/components/schemas/ProblemDetails"
 
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-
 # Global security (to be implemented)
 # security:
 #   - BearerAuth: []

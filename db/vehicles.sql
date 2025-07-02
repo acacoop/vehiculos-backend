@@ -1,32 +1,37 @@
 -- Clear existing data
 DELETE FROM vehicles;
+
 DELETE FROM users;
 
 -- Insert sample vehicles (UUIDs will be auto-generated)
-INSERT INTO vehicles (
-    license_plate,
-    brand,
-    model,
-    year,
-    img_url
-) VALUES (
-    'JKL123',
-    'Nissan',
-    'Altima',
-    2017,
-    'https://s1.cdn.autoevolution.com/images/gallery/NISSANAltimaSedan-4744_6.jpg'
-), (
-    'MNO456',
-    'Hyundai',
-    'Elantra',
-    2016,
-    'https://s1.cdn.autoevolution.com/images/gallery/hyundai-elantra-2023-7583_27.jpg'
-), (
-    'PQR789',
-    'Kia',
-    'Optima',
-    2015,
-    'https://s1.cdn.autoevolution.com/images/gallery/KIA-K5-6868_32.jpg'
+INSERT INTO
+    vehicles (
+        license_plate,
+        brand,
+        model,
+        year,
+        img_url
+    )
+VALUES (
+        'JKL123',
+        'Nissan',
+        'Altima',
+        2017,
+        'https://s1.cdn.autoevolution.com/images/gallery/NISSANAltimaSedan-4744_6.jpg'
+    ),
+    (
+        'MNO456',
+        'Hyundai',
+        'Elantra',
+        2016,
+        'https://s1.cdn.autoevolution.com/images/gallery/hyundai-elantra-2023-7583_27.jpg'
+    ),
+    (
+        'PQR789',
+        'Kia',
+        'Optima',
+        2015,
+        'https://s1.cdn.autoevolution.com/images/gallery/KIA-K5-6868_32.jpg'
     ),
     (
         'STU012',
@@ -64,43 +69,49 @@ INSERT INTO vehicles (
         'https://s1.cdn.autoevolution.com/images/gallery/AUDI-A4-6631_15.jpg'
     ),
     (
-    'HIJ567',
-    'Lexus',
-    'IS',
-    2009,
-    'https://s1.cdn.autoevolution.com/images/gallery/LEXUS-IS-6846_25.jpg'
-), (
-    'KLM890',
-    'Acura',
-    'TLX',
-    2008,
-    'https://s1.cdn.autoevolution.com/images/gallery/ACURA-TLX-6828_15.jpg'
-);
+        'HIJ567',
+        'Lexus',
+        'IS',
+        2009,
+        'https://s1.cdn.autoevolution.com/images/gallery/LEXUS-IS-6846_25.jpg'
+    ),
+    (
+        'KLM890',
+        'Acura',
+        'TLX',
+        2008,
+        'https://s1.cdn.autoevolution.com/images/gallery/ACURA-TLX-6828_15.jpg'
+    );
 
 -- Insert sample users (UUIDs will be auto-generated)
-INSERT INTO users (
-    first_name,
-    last_name,
-    dni,
-    email
-) VALUES (
-    'Juan',
-    'Pérez',
-    12345678,
-    'juan.perez@example.com'
-), (
-    'María',
-    'González',
-    87654321,
-    'maria.gonzalez@example.com'
-), (
-    'Carlos',
-    'López',
-    11223344,
-    'carlos.lopez@example.com'
-), (
-    'Ana',
-    'Martínez',
-    44332211,
-    'ana.martinez@example.com'
-);
+INSERT INTO
+    users (
+        first_name,
+        last_name,
+        dni,
+        email
+    )
+VALUES (
+        'Juan',
+        'Pérez',
+        12345678,
+        'juan.perez@example.com'
+    ),
+    (
+        'María',
+        'González',
+        87654321,
+        'maria.gonzalez@example.com'
+    ),
+    (
+        'Carlos',
+        'López',
+        11223344,
+        'carlos.lopez@example.com'
+    ),
+    (
+        'Ana',
+        'Martínez',
+        44332211,
+        'ana.martinez@example.com'
+    );

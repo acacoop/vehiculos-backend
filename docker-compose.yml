@@ -1,6 +1,4 @@
 # Docker Compose for Vehiculos Application
-version: '3.8'
-
 services:
   # PostgreSQL Database
   db:
@@ -11,8 +9,7 @@ services:
       POSTGRES_DB: vehicles_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
+    # PostgreSQL port not exposed to host - only accessible within Docker network
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
@@ -50,7 +47,7 @@ services:
     networks:
       - vehiculos-network
     volumes:
-      - ./logs:/app/logs  # Optional: for logs if you add logging
+      - ./logs:/app/logs # Optional: for logs if you add logging
 
 # Named volumes
 volumes:

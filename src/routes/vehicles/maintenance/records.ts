@@ -2,39 +2,37 @@ import express, { Request, Response } from "express";
 import { MaintenanceRecordSchema } from "../../../schemas/maintenance/maintanceRecord";
 import {
   addMaintenanceRecord,
-  getAllMaintenanceRecords,
-  getMaintenanceRecordsByAssignedMaintenanceId,
+  getMaintenanceRecordsByVehicle,
+  getMaintenanceRecordById,
 } from "../../../services/vehicles/maintenance/records";
+import { MaintenanceRecord } from "../../../interfaces/maintenance";
+import { validateId } from "../../../middleware/validation";
 
 const router = express.Router();
 
-// GET: Fetch all maintenance records
-router.get("/", async (req: Request, res: Response) => {
+// GET: Fetch maintenance records by vehicle ID
+router.get("/vehicle/:vehicleId", validateId, async (req: Request, res: Response) => {
+  const vehicleId = req.params.vehicleId;
+
   try {
-    const records = await getAllMaintenanceRecords();
+    const records = await getMaintenanceRecordsByVehicle(vehicleId);
     res.status(200).json(records);
   } catch (error) {
     res.status(500).json({ error: `Internal Server Error: ${error}` });
   }
 });
 
-// GET: Fetch all maintanance for a assined maintenance to a vehicle
-router.get("/assignedMaintenance/:id", async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id);
-  if (isNaN(id)) {
-    res.status(400).json({ error: "Invalid id" });
-    return;
-  }
+// GET: Fetch maintenance record by ID
+router.get("/:id", validateId, async (req: Request, res: Response) => {
+  const id = req.params.id;
 
   try {
-    const records = await getMaintenanceRecordsByAssignedMaintenanceId(id);
-    if (!records) {
-      res.status(404).json({
-        error: "No maintenance records found for this assigned maintenance",
-      });
+    const record = await getMaintenanceRecordById(id);
+    if (!record) {
+      res.status(404).json({ error: "Maintenance record not found" });
       return;
     }
-    res.status(200).json(records);
+    res.status(200).json(record);
   } catch (error) {
     res.status(500).json({ error: `Internal Server Error: ${error}` });
   }
@@ -42,7 +40,7 @@ router.get("/assignedMaintenance/:id", async (req: Request, res: Response) => {
 
 // POST: Add a new maintenance record
 router.post("/", async (req: Request, res: Response) => {
-  const maintenanceRecord = MaintenanceRecordSchema.parse(req.body);
+  const maintenanceRecord: MaintenanceRecord = MaintenanceRecordSchema.parse(req.body);
 
   try {
     const record = await addMaintenanceRecord(maintenanceRecord);
