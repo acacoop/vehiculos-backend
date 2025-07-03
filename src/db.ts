@@ -15,10 +15,14 @@ const pool = new Pool({
   database: DB_NAME,
 });
 
-// export const query = async (text: string, params?: unknown[]) => {
-//   const result = await pool.query(text, params);
-//   return result.rows;
-// };
+pool.connect()
+  .then(client => {
+    console.log("✅ Database connection successful");
+    client.release();
+  })
+  .catch(err => {
+    console.error("❌ Database connection failed:", err.message);
+  });
 
 export const some = async <T>(
   text: string,
@@ -28,8 +32,8 @@ export const some = async <T>(
     const { rows } = await pool.query(text, params);
     return rows;
   } catch (error) {
-    console.log(error);
-    return [];
+    console.error("❌ Database query error in 'some':", error);
+    throw error; // Re-throw to see the actual error
   }
 };
 
@@ -41,7 +45,7 @@ export const oneOrNone = async <T>(
     const { rows } = await pool.query(text, params);
     return rows[0];
   } catch (error) {
-    console.log(error);
-    return null;
+    console.error("❌ Database query error in 'oneOrNone':", error);
+    throw error; // Re-throw to see the actual error
   }
 };

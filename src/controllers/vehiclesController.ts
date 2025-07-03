@@ -1,4 +1,3 @@
-import { Request, Response } from 'express';
 import { BaseController } from './baseController';
 import { Vehicle } from '../interfaces/vehicle';
 import { 
@@ -6,10 +5,8 @@ import {
   getVehicleById, 
   addVehicle, 
   updateVehicle, 
-  deleteVehicle,
-  getVehicleByLicensePlate 
+  deleteVehicle
 } from '../services/vehicles/vehiclesService';
-import { asyncHandler, AppError } from '../middleware/errorHandler';
 
 export class VehiclesController extends BaseController {
   constructor() {
@@ -17,7 +14,7 @@ export class VehiclesController extends BaseController {
   }
 
   // Implement abstract methods from BaseController
-  protected async getAllService(options: { limit: number; offset: number }) {
+  protected async getAllService(options: { limit: number; offset: number; searchParams?: Record<string, string> }) {
     return await getAllVehicles(options);
   }
 
@@ -41,23 +38,6 @@ export class VehiclesController extends BaseController {
   protected async deleteService(id: string) {
     return await deleteVehicle(id);
   }
-
-  // Custom methods specific to vehicles
-  public getVehicleByLicensePlate = asyncHandler(async (req: Request, res: Response) => {
-    const { licensePlate } = req.params;
-    const vehicle = await getVehicleByLicensePlate(licensePlate);
-    
-    if (!vehicle) {
-      throw new AppError(
-        `Vehicle with license plate ${licensePlate} was not found`,
-        404,
-        'https://example.com/problems/vehicle-not-found',
-        'Vehicle Not Found'
-      );
-    }
-    
-    this.sendResponse(res, vehicle);
-  });
 }
 
 // Export singleton instance

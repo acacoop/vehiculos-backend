@@ -1,6 +1,24 @@
 # Vehiculos Backend - Development Makefile
 
-.PHONY: help up down logs db restart clean dev docs health sample-data
+.PHONY: help setup up down logs db restart clean dev dev-stop docs health sample-data
+
+# Helper function to wait for database
+define wait_for_db
+	@echo "⏳ Waiting for database..."
+	@for i in 1 2 3 4 5 6 7 8 9 10; do \
+		if docker compose exec -T db pg_isready -U postgres -d vehicles_db >/dev/null 2>&1; then \
+			echo "✅ Database ready!"; \
+			break; \
+		else \
+			printf "   ."; \
+			sleep 2; \
+		fi; \
+		if [ $$i -eq 10 ]; then \
+			echo "\n⚠️  Continuing anyway..."; \
+		fi; \
+	done
+	@echo ""
+endef
 
 help: ## Show available commands
 	@echo "🚗 Vehiculos Backend Commands"
@@ -10,11 +28,10 @@ help: ## Show available commands
 	@echo "URLs: http://localhost:3000 • http://localhost:3000/docs"
 
 up: ## Start application and database
-	docker compose up --build -d
-	@echo "✅ Started. Next: make sample-data"
+	@docker compose up --build -d >/dev/null 2>&1 && echo "✅ Services started. Try: make sample-data"
 
 down: ## Stop application
-	docker compose down
+	@docker compose down >/dev/null 2>&1 && echo "✅ Services stopped"
 
 sample-data: ## Load test data (15 users, 15 vehicles)
 	@read -p "Load sample data? (y/N): " confirm; \
@@ -33,8 +50,25 @@ docs: ## Open API documentation
 health: ## Check application status
 	@curl -f http://localhost:3000/health 2>/dev/null | jq . || echo "❌ Not responding"
 
-dev: ## Development mode with hot reload
-	npm run dev
+setup: ## Initial setup (install deps, start services, load sample data)
+	@echo "🏗️  Initial setup..."
+	@npm install >/dev/null 2>&1 && echo "✅ Dependencies installed"
+	@docker compose up -d >/dev/null 2>&1 && echo "✅ Services started"
+	$(call wait_for_db)
+	@docker compose exec -T db psql -U postgres -d vehicles_db -f /docker-entrypoint-initdb.d/sample_data.sql >/dev/null 2>&1 && echo "✅ Sample data loaded" || echo "⚠️  Sample data already exists"
+	@echo "🎉 Ready! API: http://localhost:3000 | Docs: http://localhost:3000/docs"
+
+dev: ## Development mode with hot reload (starts DB, stops backend container, runs locally)
+	@echo "🚀 Starting development environment..."
+	@docker compose up -d db >/dev/null 2>&1 && echo "✅ Database starting"
+	@docker compose stop backend >/dev/null 2>&1 || true
+	$(call wait_for_db)
+	@if lsof -Pi :3000 -sTCP:LISTEN -t >/dev/null 2>&1; then echo "⚠️  Port 3000 in use!"; exit 1; fi
+	@echo "🔄 Starting with hot reload..."
+	@NODE_ENV=development npm run dev
+
+dev-stop: ## Stop development environment
+	@docker compose down >/dev/null 2>&1 && echo "✅ Development stopped"
 
 logs: ## View application logs
 	docker compose logs -f backend

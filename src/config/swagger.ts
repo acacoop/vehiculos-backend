@@ -52,8 +52,4 @@ export const setupSwagger = (app: Express) => {
     res.setHeader('Content-Type', 'text/yaml');
     res.send(YAML.stringify(swaggerSpec, 4));
   });
-
-  console.log('📚 Swagger documentation available at: /docs');
-  console.log('📄 OpenAPI JSON spec available at: /docs.json');
-  console.log('📄 OpenAPI YAML spec available at: /docs.yaml');
 };

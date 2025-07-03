@@ -6,17 +6,16 @@ import { UserSchema } from "../schemas/user";
 
 const router = Router();
 
-// GET /users - Get all users with pagination
+// GET /users - Get all users with pagination and search
+// Supports query parameters: page, limit, email, dni, first-name, last-name
+// Examples: 
+// - /users?email=user@example.com 
+// - /users?dni=12345678
+// - /users?first-name=John&last-name=Doe
 router.get("/", usersController.getAll);
 
 // GET /users/:id - Get user by ID
 router.get("/:id", validateId, usersController.getById);
-
-// GET /users/email/:email - Get user by email
-router.get("/email/:email", usersController.getUserByEmail);
-
-// GET /users/dni/:dni - Get user by DNI
-router.get("/dni/:dni", usersController.getUserByDni);
 
 // POST /users - Create new user
 router.post("/", validateSchema(UserSchema), usersController.create);

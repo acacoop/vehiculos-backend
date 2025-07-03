@@ -4,20 +4,50 @@ import { Vehicle } from "../../interfaces/vehicle";
 export const BASE_SELECT =
   "SELECT v.id, v.license_plate as licensePlate, v.brand, v.model, v.year, v.img_url as imgUrl FROM vehicles v";
 
-export const getAllVehicles = async (options?: { limit?: number; offset?: number }): Promise<{ items: Vehicle[]; total: number }> => {
-  const { limit, offset } = options || {};
+export const getAllVehicles = async (options?: { 
+  limit?: number; 
+  offset?: number; 
+  searchParams?: Record<string, string> 
+}): Promise<{ items: Vehicle[]; total: number }> => {
+  const { limit, offset, searchParams } = options || {};
+  
+  // Build WHERE clause based on search parameters
+  const whereConditions: string[] = [];
+  const params: unknown[] = [];
+  let paramIndex = 1;
+
+  if (searchParams) {
+    if (searchParams['license-plate'] || searchParams.licensePlate) {
+      const licensePlate = searchParams['license-plate'] || searchParams.licensePlate;
+      whereConditions.push(`v.license_plate = $${paramIndex++}`);
+      params.push(licensePlate);
+    }
+    if (searchParams.brand) {
+      whereConditions.push(`LOWER(v.brand) LIKE LOWER($${paramIndex++})`);
+      params.push(`%${searchParams.brand}%`);
+    }
+    if (searchParams.model) {
+      whereConditions.push(`LOWER(v.model) LIKE LOWER($${paramIndex++})`);
+      params.push(`%${searchParams.model}%`);
+    }
+    if (searchParams.year) {
+      whereConditions.push(`v.year = $${paramIndex++}`);
+      params.push(parseInt(searchParams.year));
+    }
+  }
+
+  const whereClause = whereConditions.length > 0 ? ` WHERE ${whereConditions.join(' AND ')}` : '';
   
   // Get total count
-  const countSql = "SELECT COUNT(*) as total FROM vehicles";
-  const countResult = await oneOrNone<{ total: string }>(countSql);
+  const countSql = `SELECT COUNT(*) as total FROM vehicles v${whereClause}`;
+  const countResult = await oneOrNone<{ total: string }>(countSql, params);
   const total = parseInt(countResult?.total || '0');
   
   // Get paginated results
-  let sql = BASE_SELECT;
-  const params: unknown[] = [];
+  let sql = `${BASE_SELECT}${whereClause}`;
   
   if (limit && offset !== undefined) {
-    sql += ` LIMIT $1 OFFSET $2`;
+    sql += ` LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
     params.push(limit, offset);
   }
   
@@ -29,13 +59,6 @@ export const getAllVehicles = async (options?: { limit?: number; offset?: number
 export const getVehicleById = async (id: string): Promise<Vehicle | null> => {
   const sql = `${BASE_SELECT} WHERE id = $1`;
   return await oneOrNone<Vehicle>(sql, [id]);
-};
-
-export const getVehicleByLicensePlate = async (
-  licensePlate: string,
-): Promise<Vehicle | null> => {
-  const sql = `${BASE_SELECT} WHERE license_plate = $1`;
-  return await oneOrNone<Vehicle>(sql, [licensePlate]);
 };
 
 export const addVehicle = async (vehicle: Vehicle): Promise<Vehicle | null> => {

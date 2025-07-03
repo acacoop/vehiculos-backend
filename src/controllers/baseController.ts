@@ -47,13 +47,21 @@ export abstract class BaseController {
     res.status(statusCode).json(response);
   }
 
-  // GET all resources with pagination
+  // GET all resources with pagination and search
   public getAll = asyncHandler(async (req: Request, res: Response) => {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const offset = (page - 1) * limit;
 
-    const { items, total } = await this.getAllService({ limit, offset });
+    // Extract search parameters (excluding pagination params)
+    const searchParams: Record<string, string> = {};
+    for (const [key, value] of Object.entries(req.query)) {
+      if (key !== 'page' && key !== 'limit' && typeof value === 'string') {
+        searchParams[key] = value;
+      }
+    }
+
+    const { items, total } = await this.getAllService({ limit, offset, searchParams });
     
     this.sendResponse(res, items, undefined, 200, {
       page,
@@ -182,7 +190,7 @@ export abstract class BaseController {
   });
 
   // Abstract methods to be implemented by child classes
-  protected abstract getAllService(options: { limit: number; offset: number }): Promise<{ items: unknown[]; total: number }>;
+  protected abstract getAllService(options: { limit: number; offset: number; searchParams?: Record<string, string> }): Promise<{ items: unknown[]; total: number }>;
   protected abstract getByIdService(id: string): Promise<unknown | null>;
   protected abstract createService(data: unknown): Promise<unknown>;
   protected abstract updateService(id: string, data: unknown): Promise<unknown | null>;

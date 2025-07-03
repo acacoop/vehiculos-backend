@@ -50,7 +50,21 @@ paths:
   # USERS
   /users:
     get:
-      summary: Get all users with pagination
+      summary: Get all users with pagination and search
+      description: |
+        Get users with optional search filters and pagination.
+
+        **Search Parameters:**
+        - `email`: Exact match by email address
+        - `dni`: Exact match by DNI
+        - `first-name`: Partial match by first name (case-insensitive)
+        - `last-name`: Partial match by last name (case-insensitive)
+
+        **Examples:**
+        - `/users?email=user@example.com`
+        - `/users?dni=12345678`
+        - `/users?first-name=John&last-name=Doe`
+        - `/users?first-name=Ana&page=1&limit=5`
       tags: [Users]
       parameters:
         - name: page
@@ -66,6 +80,27 @@ paths:
             minimum: 1
             maximum: 100
             default: 10
+        - name: email
+          in: query
+          description: Filter by exact email address
+          schema:
+            type: string
+            format: email
+        - name: dni
+          in: query
+          description: Filter by exact DNI
+          schema:
+            type: string
+        - name: first-name
+          in: query
+          description: Filter by first name (partial match, case-insensitive)
+          schema:
+            type: string
+        - name: last-name
+          in: query
+          description: Filter by last name (partial match, case-insensitive)
+          schema:
+            type: string
       responses:
         "200":
           description: List of users
@@ -174,43 +209,24 @@ paths:
         "404":
           description: User not found
 
-  /users/email/{email}:
-    get:
-      summary: Get user by email
-      tags: [Users]
-      parameters:
-        - name: email
-          in: path
-          required: true
-          schema:
-            type: string
-            format: email
-      responses:
-        "200":
-          description: User found
-        "404":
-          description: User not found
-
-  /users/dni/{dni}:
-    get:
-      summary: Get user by DNI
-      tags: [Users]
-      parameters:
-        - name: dni
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: User found
-        "404":
-          description: User not found
-
   # VEHICLES
   /vehicles:
     get:
-      summary: Get all vehicles with pagination
+      summary: Get all vehicles with pagination and search
+      description: |
+        Get vehicles with optional search filters and pagination.
+
+        **Search Parameters:**
+        - `license-plate`: Exact match by license plate
+        - `brand`: Partial match by brand name (case-insensitive)
+        - `model`: Partial match by model name (case-insensitive)
+        - `year`: Exact match by year
+
+        **Examples:**
+        - `/vehicles?license-plate=AAA-123`
+        - `/vehicles?brand=Toyota&model=Corolla`
+        - `/vehicles?year=2020&page=1&limit=5`
+        - `/vehicles?brand=Honda&year=2021`
       tags: [Vehicles]
       parameters:
         - name: page
@@ -226,6 +242,33 @@ paths:
             minimum: 1
             maximum: 100
             default: 10
+        - name: license-plate
+          in: query
+          description: Filter by exact license plate
+          schema:
+            type: string
+            pattern: '^[A-Z]{2,3}-?\d{3,4}[A-Z]{0,2}$'
+            example: "AAA-123"
+        - name: brand
+          in: query
+          description: Filter by brand name (partial match, case-insensitive)
+          schema:
+            type: string
+            example: "Toyota"
+        - name: model
+          in: query
+          description: Filter by model name (partial match, case-insensitive)
+          schema:
+            type: string
+            example: "Corolla"
+        - name: year
+          in: query
+          description: Filter by exact year
+          schema:
+            type: integer
+            minimum: 1900
+            maximum: 2030
+            example: 2020
       responses:
         "200":
           description: List of vehicles
@@ -326,24 +369,358 @@ paths:
         "404":
           description: Vehicle not found
 
-  /vehicles/license-plate/{licensePlate}:
+  # RESERVATIONS
+  /reservations:
     get:
-      summary: Get vehicle by license plate
-      tags: [Vehicles]
+      summary: Get all reservations
+      tags: [Reservations]
+      responses:
+        "200":
+          description: List of reservations retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationListResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      summary: Create a new reservation
+      tags: [Reservations]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReservationInput"
+      responses:
+        "201":
+          description: Reservation created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /reservations/user/{id}:
+    get:
+      summary: Get reservations for a specific user
+      tags: [Reservations]
       parameters:
-        - name: licensePlate
+        - name: id
           in: path
           required: true
           schema:
             type: string
-            pattern: "^[A-Z]{3}[0-9]{3}$"
+            format: uuid
       responses:
         "200":
-          description: Vehicle found
+          description: User reservations retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationListResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /reservations/vehicle/{id}:
+    get:
+      summary: Get reservations for a specific vehicle
+      tags: [Reservations]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Vehicle reservations retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /reservations/user/{id}/assigned:
+    get:
+      summary: Get reservations for all vehicles assigned to a specific user
+      tags: [Reservations]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Assigned vehicle reservations retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /reservations/user/{id}/today:
+    get:
+      summary: Get today's reservations for a specific user
+      tags: [Reservations]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Today's user reservations retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ASSIGNMENTS
+  /assignments:
+    get:
+      summary: Get all vehicle assignments
+      tags: [Assignments]
+      responses:
+        "200":
+          description: List of assignments retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignmentListResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      summary: Create a new vehicle assignment
+      tags: [Assignments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignmentInput"
+      responses:
+        "201":
+          description: Assignment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignmentResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /assignments/user/{id}:
+    get:
+      summary: Get vehicles assigned to a specific user
+      tags: [Assignments]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User assignments retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignmentListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /assignments/vehicle/{id}:
+    get:
+      summary: Get users assigned to a specific vehicle
+      tags: [Assignments]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Vehicle assignments retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignmentListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # MAINTENANCE CATEGORIES
+  /maintenance/categories:
+    get:
+      summary: Get all maintenance categories
+      tags: [Maintenance]
+      responses:
+        "200":
+          description: List of maintenance categories retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceCategoryListResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # MAINTENANCE POSIBLES
+  /maintenance/posibles:
+    get:
+      summary: Get all possible maintenance types
+      tags: [Maintenance]
+      responses:
+        "200":
+          description: List of possible maintenance types retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceListResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # MAINTENANCE ASSIGNMENTS
+  /maintenance/assignments:
+    post:
+      summary: Assign maintenance to a vehicle
+      tags: [Maintenance]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignedMaintenanceInput"
+      responses:
+        "201":
+          description: Maintenance assigned successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignedMaintenanceResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /maintenance/assignments/{vehicle_id}:
+    get:
+      summary: Get all maintenance assignments for a specific vehicle
+      tags: [Maintenance]
+      parameters:
+        - name: vehicle_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Vehicle maintenance assignments retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignedMaintenanceListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # MAINTENANCE RECORDS
+  /maintenance/records:
+    post:
+      summary: Add a new maintenance record
+      tags: [Maintenance]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceRecordInput"
+      responses:
+        "201":
+          description: Maintenance record created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceRecordResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /maintenance/records/{id}:
+    get:
+      summary: Get maintenance record by ID
+      tags: [Maintenance]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Maintenance record retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceRecordResponse"
         "404":
           $ref: "#/components/responses/NotFound"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /maintenance/records/vehicle/{vehicleId}:
+    get:
+      summary: Get maintenance records for a specific vehicle
+      tags: [Maintenance]
+      parameters:
+        - name: vehicleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Vehicle maintenance records retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceRecordListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
 components:
   schemas:
@@ -603,6 +980,328 @@ components:
                     type: string
                   message:
                     type: string
+
+    # RESERVATION SCHEMAS
+    Reservation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "750e8400-e29b-41d4-a716-446655440002"
+        vehicleId:
+          type: string
+          format: uuid
+          example: "650e8400-e29b-41d4-a716-446655440001"
+        userId:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        startDate:
+          type: string
+          format: date-time
+          example: "2025-01-15T09:00:00Z"
+        endDate:
+          type: string
+          format: date-time
+          example: "2025-01-15T17:00:00Z"
+      required:
+        - id
+        - vehicleId
+        - userId
+        - startDate
+        - endDate
+
+    ReservationInput:
+      type: object
+      properties:
+        vehicleId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+      required:
+        - vehicleId
+        - userId
+        - startDate
+        - endDate
+
+    ReservationResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/Reservation"
+
+    ReservationListResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Reservation"
+
+    # ASSIGNMENT SCHEMAS
+    Assignment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "850e8400-e29b-41d4-a716-446655440003"
+        vehicleId:
+          type: string
+          format: uuid
+          example: "650e8400-e29b-41d4-a716-446655440001"
+        userId:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      required:
+        - id
+        - vehicleId
+        - userId
+
+    AssignmentInput:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        vehicleId:
+          type: string
+          format: uuid
+      required:
+        - userId
+        - vehicleId
+
+    AssignmentResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/Assignment"
+
+    AssignmentListResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Assignment"
+
+    # MAINTENANCE CATEGORY SCHEMAS
+    MaintenanceCategory:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "950e8400-e29b-41d4-a716-446655440004"
+        name:
+          type: string
+          example: "Motor"
+      required:
+        - id
+        - name
+
+    MaintenanceCategoryListResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/MaintenanceCategory"
+
+    # MAINTENANCE SCHEMAS
+    Maintenance:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "a50e8400-e29b-41d4-a716-446655440005"
+        categoryId:
+          type: string
+          format: uuid
+          example: "950e8400-e29b-41d4-a716-446655440004"
+        name:
+          type: string
+          example: "Cambio de aceite"
+      required:
+        - id
+        - categoryId
+        - name
+
+    MaintenanceListResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Maintenance"
+
+    # ASSIGNED MAINTENANCE SCHEMAS
+    AssignedMaintenance:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "b50e8400-e29b-41d4-a716-446655440006"
+        vehicleId:
+          type: string
+          format: uuid
+          example: "650e8400-e29b-41d4-a716-446655440001"
+        maintenanceId:
+          type: string
+          format: uuid
+          example: "a50e8400-e29b-41d4-a716-446655440005"
+        kilometersFrequency:
+          type: integer
+          minimum: 0
+          example: 10000
+        daysFrequency:
+          type: integer
+          minimum: 0
+          example: 90
+        maintenance_name:
+          type: string
+          example: "Cambio de aceite"
+        maintenance_category_name:
+          type: string
+          example: "Motor"
+      required:
+        - vehicleId
+        - maintenanceId
+
+    AssignedMaintenanceInput:
+      type: object
+      properties:
+        vehicleId:
+          type: string
+          format: uuid
+        maintenanceId:
+          type: string
+          format: uuid
+        kilometersFrequency:
+          type: integer
+          minimum: 0
+        daysFrequency:
+          type: integer
+          minimum: 0
+      required:
+        - vehicleId
+        - maintenanceId
+
+    AssignedMaintenanceResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/AssignedMaintenance"
+
+    AssignedMaintenanceListResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/AssignedMaintenance"
+
+    # MAINTENANCE RECORD SCHEMAS
+    MaintenanceRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "c50e8400-e29b-41d4-a716-446655440007"
+        assignedMaintenanceId:
+          type: string
+          format: uuid
+          example: "b50e8400-e29b-41d4-a716-446655440006"
+        userId:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        date:
+          type: string
+          format: date-time
+          example: "2025-01-10T14:30:00Z"
+        kilometers:
+          type: integer
+          minimum: 0
+          example: 75000
+        notes:
+          type: string
+          example: "Mantenimiento realizado según especificaciones del fabricante"
+      required:
+        - assignedMaintenanceId
+        - userId
+        - date
+        - kilometers
+
+    MaintenanceRecordInput:
+      type: object
+      properties:
+        assignedMaintenanceId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date-time
+        kilometers:
+          type: integer
+          minimum: 0
+        notes:
+          type: string
+      required:
+        - assignedMaintenanceId
+        - userId
+        - date
+        - kilometers
+
+    MaintenanceRecordResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/MaintenanceRecord"
+
+    MaintenanceRecordListResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/MaintenanceRecord"
 
   responses:
     # Common error responses using RFC 7807

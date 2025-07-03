@@ -90,8 +90,12 @@ app.use(globalErrorHandler);
 
 // Start server
 app.listen(APP_PORT, () => {
-  console.log(`🚗 Vehiculos API Server running on http://localhost:${APP_PORT}`);
-  console.log(`� API Documentation: http://localhost:${APP_PORT}/docs`);
-  console.log(`�📊 Health check available at http://localhost:${APP_PORT}/health`);
-  console.log(`🐛 Environment: ${process.env.NODE_ENV || 'development'}`);
+  if (process.env.NODE_ENV !== 'development') {
+    console.log(`🚗 Vehiculos API Server running on http://localhost:${APP_PORT}`);
+    console.log(`📖 API Documentation: http://localhost:${APP_PORT}/docs`);
+    console.log(`📊 Health check available at http://localhost:${APP_PORT}/health`);
+    console.log(`🐛 Environment: ${process.env.NODE_ENV || 'development'}`);
+  } else {
+    console.log(`✅ Server ready → http://localhost:${APP_PORT} | Docs: /docs`);
+  }
 });

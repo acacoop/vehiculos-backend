@@ -7,10 +7,10 @@ import { licensePlateRegex } from "../schemas/validations";
 
 const router = Router();
 
-// Middleware to validate license plate
-const validateLicensePlate = (req: Request, res: Response, next: NextFunction) => {
-  const { licensePlate } = req.params;
-  if (!licensePlateRegex.test(licensePlate)) {
+// Middleware to validate license plate in query parameters
+const validateLicensePlateQuery = (req: Request, res: Response, next: NextFunction) => {
+  const licensePlate = req.query['license-plate'] as string;
+  if (licensePlate && !licensePlateRegex.test(licensePlate)) {
     throw new AppError(
       'The provided license plate format is invalid. Expected format: ABC123 or AB123CD',
       400,
@@ -21,14 +21,16 @@ const validateLicensePlate = (req: Request, res: Response, next: NextFunction) =
   next();
 };
 
-// GET /vehicles - Get all vehicles with pagination
-router.get("/", vehiclesController.getAll);
+// GET /vehicles - Get all vehicles with pagination and search
+// Supports query parameters: page, limit, license-plate, brand, model, year
+// Examples: 
+// - /vehicles?license-plate=AAA-123 
+// - /vehicles?brand=Toyota&model=Corolla
+// - /vehicles?year=2020&page=1&limit=5
+router.get("/", validateLicensePlateQuery, vehiclesController.getAll);
 
 // GET /vehicles/:id - Get vehicle by ID
 router.get("/:id", validateId, vehiclesController.getById);
-
-// GET /vehicles/license-plate/:licensePlate - Get vehicle by license plate
-router.get("/license-plate/:licensePlate", validateLicensePlate, vehiclesController.getVehicleByLicensePlate);
 
 // POST /vehicles - Create new vehicle
 router.post("/", validateSchema(VehicleSchema), vehiclesController.create);

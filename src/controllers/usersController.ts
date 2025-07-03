@@ -1,4 +1,3 @@
-import { Request, Response } from 'express';
 import { BaseController } from './baseController';
 import { User } from '../interfaces/user';
 import { 
@@ -6,18 +5,15 @@ import {
   getUserById, 
   addUser, 
   updateUser, 
-  deleteUser,
-  getUserByEmail,
-  getUserByDni 
+  deleteUser
 } from '../services/usersService';
-import { asyncHandler, AppError } from '../middleware/errorHandler';
 
 export class UsersController extends BaseController {
   constructor() {
     super('User');
   }
   // Implement abstract methods from BaseController
-  protected async getAllService(options: { limit: number; offset: number }) {
+  protected async getAllService(options: { limit: number; offset: number; searchParams?: Record<string, string> }) {
     return await getAllUsers(options);
   }
 
@@ -41,39 +37,6 @@ export class UsersController extends BaseController {
   protected async deleteService(id: string) {
     return await deleteUser(id);
   }
-
-  // Custom methods specific to users
-  public getUserByEmail = asyncHandler(async (req: Request, res: Response) => {
-    const { email } = req.params;
-    const user = await getUserByEmail(email);
-    
-    if (!user) {
-      throw new AppError(
-        `User with email ${email} was not found`,
-        404,
-        'https://example.com/problems/user-not-found',
-        'User Not Found'
-      );
-    }
-    
-    this.sendResponse(res, user);
-  });
-
-  public getUserByDni = asyncHandler(async (req: Request, res: Response) => {
-    const { dni } = req.params;
-    const user = await getUserByDni(dni);
-    
-    if (!user) {
-      throw new AppError(
-        `User with DNI ${dni} was not found`,
-        404,
-        'https://example.com/problems/user-not-found',
-        'User Not Found'
-      );
-    }
-    
-    this.sendResponse(res, user);
-  });
 }
 
 // Export singleton instance
