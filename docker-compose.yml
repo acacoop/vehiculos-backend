@@ -10,7 +10,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5433:5432"  # Expose PostgreSQL on port 5433 to avoid conflicts
+      - "5433:5432" # Expose PostgreSQL on port 5433 to avoid conflicts
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
