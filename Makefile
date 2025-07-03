@@ -28,7 +28,7 @@ help: ## Show available commands
 	@echo "URLs: http://localhost:3000 • http://localhost:3000/docs"
 
 up: ## Start application and database
-	@docker compose up --build -d >/dev/null 2>&1 && echo "✅ Services started. Try: make sample-data"
+	@docker compose up --build -d  && echo "✅ Services started. Try: make sample-data"
 
 down: ## Stop application
 	@docker compose down >/dev/null 2>&1 && echo "✅ Services stopped"
@@ -36,7 +36,7 @@ down: ## Stop application
 sample-data: ## Load test data (15 users, 15 vehicles)
 	@read -p "Load sample data? (y/N): " confirm; \
 	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
-		docker compose exec db psql -U postgres -d vehicles_db -f /docker-entrypoint-initdb.d/sample_data.sql; \
+		docker compose exec -T db psql -U postgres -d vehicles_db < ./db/sample_data.sql; \
 		echo "✅ Sample data loaded"; \
 	else \
 		echo "❌ Cancelled"; \
