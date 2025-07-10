@@ -69,8 +69,8 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
 // CORS configuration
 export const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://yourdomain.com'] // Configure your actual domains
-    : ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:8081'],
+    ? ['https://yourdomain.com'] // Configure your actual domains in production
+    : true, // Allow all origins in development
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
