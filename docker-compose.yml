@@ -39,6 +39,8 @@ services:
       DB_PASSWORD: postgres
       DB_NAME: vehicles_db
       NODE_ENV: production
+      RATE_LIMIT_WINDOW_MS: 60000 # 1 minute
+      RATE_LIMIT_MAX: 1000 # 1000 requests per window
     ports:
       - "3000:3000"
     depends_on:

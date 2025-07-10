@@ -2,11 +2,12 @@ import { Request, Response, NextFunction } from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { AppError } from './errorHandler';
+import { RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX } from '../config/env.config';
 
 // Rate limiting using express-rate-limit
 export const rateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: RATE_LIMIT_WINDOW_MS, // Configurable window (default: 15 minutes)
+  max: RATE_LIMIT_MAX, // Configurable max requests per window (default: 1000)
   message: {
     type: 'https://example.com/problems/rate-limit-exceeded',
     title: 'Too Many Requests',
@@ -15,7 +16,6 @@ export const rateLimiter = rateLimit({
   },
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   handler: (_req: Request, _res: Response) => {
     throw new AppError(
       'Rate limit exceeded. Please try again later.',
