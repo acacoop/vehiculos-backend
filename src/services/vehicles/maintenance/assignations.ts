@@ -3,10 +3,10 @@ import { AssignedMaintenance } from "../../../interfaces/maintenance";
 
 const BASE_SELECT = `SELECT 
     am.id,
-    am.vehicle_id as vehicleId,
-    am.maintenance_id as maintenanceId,
-    am.kilometers_frequency as kilometersFrequency,
-    am.days_frequency as daysFrequency,
+    am.vehicle_id as "vehicleId",
+    am.maintenance_id as "maintenanceId",
+    am.kilometers_frequency as "kilometersFrequency",
+    am.days_frequency as "daysFrequency",
     m.name as maintenance_name,
     mc.name as maintenance_category_name
   FROM 
@@ -41,7 +41,7 @@ export const assignMaintenance = async (
     assignedMaintenance;
   
   const query = `INSERT INTO assigned_maintenances (vehicle_id, maintenance_id, kilometers_frequency, days_frequency) 
-                 VALUES ($1, $2, $3, $4) RETURNING *`;
+                 VALUES ($1, $2, $3, $4) RETURNING id, vehicle_id as "vehicleId", maintenance_id as "maintenanceId", kilometers_frequency as "kilometersFrequency", days_frequency as "daysFrequency"`;
   const params = [vehicleId, maintenanceId, kilometersFrequency, daysFrequency];
   
   return oneOrNone<AssignedMaintenance>(query, params);

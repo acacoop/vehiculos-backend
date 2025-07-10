@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // Define the schema for the user object
 export const UserSchema = z.object({
-  id: z.number().default(0),
+  id: z.string().uuid().optional(), // UUID, optional for creation
   firstName: z.string(),
   lastName: z.string(),
   email: z.string().email(),

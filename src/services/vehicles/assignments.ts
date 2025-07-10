@@ -6,7 +6,7 @@ import { BASE_SELECT as USERS_BASE_SELECT } from "../usersService";
 import { User } from "../../interfaces/user";
 
 export const BASE_SELECT =
-  "SELECT id, vehicle_id as vehicleId, user_id as userId FROM assignments";
+  'SELECT id, vehicle_id as "vehicleId", user_id as "userId" FROM assignments';
 
 export const getAllAssignments = async (): Promise<Assignment[]> => {
   const sql = `${BASE_SELECT}`;
@@ -63,7 +63,7 @@ export const addAssignment = async (
   userId: number,
   vehicleId: number,
 ): Promise<Assignment | null> => {
-  const sql = `INSERT INTO assignments (user_id, vehicle_id) VALUES ($1, $2) RETURNING *`;
+  const sql = `INSERT INTO assignments (user_id, vehicle_id) VALUES ($1, $2) RETURNING id, user_id as "userId", vehicle_id as "vehicleId"`;
   const params = [userId, vehicleId];
   return oneOrNone<Assignment>(sql, params);
 };

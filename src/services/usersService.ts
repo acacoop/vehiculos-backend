@@ -2,7 +2,7 @@ import { oneOrNone, some } from "../db";
 import { User } from "../interfaces/user";
 
 export const BASE_SELECT =
-  "SELECT u.id, u.first_name AS firstName, u.last_name AS lastName, u.dni, u.email FROM users u";
+  'SELECT u.id, u.first_name AS "firstName", u.last_name AS "lastName", u.dni, u.email FROM users u';
 
 export const getAllUsers = async (options?: { 
   limit?: number; 
@@ -65,7 +65,7 @@ export const getUserById = async (id: string): Promise<User | null> => {
 export const addUser = async (user: User): Promise<User | null> => {
   const { firstName, lastName, dni, email } = user;
 
-  const sql = `INSERT INTO users (first_name, last_name, dni, email) VALUES ($1, $2, $3, $4) RETURNING id, first_name AS firstName, last_name AS lastName, dni, email`;
+  const sql = `INSERT INTO users (first_name, last_name, dni, email) VALUES ($1, $2, $3, $4) RETURNING id, first_name AS "firstName", last_name AS "lastName", dni, email`;
   const params = [firstName, lastName, dni, email];
   return await oneOrNone<User>(sql, params);
 };
@@ -97,7 +97,7 @@ export const updateUser = async (id: string, user: Partial<User>): Promise<User 
   }
 
   params.push(id);
-  const sql = `UPDATE users SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING id, first_name AS firstName, last_name AS lastName, dni, email`;
+  const sql = `UPDATE users SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING id, first_name AS "firstName", last_name AS "lastName", dni, email`;
   
   return await oneOrNone<User>(sql, params);
 };

@@ -2,7 +2,7 @@ import { oneOrNone, some } from "../../db";
 import { Vehicle } from "../../interfaces/vehicle";
 
 export const BASE_SELECT =
-  "SELECT v.id, v.license_plate as licensePlate, v.brand, v.model, v.year, v.img_url as imgUrl FROM vehicles v";
+  'SELECT v.id, v.license_plate as "licensePlate", v.brand, v.model, v.year, v.img_url as "imgUrl" FROM vehicles v';
 
 export const getAllVehicles = async (options?: { 
   limit?: number; 
@@ -63,7 +63,7 @@ export const getVehicleById = async (id: string): Promise<Vehicle | null> => {
 
 export const addVehicle = async (vehicle: Vehicle): Promise<Vehicle | null> => {
   const { licensePlate, brand, model, year, imgUrl } = vehicle;
-  const sql = `INSERT INTO vehicles (license_plate, brand, model, year, img_url) VALUES ($1, $2, $3, $4, $5) RETURNING id, license_plate as licensePlate, brand, model, year, img_url as imgUrl`;
+  const sql = `INSERT INTO vehicles (license_plate, brand, model, year, img_url) VALUES ($1, $2, $3, $4, $5) RETURNING id, license_plate as "licensePlate", brand, model, year, img_url as "imgUrl"`;
   const params = [licensePlate, brand, model, year, imgUrl];
   return await oneOrNone<Vehicle>(sql, params);
 };
@@ -99,7 +99,7 @@ export const updateVehicle = async (id: string, vehicle: Partial<Vehicle>): Prom
   }
 
   params.push(id);
-  const sql = `UPDATE vehicles SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING id, license_plate as licensePlate, brand, model, year, img_url as imgUrl`;
+  const sql = `UPDATE vehicles SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING id, license_plate as "licensePlate", brand, model, year, img_url as "imgUrl"`;
   
   return await oneOrNone<Vehicle>(sql, params);
 };
