@@ -4,6 +4,7 @@ import { BASE_SELECT as VEHICLES_BASE_SELECT } from "./vehiclesService";
 import { Vehicle } from "../../interfaces/vehicle";
 import { BASE_SELECT as USERS_BASE_SELECT } from "../usersService";
 import { User } from "../../interfaces/user";
+import { validateUserExists, validateVehicleExists } from "../../utils/validators";
 
 export const BASE_SELECT =
   'SELECT id, vehicle_id as "vehicleId", user_id as "userId", start_date as "startDate", end_date as "endDate" FROM assignments';
@@ -164,6 +165,11 @@ export const addAssignment = async (
   assignment: Omit<Assignment, 'id'>
 ): Promise<Assignment | null> => {
   const { userId, vehicleId, startDate, endDate } = assignment;
+  
+  // Validate that user and vehicle exist
+  await validateUserExists(userId);
+  await validateVehicleExists(vehicleId);
+  
   const sql = `INSERT INTO assignments (user_id, vehicle_id, start_date, end_date) VALUES ($1, $2, $3, $4) RETURNING id, user_id as "userId", vehicle_id as "vehicleId", start_date as "startDate", end_date as "endDate"`;
   const params = [userId, vehicleId, startDate || new Date().toISOString().split('T')[0], endDate || null];
   return oneOrNone<Assignment>(sql, params);

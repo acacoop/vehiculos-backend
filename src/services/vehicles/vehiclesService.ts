@@ -1,5 +1,6 @@
 import { oneOrNone, some } from "../../db";
 import { Vehicle } from "../../interfaces/vehicle";
+import { getCurrentResponsibleForVehicle } from "../vehicleResponsiblesService";
 
 export const BASE_SELECT =
   'SELECT v.id, v.license_plate as "licensePlate", v.brand, v.model, v.year, v.img_url as "imgUrl" FROM vehicles v';
@@ -58,7 +59,19 @@ export const getAllVehicles = async (options?: {
 
 export const getVehicleById = async (id: string): Promise<Vehicle | null> => {
   const sql = `${BASE_SELECT} WHERE id = $1`;
-  return await oneOrNone<Vehicle>(sql, [id]);
+  const vehicle = await oneOrNone<Vehicle>(sql, [id]);
+  
+  if (!vehicle) {
+    return null;
+  }
+
+  // Add current responsible to the vehicle
+  const currentResponsible = await getCurrentResponsibleForVehicle(id);
+  
+  return {
+    ...vehicle,
+    currentResponsible
+  };
 };
 
 export const addVehicle = async (vehicle: Vehicle): Promise<Vehicle | null> => {

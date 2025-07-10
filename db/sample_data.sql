@@ -1317,6 +1317,315 @@ VALUES
     );
 
 -- =====================================================
+-- INSERT VEHICLE RESPONSIBLES
+-- =====================================================
+-- Assign responsibles to vehicles with different periods
+
+INSERT INTO
+    vehicle_responsibles (
+        vehicle_id,
+        user_id,
+        start_date,
+        end_date
+    )
+VALUES
+    -- Management vehicles - long-term responsibles
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'ABC123'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'carlos.rodriguez@acacoop.com'
+        ),
+        '2024-01-01',
+        NULL -- Currently responsible
+    ),
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'MNO345'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'maria.gonzalez@acacoop.com'
+        ),
+        '2024-02-01',
+        NULL -- Currently responsible
+    ),
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'QRS345'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'ana.martinez@acacoop.com'
+        ),
+        '2024-01-15',
+        NULL -- Currently responsible
+    ),
+    -- Operations team - medium-term responsibles
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'DEF456'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'juan.perez@acacoop.com'
+        ),
+        '2024-03-01',
+        NULL -- Currently responsible
+    ),
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'STU901'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'sofia.hernandez@acacoop.com'
+        ),
+        '2024-04-01',
+        NULL -- Currently responsible
+    ),
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'VWX234'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'diego.garcia@acacoop.com'
+        ),
+        '2024-05-01',
+        NULL -- Currently responsible
+    ),
+    -- Field staff - project-based responsibles
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'YZA567'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'andres.morales@acacoop.com'
+        ),
+        '2024-06-01',
+        NULL -- Currently responsible
+    ),
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'EFG123'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'miguel.vargas@acacoop.com'
+        ),
+        '2024-07-01',
+        NULL -- Currently responsible
+    ),
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'HIJ456'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'isabella.ruiz@acacoop.com'
+        ),
+        '2024-08-01',
+        NULL -- Currently responsible
+    ),
+    -- Maintenance team - rotating responsibles
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'KLM789'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'roberto.jimenez@acacoop.com'
+        ),
+        '2024-09-01',
+        NULL -- Currently responsible
+    ),
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'NOP012'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'lucia.castro@acacoop.com'
+        ),
+        '2024-10-01',
+        NULL -- Currently responsible
+    ),
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'TUV678'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'fernando.romero@acacoop.com'
+        ),
+        '2024-11-01',
+        NULL -- Currently responsible
+    ),
+    -- Some historical responsibles (ended periods)
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'GHI789'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'luis.lopez@acacoop.com'
+        ),
+        '2024-01-01',
+        '2024-12-31' -- Ended responsibility
+    ),
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'GHI789'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'valentina.silva@acacoop.com'
+        ),
+        '2025-01-01',
+        NULL -- Currently responsible
+    ),
+    -- Vehicles with responsibility changes
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'JKL012'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'camila.torres@acacoop.com'
+        ),
+        '2024-01-01',
+        '2024-06-30' -- Ended responsibility
+    ),
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'JKL012'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'valentina.silva@acacoop.com'
+        ),
+        '2024-07-01',
+        NULL -- Currently responsible
+    ),
+    -- Some vehicles without current responsibles for testing
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'PQR678'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'andres.morales@acacoop.com'
+        ),
+        '2024-01-01',
+        '2024-12-31' -- Ended responsibility
+    ),
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'BCD890'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'miguel.vargas@acacoop.com'
+        ),
+        '2024-01-01',
+        '2024-11-30' -- Ended responsibility
+    );
+
+-- =====================================================
 -- DATA VERIFICATION QUERIES
 -- =====================================================
 -- Uncomment the following to verify data was inserted correctly
@@ -1335,7 +1644,9 @@ VALUES
 -- UNION ALL
 -- SELECT 'Maintenance Records', count(*) FROM maintenance_records
 -- UNION ALL
--- SELECT 'Reservations', count(*) FROM reservations;
+-- SELECT 'Reservations', count(*) FROM reservations
+-- UNION ALL
+-- SELECT 'Vehicle Responsibles', count(*) FROM vehicle_responsibles;
 
 -- Sample queries to test the data:
 -- SELECT u.first_name, u.last_name, v.brand, v.model, v.license_plate

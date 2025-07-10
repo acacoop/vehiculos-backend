@@ -758,6 +758,236 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  # VEHICLE RESPONSIBLES
+  /vehicle-responsibles:
+    get:
+      summary: Get all vehicle responsibles with optional filters
+      description: |
+        Get all vehicle responsibility assignments with optional filtering by user, vehicle, or active status.
+        
+        **Filter Parameters:**
+        - `userId`: Filter by specific user ID
+        - `vehicleId`: Filter by specific vehicle ID
+        - `active`: Filter by active status (true for current, false for ended)
+        - `date`: Filter by specific date (YYYY-MM-DD format)
+        - Pagination is supported with `page` and `limit` parameters
+        
+        **Examples:**
+        - `/vehicle-responsibles?userId=550e8400-e29b-41d4-a716-446655440000`
+        - `/vehicle-responsibles?vehicleId=650e8400-e29b-41d4-a716-446655440001`
+        - `/vehicle-responsibles?active=true`
+        - `/vehicle-responsibles?date=2025-01-15`
+      tags: [Vehicle Responsibles]
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number for pagination
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          description: Number of items per page
+        - name: userId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by user ID
+        - name: vehicleId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by vehicle ID
+        - name: active
+          in: query
+          schema:
+            type: boolean
+          description: Filter by active status (true for current, false for ended)
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter by specific date (YYYY-MM-DD format)
+      responses:
+        "200":
+          description: List of vehicle responsibles retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleResponsibleListResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      summary: Create a new vehicle responsible assignment
+      description: |
+        Create a new vehicle responsible assignment. This will automatically end any current 
+        active responsibility for the same vehicle by setting the end date to the day before 
+        the new assignment starts.
+      tags: [Vehicle Responsibles]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VehicleResponsibleInput"
+      responses:
+        "201":
+          description: Vehicle responsible created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleResponsibleResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          description: Conflicting responsibility periods
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /vehicle-responsibles/{id}:
+    get:
+      summary: Get vehicle responsible by ID
+      tags: [Vehicle Responsibles]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Vehicle responsible found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleResponsibleResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      summary: Update vehicle responsible (full replacement)
+      tags: [Vehicle Responsibles]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VehicleResponsibleInput"
+      responses:
+        "200":
+          description: Vehicle responsible updated successfully
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Conflicting responsibility periods
+    patch:
+      summary: Partially update vehicle responsible
+      tags: [Vehicle Responsibles]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VehicleResponsibleInput"
+      responses:
+        "200":
+          description: Vehicle responsible partially updated successfully
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Conflicting responsibility periods
+    delete:
+      summary: Delete vehicle responsible
+      tags: [Vehicle Responsibles]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Vehicle responsible deleted successfully
+        "404":
+          description: Vehicle responsible not found
+
+  /vehicle-responsibles/vehicle/{vehicleId}/current:
+    get:
+      summary: Get current responsible for a vehicle
+      description: Get the currently active responsible for a specific vehicle
+      tags: [Vehicle Responsibles]
+      parameters:
+        - name: vehicleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Current responsible found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleResponsibleResponse"
+        "404":
+          description: No current responsible found for this vehicle
+
+  /vehicle-responsibles/user/{userId}/current:
+    get:
+      summary: Get current vehicles under a user's responsibility
+      description: Get all vehicles currently under the responsibility of a specific user
+      tags: [Vehicle Responsibles]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Current vehicles found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/VehicleResponsibleWithDetails"
+
+  # ...existing code...
 components:
   schemas:
     # RFC 7807 Problem Details for HTTP APIs
@@ -906,6 +1136,11 @@ components:
           type: string
           format: uri
           example: "https://example.com/vehicle.jpg"
+        currentResponsible:
+          allOf:
+            - $ref: "#/components/schemas/VehicleResponsibleWithDetails"
+            - nullable: true
+          description: "Current responsible for the vehicle (only included in detailed views)"
       required:
         - id
         - licensePlate
@@ -941,6 +1176,115 @@ components:
         - model
         - year
         - imgUrl
+
+    # VEHICLE RESPONSIBLE SCHEMAS
+    VehicleResponsible:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "d50e8400-e29b-41d4-a716-446655440008"
+        vehicleId:
+          type: string
+          format: uuid
+          example: "650e8400-e29b-41d4-a716-446655440001"
+        userId:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        startDate:
+          type: string
+          format: date
+          example: "2025-01-15"
+          description: "Start date of the responsibility period"
+        endDate:
+          type: string
+          format: date
+          nullable: true
+          example: "2025-12-31"
+          description: "End date of the responsibility period (null means currently active)"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-01-15T09:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-01-15T09:00:00Z"
+      required:
+        - id
+        - vehicleId
+        - userId
+        - startDate
+
+    VehicleResponsibleWithDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "d50e8400-e29b-41d4-a716-446655440008"
+        startDate:
+          type: string
+          format: date
+          example: "2025-01-15"
+          description: "Start date of the responsibility period"
+        endDate:
+          type: string
+          format: date
+          nullable: true
+          example: "2025-12-31"
+          description: "End date of the responsibility period (null means currently active)"
+        user:
+          $ref: "#/components/schemas/User"
+        vehicle:
+          $ref: "#/components/schemas/Vehicle"
+      required:
+        - id
+        - startDate
+        - user
+        - vehicle
+
+    VehicleResponsibleInput:
+      type: object
+      properties:
+        vehicleId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        startDate:
+          type: string
+          format: date
+          description: "Start date of the responsibility period (defaults to today if not provided)"
+        endDate:
+          type: string
+          format: date
+          nullable: true
+          description: "End date of the responsibility period (null means indefinite)"
+      required:
+        - vehicleId
+        - userId
+
+    VehicleResponsibleResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/VehicleResponsibleWithDetails"
+
+    VehicleResponsibleListResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/VehicleResponsibleWithDetails"
 
     # Response schemas
     ApiResponse:

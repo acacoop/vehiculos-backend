@@ -63,7 +63,6 @@ export const globalErrorHandler = (
   err: Error,
   req: Request,
   res: Response,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _next: NextFunction
 ): void => {
   // Set content type for RFC 7807
@@ -95,31 +94,6 @@ export const globalErrorHandler = (
           code: e.code,
         })),
       }
-    );
-    res.status(400).json(problem);
-    return;
-  }
-
-  // Database constraint errors
-  if (err.message.includes('duplicate key')) {
-    const problem = createProblemDetails(
-      409,
-      'Resource Already Exists',
-      'A resource with the same identifier already exists',
-      'https://example.com/problems/duplicate-resource',
-      req.originalUrl
-    );
-    res.status(409).json(problem);
-    return;
-  }
-
-  if (err.message.includes('foreign key constraint')) {
-    const problem = createProblemDetails(
-      400,
-      'Referenced Resource Not Found',
-      'The referenced resource does not exist',
-      'https://example.com/problems/foreign-key-constraint',
-      req.originalUrl
     );
     res.status(400).json(problem);
     return;

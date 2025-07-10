@@ -33,7 +33,7 @@ export const some = async <T>(
     return rows;
   } catch (error) {
     console.error("❌ Database query error in 'some':", error);
-    throw error; // Re-throw to see the actual error
+    throw error;
   }
 };
 
@@ -46,6 +46,6 @@ export const oneOrNone = async <T>(
     return rows[0];
   } catch (error) {
     console.error("❌ Database query error in 'oneOrNone':", error);
-    throw error; // Re-throw to see the actual error
+    throw error;
   }
 };

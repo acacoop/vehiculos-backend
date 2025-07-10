@@ -1,3 +1,5 @@
+import { VehicleResponsibleWithDetails } from './vehicleResponsible';
+
 export interface Vehicle {
   id?: string; // UUID, optional for creation
   licensePlate: string;
@@ -5,4 +7,5 @@ export interface Vehicle {
   model: string;
   year: number;
   imgUrl: string;
+  currentResponsible?: VehicleResponsibleWithDetails | null; // Optional, only included in detailed views
 }

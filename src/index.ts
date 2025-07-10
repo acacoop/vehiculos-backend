@@ -11,6 +11,7 @@ import usersRoutes from "./routes/users";
 import vehiclesRoutes from "./routes/vehicles";
 import assignmentsRoutes from "./routes/vehicles/assignments";
 import reservationsRoutes from "./routes/reservations";
+import vehicleResponsiblesRoutes from "./routes/vehicleResponsibles";
 import maintenanceCategoriesRoutes from "./routes/vehicles/maintenance/categories";
 import maintenanceRoutes from "./routes/vehicles/maintenance/posibles";
 import assignedMaintenanceRoutes from "./routes/vehicles/maintenance/assignments";
@@ -56,6 +57,7 @@ app.get("/", (req: Request, res: Response) => {
       vehicles: '/vehicles',
       assignments: '/assignments',
       reservations: '/reservations',
+      vehicleResponsibles: '/vehicle-responsibles',
       maintenance: {
         categories: '/maintenance/categories',
         posibles: '/maintenance/posibles',
@@ -71,6 +73,7 @@ app.use("/users", usersRoutes);
 app.use("/vehicles", vehiclesRoutes);
 app.use("/assignments", assignmentsRoutes);
 app.use("/reservations", reservationsRoutes);
+app.use("/vehicle-responsibles", vehicleResponsiblesRoutes);
 app.use("/maintenance/categories", maintenanceCategoriesRoutes);
 app.use("/maintenance/posibles", maintenanceRoutes);
 app.use("/maintenance/assignments", assignedMaintenanceRoutes);
