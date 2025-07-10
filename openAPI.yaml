@@ -209,6 +209,50 @@ paths:
         "404":
           description: User not found
 
+  /users/{id}/activate:
+    post:
+      summary: Activate user
+      description: Activate a deactivated user
+      tags: [Users]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: User activated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "404":
+          description: User not found
+
+  /users/{id}/deactivate:
+    post:
+      summary: Deactivate user
+      description: Deactivate an active user (soft delete)
+      tags: [Users]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: User deactivated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "404":
+          description: User not found
+
   # VEHICLES
   /vehicles:
     get:
@@ -372,8 +416,48 @@ paths:
   # RESERVATIONS
   /reservations:
     get:
-      summary: Get all reservations
+      summary: Get all reservations with optional filters
+      description: |
+        Get all reservations with optional filtering by user or vehicle.
+        
+        **Filter Parameters:**
+        - `userId`: Filter reservations by specific user ID
+        - `vehicleId`: Filter reservations by specific vehicle ID
+        - Pagination is supported with `page` and `limit` parameters
+        
+        **Examples:**
+        - `/reservations?userId=550e8400-e29b-41d4-a716-446655440000`
+        - `/reservations?vehicleId=650e8400-e29b-41d4-a716-446655440001`
+        - `/reservations?page=1&limit=5`
       tags: [Reservations]
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number for pagination
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          description: Number of items per page
+        - name: userId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter reservations by user ID
+        - name: vehicleId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter reservations by vehicle ID
       responses:
         "200":
           description: List of reservations retrieved successfully
@@ -404,103 +488,51 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-  /reservations/user/{id}:
-    get:
-      summary: Get reservations for a specific user
-      tags: [Reservations]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "200":
-          description: User reservations retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ReservationListResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
-  /reservations/vehicle/{id}:
-    get:
-      summary: Get reservations for a specific vehicle
-      tags: [Reservations]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "200":
-          description: Vehicle reservations retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ReservationListResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
-  /reservations/user/{id}/assigned:
-    get:
-      summary: Get reservations for all vehicles assigned to a specific user
-      tags: [Reservations]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "200":
-          description: Assigned vehicle reservations retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ReservationListResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
-  /reservations/user/{id}/today:
-    get:
-      summary: Get today's reservations for a specific user
-      tags: [Reservations]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "200":
-          description: Today's user reservations retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ReservationListResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
   # ASSIGNMENTS
   /assignments:
     get:
-      summary: Get all vehicle assignments
+      summary: Get all vehicle assignments with optional filters
+      description: |
+        Get all vehicle assignments with optional filtering by user or vehicle.
+        
+        **Filter Parameters:**
+        - `userId`: Filter assignments by specific user ID
+        - `vehicleId`: Filter assignments by specific vehicle ID
+        - Pagination is supported with `page` and `limit` parameters
+        
+        **Examples:**
+        - `/assignments?userId=550e8400-e29b-41d4-a716-446655440000`
+        - `/assignments?vehicleId=650e8400-e29b-41d4-a716-446655440001`
+        - `/assignments?page=1&limit=5`
       tags: [Assignments]
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number for pagination
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          description: Number of items per page
+        - name: userId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter assignments by user ID
+        - name: vehicleId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter assignments by vehicle ID
       responses:
         "200":
           description: List of assignments retrieved successfully
@@ -526,50 +558,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AssignmentResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
-  /assignments/user/{id}:
-    get:
-      summary: Get vehicles assigned to a specific user
-      tags: [Assignments]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: User assignments retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AssignmentListResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
-  /assignments/vehicle/{id}:
-    get:
-      summary: Get users assigned to a specific vehicle
-      tags: [Assignments]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Vehicle assignments retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AssignmentListResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
         "500":
@@ -653,6 +641,58 @@ paths:
 
   # MAINTENANCE RECORDS
   /maintenance/records:
+    get:
+      summary: Get all maintenance records with optional filters
+      description: |
+        Get all maintenance records with optional filtering by user or vehicle.
+        
+        **Filter Parameters:**
+        - `userId`: Filter maintenance records by specific user ID
+        - `vehicleId`: Filter maintenance records by specific vehicle ID
+        - Pagination is supported with `page` and `limit` parameters
+        
+        **Examples:**
+        - `/maintenance/records?userId=550e8400-e29b-41d4-a716-446655440000`
+        - `/maintenance/records?vehicleId=650e8400-e29b-41d4-a716-446655440001`
+        - `/maintenance/records?page=1&limit=5`
+      tags: [Maintenance]
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number for pagination
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          description: Number of items per page
+        - name: userId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter maintenance records by user ID
+        - name: vehicleId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter maintenance records by vehicle ID
+      responses:
+        "200":
+          description: List of maintenance records retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceRecordListResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     post:
       summary: Add a new maintenance record
       tags: [Maintenance]
@@ -694,29 +734,6 @@ paths:
                 $ref: "#/components/schemas/MaintenanceRecordResponse"
         "404":
           $ref: "#/components/responses/NotFound"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
-  /maintenance/records/vehicle/{vehicleId}:
-    get:
-      summary: Get maintenance records for a specific vehicle
-      tags: [Maintenance]
-      parameters:
-        - name: vehicleId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "200":
-          description: Vehicle maintenance records retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MaintenanceRecordListResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
         "500":
@@ -800,12 +817,17 @@ components:
           type: string
           format: email
           example: "juan.perez@example.com"
+        active:
+          type: boolean
+          example: true
+          description: "Whether the user is active or deactivated"
       required:
         - id
         - firstName
         - lastName
         - dni
         - email
+        - active
 
     UserInput:
       type: object
@@ -825,6 +847,10 @@ components:
         email:
           type: string
           format: email
+        active:
+          type: boolean
+          default: true
+          description: "Whether the user is active or deactivated"
       required:
         - firstName
         - lastName
@@ -1067,10 +1093,22 @@ components:
           type: string
           format: uuid
           example: "550e8400-e29b-41d4-a716-446655440000"
+        startDate:
+          type: string
+          format: date
+          example: "2025-01-15"
+          description: "Start date of the assignment"
+        endDate:
+          type: string
+          format: date
+          nullable: true
+          example: "2025-12-31"
+          description: "End date of the assignment (null means indefinite)"
       required:
         - id
         - vehicleId
         - userId
+        - startDate
 
     AssignmentInput:
       type: object
@@ -1081,6 +1119,15 @@ components:
         vehicleId:
           type: string
           format: uuid
+        startDate:
+          type: string
+          format: date
+          description: "Start date of the assignment (defaults to today if not provided)"
+        endDate:
+          type: string
+          format: date
+          nullable: true
+          description: "End date of the assignment (null means indefinite)"
       required:
         - userId
         - vehicleId

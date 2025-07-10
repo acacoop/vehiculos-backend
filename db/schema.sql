@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS users (
     first_name text not null,
     last_name text not null,
     dni integer not null unique,
-    email text not null unique
+    email text not null unique,
+    active boolean not null default true
 );
 
 -- Create the assignments table
@@ -25,6 +26,8 @@ CREATE TABLE IF NOT EXISTS assignments (
     id uuid primary key default uuid_generate_v4 (),
     user_id uuid not null references users (id),
     vehicle_id uuid not null references vehicles (id),
+    start_date date not null default CURRENT_DATE,
+    end_date date,
     unique (user_id, vehicle_id)
 );
 

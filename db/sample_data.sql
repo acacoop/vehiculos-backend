@@ -30,102 +30,118 @@ INSERT INTO
         first_name,
         last_name,
         dni,
-        email
+        email,
+        active
     )
 VALUES
-    -- Management & Admin
+    -- Management & Admin (all active)
     (
         'Carlos',
         'Rodríguez',
         12345678,
-        'carlos.rodriguez@acacoop.com'
+        'carlos.rodriguez@acacoop.com',
+        true
     ),
     (
         'María',
         'González',
         23456789,
-        'maria.gonzalez@acacoop.com'
+        'maria.gonzalez@acacoop.com',
+        true
     ),
     (
         'Ana',
         'Martínez',
         34567890,
-        'ana.martinez@acacoop.com'
+        'ana.martinez@acacoop.com',
+        true
     ),
-    -- Operations Team
+    -- Operations Team (mostly active, one inactive for testing)
     (
         'Juan',
         'Pérez',
         45678901,
-        'juan.perez@acacoop.com'
+        'juan.perez@acacoop.com',
+        true
     ),
     (
         'Luis',
         'López',
         56789012,
-        'luis.lopez@acacoop.com'
+        'luis.lopez@acacoop.com',
+        false
     ),
     (
         'Sofia',
         'Hernández',
         67890123,
-        'sofia.hernandez@acacoop.com'
+        'sofia.hernandez@acacoop.com',
+        true
     ),
     (
         'Diego',
         'García',
         78901234,
-        'diego.garcia@acacoop.com'
+        'diego.garcia@acacoop.com',
+        true
     ),
     (
         'Valentina',
         'Silva',
         89012345,
-        'valentina.silva@acacoop.com'
+        'valentina.silva@acacoop.com',
+        true
     ),
-    -- Field Staff
+    -- Field Staff (mix of active and inactive)
     (
         'Andrés',
         'Morales',
         90123456,
-        'andres.morales@acacoop.com'
+        'andres.morales@acacoop.com',
+        true
     ),
     (
         'Camila',
         'Torres',
         12987654,
-        'camila.torres@acacoop.com'
+        'camila.torres@acacoop.com',
+        false
     ),
     (
         'Miguel',
         'Vargas',
         23876543,
-        'miguel.vargas@acacoop.com'
+        'miguel.vargas@acacoop.com',
+        true
     ),
     (
         'Isabella',
         'Ruiz',
         34765432,
-        'isabella.ruiz@acacoop.com'
+        'isabella.ruiz@acacoop.com',
+        true
     ),
-    -- Maintenance Team
+    -- Maintenance Team (all active)
     (
         'Roberto',
         'Jiménez',
         45654321,
-        'roberto.jimenez@acacoop.com'
+        'roberto.jimenez@acacoop.com',
+        true
     ),
     (
         'Lucía',
         'Castro',
         56543210,
-        'lucia.castro@acacoop.com'
+        'lucia.castro@acacoop.com',
+        true
     ),
     (
         'Fernando',
         'Romero',
         67432109,
-        'fernando.romero@acacoop.com'
+        'fernando.romero@acacoop.com',
+        true
     );
 
 -- =====================================================
@@ -536,9 +552,9 @@ VALUES
 -- =====================================================
 
 INSERT INTO
-    assignments (user_id, vehicle_id)
+    assignments (user_id, vehicle_id, start_date, end_date)
 VALUES
-    -- Management gets newer vehicles
+    -- Management gets newer vehicles (long-term assignments)
     (
         (
             SELECT id
@@ -551,7 +567,9 @@ VALUES
             FROM vehicles
             WHERE
                 license_plate = 'ABC123'
-        )
+        ),
+        '2024-01-01',
+        '2025-12-31'
     ),
     (
         (
@@ -565,7 +583,9 @@ VALUES
             FROM vehicles
             WHERE
                 license_plate = 'MNO345'
-        )
+        ),
+        '2024-02-01',
+        '2025-12-31'
     ),
     (
         (
@@ -579,9 +599,11 @@ VALUES
             FROM vehicles
             WHERE
                 license_plate = 'QRS345'
-        )
+        ),
+        '2024-01-15',
+        NULL
     ),
-    -- Operations team gets versatile vehicles
+    -- Operations team gets versatile vehicles (medium-term assignments)
     (
         (
             SELECT id
@@ -594,21 +616,9 @@ VALUES
             FROM vehicles
             WHERE
                 license_plate = 'DEF456'
-        )
-    ),
-    (
-        (
-            SELECT id
-            FROM users
-            WHERE
-                email = 'luis.lopez@acacoop.com'
         ),
-        (
-            SELECT id
-            FROM vehicles
-            WHERE
-                license_plate = 'PQR678'
-        )
+        '2024-03-01',
+        '2025-06-30'
     ),
     (
         (
@@ -622,7 +632,9 @@ VALUES
             FROM vehicles
             WHERE
                 license_plate = 'STU901'
-        )
+        ),
+        '2024-04-01',
+        '2025-08-31'
     ),
     (
         (
@@ -636,9 +648,11 @@ VALUES
             FROM vehicles
             WHERE
                 license_plate = 'VWX234'
-        )
+        ),
+        '2024-05-01',
+        '2025-05-31'
     ),
-    -- Field staff gets pickup trucks and vans
+    -- Field staff gets pickup trucks and vans (project-based assignments)
     (
         (
             SELECT id
@@ -651,21 +665,9 @@ VALUES
             FROM vehicles
             WHERE
                 license_plate = 'YZA567'
-        )
-    ),
-    (
-        (
-            SELECT id
-            FROM users
-            WHERE
-                email = 'camila.torres@acacoop.com'
         ),
-        (
-            SELECT id
-            FROM vehicles
-            WHERE
-                license_plate = 'BCD890'
-        )
+        '2024-06-01',
+        '2025-03-31'
     ),
     (
         (
@@ -679,7 +681,9 @@ VALUES
             FROM vehicles
             WHERE
                 license_plate = 'EFG123'
-        )
+        ),
+        '2024-07-01',
+        NULL
     ),
     (
         (
@@ -693,9 +697,11 @@ VALUES
             FROM vehicles
             WHERE
                 license_plate = 'HIJ456'
-        )
+        ),
+        '2024-08-01',
+        '2025-07-31'
     ),
-    -- Maintenance team gets compact vehicles for efficiency
+    -- Maintenance team gets compact vehicles for efficiency (short-term rotating assignments)
     (
         (
             SELECT id
@@ -708,7 +714,9 @@ VALUES
             FROM vehicles
             WHERE
                 license_plate = 'KLM789'
-        )
+        ),
+        '2024-09-01',
+        '2025-02-28'
     ),
     (
         (
@@ -722,7 +730,9 @@ VALUES
             FROM vehicles
             WHERE
                 license_plate = 'NOP012'
-        )
+        ),
+        '2024-10-01',
+        '2025-04-30'
     ),
     (
         (
@@ -736,7 +746,43 @@ VALUES
             FROM vehicles
             WHERE
                 license_plate = 'TUV678'
-        )
+        ),
+        '2024-11-01',
+        NULL
+    ),
+    -- Some temporary assignments for testing different scenarios
+    (
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'valentina.silva@acacoop.com'
+        ),
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'PQR678'
+        ),
+        '2025-01-01',
+        '2025-03-31'
+    ),
+    -- Past assignment (already ended)
+    (
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'luis.lopez@acacoop.com'
+        ),
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'GHI789'
+        ),
+        '2024-01-01',
+        '2024-12-31'
     );
 
 -- =====================================================

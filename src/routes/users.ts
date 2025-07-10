@@ -29,4 +29,10 @@ router.patch("/:id", validateId, validateSchema(UserSchema.partial()), usersCont
 // DELETE /users/:id - Delete user
 router.delete("/:id", validateId, usersController.delete);
 
+// POST /users/:id/activate - Activate user
+router.post("/:id/activate", usersController.activate);
+
+// POST /users/:id/deactivate - Deactivate user
+router.post("/:id/deactivate", usersController.deactivate);
+
 export default router;

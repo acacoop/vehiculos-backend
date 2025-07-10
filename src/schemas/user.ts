@@ -7,4 +7,5 @@ export const UserSchema = z.object({
   lastName: z.string(),
   email: z.string().email(),
   dni: z.number(),
+  active: z.boolean().default(true),
 });

@@ -2,7 +2,7 @@ import { oneOrNone, some } from "../db";
 import { User } from "../interfaces/user";
 
 export const BASE_SELECT =
-  'SELECT u.id, u.first_name AS "firstName", u.last_name AS "lastName", u.dni, u.email FROM users u';
+  'SELECT u.id, u.first_name AS "firstName", u.last_name AS "lastName", u.dni, u.email, u.active FROM users u';
 
 export const getAllUsers = async (options?: { 
   limit?: number; 
@@ -63,10 +63,10 @@ export const getUserById = async (id: string): Promise<User | null> => {
 };
 
 export const addUser = async (user: User): Promise<User | null> => {
-  const { firstName, lastName, dni, email } = user;
+  const { firstName, lastName, dni, email, active = true } = user;
 
-  const sql = `INSERT INTO users (first_name, last_name, dni, email) VALUES ($1, $2, $3, $4) RETURNING id, first_name AS "firstName", last_name AS "lastName", dni, email`;
-  const params = [firstName, lastName, dni, email];
+  const sql = `INSERT INTO users (first_name, last_name, dni, email, active) VALUES ($1, $2, $3, $4, $5) RETURNING id, first_name AS "firstName", last_name AS "lastName", dni, email, active`;
+  const params = [firstName, lastName, dni, email, active];
   return await oneOrNone<User>(sql, params);
 };
 
@@ -91,13 +91,17 @@ export const updateUser = async (id: string, user: Partial<User>): Promise<User 
     fields.push(`email = $${paramIndex++}`);
     params.push(user.email);
   }
+  if (user.active !== undefined) {
+    fields.push(`active = $${paramIndex++}`);
+    params.push(user.active);
+  }
 
   if (fields.length === 0) {
     return getUserById(id);
   }
 
   params.push(id);
-  const sql = `UPDATE users SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING id, first_name AS "firstName", last_name AS "lastName", dni, email`;
+  const sql = `UPDATE users SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING id, first_name AS "firstName", last_name AS "lastName", dni, email, active`;
   
   return await oneOrNone<User>(sql, params);
 };
@@ -106,4 +110,14 @@ export const deleteUser = async (id: string): Promise<boolean> => {
   const sql = `DELETE FROM users WHERE id = $1`;
   const result = await some(sql, [id]);
   return Array.isArray(result);
+};
+
+export const activateUser = async (id: string): Promise<User | null> => {
+  const sql = `UPDATE users SET active = true WHERE id = $1 RETURNING id, first_name AS "firstName", last_name AS "lastName", dni, email, active`;
+  return await oneOrNone<User>(sql, [id]);
+};
+
+export const deactivateUser = async (id: string): Promise<User | null> => {
+  const sql = `UPDATE users SET active = false WHERE id = $1 RETURNING id, first_name AS "firstName", last_name AS "lastName", dni, email, active`;
+  return await oneOrNone<User>(sql, [id]);
 };
