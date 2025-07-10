@@ -59,11 +59,13 @@ paths:
         - `dni`: Exact match by DNI
         - `first-name`: Partial match by first name (case-insensitive)
         - `last-name`: Partial match by last name (case-insensitive)
+        - `active`: Filter by active status (true/false)
 
         **Examples:**
         - `/users?email=user@example.com`
         - `/users?dni=12345678`
         - `/users?first-name=John&last-name=Doe`
+        - `/users?active=false`
         - `/users?first-name=Ana&page=1&limit=5`
       tags: [Users]
       parameters:
@@ -101,6 +103,11 @@ paths:
           description: Filter by last name (partial match, case-insensitive)
           schema:
             type: string
+        - name: active
+          in: query
+          description: Filter by active status (true for active users, false for inactive users)
+          schema:
+            type: boolean
       responses:
         "200":
           description: List of users
@@ -230,6 +237,12 @@ paths:
                 $ref: "#/components/schemas/UserResponse"
         "404":
           description: User not found
+        "409":
+          description: User is already active
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
 
   /users/{id}/deactivate:
     post:
@@ -252,6 +265,12 @@ paths:
                 $ref: "#/components/schemas/UserResponse"
         "404":
           description: User not found
+        "409":
+          description: User is already inactive
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
 
   # VEHICLES
   /vehicles:
@@ -419,12 +438,12 @@ paths:
       summary: Get all reservations with optional filters
       description: |
         Get all reservations with optional filtering by user or vehicle.
-        
+
         **Filter Parameters:**
         - `userId`: Filter reservations by specific user ID
         - `vehicleId`: Filter reservations by specific vehicle ID
         - Pagination is supported with `page` and `limit` parameters
-        
+
         **Examples:**
         - `/reservations?userId=550e8400-e29b-41d4-a716-446655440000`
         - `/reservations?vehicleId=650e8400-e29b-41d4-a716-446655440001`
@@ -494,12 +513,12 @@ paths:
       summary: Get all vehicle assignments with optional filters
       description: |
         Get all vehicle assignments with optional filtering by user or vehicle.
-        
+
         **Filter Parameters:**
         - `userId`: Filter assignments by specific user ID
         - `vehicleId`: Filter assignments by specific vehicle ID
         - Pagination is supported with `page` and `limit` parameters
-        
+
         **Examples:**
         - `/assignments?userId=550e8400-e29b-41d4-a716-446655440000`
         - `/assignments?vehicleId=650e8400-e29b-41d4-a716-446655440001`
@@ -645,12 +664,12 @@ paths:
       summary: Get all maintenance records with optional filters
       description: |
         Get all maintenance records with optional filtering by user or vehicle.
-        
+
         **Filter Parameters:**
         - `userId`: Filter maintenance records by specific user ID
         - `vehicleId`: Filter maintenance records by specific vehicle ID
         - Pagination is supported with `page` and `limit` parameters
-        
+
         **Examples:**
         - `/maintenance/records?userId=550e8400-e29b-41d4-a716-446655440000`
         - `/maintenance/records?vehicleId=650e8400-e29b-41d4-a716-446655440001`
@@ -1085,14 +1104,6 @@ components:
           type: string
           format: uuid
           example: "850e8400-e29b-41d4-a716-446655440003"
-        vehicleId:
-          type: string
-          format: uuid
-          example: "650e8400-e29b-41d4-a716-446655440001"
-        userId:
-          type: string
-          format: uuid
-          example: "550e8400-e29b-41d4-a716-446655440000"
         startDate:
           type: string
           format: date
@@ -1104,11 +1115,15 @@ components:
           nullable: true
           example: "2025-12-31"
           description: "End date of the assignment (null means indefinite)"
+        user:
+          $ref: "#/components/schemas/User"
+        vehicle:
+          $ref: "#/components/schemas/Vehicle"
       required:
         - id
-        - vehicleId
-        - userId
         - startDate
+        - user
+        - vehicle
 
     AssignmentInput:
       type: object

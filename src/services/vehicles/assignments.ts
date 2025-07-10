@@ -1,5 +1,5 @@
 import { oneOrNone, some } from "../../db";
-import { Assignment } from "../../interfaces/assignment";
+import { Assignment, AssignmentWithDetails } from "../../interfaces/assignment";
 import { BASE_SELECT as VEHICLES_BASE_SELECT } from "./vehiclesService";
 import { Vehicle } from "../../interfaces/vehicle";
 import { BASE_SELECT as USERS_BASE_SELECT } from "../usersService";
@@ -8,44 +8,108 @@ import { User } from "../../interfaces/user";
 export const BASE_SELECT =
   'SELECT id, vehicle_id as "vehicleId", user_id as "userId", start_date as "startDate", end_date as "endDate" FROM assignments';
 
+export const BASE_SELECT_WITH_DETAILS = `
+  SELECT 
+    a.id,
+    a.start_date as "startDate",
+    a.end_date as "endDate",
+    u.id as "user_id",
+    u.first_name as "user_firstName",
+    u.last_name as "user_lastName",
+    u.dni as "user_dni",
+    u.email as "user_email",
+    u.active as "user_active",
+    v.id as "vehicle_id",
+    v.license_plate as "vehicle_licensePlate",
+    v.brand as "vehicle_brand",
+    v.model as "vehicle_model",
+    v.year as "vehicle_year",
+    v.img_url as "vehicle_imgUrl"
+  FROM assignments a
+  INNER JOIN users u ON a.user_id = u.id
+  INNER JOIN vehicles v ON a.vehicle_id = v.id
+`;
+
+const mapRowToAssignmentWithDetails = (row: AssignmentRow): AssignmentWithDetails => ({
+  id: row.id,
+  startDate: row.startDate,
+  endDate: row.endDate,
+  user: {
+    id: row.user_id,
+    firstName: row.user_firstName,
+    lastName: row.user_lastName,
+    dni: row.user_dni,
+    email: row.user_email,
+    active: row.user_active
+  },
+  vehicle: {
+    id: row.vehicle_id,
+    licensePlate: row.vehicle_licensePlate,
+    brand: row.vehicle_brand,
+    model: row.vehicle_model,
+    year: row.vehicle_year,
+    imgUrl: row.vehicle_imgUrl
+  }
+});
+
+interface AssignmentRow {
+  id: string;
+  startDate: string;
+  endDate?: string;
+  user_id: string;
+  user_firstName: string;
+  user_lastName: string;
+  user_dni: number;
+  user_email: string;
+  user_active: boolean;
+  vehicle_id: string;
+  vehicle_licensePlate: string;
+  vehicle_brand: string;
+  vehicle_model: string;
+  vehicle_year: number;
+  vehicle_imgUrl: string;
+}
+
 export const getAllAssignments = async (options?: { 
-  userId?: string; 
-  vehicleId?: string;
   limit?: number; 
   offset?: number; 
-}): Promise<{ items: Assignment[]; total: number }> => {
-  const { userId, vehicleId, limit, offset } = options || {};
+  searchParams?: Record<string, string>;
+}): Promise<{ items: AssignmentWithDetails[]; total: number }> => {
+  const { limit, offset, searchParams } = options || {};
   
-  // Build WHERE clause based on filters
+  // Build WHERE clause based on search parameters
   const whereConditions: string[] = [];
   const params: unknown[] = [];
   let paramIndex = 1;
 
-  if (userId) {
-    whereConditions.push(`user_id = $${paramIndex++}`);
-    params.push(userId);
-  }
-  if (vehicleId) {
-    whereConditions.push(`vehicle_id = $${paramIndex++}`);
-    params.push(vehicleId);
+  if (searchParams) {
+    if (searchParams.userId) {
+      whereConditions.push(`a.user_id = $${paramIndex++}`);
+      params.push(searchParams.userId);
+    }
+    if (searchParams.vehicleId) {
+      whereConditions.push(`a.vehicle_id = $${paramIndex++}`);
+      params.push(searchParams.vehicleId);
+    }
   }
 
   const whereClause = whereConditions.length > 0 ? ` WHERE ${whereConditions.join(' AND ')}` : '';
   
   // Get total count
-  const countSql = `SELECT COUNT(*) as total FROM assignments${whereClause}`;
+  const countSql = `SELECT COUNT(*) as total FROM assignments a${whereClause}`;
   const countResult = await oneOrNone<{ total: string }>(countSql, params);
   const total = parseInt(countResult?.total || '0');
   
   // Get paginated results
-  let sql = `${BASE_SELECT}${whereClause}`;
+  let sql = `${BASE_SELECT_WITH_DETAILS}${whereClause}`;
   
   if (limit && offset !== undefined) {
     sql += ` LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
     params.push(limit, offset);
   }
   
-  const items = await some<Assignment>(sql, params);
+  const rows = await some<AssignmentRow>(sql, params);
+  const items = rows.map(mapRowToAssignmentWithDetails);
   
   return { items, total };
 };

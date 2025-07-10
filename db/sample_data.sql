@@ -552,7 +552,12 @@ VALUES
 -- =====================================================
 
 INSERT INTO
-    assignments (user_id, vehicle_id, start_date, end_date)
+    assignments (
+        user_id,
+        vehicle_id,
+        start_date,
+        end_date
+    )
 VALUES
     -- Management gets newer vehicles (long-term assignments)
     (

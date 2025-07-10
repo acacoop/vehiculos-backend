@@ -47,35 +47,59 @@ export class UsersController extends BaseController {
   public activate = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
     
-    const result = await activateUserService(id);
-    
-    if (!result) {
-      throw new AppError(
-        `${this.resourceName} with ID ${id} was not found`,
-        404,
-        'https://example.com/problems/resource-not-found',
-        'Resource Not Found'
-      );
+    try {
+      const result = await activateUserService(id);
+      
+      if (!result) {
+        throw new AppError(
+          `${this.resourceName} with ID ${id} was not found`,
+          404,
+          'https://example.com/problems/resource-not-found',
+          'Resource Not Found'
+        );
+      }
+      
+      this.sendResponse(res, result, `${this.resourceName} activated successfully`);
+    } catch (error) {
+      if (error instanceof Error && error.message === 'ALREADY_ACTIVE') {
+        throw new AppError(
+          'User is already active',
+          409,
+          'https://example.com/problems/invalid-state-transition',
+          'Invalid State Transition'
+        );
+      }
+      throw error;
     }
-    
-    this.sendResponse(res, result, `${this.resourceName} activated successfully`);
   });
 
   public deactivate = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
     
-    const result = await deactivateUserService(id);
-    
-    if (!result) {
-      throw new AppError(
-        `${this.resourceName} with ID ${id} was not found`,
-        404,
-        'https://example.com/problems/resource-not-found',
-        'Resource Not Found'
-      );
+    try {
+      const result = await deactivateUserService(id);
+      
+      if (!result) {
+        throw new AppError(
+          `${this.resourceName} with ID ${id} was not found`,
+          404,
+          'https://example.com/problems/resource-not-found',
+          'Resource Not Found'
+        );
+      }
+      
+      this.sendResponse(res, result, `${this.resourceName} deactivated successfully`);
+    } catch (error) {
+      if (error instanceof Error && error.message === 'ALREADY_INACTIVE') {
+        throw new AppError(
+          'User is already inactive',
+          409,
+          'https://example.com/problems/invalid-state-transition',
+          'Invalid State Transition'
+        );
+      }
+      throw error;
     }
-    
-    this.sendResponse(res, result, `${this.resourceName} deactivated successfully`);
   });
 }
 

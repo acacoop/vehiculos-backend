@@ -35,6 +35,10 @@ export const getAllUsers = async (options?: {
       whereConditions.push(`LOWER(u.last_name) LIKE LOWER($${paramIndex++})`);
       params.push(`%${lastName}%`);
     }
+    if (searchParams.active !== undefined) {
+      whereConditions.push(`u.active = $${paramIndex++}`);
+      params.push(searchParams.active === 'true');
+    }
   }
 
   const whereClause = whereConditions.length > 0 ? ` WHERE ${whereConditions.join(' AND ')}` : '';
@@ -113,11 +117,33 @@ export const deleteUser = async (id: string): Promise<boolean> => {
 };
 
 export const activateUser = async (id: string): Promise<User | null> => {
+  // First check if user exists and get current state
+  const currentUser = await getUserById(id);
+  if (!currentUser) {
+    return null;
+  }
+  
+  // Check if user is already active
+  if (currentUser.active) {
+    throw new Error('ALREADY_ACTIVE');
+  }
+  
   const sql = `UPDATE users SET active = true WHERE id = $1 RETURNING id, first_name AS "firstName", last_name AS "lastName", dni, email, active`;
   return await oneOrNone<User>(sql, [id]);
 };
 
 export const deactivateUser = async (id: string): Promise<User | null> => {
+  // First check if user exists and get current state
+  const currentUser = await getUserById(id);
+  if (!currentUser) {
+    return null;
+  }
+  
+  // Check if user is already inactive
+  if (!currentUser.active) {
+    throw new Error('ALREADY_INACTIVE');
+  }
+  
   const sql = `UPDATE users SET active = false WHERE id = $1 RETURNING id, first_name AS "firstName", last_name AS "lastName", dni, email, active`;
   return await oneOrNone<User>(sql, [id]);
 };
