@@ -3,9 +3,9 @@ import { some } from "../../../db";
 const BASE_SELECT = `
     SELECT
         id,
-        name,
+        name
     FROM
-        mainenance_category
+        maintenance_category
     `;
 
 export const getAllMaintenancesCategories = async () => {
@@ -13,3 +13,4 @@ export const getAllMaintenancesCategories = async () => {
   const maintenanceCategoryRecords = await some(query, []);
   return maintenanceCategoryRecords;
 };
+
