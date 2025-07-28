@@ -7,9 +7,9 @@ const BASE_SELECT = `
         m.img_name as maintenanceImgName,
         mc.name as maintenanceCategoryName
     FROM
-        maintenance as m
+        maintenances as m
         INNER JOIN
-            maintenance_category as mc
+            maintenance_categories as mc
         ON
             m.category_id = mc.id
     `;
