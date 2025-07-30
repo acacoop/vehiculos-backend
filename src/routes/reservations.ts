@@ -13,11 +13,33 @@ import { validateId } from "../middleware/validation";
 
 const router = express.Router();
 
-// GET: Fetch all users
+// GET: Fetch all reservations with pagination and search
 router.get("/", async (req: Request, res: Response) => {
   try {
-    const users = await getAllReservations();
-    res.status(200).json(users);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = (page - 1) * limit;
+
+    // Extract search parameters (excluding pagination params)
+    const searchParams: Record<string, string> = {};
+    for (const [key, value] of Object.entries(req.query)) {
+      if (key !== 'page' && key !== 'limit' && typeof value === 'string') {
+        searchParams[key] = value;
+      }
+    }
+
+    const { items, total } = await getAllReservations({ limit, offset, searchParams });
+    
+    res.status(200).json({
+      status: 'success',
+      data: items,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     res.status(500).json({ error: `Internal Server Error: ${error}` });
   }

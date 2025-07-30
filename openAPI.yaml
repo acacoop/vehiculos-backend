@@ -57,16 +57,16 @@ paths:
         **Search Parameters:**
         - `email`: Exact match by email address
         - `dni`: Exact match by DNI
-        - `first-name`: Partial match by first name (case-insensitive)
-        - `last-name`: Partial match by last name (case-insensitive)
+        - `firstName`: Partial match by first name (case-insensitive)
+        - `lastName`: Partial match by last name (case-insensitive)
         - `active`: Filter by active status (true/false)
 
         **Examples:**
         - `/users?email=user@example.com`
         - `/users?dni=12345678`
-        - `/users?first-name=John&last-name=Doe`
+        - `/users?firstName=John&lastName=Doe`
         - `/users?active=false`
-        - `/users?first-name=Ana&page=1&limit=5`
+        - `/users?firstName=Ana&page=1&limit=5`
       tags: [Users]
       parameters:
         - name: page
@@ -93,12 +93,12 @@ paths:
           description: Filter by exact DNI
           schema:
             type: string
-        - name: first-name
+        - name: firstName
           in: query
           description: Filter by first name (partial match, case-insensitive)
           schema:
             type: string
-        - name: last-name
+        - name: lastName
           in: query
           description: Filter by last name (partial match, case-insensitive)
           schema:
@@ -280,13 +280,13 @@ paths:
         Get vehicles with optional search filters and pagination.
 
         **Search Parameters:**
-        - `license-plate`: Exact match by license plate
+        - `licensePlate`: Exact match by license plate
         - `brand`: Partial match by brand name (case-insensitive)
         - `model`: Partial match by model name (case-insensitive)
         - `year`: Exact match by year
 
         **Examples:**
-        - `/vehicles?license-plate=AAA-123`
+        - `/vehicles?licensePlate=AAA-123`
         - `/vehicles?brand=Toyota&model=Corolla`
         - `/vehicles?year=2020&page=1&limit=5`
         - `/vehicles?brand=Honda&year=2021`
@@ -305,7 +305,7 @@ paths:
             minimum: 1
             maximum: 100
             default: 10
-        - name: license-plate
+        - name: licensePlate
           in: query
           description: Filter by exact license plate
           schema:
@@ -470,13 +470,13 @@ paths:
           schema:
             type: string
             format: uuid
-          description: Filter reservations by user ID
+          description: "Filter reservations by user ID"
         - name: vehicleId
           in: query
           schema:
             type: string
             format: uuid
-          description: Filter reservations by vehicle ID
+          description: "Filter reservations by vehicle ID"
       responses:
         "200":
           description: List of reservations retrieved successfully
@@ -545,13 +545,13 @@ paths:
           schema:
             type: string
             format: uuid
-          description: Filter assignments by user ID
+          description: "Filter assignments by user ID"
         - name: vehicleId
           in: query
           schema:
             type: string
             format: uuid
-          description: Filter assignments by vehicle ID
+          description: "Filter assignments by vehicle ID"
       responses:
         "200":
           description: List of assignments retrieved successfully
@@ -635,12 +635,12 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-  /maintenance/assignments/{vehicle_id}:
+  /maintenance/assignments/{vehicleId}:
     get:
       summary: Get all maintenance assignments for a specific vehicle
       tags: [Maintenance]
       parameters:
-        - name: vehicle_id
+        - name: vehicleId
           in: path
           required: true
           schema:
@@ -696,13 +696,13 @@ paths:
           schema:
             type: string
             format: uuid
-          description: Filter maintenance records by user ID
+          description: "Filter maintenance records by user ID"
         - name: vehicleId
           in: query
           schema:
             type: string
             format: uuid
-          description: Filter maintenance records by vehicle ID
+          description: "Filter maintenance records by vehicle ID"
       responses:
         "200":
           description: List of maintenance records retrieved successfully
@@ -728,6 +728,29 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MaintenanceRecordResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /maintenance/records/vehicle/{vehicleId}:
+    get:
+      summary: Get maintenance records for a specific vehicle
+      tags: [Maintenance]
+      parameters:
+        - name: vehicleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Vehicle maintenance records retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceRecordListResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
         "500":
@@ -764,14 +787,14 @@ paths:
       summary: Get all vehicle responsibles with optional filters
       description: |
         Get all vehicle responsibility assignments with optional filtering by user, vehicle, or active status.
-        
+
         **Filter Parameters:**
         - `userId`: Filter by specific user ID
         - `vehicleId`: Filter by specific vehicle ID
         - `active`: Filter by active status (true for current, false for ended)
         - `date`: Filter by specific date (YYYY-MM-DD format)
         - Pagination is supported with `page` and `limit` parameters
-        
+
         **Examples:**
         - `/vehicle-responsibles?userId=550e8400-e29b-41d4-a716-446655440000`
         - `/vehicle-responsibles?vehicleId=650e8400-e29b-41d4-a716-446655440001`
@@ -799,13 +822,13 @@ paths:
           schema:
             type: string
             format: uuid
-          description: Filter by user ID
+          description: "Filter by user ID"
         - name: vehicleId
           in: query
           schema:
             type: string
             format: uuid
-          description: Filter by vehicle ID
+          description: "Filter by vehicle ID"
         - name: active
           in: query
           schema:

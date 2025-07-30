@@ -25,15 +25,13 @@ export const getAllUsers = async (options?: {
       whereConditions.push(`u.dni = $${paramIndex++}`);
       params.push(searchParams.dni);
     }
-    if (searchParams.firstName || searchParams['first-name']) {
-      const firstName = searchParams.firstName || searchParams['first-name'];
+    if (searchParams.firstName) {
       whereConditions.push(`LOWER(u.first_name) LIKE LOWER($${paramIndex++})`);
-      params.push(`%${firstName}%`);
+      params.push(`%${searchParams.firstName}%`);
     }
-    if (searchParams.lastName || searchParams['last-name']) {
-      const lastName = searchParams.lastName || searchParams['last-name'];
+    if (searchParams.lastName) {
       whereConditions.push(`LOWER(u.last_name) LIKE LOWER($${paramIndex++})`);
-      params.push(`%${lastName}%`);
+      params.push(`%${searchParams.lastName}%`);
     }
     if (searchParams.active !== undefined) {
       whereConditions.push(`u.active = $${paramIndex++}`);

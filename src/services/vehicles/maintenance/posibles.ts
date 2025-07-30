@@ -4,7 +4,6 @@ const BASE_SELECT = `
     SELECT
         m.id,
         m.name,
-        m.img_name as maintenanceImgName,
         mc.name as maintenanceCategoryName
     FROM
         maintenances as m

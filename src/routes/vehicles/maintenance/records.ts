@@ -1,53 +1,19 @@
-import express, { Request, Response } from "express";
-import { MaintenanceRecordSchema } from "../../../schemas/maintenance/maintanceRecord";
-import {
-  addMaintenanceRecord,
-  getMaintenanceRecordsByVehicle,
-  getMaintenanceRecordById,
-} from "../../../services/vehicles/maintenance/records";
-import { MaintenanceRecord } from "../../../interfaces/maintenance";
-import { validateId } from "../../../middleware/validation";
+import express from "express";
+import { validateId, validateUUIDParam } from "../../../middleware/validation";
+import { maintenanceRecordsController } from "../../../controllers/maintenanceRecordsController";
 
 const router = express.Router();
 
-// GET: Fetch maintenance records by vehicle ID
-router.get("/vehicle/:vehicleId", validateId, async (req: Request, res: Response) => {
-  const vehicleId = req.params.vehicleId;
+// GET: Fetch all maintenance records with pagination and search
+router.get("/", maintenanceRecordsController.getAll);
 
-  try {
-    const records = await getMaintenanceRecordsByVehicle(vehicleId);
-    res.status(200).json(records);
-  } catch (error) {
-    res.status(500).json({ error: `Internal Server Error: ${error}` });
-  }
-});
+// GET: Fetch maintenance records by vehicle ID
+router.get("/vehicle/:vehicleId", validateUUIDParam("vehicleId"), maintenanceRecordsController.getByVehicle);
 
 // GET: Fetch maintenance record by ID
-router.get("/:id", validateId, async (req: Request, res: Response) => {
-  const id = req.params.id;
-
-  try {
-    const record = await getMaintenanceRecordById(id);
-    if (!record) {
-      res.status(404).json({ error: "Maintenance record not found" });
-      return;
-    }
-    res.status(200).json(record);
-  } catch (error) {
-    res.status(500).json({ error: `Internal Server Error: ${error}` });
-  }
-});
+router.get("/:id", validateId, maintenanceRecordsController.getById);
 
 // POST: Add a new maintenance record
-router.post("/", async (req: Request, res: Response) => {
-  const maintenanceRecord: MaintenanceRecord = MaintenanceRecordSchema.parse(req.body);
-
-  try {
-    const record = await addMaintenanceRecord(maintenanceRecord);
-    res.status(201).json(record);
-  } catch (error) {
-    res.status(500).json({ error: `Internal Server Error: ${error}` });
-  }
-});
+router.post("/", maintenanceRecordsController.create);
 
 export default router;

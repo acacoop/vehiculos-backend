@@ -18,10 +18,9 @@ export const getAllVehicles = async (options?: {
   let paramIndex = 1;
 
   if (searchParams) {
-    if (searchParams['license-plate'] || searchParams.licensePlate) {
-      const licensePlate = searchParams['license-plate'] || searchParams.licensePlate;
+    if (searchParams.licensePlate) {
       whereConditions.push(`v.license_plate = $${paramIndex++}`);
-      params.push(licensePlate);
+      params.push(searchParams.licensePlate);
     }
     if (searchParams.brand) {
       whereConditions.push(`LOWER(v.brand) LIKE LOWER($${paramIndex++})`);

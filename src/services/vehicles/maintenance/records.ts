@@ -40,9 +40,54 @@ export const addMaintenanceRecord = async (
   return oneOrNone<MaintenanceRecord>(query, params);
 };
 
-export const getAllMaintenanceRecords = async (): Promise<MaintenanceRecord[]> => {
-  const sql = `${BASE_SELECT}`;
-  return some<MaintenanceRecord>(sql);
+export const getAllMaintenanceRecords = async (options?: { 
+  limit?: number; 
+  offset?: number; 
+  searchParams?: Record<string, string>;
+}): Promise<{ items: MaintenanceRecord[]; total: number }> => {
+  const { limit, offset, searchParams } = options || {};
+  
+  // Build WHERE clause based on search parameters
+  const whereConditions: string[] = [];
+  const params: unknown[] = [];
+  let paramIndex = 1;
+
+  if (searchParams) {
+    if (searchParams.userId) {
+      whereConditions.push(`mr.user_id = $${paramIndex++}`);
+      params.push(searchParams.userId);
+    }
+    if (searchParams.vehicleId) {
+      whereConditions.push(`am.vehicle_id = $${paramIndex++}`);
+      params.push(searchParams.vehicleId);
+    }
+  }
+
+  const whereClause = whereConditions.length > 0 ? ` WHERE ${whereConditions.join(' AND ')}` : '';
+  
+  // Base query with joins to get vehicle information when filtering by vehicleId
+  const baseQuery = searchParams?.vehicleId 
+    ? `${BASE_SELECT} INNER JOIN assigned_maintenances am ON mr.assigned_maintenance_id = am.id`
+    : BASE_SELECT;
+  
+  // Get total count
+  const countSql = `SELECT COUNT(*) as total FROM maintenance_records mr ${
+    searchParams?.vehicleId ? 'INNER JOIN assigned_maintenances am ON mr.assigned_maintenance_id = am.id' : ''
+  }${whereClause}`;
+  const countResult = await oneOrNone<{ total: string }>(countSql, params);
+  const total = parseInt(countResult?.total || '0');
+  
+  // Get paginated results
+  let sql = `${baseQuery}${whereClause} ORDER BY mr.date DESC`;
+  
+  if (limit && offset !== undefined) {
+    sql += ` LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+    params.push(limit, offset);
+  }
+  
+  const items = await some<MaintenanceRecord>(sql, params);
+  
+  return { items, total };
 };
 
 export const getMaintenanceRecordsByAssignedMaintenanceId = async (

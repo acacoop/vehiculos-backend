@@ -7,11 +7,11 @@ import { UserSchema } from "../schemas/user";
 const router = Router();
 
 // GET /users - Get all users with pagination and search
-// Supports query parameters: page, limit, email, dni, first-name, last-name
+// Supports query parameters: page, limit, email, dni, firstName, lastName
 // Examples: 
 // - /users?email=user@example.com 
 // - /users?dni=12345678
-// - /users?first-name=John&last-name=Doe
+// - /users?firstName=John&lastName=Doe
 router.get("/", usersController.getAll);
 
 // GET /users/:id - Get user by ID

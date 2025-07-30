@@ -5,7 +5,7 @@ const BASE_SELECT = `
         id,
         name
     FROM
-        maintenance_category
+        maintenance_categories
     `;
 
 export const getAllMaintenancesCategories = async () => {

@@ -9,7 +9,7 @@ const router = Router();
 
 // Middleware to validate license plate in query parameters
 const validateLicensePlateQuery = (req: Request, res: Response, next: NextFunction) => {
-  const licensePlate = req.query['license-plate'] as string;
+  const licensePlate = req.query.licensePlate as string;
   if (licensePlate && !licensePlateRegex.test(licensePlate)) {
     throw new AppError(
       'The provided license plate format is invalid. Expected format: ABC123 or AB123CD',
