@@ -50,8 +50,11 @@ router.get("/user/:id", validateId, async (req: Request, res: Response) => {
   const id = req.params.id;
 
   try {
-    const vehicles = await getReservationsByUserId(id);
-    res.status(200).json(vehicles);
+    const reservations = await getReservationsByUserId(id);
+    res.status(200).json({
+      status: 'success',
+      data: reservations
+    });
   } catch (error) {
     res.status(500).json({ error: `Internal Server Error: ${error}` });
   }
@@ -62,8 +65,11 @@ router.get("/vehicle/:id", validateId, async (req: Request, res: Response) => {
   const id = req.params.id;
 
   try {
-    const vehicles = await getReservationsByVehicleId(id);
-    res.status(200).json(vehicles);
+    const reservations = await getReservationsByVehicleId(id);
+    res.status(200).json({
+      status: 'success',
+      data: reservations
+    });
   } catch (error) {
     res.status(500).json({ error: `Internal Server Error: ${error}` });
   }
@@ -74,8 +80,11 @@ router.get("/user/:id/assigned", validateId, async (req: Request, res: Response)
   const id = req.params.id;
 
   try {
-    const vehicles = await getReservatiosOfAssignedVehiclesByUserId(id);
-    res.status(200).json(vehicles);
+    const reservations = await getReservatiosOfAssignedVehiclesByUserId(id);
+    res.status(200).json({
+      status: 'success',
+      data: reservations
+    });
   } catch (error) {
     res.status(500).json({ error: `Internal Server Error: ${error}` });
   }
@@ -86,8 +95,11 @@ router.get("/user/:id/today", validateId, async (req: Request, res: Response) =>
   const id = req.params.id;
 
   try {
-    const vehicles = await getTodayReservationsByUserId(id);
-    res.status(200).json(vehicles);
+    const reservations = await getTodayReservationsByUserId(id);
+    res.status(200).json({
+      status: 'success',
+      data: reservations
+    });
   } catch (error) {
     res.status(500).json({ error: `Internal Server Error: ${error}` });
   }
@@ -99,7 +111,10 @@ router.post("/", async (req: Request, res: Response) => {
 
   try {
     const newReservation = await addReservation(reservation);
-    res.status(201).json(newReservation);
+    res.status(201).json({
+      status: 'success',
+      data: newReservation
+    });
   } catch (error) {
     res.status(500).json({ error: `Internal Server Error: ${error}` });
   }

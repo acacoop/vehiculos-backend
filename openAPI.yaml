@@ -1010,7 +1010,6 @@ paths:
                     items:
                       $ref: "#/components/schemas/VehicleResponsibleWithDetails"
 
-  # ...existing code...
 components:
   schemas:
     # RFC 7807 Problem Details for HTTP APIs
@@ -1401,14 +1400,6 @@ components:
           type: string
           format: uuid
           example: "750e8400-e29b-41d4-a716-446655440002"
-        vehicleId:
-          type: string
-          format: uuid
-          example: "650e8400-e29b-41d4-a716-446655440001"
-        userId:
-          type: string
-          format: uuid
-          example: "550e8400-e29b-41d4-a716-446655440000"
         startDate:
           type: string
           format: date-time
@@ -1417,12 +1408,16 @@ components:
           type: string
           format: date-time
           example: "2025-01-15T17:00:00Z"
+        user:
+          $ref: "#/components/schemas/User"
+        vehicle:
+          $ref: "#/components/schemas/Vehicle"
       required:
         - id
-        - vehicleId
-        - userId
         - startDate
         - endDate
+        - user
+        - vehicle
 
     ReservationInput:
       type: object
