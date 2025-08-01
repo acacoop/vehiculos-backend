@@ -79,26 +79,64 @@ CREATE TABLE IF NOT EXISTS vehicle_responsibles (
     user_id uuid not null references users (id),
     start_date date not null default CURRENT_DATE,
     end_date date,
-    created_at timestamp with time zone default now(),
-    updated_at timestamp with time zone default now()
+    created_at timestamp
+    with
+        time zone default now(),
+        updated_at timestamp
+    with
+        time zone default now()
 );
 
--- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_vehicle_responsibles_vehicle_id ON vehicle_responsibles(vehicle_id);
-CREATE INDEX IF NOT EXISTS idx_vehicle_responsibles_user_id ON vehicle_responsibles(user_id);
-CREATE INDEX IF NOT EXISTS idx_vehicle_responsibles_dates ON vehicle_responsibles(start_date, end_date);
-CREATE INDEX IF NOT EXISTS idx_vehicle_responsibles_active ON vehicle_responsibles(vehicle_id, end_date) WHERE end_date IS NULL;
+-- Documents management schema
 
--- Update trigger for updated_at
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = now();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- TIPOS DE ENTIDADES
+CREATE TABLE IF NOT EXISTS entity_types (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    name text NOT NULL UNIQUE
+);
 
-CREATE TRIGGER trigger_update_vehicle_responsibles_updated_at
-    BEFORE UPDATE ON vehicle_responsibles
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+-- TIPOS DE DOCUMENTOS
+CREATE TABLE IF NOT EXISTS document_types (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    name text NOT NULL UNIQUE,
+    entity_type_id uuid NOT NULL REFERENCES entity_types (id) ON DELETE CASCADE
+);
+
+-- Definición de archivos requeridos por tipo de documento
+
+CREATE TABLE IF NOT EXISTS document_type_files (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    document_type_id uuid NOT NULL REFERENCES document_types (id) ON DELETE CASCADE,
+    name text NOT NULL,
+    CONSTRAINT unique_file_per_document_type UNIQUE (document_type_id, name)
+);
+
+-- DOCUMENTOS (variables)
+CREATE TABLE IF NOT EXISTS documents (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    document_type_id uuid NOT NULL REFERENCES document_types (id) ON DELETE CASCADE,
+    entity_id uuid NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT NOW(),
+    updated_at timestamptz NOT NULL DEFAULT NOW()
+);
+
+-- ARCHIVOS EN DOCUMENTO (inmutables, versionados)
+
+CREATE TABLE IF NOT EXISTS document_files (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4 (),
+    document_id uuid NOT NULL REFERENCES documents (id) ON DELETE CASCADE,
+    document_type_file_id uuid NOT NULL REFERENCES document_type_files (id) ON DELETE CASCADE,
+    stored_filename text NOT NULL UNIQUE,
+    file_path text NOT NULL,
+    mime_type text NOT NULL,
+    file_size bigint NOT NULL, -- Tamaño del archivo en bytes
+    version integer NOT NULL DEFAULT 1,
+    is_current boolean NOT NULL DEFAULT true,
+    upload_date timestamptz NOT NULL DEFAULT NOW(),
+    checksum text NOT NULL, -- Checksum del archivo para verificar integridad
+    CONSTRAINT unique_current_file UNIQUE (
+        document_id,
+        document_type_file_id
+    )
+    WHERE (is_current) DEFERRABLE INITIALLY DEFERRED
+);
