@@ -4,11 +4,7 @@ import {
   getUsersAssignedByVehicleId,
   getVehiclesAssignedByUserId,
 } from "../../services/vehicles/assignments";
-import { 
-  validateId, 
-  validateAssignmentUpdate, 
-  validateAssignmentFinish 
-} from "../../middleware/validation";
+import { validateId } from "../../middleware/validation";
 
 const router = express.Router();
 
@@ -22,13 +18,13 @@ router.get("/:id", assignmentsController.getById);
 router.post("/", assignmentsController.create);
 
 // PATCH: Update an assignment
-router.patch("/:id", validateId, validateAssignmentUpdate, assignmentsController.patch);
+router.patch("/:id", validateId, assignmentsController.patch);
 
 // PATCH: Finish/end an assignment
-router.patch("/:id/finish", validateId, validateAssignmentFinish, assignmentsController.finishAssignment);
+router.patch("/:id/finish", validateId, assignmentsController.finishAssignment);
 
 // Legacy routes for backward compatibility
-router.get("/user/:id", async (req, res) => {
+router.get("/user/:id", validateId, async (req, res) => {
   const id = req.params.id;
   
   try {
@@ -39,7 +35,7 @@ router.get("/user/:id", async (req, res) => {
   }
 });
 
-router.get("/vehicle/:id", async (req, res) => {
+router.get("/vehicle/:id", validateId, async (req, res) => {
   const id = req.params.id;
   
   try {

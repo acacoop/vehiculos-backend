@@ -3,13 +3,13 @@ import { Assignment } from '../interfaces/assignment';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { 
   getAllAssignments, 
-  getAssignmentById, 
   addAssignment,
   updateAssignment,
   finishAssignment,
   getAssignmentWithDetailsById
 } from '../services/vehicles/assignments';
 import { Request, Response } from 'express';
+import { AssignmentUpdateSchema, AssignmentFinishSchema } from '../schemas/assignment';
 
 export class AssignmentsController extends BaseController {
   constructor() {
@@ -41,7 +41,18 @@ export class AssignmentsController extends BaseController {
   }
 
   protected async patchService(id: string, data: unknown): Promise<unknown | null> {
-    const assignmentData = data as Partial<Assignment>;
+    // Validate data with Zod schema
+    const validationResult = AssignmentUpdateSchema.safeParse(data);
+    if (!validationResult.success) {
+      throw new AppError(
+        validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', '),
+        400,
+        'https://example.com/problems/validation-error',
+        'Validation Error'
+      );
+    }
+    
+    const assignmentData = validationResult.data as Partial<Assignment>;
     
     try {
       const result = await updateAssignment(id, assignmentData);
@@ -62,17 +73,20 @@ export class AssignmentsController extends BaseController {
   // Custom method to finish/end an assignment
   public finishAssignment = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
-    const { endDate } = req.body;
+    const bodyData = req.body;
     
-    // Validate UUID format
-    if (!this.isValidUUID(id)) {
+    // Validate data with Zod schema
+    const validationResult = AssignmentFinishSchema.safeParse(bodyData);
+    if (!validationResult.success) {
       throw new AppError(
-        `Invalid UUID format provided: ${id}`,
+        validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', '),
         400,
-        'https://example.com/problems/invalid-uuid',
-        'Invalid UUID Format'
+        'https://example.com/problems/validation-error',
+        'Validation Error'
       );
     }
+    
+    const { endDate } = validationResult.data;
     
     try {
       const result = await finishAssignment(id, endDate);

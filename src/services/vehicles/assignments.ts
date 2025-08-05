@@ -5,6 +5,7 @@ import { Vehicle } from "../../interfaces/vehicle";
 import { BASE_SELECT as USERS_BASE_SELECT } from "../usersService";
 import { User } from "../../interfaces/user";
 import { validateUserExists, validateVehicleExists } from "../../utils/validators";
+import { validateISODateFormat } from "../../utils/dateValidators";
 
 export const BASE_SELECT =
   'SELECT id, vehicle_id as "vehicleId", user_id as "userId", start_date as "startDate", end_date as "endDate" FROM assignments';
@@ -200,15 +201,13 @@ export const updateAssignment = async (id: string, assignment: Partial<Assignmen
   
   // Validate dates if provided
   if (assignment.startDate !== undefined) {
-    if (!isValidISODate(assignment.startDate)) {
-      throw new Error('Invalid start date format. Expected ISO 8601 format.');
-    }
+    validateISODateFormat(assignment.startDate, 'startDate');
     fields.push(`start_date = $${paramIndex++}`);
     params.push(assignment.startDate);
   }
   if (assignment.endDate !== undefined) {
-    if (assignment.endDate && !isValidISODate(assignment.endDate)) {
-      throw new Error('Invalid end date format. Expected ISO 8601 format.');
+    if (assignment.endDate) {
+      validateISODateFormat(assignment.endDate, 'endDate');
     }
     fields.push(`end_date = $${paramIndex++}`);
     params.push(assignment.endDate);
@@ -247,41 +246,11 @@ export const getAssignmentWithDetailsById = async (id: string): Promise<Assignme
 };
 
 export const finishAssignment = async (id: string, endDate?: string): Promise<AssignmentWithDetails | null> => {
-  // Validate that the assignment exists
-  const existingAssignment = await getAssignmentById(id);
-  if (!existingAssignment) {
-    return null;
-  }
-
   // Use provided endDate or current date
   const finalEndDate = endDate || new Date().toISOString();
   
-  // Validate date format
-  if (!isValidISODate(finalEndDate)) {
-    throw new Error('Invalid date format. Expected ISO 8601 format.');
-  }
-
-  // Validate that endDate is not before startDate
-  if (new Date(finalEndDate) <= new Date(existingAssignment.startDate)) {
-    throw new Error('End date must be after start date.');
-  }
-
-  const sql = `UPDATE assignments SET end_date = $1 WHERE id = $2`;
-  await some(sql, [finalEndDate, id]);
-  
-  // Return the updated assignment with details
-  return await getAssignmentWithDetailsById(id);
-};
-
-// Helper function to validate ISO date format
-const isValidISODate = (dateString: string): boolean => {
-  const isoDateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/;
-  if (!isoDateRegex.test(dateString)) {
-    return false;
-  }
-  
-  const date = new Date(dateString);
-  return date instanceof Date && !isNaN(date.getTime());
+  // Use updateAssignment to handle validation and update logic
+  return await updateAssignment(id, { endDate: finalEndDate });
 };
 
 export const deleteAssignment = async (id: string): Promise<boolean> => {

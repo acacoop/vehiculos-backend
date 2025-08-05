@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
+import { isValidUUID } from '../utils/uuidValidators';
 
 // Standard response format
 export interface ApiResponse<T = unknown> {
@@ -24,8 +25,7 @@ export abstract class BaseController {
 
   // UUID validation helper
   protected isValidUUID(uuid: string): boolean {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(uuid);
+    return isValidUUID(uuid);
   }
   // Standard success response with optional pagination
   protected sendResponse<T>(res: Response, data: T, message?: string, statusCode = 200, pagination?: ApiResponse['pagination']) {
