@@ -1,6 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "./errorHandler";
 
+// Regex patterns - defined once to avoid duplication
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/;
+
 /**
  * Internal function to validate UUID format
  */
@@ -9,11 +13,17 @@ const validateUUIDFormat = (id: string, paramName: string = "id"): void => {
     throw new AppError(`${paramName} parameter is required`, 400);
   }
   
-  // UUID v4 regex pattern
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  
-  if (!uuidRegex.test(id)) {
+  if (!UUID_REGEX.test(id)) {
     throw new AppError(`Invalid UUID format for ${paramName}`, 400);
+  }
+};
+
+/**
+ * Internal function to validate ISO date format
+ */
+const validateISODateFormat = (dateString: string, paramName: string): void => {
+  if (!ISO_DATE_REGEX.test(dateString) || isNaN(new Date(dateString).getTime())) {
+    throw new AppError(`Invalid ISO date format for ${paramName}`, 400);
   }
 };
 
@@ -41,34 +51,22 @@ export const validateUUIDParam = (paramName: string) => {
 export const validateAssignmentUpdate = (req: Request, res: Response, next: NextFunction): void => {
   const { userId, vehicleId, startDate, endDate } = req.body;
   
-  // Validate UUIDs if provided
+  // Validate UUIDs if provided using the unified function
   if (userId && typeof userId === 'string') {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(userId)) {
-      throw new AppError('Invalid UUID format for userId', 400);
-    }
+    validateUUIDFormat(userId, 'userId');
   }
   
   if (vehicleId && typeof vehicleId === 'string') {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(vehicleId)) {
-      throw new AppError('Invalid UUID format for vehicleId', 400);
-    }
+    validateUUIDFormat(vehicleId, 'vehicleId');
   }
   
-  // Validate date formats if provided
+  // Validate date formats if provided using the unified function
   if (startDate && typeof startDate === 'string') {
-    const isoDateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/;
-    if (!isoDateRegex.test(startDate) || isNaN(new Date(startDate).getTime())) {
-      throw new AppError('Invalid ISO date format for startDate', 400);
-    }
+    validateISODateFormat(startDate, 'startDate');
   }
   
   if (endDate && typeof endDate === 'string') {
-    const isoDateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/;
-    if (!isoDateRegex.test(endDate) || isNaN(new Date(endDate).getTime())) {
-      throw new AppError('Invalid ISO date format for endDate', 400);
-    }
+    validateISODateFormat(endDate, 'endDate');
   }
   
   // Validate date logic if both dates are provided
@@ -85,12 +83,9 @@ export const validateAssignmentUpdate = (req: Request, res: Response, next: Next
 export const validateAssignmentFinish = (req: Request, res: Response, next: NextFunction): void => {  
   const { endDate } = req.body;
   
-  // Validate endDate format if provided
+  // Validate endDate format if provided using the unified function
   if (endDate && typeof endDate === 'string') {
-    const isoDateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/;
-    if (!isoDateRegex.test(endDate) || isNaN(new Date(endDate).getTime())) {
-      throw new AppError('Invalid ISO date format for endDate', 400);
-    }
+    validateISODateFormat(endDate, 'endDate');
   }
   
   next();
