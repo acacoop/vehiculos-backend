@@ -42,6 +42,10 @@ sample-data: ## Load test data (15 users, 15 vehicles)
 		echo "❌ Cancelled"; \
 	fi
 
+documents-setup: ## Load document types and base configuration
+	@docker compose exec -T db psql -U postgres -d vehicles_db < ./db/documents_base_data.sql && \
+	echo "✅ Document types configured"
+
 docs: ## Open API documentation
 	@command -v open >/dev/null 2>&1 && open http://localhost:3000/docs || \
 	 command -v xdg-open >/dev/null 2>&1 && xdg-open http://localhost:3000/docs || \
@@ -55,6 +59,7 @@ setup: ## Initial setup (install deps, start services, load sample data)
 	@npm install >/dev/null 2>&1 && echo "✅ Dependencies installed"
 	@docker compose up -d >/dev/null 2>&1 && echo "✅ Services started"
 	$(call wait_for_db)
+	@docker compose exec -T db psql -U postgres -d vehicles_db < ./db/documents_base_data.sql >/dev/null 2>&1 && echo "✅ Document types configured" || echo "⚠️  Document types already exist"
 	@docker compose exec -T db psql -U postgres -d vehicles_db -f /docker-entrypoint-initdb.d/sample_data.sql >/dev/null 2>&1 && echo "✅ Sample data loaded" || echo "⚠️  Sample data already exists"
 	@echo "🎉 Ready! API: http://localhost:3000 | Docs: http://localhost:3000/docs"
 

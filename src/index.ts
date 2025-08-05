@@ -16,6 +16,7 @@ import maintenanceCategoriesRoutes from "./routes/vehicles/maintenance/categorie
 import maintenanceRoutes from "./routes/vehicles/maintenance/posibles";
 import assignedMaintenanceRoutes from "./routes/vehicles/maintenance/assignments";
 import maintenanceRecordsRoutes from "./routes/vehicles/maintenance/records";
+import documentsRoutes from "./routes/documents";
 
 import { APP_PORT } from "./config/env.config";
 
@@ -58,6 +59,7 @@ app.get("/", (req: Request, res: Response) => {
       assignments: '/assignments',
       reservations: '/reservations',
       vehicleResponsibles: '/vehicle-responsibles',
+      documents: '/documents',
       maintenance: {
         categories: '/maintenance/categories',
         posibles: '/maintenance/posibles',
@@ -74,6 +76,7 @@ app.use("/vehicles", vehiclesRoutes);
 app.use("/assignments", assignmentsRoutes);
 app.use("/reservations", reservationsRoutes);
 app.use("/vehicle-responsibles", vehicleResponsiblesRoutes);
+app.use("/documents", documentsRoutes);
 app.use("/maintenance/categories", maintenanceCategoriesRoutes);
 app.use("/maintenance/posibles", maintenanceRoutes);
 app.use("/maintenance/assignments", assignedMaintenanceRoutes);

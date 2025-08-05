@@ -14,7 +14,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-      - ./db/sample_data.sql:/docker-entrypoint-initdb.d/02-sample_data.sql
+      - ./db/documents_base_data.sql:/docker-entrypoint-initdb.d/02-documents_base_data.sql
+      - ./db/sample_data.sql:/docker-entrypoint-initdb.d/03-sample_data.sql
     networks:
       - vehiculos-network
     healthcheck:
@@ -41,6 +42,7 @@ services:
       NODE_ENV: development
       RATE_LIMIT_WINDOW_MS: 60000 # 1 minute
       RATE_LIMIT_MAX: 1000 # 1000 requests per window
+      DOCUMENTS_STORAGE_PATH: /app/storage/documents
     ports:
       - "3000:3000"
     depends_on:
@@ -50,10 +52,13 @@ services:
       - vehiculos-network
     volumes:
       - ./logs:/app/logs # Optional: for logs if you add logging
+      - documents_storage:/app/storage/documents # Document files storage
 
 # Named volumes
 volumes:
   postgres_data:
+    driver: local
+  documents_storage:
     driver: local
 
 # Networks
