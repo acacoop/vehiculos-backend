@@ -5,6 +5,7 @@ import { Vehicle } from "../../interfaces/vehicle";
 import { BASE_SELECT as USERS_BASE_SELECT } from "../usersService";
 import { User } from "../../interfaces/user";
 import { validateUserExists, validateVehicleExists } from "../../utils/validators";
+import { validateISODateFormat } from "../../utils/dateValidators";
 
 export const BASE_SELECT =
   'SELECT id, vehicle_id as "vehicleId", user_id as "userId", start_date as "startDate", end_date as "endDate" FROM assignments';
@@ -175,41 +176,81 @@ export const addAssignment = async (
   return oneOrNone<Assignment>(sql, params);
 };
 
-export const updateAssignment = async (id: string, assignment: Partial<Assignment>): Promise<Assignment | null> => {
+export const updateAssignment = async (id: string, assignment: Partial<Assignment>): Promise<AssignmentWithDetails | null> => {
+  // Validate that the assignment exists first
+  const existingAssignment = await getAssignmentById(id);
+  if (!existingAssignment) {
+    return null;
+  }
+
   const fields: string[] = [];
   const params: unknown[] = [];
   let paramIndex = 1;
 
+  // Validate user and vehicle if provided
   if (assignment.userId !== undefined) {
+    await validateUserExists(assignment.userId);
     fields.push(`user_id = $${paramIndex++}`);
     params.push(assignment.userId);
   }
   if (assignment.vehicleId !== undefined) {
+    await validateVehicleExists(assignment.vehicleId);
     fields.push(`vehicle_id = $${paramIndex++}`);
     params.push(assignment.vehicleId);
   }
+  
+  // Validate dates if provided
   if (assignment.startDate !== undefined) {
+    validateISODateFormat(assignment.startDate, 'startDate');
     fields.push(`start_date = $${paramIndex++}`);
     params.push(assignment.startDate);
   }
   if (assignment.endDate !== undefined) {
+    if (assignment.endDate) {
+      validateISODateFormat(assignment.endDate, 'endDate');
+    }
     fields.push(`end_date = $${paramIndex++}`);
     params.push(assignment.endDate);
   }
 
+  // Validate date logic
+  const startDate = assignment.startDate || existingAssignment.startDate;
+  const endDate = assignment.endDate !== undefined ? assignment.endDate : existingAssignment.endDate;
+  
+  if (endDate && new Date(endDate) <= new Date(startDate)) {
+    throw new Error('End date must be after start date.');
+  }
+
   if (fields.length === 0) {
-    return getAssignmentById(id);
+    return getAssignmentWithDetailsById(id);
   }
 
   params.push(id);
-  const sql = `UPDATE assignments SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING id, user_id as "userId", vehicle_id as "vehicleId", start_date as "startDate", end_date as "endDate"`;
+  const sql = `UPDATE assignments SET ${fields.join(', ')} WHERE id = $${paramIndex}`;
   
-  return await oneOrNone<Assignment>(sql, params);
+  await some(sql, params);
+  
+  // Return the updated assignment with details
+  return await getAssignmentWithDetailsById(id);
 };
 
 export const getAssignmentById = async (id: string): Promise<Assignment | null> => {
   const sql = `${BASE_SELECT} WHERE id = $1`;
   return await oneOrNone<Assignment>(sql, [id]);
+};
+
+export const getAssignmentWithDetailsById = async (id: string): Promise<AssignmentWithDetails | null> => {
+  const sql = `${BASE_SELECT_WITH_DETAILS} WHERE a.id = $1`;
+  const row = await oneOrNone<AssignmentRow>(sql, [id]);
+  return row ? mapRowToAssignmentWithDetails(row) : null;
+};
+
+export const finishAssignment = async (id: string, endDate?: string): Promise<AssignmentWithDetails | null> => {
+  // Use provided endDate or current date
+  const finalEndDate = endDate || new Date().toISOString();
+  
+  // Use updateAssignment to handle validation and update logic
+  return await updateAssignment(id, { endDate: finalEndDate });
 };
 
 export const deleteAssignment = async (id: string): Promise<boolean> => {

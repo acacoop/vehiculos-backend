@@ -1,18 +1,16 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "./errorHandler";
+import { isValidUUID } from "../utils/uuidValidators";
 
 /**
- * Internal function to validate UUID format
+ * Internal function to validate UUID format for middleware (throws AppError)
  */
 const validateUUIDFormat = (id: string, paramName: string = "id"): void => {
   if (!id) {
     throw new AppError(`${paramName} parameter is required`, 400);
   }
   
-  // UUID v4 regex pattern
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  
-  if (!uuidRegex.test(id)) {
+  if (!isValidUUID(id)) {
     throw new AppError(`Invalid UUID format for ${paramName}`, 400);
   }
 };
