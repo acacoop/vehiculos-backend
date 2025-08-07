@@ -6,6 +6,6 @@ export interface Vehicle {
   brand: string;
   model: string;
   year: number;
-  imgUrl: string;
+  imgUrl?: string; // Optional image URL
   currentResponsible?: VehicleResponsibleWithDetails | null; // Optional, only included in detailed views
 }

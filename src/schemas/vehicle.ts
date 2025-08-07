@@ -8,5 +8,5 @@ export const VehicleSchema = z.object({
   brand: z.string(),
   model: z.string(),
   year: z.number(),
-  imgUrl: z.string().url(),
+  imgUrl: z.string().url().optional(), // Optional image URL
 });

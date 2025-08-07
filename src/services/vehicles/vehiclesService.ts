@@ -76,7 +76,7 @@ export const getVehicleById = async (id: string): Promise<Vehicle | null> => {
 export const addVehicle = async (vehicle: Vehicle): Promise<Vehicle | null> => {
   const { licensePlate, brand, model, year, imgUrl } = vehicle;
   const sql = `INSERT INTO vehicles (license_plate, brand, model, year, img_url) VALUES ($1, $2, $3, $4, $5) RETURNING id, license_plate as "licensePlate", brand, model, year, img_url as "imgUrl"`;
-  const params = [licensePlate, brand, model, year, imgUrl];
+  const params = [licensePlate, brand, model, year, imgUrl || null];
   return await oneOrNone<Vehicle>(sql, params);
 };
 
@@ -103,7 +103,7 @@ export const updateVehicle = async (id: string, vehicle: Partial<Vehicle>): Prom
   }
   if (vehicle.imgUrl !== undefined) {
     fields.push(`img_url = $${paramIndex++}`);
-    params.push(vehicle.imgUrl);
+    params.push(vehicle.imgUrl || null); // Allow null to clear the image
   }
 
   if (fields.length === 0) {

@@ -64,7 +64,7 @@ interface ReservationRow {
   vehicle_brand: string;
   vehicle_model: string;
   vehicle_year: number;
-  vehicle_imgUrl: string;
+  vehicle_imgUrl?: string; // Made optional
 }
 
 export const getAllReservations = async (options?: { 
