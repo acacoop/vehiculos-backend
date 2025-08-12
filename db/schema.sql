@@ -13,18 +13,22 @@ CREATE TABLE IF NOT EXISTS vehicles (
 
 -- Create the vehicle kilometers log table
 CREATE TABLE IF NOT EXISTS vehicle_kilometers (
-    id uuid primary key default uuid_generate_v4(),
-    vehicle_id uuid not null references vehicles(id) on delete cascade,
-    user_id uuid not null references users(id),
+    id uuid primary key default uuid_generate_v4 (),
+    vehicle_id uuid not null references vehicles (id) on delete cascade,
+    user_id uuid not null references users (id),
     -- Using timestamp with time zone for precision; frontend can send ISO string
-    date timestamp with time zone not null,
-    kilometers integer not null check (kilometers >= 0),
-    created_at timestamp with time zone default now(),
-    unique (vehicle_id, date)
+    date timestamp
+    with
+        time zone not null,
+        kilometers integer not null check (kilometers >= 0),
+        created_at timestamp
+    with
+        time zone default now(),
+        unique (vehicle_id, date)
 );
 
 -- Index to speed up chronological lookups per vehicle
-CREATE INDEX IF NOT EXISTS idx_vehicle_kilometers_vehicle_date ON vehicle_kilometers(vehicle_id, date);
+CREATE INDEX IF NOT EXISTS idx_vehicle_kilometers_vehicle_date ON vehicle_kilometers (vehicle_id, date);
 
 -- Create the users table
 CREATE TABLE IF NOT EXISTS users (
@@ -94,15 +98,24 @@ CREATE TABLE IF NOT EXISTS vehicle_responsibles (
     user_id uuid not null references users (id),
     start_date date not null default CURRENT_DATE,
     end_date date,
-    created_at timestamp with time zone default now(),
-    updated_at timestamp with time zone default now()
+    created_at timestamp
+    with
+        time zone default now(),
+        updated_at timestamp
+    with
+        time zone default now()
 );
 
 -- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_vehicle_responsibles_vehicle_id ON vehicle_responsibles(vehicle_id);
-CREATE INDEX IF NOT EXISTS idx_vehicle_responsibles_user_id ON vehicle_responsibles(user_id);
-CREATE INDEX IF NOT EXISTS idx_vehicle_responsibles_dates ON vehicle_responsibles(start_date, end_date);
-CREATE INDEX IF NOT EXISTS idx_vehicle_responsibles_active ON vehicle_responsibles(vehicle_id, end_date) WHERE end_date IS NULL;
+CREATE INDEX IF NOT EXISTS idx_vehicle_responsibles_vehicle_id ON vehicle_responsibles (vehicle_id);
+
+CREATE INDEX IF NOT EXISTS idx_vehicle_responsibles_user_id ON vehicle_responsibles (user_id);
+
+CREATE INDEX IF NOT EXISTS idx_vehicle_responsibles_dates ON vehicle_responsibles (start_date, end_date);
+
+CREATE INDEX IF NOT EXISTS idx_vehicle_responsibles_active ON vehicle_responsibles (vehicle_id, end_date)
+WHERE
+    end_date IS NULL;
 
 -- Update trigger for updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()

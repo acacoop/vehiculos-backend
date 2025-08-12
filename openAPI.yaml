@@ -22,6 +22,77 @@ servers:
     description: Production server
 
 paths:
+  /vehicles/kilometers/{vehicleId}:
+    get:
+      summary: Get all kilometer logs for a vehicle
+      description: |
+        Returns the chronological list of kilometer readings for a given vehicle.
+        Useful for tracking usage and validating new entries.
+      tags: [Vehicles]
+      parameters:
+        - name: vehicleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of kilometer logs for the vehicle
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleKilometersLogListResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /vehicles/kilometers:
+    post:
+      summary: Add a new kilometer log for a vehicle
+      description: |
+        Adds a new kilometer reading for a vehicle. The kilometers value must be greater than or equal to the previous reading and less than or equal to the next reading (if inserting out-of-order).
+        Returns error 422 if the value is out of range.
+      tags: [Vehicles]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VehicleKilometersLogInput"
+            examples:
+              valid:
+                summary: Valid log
+                value:
+                  vehicleId: "650e8400-e29b-41d4-a716-446655440001"
+                  userId: "550e8400-e29b-41d4-a716-446655440000"
+                  date: "2025-02-05T09:00:00Z"
+                  kilometers: 48500
+              invalid:
+                summary: Invalid log (km less than previous)
+                value:
+                  vehicleId: "650e8400-e29b-41d4-a716-446655440001"
+                  userId: "550e8400-e29b-41d4-a716-446655440000"
+                  date: "2025-02-05T09:00:00Z"
+                  kilometers: 40000
+      responses:
+        "201":
+          description: Kilometer log created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleKilometersLogResponse"
+        "422":
+          description: Invalid kilometers value (out of range)
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   # HEALTH CHECK
   /health:
     get:
@@ -1012,6 +1083,71 @@ paths:
 
 components:
   schemas:
+    VehicleKilometersLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        vehicleId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date-time
+        kilometers:
+          type: integer
+          minimum: 0
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - vehicleId
+        - userId
+        - date
+        - kilometers
+
+    VehicleKilometersLogInput:
+      type: object
+      properties:
+        vehicleId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date-time
+        kilometers:
+          type: integer
+          minimum: 0
+      required:
+        - vehicleId
+        - userId
+        - date
+        - kilometers
+
+    VehicleKilometersLogResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/VehicleKilometersLog"
+
+    VehicleKilometersLogListResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/VehicleKilometersLog"
     # RFC 7807 Problem Details for HTTP APIs
     ProblemDetails:
       type: object

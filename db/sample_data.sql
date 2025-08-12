@@ -1662,18 +1662,128 @@ VALUES
 -- =====================================================
 -- We add some chronological and back-dated entries to exercise validation logic.
 
-INSERT INTO vehicle_kilometers (vehicle_id, user_id, date, kilometers) VALUES
+INSERT INTO
+    vehicle_kilometers (
+        vehicle_id,
+        user_id,
+        date,
+        kilometers
+    )
+VALUES
     -- Vehicle ABC123 progressive km
-    ((SELECT id FROM vehicles WHERE license_plate='ABC123'), (SELECT id FROM users WHERE email='carlos.rodriguez@acacoop.com'), '2025-01-01T09:00:00Z', 45500),
-    ((SELECT id FROM vehicles WHERE license_plate='ABC123'), (SELECT id FROM users WHERE email='carlos.rodriguez@acacoop.com'), '2025-01-10T09:00:00Z', 46200),
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'ABC123'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'carlos.rodriguez@acacoop.com'
+        ),
+        '2025-01-01T09:00:00Z',
+        45500
+    ),
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'ABC123'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'carlos.rodriguez@acacoop.com'
+        ),
+        '2025-01-10T09:00:00Z',
+        46200
+    ),
     -- A later entry
-    ((SELECT id FROM vehicles WHERE license_plate='ABC123'), (SELECT id FROM users WHERE email='carlos.rodriguez@acacoop.com'), '2025-02-01T09:00:00Z', 48050),
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'ABC123'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'carlos.rodriguez@acacoop.com'
+        ),
+        '2025-02-01T09:00:00Z',
+        48050
+    ),
     -- Back-dated insertion between first and second should still be valid if within range
-    ((SELECT id FROM vehicles WHERE license_plate='ABC123'), (SELECT id FROM users WHERE email='carlos.rodriguez@acacoop.com'), '2025-01-05T09:00:00Z', 45800),
-
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'ABC123'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'carlos.rodriguez@acacoop.com'
+        ),
+        '2025-01-05T09:00:00Z',
+        45800
+    ),
     -- Vehicle DEF456
-    ((SELECT id FROM vehicles WHERE license_plate='DEF456'), (SELECT id FROM users WHERE email='juan.perez@acacoop.com'), '2025-01-03T12:00:00Z', 38600),
-    ((SELECT id FROM vehicles WHERE license_plate='DEF456'), (SELECT id FROM users WHERE email='juan.perez@acacoop.com'), '2025-02-03T12:00:00Z', 40010),
-
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'DEF456'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'juan.perez@acacoop.com'
+        ),
+        '2025-01-03T12:00:00Z',
+        38600
+    ),
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'DEF456'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'juan.perez@acacoop.com'
+        ),
+        '2025-02-03T12:00:00Z',
+        40010
+    ),
     -- Vehicle MNO345 sparse readings
-    ((SELECT id FROM vehicles WHERE license_plate='MNO345'), (SELECT id FROM users WHERE email='maria.gonzalez@acacoop.com'), '2025-01-02T08:30:00Z', 35200);
+    (
+        (
+            SELECT id
+            FROM vehicles
+            WHERE
+                license_plate = 'MNO345'
+        ),
+        (
+            SELECT id
+            FROM users
+            WHERE
+                email = 'maria.gonzalez@acacoop.com'
+        ),
+        '2025-01-02T08:30:00Z',
+        35200
+    );
