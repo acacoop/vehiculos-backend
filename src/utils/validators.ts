@@ -42,3 +42,24 @@ export const validateUserExists = async (userId: string): Promise<void> => {
     );
   }
 };
+
+/**
+ * Validates that a maintenance category exists in the database
+ * @param categoryId - The ID of the maintenance category to validate
+ * @throws AppError if the maintenance category doesn't exist
+ */
+export const validateMaintenanceCategoryExists = async (categoryId: string): Promise<void> => {
+  const categoryExists = await oneOrNone<{ id: string }>(
+    'SELECT id FROM maintenance_categories WHERE id = $1', 
+    [categoryId]
+  );
+  
+  if (!categoryExists) {
+    throw new AppError(
+      `Maintenance category with ID ${categoryId} does not exist`,
+      404,
+      'https://example.com/problems/maintenance-category-not-found',
+      'Maintenance Category Not Found'
+    );
+  }
+};

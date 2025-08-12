@@ -24,6 +24,28 @@ export const validateId = (req: Request, res: Response, next: NextFunction): voi
 };
 
 /**
+ * Middleware to validate maintenance category data
+ */
+export const validateMaintenanceCategoryData = (req: Request, res: Response, next: NextFunction): void => {
+  const { name } = req.body;
+  
+  // Validate name is provided and is a non-empty string
+  if (!name || typeof name !== 'string' || name.trim().length === 0) {
+    throw new AppError('Name is required and must be a non-empty string', 400);
+  }
+  
+  // Validate name length
+  if (name.length > 255) {
+    throw new AppError('Name must be less than 255 characters', 400);
+  }
+  
+  // Trim whitespace
+  req.body.name = name.trim();
+  
+  next();
+};
+
+/**
  * Middleware to validate UUID format for specific parameter names
  */
 export const validateUUIDParam = (paramName: string) => {
