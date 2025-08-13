@@ -19,6 +19,8 @@ DELETE FROM reservations;
 
 DELETE FROM assignments;
 
+DELETE FROM vehicle_responsibles;
+
 DELETE FROM vehicles;
 
 DELETE FROM users;
