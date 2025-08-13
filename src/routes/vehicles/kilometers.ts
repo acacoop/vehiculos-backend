@@ -2,12 +2,17 @@ import express from 'express';
 import { validateUUIDParam } from '../../middleware/validation';
 import { vehicleKilometersController } from '../../controllers/vehicleKilometersController';
 
-const router = express.Router();
+// This router is mounted at /vehicles/:id/kilometers (see index.ts)
+// We merge params so we can access :id inside the handlers
+const router = express.Router({ mergeParams: true });
 
-// GET /vehicles/kilometers/:vehicleId
-router.get('/:vehicleId', validateUUIDParam('vehicleId'), vehicleKilometersController.getByVehicle);
+// Validate the parent vehicle id param
+router.use(validateUUIDParam('id'));
 
-// POST /vehicles/kilometers
+// GET /vehicles/:id/kilometers - list logs for vehicle
+router.get('/', vehicleKilometersController.getByVehicle);
+
+// POST /vehicles/:id/kilometers - create log for vehicle
 router.post('/', vehicleKilometersController.create);
 
 export default router;

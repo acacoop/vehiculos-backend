@@ -16,7 +16,6 @@ import maintenanceCategoriesRoutes from "./routes/vehicles/maintenance/categorie
 import maintenanceRoutes from "./routes/vehicles/maintenance/posibles";
 import assignedMaintenanceRoutes from "./routes/vehicles/maintenance/assignments";
 import maintenanceRecordsRoutes from "./routes/vehicles/maintenance/records";
-import vehicleKilometersRoutes from "./routes/vehicles/kilometers";
 
 import { APP_PORT } from "./config/env.config";
 
@@ -65,7 +64,7 @@ app.get("/", (req: Request, res: Response) => {
         assignments: '/maintenance/assignments',
         records: '/maintenance/records',
       },
-  vehicleKilometers: '/vehicles/kilometers'
+  vehicleKilometers: '/vehicles/{id}/kilometers'
     },
   });
 });
@@ -80,7 +79,6 @@ app.use("/maintenance/categories", maintenanceCategoriesRoutes);
 app.use("/maintenance/posibles", maintenanceRoutes);
 app.use("/maintenance/assignments", assignedMaintenanceRoutes);
 app.use("/maintenance/records", maintenanceRecordsRoutes);
-app.use("/vehicles/kilometers", vehicleKilometersRoutes);
 
 // 404 handler
 app.use("*", (req: Request, res: Response) => {
