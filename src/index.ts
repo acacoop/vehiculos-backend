@@ -65,7 +65,7 @@ app.get("/", (req: Request, res: Response) => {
         assignments: '/maintenance/assignments',
         records: '/maintenance/records',
       },
-  vehicleKilometers: '/vehicles/kilometers'
+  vehicleKilometers: '/vehicles/{id}/kilometers'
     },
   });
 });

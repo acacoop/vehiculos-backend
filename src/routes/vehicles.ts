@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { vehiclesController } from "../controllers/vehiclesController";
+import vehicleKilometersRoutes from "./vehicles/kilometers";
 import { validateSchema, AppError } from "../middleware/errorHandler";
 import { validateId } from "../middleware/validation";
 import { VehicleSchema } from "../schemas/vehicle";
@@ -43,5 +44,8 @@ router.patch("/:id", validateId, validateSchema(VehicleSchema.partial()), vehicl
 
 // DELETE /vehicles/:id - Delete vehicle
 router.delete("/:id", validateId, vehiclesController.delete);
+
+// Nested kilometers routes for a vehicle
+router.use("/:id/kilometers", vehicleKilometersRoutes);
 
 export default router;
