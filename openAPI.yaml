@@ -612,6 +612,58 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /maintenance/posibles/{maintenanceId}/vehicles:
+    get:
+      summary: Get all vehicles assigned to a specific maintenance type
+      description: |
+        Retrieve all vehicles that have been assigned to a specific maintenance type.
+        
+        This endpoint returns detailed information about each vehicle including:
+        - Vehicle details (license plate, brand, model, year, image)
+        - Assignment details (frequencies for kilometers and days)
+        - Assignment ID for reference
+        
+        **Use Cases:**
+        - View which vehicles need a specific type of maintenance
+        - Monitor maintenance coverage across the fleet
+        - Generate maintenance schedules by maintenance type
+        
+        **Example Response:**
+        Returns an array of vehicle assignments with their details and frequencies.
+      tags: [Maintenance]
+      parameters:
+        - name: maintenanceId
+          in: path
+          required: true
+          description: UUID of the maintenance type to get vehicles for
+          schema:
+            type: string
+            format: uuid
+          example: "a06b00cc-13bf-4286-a517-59b8f3fadae2"
+      responses:
+        "200":
+          description: Vehicles assigned to maintenance type retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceVehiclesResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          description: Maintenance type not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: "error"
+                message: "Maintenance with ID a06b00cc-13bf-4286-a517-59b8f3fadae2 not found"
+                statusCode: 404
+                type: "https://example.com/problems/maintenance-not-found"
+                title: "Maintenance Not Found"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
   # MAINTENANCE ASSIGNMENTS
   /maintenance/assignments:
     post:
@@ -1652,6 +1704,106 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/AssignedMaintenance"
+
+    # MAINTENANCE VEHICLE ASSIGNMENT SCHEMAS
+    MaintenanceVehicleAssignment:
+      type: object
+      description: Vehicle assigned to a specific maintenance type with assignment details
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Assignment ID
+          example: "16529194-47f0-4254-b89d-264f602d14ba"
+        vehicleId:
+          type: string
+          format: uuid
+          description: Vehicle UUID
+          example: "de5ec984-6ce0-4bbe-88a0-421b8f2e8b9c"
+        maintenanceId:
+          type: string
+          format: uuid
+          description: Maintenance type UUID
+          example: "a06b00cc-13bf-4286-a517-59b8f3fadae2"
+        kilometersFrequency:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: Kilometers frequency for this maintenance (null if not applicable)
+          example: 10000
+        daysFrequency:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: Days frequency for this maintenance (null if not applicable)
+          example: 180
+        licensePlate:
+          type: string
+          description: Vehicle license plate
+          example: "ABC123"
+        brand:
+          type: string
+          description: Vehicle brand
+          example: "Toyota"
+        model:
+          type: string
+          description: Vehicle model
+          example: "Corolla"
+        year:
+          type: integer
+          minimum: 1900
+          maximum: 2100
+          description: Vehicle year
+          example: 2020
+        imgUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: Vehicle image URL (null if no image)
+          example: "https://example.com/images/vehicle-123.jpg"
+      required:
+        - id
+        - vehicleId
+        - maintenanceId
+        - licensePlate
+        - brand
+        - model
+        - year
+
+    MaintenanceVehiclesResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/MaintenanceVehicleAssignment"
+              description: Array of vehicles assigned to the maintenance type
+          example:
+            status: "success"
+            data:
+              - id: "16529194-47f0-4254-b89d-264f602d14ba"
+                vehicleId: "de5ec984-6ce0-4bbe-88a0-421b8f2e8b9c"
+                maintenanceId: "a06b00cc-13bf-4286-a517-59b8f3fadae2"
+                kilometersFrequency: 10000
+                daysFrequency: 180
+                licensePlate: "ABC123"
+                brand: "Toyota"
+                model: "Corolla"
+                year: 2020
+                imgUrl: "https://example.com/images/vehicle-123.jpg"
+              - id: "5f879c10-d3b0-4dde-8c14-316f50c93b5b"
+                vehicleId: "fe6ec984-6ce0-4bbe-88a0-421b8f2e8b9d"
+                maintenanceId: "a06b00cc-13bf-4286-a517-59b8f3fadae2"
+                kilometersFrequency: 10000
+                daysFrequency: 180
+                licensePlate: "DEF456"
+                brand: "Honda"
+                model: "Civic"
+                year: 2019
+                imgUrl: null
+            message: "Found 2 vehicle(s) assigned to maintenance"
 
     # MAINTENANCE RECORD SCHEMAS
     MaintenanceRecord:

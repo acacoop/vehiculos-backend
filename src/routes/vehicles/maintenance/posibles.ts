@@ -30,4 +30,7 @@ router.patch("/:id", validateId, maintenancePosiblesController.patch);
 // DELETE: Delete a maintenance
 router.delete("/:id", validateId, maintenancePosiblesController.delete);
 
+// GET: Get all vehicles assigned to a specific maintenance
+router.get("/:id/vehicles", validateId, maintenancePosiblesController.getVehiclesByMaintenance);
+
 export default router;

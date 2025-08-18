@@ -1,5 +1,5 @@
 import { some, oneOrNone } from "../../../db";
-import { Maintenance } from "../../../interfaces/maintenance";
+import { Maintenance, MaintenanceVehicleAssignment } from "../../../interfaces/maintenance";
 import { validateMaintenanceCategoryExists } from "../../../utils/validators";
 
 const BASE_SELECT = `
@@ -100,4 +100,29 @@ export const deleteMaintenance = async (id: string): Promise<boolean> => {
   const query = `DELETE FROM maintenances WHERE id = $1`;
   await some(query, [id]);
   return true;
+};
+
+// Get all vehicles assigned to a specific maintenance
+export const getVehiclesByMaintenanceId = async (
+  maintenanceId: string
+): Promise<MaintenanceVehicleAssignment[]> => {
+  const query = `
+    SELECT 
+      am.id,
+      am.vehicle_id as "vehicleId",
+      am.maintenance_id as "maintenanceId",
+      am.kilometers_frequency as "kilometersFrequency",
+      am.days_frequency as "daysFrequency",
+      v.license_plate as "licensePlate",
+      v.brand,
+      v.model,
+      v.year,
+      v.img_url as "imgUrl"
+    FROM assigned_maintenances am
+    INNER JOIN vehicles v ON am.vehicle_id = v.id
+    WHERE am.maintenance_id = $1
+    ORDER BY v.license_plate ASC
+  `;
+  
+  return await some<MaintenanceVehicleAssignment>(query, [maintenanceId]);
 };

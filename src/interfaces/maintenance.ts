@@ -28,3 +28,18 @@ export interface MaintenanceRecord {
   kilometers: number;
   notes?: string;
 }
+
+// Interface for vehicles assigned to a specific maintenance
+export interface MaintenanceVehicleAssignment {
+  id: string; // assignment id
+  vehicleId: string;
+  maintenanceId: string;
+  kilometersFrequency?: number;
+  daysFrequency?: number;
+  // Vehicle details
+  licensePlate: string;
+  brand: string;
+  model: string;
+  year: number;
+  imgUrl?: string;
+}

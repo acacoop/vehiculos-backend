@@ -7,6 +7,7 @@ import {
   createMaintenance,
   updateMaintenance,
   deleteMaintenance,
+  getVehiclesByMaintenanceId,
 } from "../services/vehicles/maintenance/posibles";
 import { Request, Response } from "express";
 import { asyncHandler, AppError } from "../middleware/errorHandler";
@@ -94,6 +95,44 @@ export class MaintenancePosiblesController extends BaseController {
   protected async deleteService(id: string) {
     return await deleteMaintenance(id);
   }
+
+  // Get all vehicles assigned to a specific maintenance
+  getVehiclesByMaintenance = asyncHandler(async (req: Request, res: Response) => {
+    const maintenanceId = req.params.id;
+    
+    try {
+      // First verify that the maintenance exists
+      const maintenance = await getMaintenanceById(maintenanceId);
+      if (!maintenance) {
+        throw new AppError(
+          `Maintenance with ID ${maintenanceId} not found`,
+          404,
+          'https://example.com/problems/maintenance-not-found',
+          'Maintenance Not Found'
+        );
+      }
+
+      const vehicles = await getVehiclesByMaintenanceId(maintenanceId);
+      
+      res.status(200).json({
+        status: 'success',
+        data: vehicles,
+        message: vehicles.length > 0 
+          ? `Found ${vehicles.length} vehicle(s) assigned to maintenance` 
+          : 'No vehicles assigned to this maintenance'
+      });
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      throw new AppError(
+        'Failed to retrieve vehicles for maintenance',
+        500,
+        'https://example.com/problems/database-error',
+        'Database Error'
+      );
+    }
+  });
 }
 
 export const maintenancePosiblesController =
