@@ -1,5 +1,8 @@
 import { some, oneOrNone } from "../../../db";
-import { Maintenance, MaintenanceVehicleAssignment } from "../../../interfaces/maintenance";
+import {
+  Maintenance,
+  MaintenanceVehicleAssignment,
+} from "../../../interfaces/maintenance";
 import { validateMaintenanceCategoryExists } from "../../../utils/validators";
 
 const BASE_SELECT = `
@@ -123,6 +126,6 @@ export const getVehiclesByMaintenanceId = async (
     WHERE am.maintenance_id = $1
     ORDER BY v.license_plate ASC
   `;
-  
+
   return await some<MaintenanceVehicleAssignment>(query, [maintenanceId]);
 };

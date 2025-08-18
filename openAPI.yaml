@@ -617,17 +617,17 @@ paths:
       summary: Get all vehicles assigned to a specific maintenance type
       description: |
         Retrieve all vehicles that have been assigned to a specific maintenance type.
-        
+
         This endpoint returns detailed information about each vehicle including:
         - Vehicle details (license plate, brand, model, year, image)
         - Assignment details (frequencies for kilometers and days)
         - Assignment ID for reference
-        
+
         **Use Cases:**
         - View which vehicles need a specific type of maintenance
         - Monitor maintenance coverage across the fleet
         - Generate maintenance schedules by maintenance type
-        
+
         **Example Response:**
         Returns an array of vehicle assignments with their details and frequencies.
       tags: [Maintenance]

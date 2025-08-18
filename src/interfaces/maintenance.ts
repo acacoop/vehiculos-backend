@@ -21,7 +21,7 @@ export interface AssignedMaintenance {
 }
 
 export interface MaintenanceRecord {
-  id?: string; // UUID 
+  id?: string; // UUID
   assignedMaintenanceId: string; // UUID
   userId: string; // UUID
   date: Date;
