@@ -596,6 +596,132 @@ paths:
                 $ref: "#/components/schemas/MaintenanceCategoryListResponse"
         "500":
           $ref: "#/components/responses/InternalServerError"
+    post:
+      summary: Create a new maintenance category
+      tags: [Maintenance]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceCategoryInput"
+      responses:
+        "201":
+          description: Maintenance category created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceCategoryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /maintenance/categories/{id}:
+    get:
+      summary: Get maintenance category by ID
+      tags: [Maintenance]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Maintenance category retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceCategoryResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      summary: Update maintenance category (full replacement)
+      tags: [Maintenance]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceCategoryInput"
+      responses:
+        "200":
+          description: Maintenance category updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceCategoryResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      summary: Update maintenance category (partial update)
+      tags: [Maintenance]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceCategoryInput"
+      responses:
+        "200":
+          description: Maintenance category updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceCategoryResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      summary: Delete maintenance category
+      tags: [Maintenance]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Maintenance category deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   # MAINTENANCE POSIBLES
   /maintenance/posibles:
@@ -609,6 +735,132 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MaintenanceListResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      summary: Create a new maintenance type
+      tags: [Maintenance]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceInput"
+      responses:
+        "201":
+          description: Maintenance type created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /maintenance/posibles/{id}:
+    get:
+      summary: Get maintenance type by ID
+      tags: [Maintenance]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Maintenance type retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      summary: Update maintenance type (full replacement)
+      tags: [Maintenance]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceInput"
+      responses:
+        "200":
+          description: Maintenance type updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      summary: Update maintenance type (partial update)
+      tags: [Maintenance]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceInput"
+      responses:
+        "200":
+          description: Maintenance type updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      summary: Delete maintenance type
+      tags: [Maintenance]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Maintenance type deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "500":
           $ref: "#/components/responses/InternalServerError"
 
@@ -707,6 +959,45 @@ paths:
                 $ref: "#/components/schemas/AssignedMaintenanceListResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /maintenance/assignments/{id}:
+    delete:
+      summary: Delete maintenance assignment
+      description: Remove a maintenance assignment from a vehicle
+      tags: [Maintenance]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the maintenance assignment to delete
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Maintenance assignment deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+              example:
+                status: "success"
+                message: "Maintenance assignment deleted successfully"
+                data: null
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          description: Maintenance assignment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: "error"
+                message: "Maintenance assignment not found"
+                statusCode: 404
         "500":
           $ref: "#/components/responses/InternalServerError"
 
@@ -1594,6 +1885,25 @@ components:
         - id
         - name
 
+    MaintenanceCategoryInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Motor"
+      required:
+        - name
+
+    MaintenanceCategoryResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/MaintenanceCategory"
+
     MaintenanceCategoryListResponse:
       allOf:
         - $ref: "#/components/schemas/ApiResponse"
@@ -1619,10 +1929,38 @@ components:
         name:
           type: string
           example: "Cambio de aceite"
+        categoryName:
+          type: string
+          example: "Motor"
+          description: "Category name (included in detailed views)"
       required:
         - id
         - categoryId
         - name
+
+    MaintenanceInput:
+      type: object
+      properties:
+        categoryId:
+          type: string
+          format: uuid
+          example: "950e8400-e29b-41d4-a716-446655440004"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Cambio de aceite"
+      required:
+        - categoryId
+        - name
+
+    MaintenanceResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/Maintenance"
 
     MaintenanceListResponse:
       allOf:
