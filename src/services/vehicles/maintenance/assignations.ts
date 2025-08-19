@@ -1,5 +1,7 @@
 import { some, oneOrNone } from "../../../db";
 import { AssignedMaintenance } from "../../../interfaces/maintenance";
+import { validateVehicleExists } from "../../../utils/validators";
+import { validateMaintenanceExists } from "../../../utils/validators";
 
 const BASE_SELECT = `SELECT 
     am.id,
@@ -39,10 +41,28 @@ export const assignMaintenance = async (
 ): Promise<AssignedMaintenance | null> => {
   const { vehicleId, maintenanceId, kilometersFrequency, daysFrequency } =
     assignedMaintenance;
-  
+
+  // Validate that vehicle and maintenance exist
+  await validateVehicleExists(vehicleId);
+  await validateMaintenanceExists(maintenanceId);
+
   const query = `INSERT INTO assigned_maintenances (vehicle_id, maintenance_id, kilometers_frequency, days_frequency) 
                  VALUES ($1, $2, $3, $4) RETURNING id, vehicle_id as "vehicleId", maintenance_id as "maintenanceId", kilometers_frequency as "kilometersFrequency", days_frequency as "daysFrequency"`;
   const params = [vehicleId, maintenanceId, kilometersFrequency, daysFrequency];
-  
+
   return oneOrNone<AssignedMaintenance>(query, params);
+};
+
+export const deleteAssignedMaintenance = async (
+  id: string
+): Promise<boolean> => {
+  // Check if the assigned maintenance exists before attempting to delete
+  const existingAssignment = await getAssignedMaintenanceById(id);
+  if (!existingAssignment) {
+    return false;
+  }
+
+  const query = `DELETE FROM assigned_maintenances WHERE id = $1`;
+  await some(query, [id]);
+  return true;
 };
