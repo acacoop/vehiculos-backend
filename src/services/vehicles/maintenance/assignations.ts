@@ -53,6 +53,49 @@ export const assignMaintenance = async (
   return oneOrNone<AssignedMaintenance>(query, params);
 };
 
+export const updateAssignedMaintenance = async (
+  id: string,
+  updateData: Partial<
+    Pick<AssignedMaintenance, "kilometersFrequency" | "daysFrequency">
+  >
+): Promise<AssignedMaintenance | null> => {
+  // Check if the assigned maintenance exists before attempting to update
+  const existingAssignment = await getAssignedMaintenanceById(id);
+  if (!existingAssignment) {
+    return null;
+  }
+
+  const updateFields = [];
+  const updateValues = [];
+  let paramIndex = 1;
+
+  if (updateData.kilometersFrequency !== undefined) {
+    updateFields.push(`kilometers_frequency = $${paramIndex++}`);
+    updateValues.push(updateData.kilometersFrequency);
+  }
+
+  if (updateData.daysFrequency !== undefined) {
+    updateFields.push(`days_frequency = $${paramIndex++}`);
+    updateValues.push(updateData.daysFrequency);
+  }
+
+  if (updateFields.length === 0) {
+    // No fields to update, return existing assignment
+    return existingAssignment;
+  }
+
+  updateValues.push(id); // Add id as the last parameter
+  const query = `
+    UPDATE assigned_maintenances 
+    SET ${updateFields.join(", ")} 
+    WHERE id = $${paramIndex}
+    RETURNING id, vehicle_id as "vehicleId", maintenance_id as "maintenanceId", 
+              kilometers_frequency as "kilometersFrequency", days_frequency as "daysFrequency"
+  `;
+
+  return oneOrNone<AssignedMaintenance>(query, updateValues);
+};
+
 export const deleteAssignedMaintenance = async (
   id: string
 ): Promise<boolean> => {

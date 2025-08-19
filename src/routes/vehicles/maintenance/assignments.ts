@@ -14,6 +14,9 @@ router.get(
 // POST: Associate a maintenance with a vehicle
 router.post("/", maintenanceAssignmentsController.create);
 
+// PUT: Update a maintenance assignment
+router.put("/:id", validateId, maintenanceAssignmentsController.update);
+
 // DELETE: Remove a maintenance assignment
 router.delete("/:id", validateId, maintenanceAssignmentsController.delete);
 

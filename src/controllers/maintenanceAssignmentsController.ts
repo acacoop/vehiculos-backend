@@ -1,11 +1,15 @@
 import { Request, Response } from "express";
 import { asyncHandler, AppError } from "../middleware/errorHandler";
-import { AssignedMaintenanceSchema } from "../schemas/maintenance/assignMaintance";
+import {
+  AssignedMaintenanceSchema,
+  UpdateAssignedMaintenanceSchema,
+} from "../schemas/maintenance/assignMaintance";
 import { AssignedMaintenance } from "../interfaces/maintenance";
 import {
   assignMaintenance,
   getAssignedMaintenancesByVehicle,
   deleteAssignedMaintenance,
+  updateAssignedMaintenance,
 } from "../services/vehicles/maintenance/assignations";
 import { ApiResponse } from "./baseController";
 
@@ -59,6 +63,36 @@ export class MaintenanceAssignmentsController {
         res.status(404).json(response);
         return;
       }
+      // Re-throw other errors to be handled by global error handler
+      throw error;
+    }
+  });
+
+  // PUT: Update a maintenance assignment
+  update = asyncHandler(async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const updateData = UpdateAssignedMaintenanceSchema.parse(req.body);
+
+    try {
+      const result = await updateAssignedMaintenance(id, updateData);
+
+      if (!result) {
+        const response: ApiResponse<null> = {
+          status: "error",
+          message: `Maintenance assignment with ID ${id} was not found`,
+        };
+        res.status(404).json(response);
+        return;
+      }
+
+      const response: ApiResponse<typeof result> = {
+        status: "success",
+        data: result,
+        message: "Maintenance assignment updated successfully",
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
       // Re-throw other errors to be handled by global error handler
       throw error;
     }

@@ -963,6 +963,55 @@ paths:
           $ref: "#/components/responses/InternalServerError"
 
   /maintenance/assignments/{id}:
+    put:
+      summary: Update maintenance assignment
+      description: Update frequency settings for an existing maintenance assignment
+      tags: [Maintenance]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the maintenance assignment to update
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMaintenanceAssignmentInput"
+      responses:
+        "200":
+          description: Maintenance assignment updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceAssignmentResponse"
+              example:
+                status: "success"
+                message: "Maintenance assignment updated successfully"
+                data:
+                  id: "550e8400-e29b-41d4-a716-446655440000"
+                  vehicleId: "550e8400-e29b-41d4-a716-446655440001"
+                  maintenanceId: "550e8400-e29b-41d4-a716-446655440002"
+                  kilometersFrequency: 10000
+                  daysFrequency: 90
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          description: Maintenance assignment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: "error"
+                message: "Maintenance assignment not found"
+                statusCode: 404
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
     delete:
       summary: Delete maintenance assignment
       description: Remove a maintenance assignment from a vehicle
@@ -2042,6 +2091,31 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/AssignedMaintenance"
+
+    UpdateMaintenanceAssignmentInput:
+      type: object
+      properties:
+        kilometersFrequency:
+          type: integer
+          minimum: 0
+          description: "Frequency in kilometers for maintenance"
+        daysFrequency:
+          type: integer
+          minimum: 0
+          description: "Frequency in days for maintenance"
+      minProperties: 1
+      description: "At least one field must be provided for update"
+      example:
+        kilometersFrequency: 10000
+        daysFrequency: 90
+
+    MaintenanceAssignmentResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/AssignedMaintenance"
 
     # MAINTENANCE VEHICLE ASSIGNMENT SCHEMAS
     MaintenanceVehicleAssignment:
