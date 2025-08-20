@@ -6,6 +6,7 @@ import { globalErrorHandler } from "./middleware/errorHandler";
 import { rateLimiter, sanitizeInput, securityHeaders, corsOptions } from "./middleware/security";
 import { setupSwagger } from "./config/swagger";
 import { requireAuth } from "./middleware/auth";
+import meRoutes from "./routes/me";
 
 // Import routes
 import usersRoutes from "./routes/users";
@@ -46,34 +47,23 @@ app.get("/health", (req: Request, res: Response) => {
   });
 });
 
-// Root endpoint
-app.get("/", (req: Request, res: Response) => {
+// Root endpoint: simple project info (no endpoint listing)
+app.get("/", (_req: Request, res: Response) => {
   res.status(200).json({
     status: 'success',
-    message: 'Vehiculos API - Fleet Management System',
+    name: 'Vehiculos API',
+    description: 'Fleet management backend for ACA Coop',
     version: '2.0.0',
     documentation: '/docs',
     health: '/health',
-    endpoints: {
-      users: '/users',
-      vehicles: '/vehicles',
-      assignments: '/assignments',
-      reservations: '/reservations',
-      vehicleResponsibles: '/vehicle-responsibles',
-      maintenance: {
-        categories: '/maintenance/categories',
-        posibles: '/maintenance/posibles',
-        assignments: '/maintenance/assignments',
-        records: '/maintenance/records',
-      },
-  vehicleKilometers: '/vehicles/{id}/kilometers'
-    },
   });
 });
 
 // API routes with consistent plural naming
 // Require authentication for all API routes after this point
 app.use(requireAuth);
+
+app.use("/me", meRoutes);
 
 app.use("/users", usersRoutes);
 app.use("/vehicles", vehiclesRoutes);

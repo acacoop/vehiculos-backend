@@ -49,6 +49,23 @@ paths:
                   uptime:
                     type: number
 
+  /me:
+    get:
+      summary: Get current authenticated user
+      description: Returns the local user mapped to the bearer token.
+      tags: [Users]
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "401":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   # USERS
   /users:
     get:
