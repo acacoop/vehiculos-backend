@@ -17,6 +17,21 @@ import {
 import { oneOrNone, some } from "../db";
 import { User } from "../interfaces/user";
 
+const VERBOSE = process.env.VERBOSE === "1" || process.argv.includes("--verbose");
+
+type SkipReason =
+  | { kind: "missing_email"; entraId: string }
+  | { kind: "missing_dni"; entraId: string; employeeId?: string }
+  | { kind: "email_conflict"; entraId: string; email: string; existingUserId: string }
+  | { kind: "dni_conflict"; entraId: string; dni: number; existingUserId: string };
+
+type Stats = {
+  created: number;
+  updated: number;
+  skippedCreate: SkipReason[];
+  cannotUpdateCount: number; // updates fully blocked by conflicts (no fields applied)
+};
+
 async function getAccessToken(): Promise<string> {
   if (!ENTRA_TENANT_ID || !ENTRA_CLIENT_ID || !ENTRA_CLIENT_SECRET) {
     throw new Error(
@@ -90,6 +105,7 @@ export async function runSync({
   const graphUsers = await fetchAllUsers(token);
 
   const seenEntraIds = new Set<string>();
+  const stats: Stats = { created: 0, updated: 0, skippedCreate: [], cannotUpdateCount: 0 };
 
   function parseDniFromCuit(input?: string): number | undefined {
     if (!input) return undefined;
@@ -124,15 +140,30 @@ export async function runSync({
 
     const existing = await getUserByEntraId(entraId);
     if (existing) {
-      const patch: Partial<User> = { firstName, lastName, active };
+      // Build patch only with changed values
+      const patch: Partial<User> = {};
+      if (firstName !== undefined && firstName !== existing.firstName) {
+        patch.firstName = firstName;
+      }
+      if (lastName !== undefined && lastName !== existing.lastName) {
+        patch.lastName = lastName;
+      }
+      if (active !== undefined && active !== existing.active) {
+        patch.active = active;
+      }
+      let hadConflicts = false;
 
       // Email update with uniqueness check
       if (email && email !== existing.email) {
         const byEmail = await findUserByEmail(email);
         if (byEmail && byEmail.id !== existing.id) {
-          console.warn(
-            `⚠️ Email conflict for ${email} (entraId=${entraId}). Already used by user ${byEmail.id}. Skipping email update.`,
-          );
+          hadConflicts = true;
+          if (VERBOSE) {
+            // concise, single-line verbose detail
+            console.log(
+              `conflict:update email entraId=${entraId} email=${email} usedBy=${byEmail.id}`,
+            );
+          }
         } else {
           patch.email = email;
         }
@@ -142,29 +173,41 @@ export async function runSync({
       if (dniFromEmployeeId && existing.dni !== dniFromEmployeeId) {
         const byDni = await findUserByDni(dniFromEmployeeId);
         if (byDni && byDni.id !== existing.id) {
-          console.warn(
-            `⚠️ DNI conflict for ${dniFromEmployeeId} (entraId=${entraId}). Already used by user ${byDni.id}. Skipping DNI update.`,
-          );
+          hadConflicts = true;
+          if (VERBOSE) {
+            console.log(
+              `conflict:update dni entraId=${entraId} dni=${dniFromEmployeeId} usedBy=${byDni.id}`,
+            );
+          }
         } else {
           patch.dni = dniFromEmployeeId;
         }
       }
 
-      if (Object.keys(patch).length > 0) {
+      const keys = Object.keys(patch);
+      if (keys.length > 0) {
         await updateUser(existing.id, patch);
+        stats.updated += 1;
+        if (VERBOSE) {
+          console.log(
+            `ok:update entraId=${entraId} userId=${existing.id} fields=${keys.join("|")}`,
+          );
+        }
+      } else if (hadConflicts) {
+        // Update attempted but fully blocked by conflicts
+        stats.cannotUpdateCount += 1;
+      } else if (VERBOSE) {
+        // No changes needed
+        console.log(`ok:noop entraId=${entraId} userId=${existing.id}`);
       }
     } else {
       // Creation path: require both email and DNI
       if (!email) {
-        console.warn(
-          `⚠️ Skipping creation for entraId=${entraId}: missing email`,
-        );
+        stats.skippedCreate.push({ kind: "missing_email", entraId });
         continue;
       }
       if (!dniFromEmployeeId) {
-        console.warn(
-          `⚠️ Skipping creation for entraId=${entraId}: missing DNI (employeeId not parseable)`,
-        );
+        stats.skippedCreate.push({ kind: "missing_dni", entraId, employeeId: gu.employeeId });
         continue;
       }
 
@@ -174,15 +217,11 @@ export async function runSync({
         findUserByDni(dniFromEmployeeId),
       ]);
       if (byEmail) {
-        console.warn(
-          `⚠️ Not creating user entraId=${entraId}: email ${email} already used by user ${byEmail.id}`,
-        );
+        stats.skippedCreate.push({ kind: "email_conflict", entraId, email, existingUserId: byEmail.id });
         continue;
       }
       if (byDni) {
-        console.warn(
-          `⚠️ Not creating user entraId=${entraId}: DNI ${dniFromEmployeeId} already used by user ${byDni.id}`,
-        );
+        stats.skippedCreate.push({ kind: "dni_conflict", entraId, dni: dniFromEmployeeId, existingUserId: byDni.id });
         continue;
       }
 
@@ -195,7 +234,13 @@ export async function runSync({
         active,
         entraId,
       };
-      await addUser(newUser);
+      const created = await addUser(newUser);
+      stats.created += 1;
+      if (VERBOSE) {
+        console.log(
+          `ok:create entraId=${entraId} userId=${created?.id ?? "unknown"}`,
+        );
+      }
     }
   }
 
@@ -207,12 +252,35 @@ export async function runSync({
       [ids],
     );
   }
+
+  // Output section
+  if (VERBOSE && stats.skippedCreate.length > 0) {
+    for (const s of stats.skippedCreate) {
+      switch (s.kind) {
+        case "missing_email":
+          console.log(`skip:create missing_email entraId=${s.entraId}`);
+          break;
+        case "missing_dni":
+          console.log(`skip:create missing_dni entraId=${s.entraId} employeeId=${s.employeeId ?? ""}`);
+          break;
+        case "email_conflict":
+          console.log(`skip:create email_conflict entraId=${s.entraId} email=${s.email} usedBy=${s.existingUserId}`);
+          break;
+        case "dni_conflict":
+          console.log(`skip:create dni_conflict entraId=${s.entraId} dni=${s.dni} usedBy=${s.existingUserId}`);
+          break;
+      }
+    }
+  }
+
+  console.log(
+    `summary created=${stats.created} updated=${stats.updated} cannot_update=${stats.cannotUpdateCount} skipped_create=${stats.skippedCreate.length}`,
+  );
 }
 
 if (require.main === module) {
   runSync()
     .then(() => {
-      console.log("✅ Sync completed");
       process.exit(0);
     })
     .catch((err) => {
