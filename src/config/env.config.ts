@@ -12,6 +12,12 @@ const envSchema = z.object({
   DB_NAME: z.string().default("vehicles_db"),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60 * 1000), // 1 minute
   RATE_LIMIT_MAX: z.coerce.number().default(1000), // 1000 requests per window
+  // Optional Entra tenant id (not required for Graph /me validation)
+  ENTRA_TENANT_ID: z.string().optional(),
+  // Sync script credentials (client credentials flow)
+  ENTRA_CLIENT_ID: z.string().optional(),
+  ENTRA_CLIENT_SECRET: z.string().optional(),
+  ENTRA_GROUP_ID: z.string().optional(), // optional group to scope sync
 });
 
 const { success, error, data } = envSchema.safeParse(process.env);
@@ -21,5 +27,9 @@ if (!success) {
   process.exit(1);
 }
 
-export const { APP_PORT, DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX } =
-  data;
+export const { 
+  APP_PORT, DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, 
+  RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX,
+  ENTRA_TENANT_ID,
+  ENTRA_CLIENT_ID, ENTRA_CLIENT_SECRET, ENTRA_GROUP_ID,
+} = data;

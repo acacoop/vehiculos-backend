@@ -5,4 +5,6 @@ export interface User {
   email: string;
   dni: number;
   active: boolean;
+  entraId?: string;
+  roles?: string[];
 }

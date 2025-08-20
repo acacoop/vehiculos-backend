@@ -2,7 +2,7 @@ import { oneOrNone, some } from "../db";
 import { User } from "../interfaces/user";
 
 export const BASE_SELECT =
-  'SELECT u.id, u.first_name AS "firstName", u.last_name AS "lastName", u.dni, u.email, u.active FROM users u';
+  'SELECT u.id, u.first_name AS "firstName", u.last_name AS "lastName", u.dni, u.email, u.active, u.entra_id AS "entraId" FROM users u';
 
 export const getAllUsers = async (options?: { 
   limit?: number; 
@@ -64,11 +64,16 @@ export const getUserById = async (id: string): Promise<User | null> => {
   return await oneOrNone<User>(sql, [id]);
 };
 
-export const addUser = async (user: User): Promise<User | null> => {
-  const { firstName, lastName, dni, email, active = true } = user;
+export const getUserByEntraId = async (entraId: string): Promise<User | null> => {
+  const sql = `${BASE_SELECT} WHERE entra_id = $1`;
+  return await oneOrNone<User>(sql, [entraId]);
+};
 
-  const sql = `INSERT INTO users (first_name, last_name, dni, email, active) VALUES ($1, $2, $3, $4, $5) RETURNING id, first_name AS "firstName", last_name AS "lastName", dni, email, active`;
-  const params = [firstName, lastName, dni, email, active];
+export const addUser = async (user: User): Promise<User | null> => {
+  const { firstName, lastName, dni, email, active = true, entraId } = user;
+
+  const sql = `INSERT INTO users (first_name, last_name, dni, email, active, entra_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, first_name AS "firstName", last_name AS "lastName", dni, email, active, entra_id AS "entraId"`;
+  const params = [firstName, lastName, dni, email, active, entraId ?? null];
   return await oneOrNone<User>(sql, params);
 };
 
@@ -93,6 +98,10 @@ export const updateUser = async (id: string, user: Partial<User>): Promise<User 
     fields.push(`email = $${paramIndex++}`);
     params.push(user.email);
   }
+  if (user.entraId !== undefined) {
+    fields.push(`entra_id = $${paramIndex++}`);
+    params.push(user.entraId);
+  }
   if (user.active !== undefined) {
     fields.push(`active = $${paramIndex++}`);
     params.push(user.active);
@@ -103,7 +112,7 @@ export const updateUser = async (id: string, user: Partial<User>): Promise<User 
   }
 
   params.push(id);
-  const sql = `UPDATE users SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING id, first_name AS "firstName", last_name AS "lastName", dni, email, active`;
+  const sql = `UPDATE users SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING id, first_name AS "firstName", last_name AS "lastName", dni, email, active, entra_id AS "entraId"`;
   
   return await oneOrNone<User>(sql, params);
 };

@@ -5,6 +5,7 @@ import cors from "cors";
 import { globalErrorHandler } from "./middleware/errorHandler";
 import { rateLimiter, sanitizeInput, securityHeaders, corsOptions } from "./middleware/security";
 import { setupSwagger } from "./config/swagger";
+import { requireAuth } from "./middleware/auth";
 
 // Import routes
 import usersRoutes from "./routes/users";
@@ -71,6 +72,9 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 // API routes with consistent plural naming
+// Require authentication for all API routes after this point
+app.use(requireAuth);
+
 app.use("/users", usersRoutes);
 app.use("/vehicles", vehiclesRoutes);
 app.use("/assignments", assignmentsRoutes);

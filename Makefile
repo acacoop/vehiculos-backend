@@ -1,6 +1,6 @@
 # Vehiculos Backend - Development Makefile
 
-.PHONY: help setup up down logs db restart clean dev dev-stop docs health sample-data
+.PHONY: help setup up down logs db restart clean dev dev-stop docs health sample-data sync-users
 
 # Helper function to wait for database
 define wait_for_db
@@ -93,3 +93,9 @@ db-reset: ## Reset database (deletes all data)
 	else \
 		echo "❌ Cancelled"; \
 	fi
+
+sync-users: ## Sync users from Microsoft Entra (Azure AD) into local DB
+	@echo "🔄 Syncing users from Entra..."
+	$(call wait_for_db)
+	npm run sync:users
+	@echo "✅ Sync complete"

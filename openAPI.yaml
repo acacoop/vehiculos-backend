@@ -13,7 +13,8 @@ info:
     - Security headers and rate limiting
 
     ## Authentication
-    Currently using basic security measures. OAuth2/JWT implementation pending.
+    This API is protected with Bearer JWT tokens issued by Microsoft Entra ID (Azure AD).
+    Send requests with an Authorization header: `Authorization: Bearer <access_token>`.
 
 servers:
   - url: http://localhost:3000
@@ -27,6 +28,7 @@ paths:
     get:
       summary: Health check endpoint
       tags: [System]
+      security: [] # Public endpoint; no auth required
       responses:
         "200":
           description: API is healthy
@@ -1898,6 +1900,17 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-# Global security (to be implemented)
-# security:
-#   - BearerAuth: []
+  parameters:
+    SwaggerBypassHeader:
+      name: x-swagger-bypass
+      in: header
+      required: false
+      description: Dev-only header to bypass authentication in Swagger Try-It-Out when server is started with SWAGGER_BYPASS_AUTH=true.
+      schema:
+        type: string
+        enum: ["true"]
+        default: "true"
+
+# Global security: require Bearer JWT for all endpoints unless a path/operation overrides with security: []
+security:
+  - BearerAuth: []

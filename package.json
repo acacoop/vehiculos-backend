@@ -7,7 +7,8 @@
     "start": "node dist/index.js",
     "dev": "ts-node-dev --env-file=.env --respawn --quiet src/index.ts",
     "dev:verbose": "ts-node-dev --respawn src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "sync:users": "ts-node-dev --env-file=.env src/scripts/syncEntraUsers.ts"
   },
   "keywords": [],
   "author": "",

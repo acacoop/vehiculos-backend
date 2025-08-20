@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS users (
     last_name text not null,
     dni integer not null unique,
     email text not null unique,
-    active boolean not null default true
+    active boolean not null default true,
+    entra_id text unique
 );
 
 -- Create the vehicle kilometers log table (after users & vehicles so FKs resolve)
