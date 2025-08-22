@@ -8,6 +8,10 @@ export const MaintenanceSchema = z.object({
     .string()
     .min(1, "Name is required")
     .max(255, "Name must be less than 255 characters"),
+  kilometersFrequency: z.number().int().nonnegative().nullable().optional(),
+  daysFrequency: z.number().int().nonnegative().nullable().optional(),
+  observaciones: z.string().max(1000).nullable().optional(),
+  instrucciones: z.string().max(2000).nullable().optional(),
 });
 
 // Schema for creating maintenances (id is excluded)
@@ -21,6 +25,10 @@ export const MaintenanceUpdateSchema = z.object({
     .min(1, "Name is required")
     .max(255, "Name must be less than 255 characters")
     .optional(),
+  kilometersFrequency: z.number().int().nonnegative().nullable().optional(),
+  daysFrequency: z.number().int().nonnegative().nullable().optional(),
+  observaciones: z.string().max(1000).nullable().optional(),
+  instrucciones: z.string().max(2000).nullable().optional(),
 });
 
 export type MaintenanceInput = z.infer<typeof MaintenanceSchema>;
