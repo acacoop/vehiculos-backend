@@ -6,35 +6,26 @@ import {
 import { validateMaintenanceCategoryExists } from "../../../utils/validators";
 
 const BASE_SELECT = `
-  SELECT
-    m.id,
-    m.category_id as "categoryId",
-    m.name,
-    m.kilometers_frequency as "kilometersFrequency",
-    m.days_frequency as "daysFrequency",
-    m.observaciones,
-    m.instrucciones,
-    mc.name as maintenanceCategoryName
-  FROM
-    maintenances as m
-    INNER JOIN
-      maintenance_categories as mc
-    ON
-      m.category_id = mc.id
-  `;
+    SELECT
+        m.id,
+        m.name,
+        mc.name as maintenanceCategoryName
+    FROM
+        maintenances as m
+        INNER JOIN
+            maintenance_categories as mc
+        ON
+            m.category_id = mc.id
+    `;
 
 const SIMPLE_SELECT = `
-  SELECT
-    id,
-    category_id as "categoryId",
-    name,
-    kilometers_frequency as "kilometersFrequency",
-    days_frequency as "daysFrequency",
-    observaciones,
-    instrucciones
-  FROM
-    maintenances
-  `;
+    SELECT
+        id,
+        category_id as "categoryId",
+        name
+    FROM
+        maintenances
+    `;
 
 export const getAllMaintenances = async () => {
   const query = `${BASE_SELECT}`;
@@ -57,29 +48,13 @@ export const getMaintenanceWithDetailsById = async (id: string) => {
 export const createMaintenance = async (
   maintenance: Omit<Maintenance, "id">
 ): Promise<Maintenance | null> => {
-  const {
-    categoryId,
-    name,
-    kilometersFrequency,
-    daysFrequency,
-    observaciones,
-    instrucciones,
-  } = maintenance;
+  const { categoryId, name } = maintenance;
 
   // Validate that the category exists
   await validateMaintenanceCategoryExists(categoryId);
 
-  const query = `INSERT INTO maintenances (category_id, name, kilometers_frequency, days_frequency, observaciones, instrucciones)
-    VALUES ($1, $2, $3, $4, $5, $6)
-    RETURNING id, category_id as "categoryId", name, kilometers_frequency as "kilometersFrequency", days_frequency as "daysFrequency", observaciones, instrucciones`;
-  return await oneOrNone<Maintenance>(query, [
-    categoryId,
-    name,
-    kilometersFrequency ?? null,
-    daysFrequency ?? null,
-    observaciones ?? null,
-    instrucciones ?? null,
-  ]);
+  const query = `INSERT INTO maintenances (category_id, name) VALUES ($1, $2) RETURNING id, category_id as "categoryId", name`;
+  return await oneOrNone<Maintenance>(query, [categoryId, name]);
 };
 
 export const updateMaintenance = async (
@@ -107,29 +82,13 @@ export const updateMaintenance = async (
     fields.push(`name = $${paramIndex++}`);
     params.push(maintenance.name);
   }
-  if (maintenance.kilometersFrequency !== undefined) {
-    fields.push(`kilometers_frequency = $${paramIndex++}`);
-    params.push(maintenance.kilometersFrequency);
-  }
-  if (maintenance.daysFrequency !== undefined) {
-    fields.push(`days_frequency = $${paramIndex++}`);
-    params.push(maintenance.daysFrequency);
-  }
-  if (maintenance.observaciones !== undefined) {
-    fields.push(`observaciones = $${paramIndex++}`);
-    params.push(maintenance.observaciones);
-  }
-  if (maintenance.instrucciones !== undefined) {
-    fields.push(`instrucciones = $${paramIndex++}`);
-    params.push(maintenance.instrucciones);
-  }
 
   if (fields.length === 0) {
     return existingMaintenance;
   }
 
   params.push(id);
-  const query = `UPDATE maintenances SET ${fields.join(", ")} WHERE id = $${paramIndex} RETURNING id, category_id as "categoryId", name, kilometers_frequency as "kilometersFrequency", days_frequency as "daysFrequency", observaciones, instrucciones`;
+  const query = `UPDATE maintenances SET ${fields.join(", ")} WHERE id = $${paramIndex} RETURNING id, category_id as "categoryId", name`;
 
   return await oneOrNone<Maintenance>(query, params);
 };

@@ -7,10 +7,6 @@ export interface Maintenance {
   id: string; // UUID
   categoryId: string; // UUID
   name: string;
-  kilometersFrequency?: number | null;
-  daysFrequency?: number | null;
-  observaciones?: string;
-  instrucciones?: string;
 }
 
 export interface AssignedMaintenance {

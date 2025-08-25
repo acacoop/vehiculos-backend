@@ -50,13 +50,8 @@ CREATE TABLE IF NOT EXISTS maintenance_categories (
 CREATE TABLE IF NOT EXISTS maintenances (
     id uuid primary key default uuid_generate_v4 (),
     category_id uuid not null references maintenance_categories (id),
-    name text not null,
-    kilometers_frequency integer,
-    days_frequency integer,
-    observaciones text,
-    instrucciones text
+    name text not null
 );
-
 
 -- Create the assigned maintenance table
 CREATE TABLE IF NOT EXISTS assigned_maintenances (
