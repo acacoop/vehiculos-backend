@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from './errorHandler';
 import { getUserByEntraId } from '../services/usersService';
+import { extractBearer, verifyEntraAccessToken } from '../utils/jwtAzure';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -13,38 +14,23 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
-// Middleware: validate token by calling Microsoft Graph /me and map to internal user
+// Middleware: validate Azure AD (Entra ID) access token locally using JWKS and map to internal user
 export const requireAuth = async (req: AuthenticatedRequest, _res: Response, next: NextFunction) => {
   try {
-    const authHeader = req.headers.authorization || '';
-    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
-    if (!token) {
-      throw new AppError('Missing bearer token', 401, 'https://example.com/problems/unauthorized', 'Unauthorized');
-    }
+    const token = extractBearer(req.headers.authorization);
+    if (!token) throw new AppError('Missing bearer token', 401, 'https://example.com/problems/unauthorized', 'Unauthorized');
 
-    const resp = await fetch('https://graph.microsoft.com/v1.0/me?$select=id,displayName,givenName,surname,mail,userPrincipalName', {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!resp.ok) {
-      const text = await resp.text().catch(() => '');
-      console.error('Graph /me validation failed:', resp.status, text);
+    const verified = await verifyEntraAccessToken(token).catch(err => {
+      console.error('Token verification failed', err);
       throw new AppError('Invalid token', 401, 'https://example.com/problems/unauthorized', 'Unauthorized');
-    }
-    const me = (await resp.json()) as {
-      id: string;
-      displayName?: string;
-      givenName?: string;
-      surname?: string;
-      mail?: string;
-      userPrincipalName?: string;
-    };
+    });
 
-    const entraId = me.id;
-    const roles: string[] = [];
-    if (!entraId) {
-      throw new AppError('User id missing from Graph profile', 401, 'https://example.com/problems/unauthorized', 'Unauthorized');
-    }
+    const entraId = verified.payload.oid; // user object id
+    if (!entraId) throw new AppError('Token missing oid claim', 401, 'https://example.com/problems/unauthorized', 'Unauthorized');
+
+    const roles = (verified.payload.roles || []) as string[];
+    const name = verified.payload.name;
+    const email = (verified.payload.preferred_username || '') as string;
 
     const user = await getUserByEntraId(entraId);
     if (!user || !user.active) {
@@ -53,11 +39,11 @@ export const requireAuth = async (req: AuthenticatedRequest, _res: Response, nex
 
     req.user = {
       id: user.id,
-      email: user.email,
-      name: `${user.firstName} ${user.lastName}`.trim(),
+      email: user.email || email || '',
+      name: `${user.firstName} ${user.lastName}`.trim() || name || '',
       roles,
       entraId,
-      raw: me,
+      raw: verified.payload,
     };
     next();
   } catch (err) {

@@ -17,13 +17,24 @@ import {
 import { oneOrNone, some } from "../db";
 import { User } from "../interfaces/user";
 
-const VERBOSE = process.env.VERBOSE === "1" || process.argv.includes("--verbose");
+const VERBOSE =
+  process.env.VERBOSE === "1" || process.argv.includes("--verbose");
 
 type SkipReason =
   | { kind: "missing_email"; entraId: string }
   | { kind: "missing_dni"; entraId: string; employeeId?: string }
-  | { kind: "email_conflict"; entraId: string; email: string; existingUserId: string }
-  | { kind: "dni_conflict"; entraId: string; dni: number; existingUserId: string };
+  | {
+      kind: "email_conflict";
+      entraId: string;
+      email: string;
+      existingUserId: string;
+    }
+  | {
+      kind: "dni_conflict";
+      entraId: string;
+      dni: number;
+      existingUserId: string;
+    };
 
 type Stats = {
   created: number;
@@ -105,24 +116,23 @@ export async function runSync({
   const graphUsers = await fetchAllUsers(token);
 
   const seenEntraIds = new Set<string>();
-  const stats: Stats = { created: 0, updated: 0, skippedCreate: [], cannotUpdateCount: 0 };
+  const stats: Stats = {
+    created: 0,
+    updated: 0,
+    skippedCreate: [],
+    cannotUpdateCount: 0,
+  };
 
   function parseDniFromCuit(input?: string): number | undefined {
     if (!input) return undefined;
     const digits = input.replace(/\D+/g, "");
-    // CUIT/CUIL: 2 base digits + DNI (7 or 8 digits) + 1 check digit => total 10 or 11 digits
-    if (digits.length === 10 || digits.length === 11) {
+
+    if (digits.length === 11) {
       const dniDigits = digits.slice(2, -1); // middle portion
-      if (dniDigits.length === 7 || dniDigits.length === 8) {
-        const n = parseInt(dniDigits, 10);
-        if (!Number.isNaN(n)) return n;
-      }
-    }
-    // If employeeId is already just DNI (7-8 digits), accept it
-    if (digits.length === 7 || digits.length === 8) {
-      const n = parseInt(digits, 10);
+      const n = parseInt(dniDigits, 10);
       if (!Number.isNaN(n)) return n;
     }
+
     return undefined;
   }
 
@@ -207,7 +217,11 @@ export async function runSync({
         continue;
       }
       if (!dniFromEmployeeId) {
-        stats.skippedCreate.push({ kind: "missing_dni", entraId, employeeId: gu.employeeId });
+        stats.skippedCreate.push({
+          kind: "missing_dni",
+          entraId,
+          employeeId: gu.employeeId,
+        });
         continue;
       }
 
@@ -217,11 +231,21 @@ export async function runSync({
         findUserByDni(dniFromEmployeeId),
       ]);
       if (byEmail) {
-        stats.skippedCreate.push({ kind: "email_conflict", entraId, email, existingUserId: byEmail.id });
+        stats.skippedCreate.push({
+          kind: "email_conflict",
+          entraId,
+          email,
+          existingUserId: byEmail.id,
+        });
         continue;
       }
       if (byDni) {
-        stats.skippedCreate.push({ kind: "dni_conflict", entraId, dni: dniFromEmployeeId, existingUserId: byDni.id });
+        stats.skippedCreate.push({
+          kind: "dni_conflict",
+          entraId,
+          dni: dniFromEmployeeId,
+          existingUserId: byDni.id,
+        });
         continue;
       }
 
@@ -235,11 +259,17 @@ export async function runSync({
         entraId,
       };
       const created = await addUser(newUser);
-      stats.created += 1;
-      if (VERBOSE) {
-        console.log(
-          `ok:create entraId=${entraId} userId=${created?.id ?? "unknown"}`,
-        );
+      if (created && created.id) {
+        stats.created += 1;
+        if (VERBOSE) {
+          console.log(`ok:create entraId=${entraId} userId=${created.id}`);
+        }
+      } else {
+        if (VERBOSE) {
+          console.error(
+            `error:create entraId=${entraId} failed to create user`,
+          );
+        }
       }
     }
   }
@@ -261,13 +291,19 @@ export async function runSync({
           console.log(`skip:create missing_email entraId=${s.entraId}`);
           break;
         case "missing_dni":
-          console.log(`skip:create missing_dni entraId=${s.entraId} employeeId=${s.employeeId ?? ""}`);
+          console.log(
+            `skip:create missing_dni entraId=${s.entraId} employeeId=${s.employeeId ?? ""}`,
+          );
           break;
         case "email_conflict":
-          console.log(`skip:create email_conflict entraId=${s.entraId} email=${s.email} usedBy=${s.existingUserId}`);
+          console.log(
+            `skip:create email_conflict entraId=${s.entraId} email=${s.email} usedBy=${s.existingUserId}`,
+          );
           break;
         case "dni_conflict":
-          console.log(`skip:create dni_conflict entraId=${s.entraId} dni=${s.dni} usedBy=${s.existingUserId}`);
+          console.log(
+            `skip:create dni_conflict entraId=${s.entraId} dni=${s.dni} usedBy=${s.existingUserId}`,
+          );
           break;
       }
     }

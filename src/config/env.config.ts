@@ -18,6 +18,14 @@ const envSchema = z.object({
   ENTRA_CLIENT_ID: z.string().optional(),
   ENTRA_CLIENT_SECRET: z.string().optional(),
   ENTRA_GROUP_ID: z.string().optional(), // optional group to scope sync
+  // API protected resource (audience) - usually the Application (client) ID of this API or an App ID URI
+  ENTRA_API_AUDIENCE: z.string().optional(),
+  // Comma separated list of accepted client app IDs (azp / appid). Optional.
+  ENTRA_ALLOWED_CLIENT_IDS: z.string().optional(),
+  // Optionally override issuer (normally https://login.microsoftonline.com/{tenantId}/v2.0)
+  ENTRA_EXPECTED_ISSUER: z.string().optional(),
+  // Scope requerido para acceso a la API
+  ENTRA_REQUIRED_SCOPE: z.string().optional(),
 });
 
 const { success, error, data } = envSchema.safeParse(process.env);
@@ -27,9 +35,21 @@ if (!success) {
   process.exit(1);
 }
 
-export const { 
-  APP_PORT, DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, 
-  RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX,
+export const {
+  APP_PORT,
+  DB_HOST,
+  DB_PORT,
+  DB_USER,
+  DB_PASSWORD,
+  DB_NAME,
+  RATE_LIMIT_WINDOW_MS,
+  RATE_LIMIT_MAX,
   ENTRA_TENANT_ID,
-  ENTRA_CLIENT_ID, ENTRA_CLIENT_SECRET, ENTRA_GROUP_ID,
+  ENTRA_CLIENT_ID,
+  ENTRA_CLIENT_SECRET,
+  ENTRA_GROUP_ID,
+  ENTRA_API_AUDIENCE,
+  ENTRA_ALLOWED_CLIENT_IDS,
+  ENTRA_EXPECTED_ISSUER,
+  ENTRA_REQUIRED_SCOPE,
 } = data;
