@@ -9,6 +9,8 @@ const BASE_SELECT = `SELECT
     am.maintenance_id as "maintenanceId",
     am.kilometers_frequency as "kilometersFrequency",
     am.days_frequency as "daysFrequency",
+  am.observations as "observations",
+  am.instructions as "instructions",
     m.name as maintenance_name,
     mc.name as maintenance_category_name
   FROM 
@@ -46,9 +48,18 @@ export const assignMaintenance = async (
   await validateVehicleExists(vehicleId);
   await validateMaintenanceExists(maintenanceId);
 
-  const query = `INSERT INTO assigned_maintenances (vehicle_id, maintenance_id, kilometers_frequency, days_frequency) 
-                 VALUES ($1, $2, $3, $4) RETURNING id, vehicle_id as "vehicleId", maintenance_id as "maintenanceId", kilometers_frequency as "kilometersFrequency", days_frequency as "daysFrequency"`;
-  const params = [vehicleId, maintenanceId, kilometersFrequency, daysFrequency];
+  const { observations, instructions } = assignedMaintenance;
+
+  const query = `INSERT INTO assigned_maintenances (vehicle_id, maintenance_id, kilometers_frequency, days_frequency, observations, instructions) 
+                 VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, vehicle_id as "vehicleId", maintenance_id as "maintenanceId", kilometers_frequency as "kilometersFrequency", days_frequency as "daysFrequency", observations as "observations", instructions as "instructions"`;
+  const params = [
+    vehicleId,
+    maintenanceId,
+    kilometersFrequency,
+    daysFrequency,
+    observations,
+    instructions,
+  ];
 
   return oneOrNone<AssignedMaintenance>(query, params);
 };
@@ -56,7 +67,10 @@ export const assignMaintenance = async (
 export const updateAssignedMaintenance = async (
   id: string,
   updateData: Partial<
-    Pick<AssignedMaintenance, "kilometersFrequency" | "daysFrequency">
+    Pick<
+      AssignedMaintenance,
+      "kilometersFrequency" | "daysFrequency" | "observations" | "instructions"
+    >
   >
 ): Promise<AssignedMaintenance | null> => {
   // Check if the assigned maintenance exists before attempting to update
@@ -79,6 +93,17 @@ export const updateAssignedMaintenance = async (
     updateValues.push(updateData.daysFrequency);
   }
 
+  // allow updating observations and instructions
+  if ((updateData as any).observations !== undefined) {
+    updateFields.push(`observations = $${paramIndex++}`);
+    updateValues.push((updateData as any).observations);
+  }
+
+  if ((updateData as any).instructions !== undefined) {
+    updateFields.push(`instructions = $${paramIndex++}`);
+    updateValues.push((updateData as any).instructions);
+  }
+
   if (updateFields.length === 0) {
     // No fields to update, return existing assignment
     return existingAssignment;
@@ -89,8 +114,9 @@ export const updateAssignedMaintenance = async (
     UPDATE assigned_maintenances 
     SET ${updateFields.join(", ")} 
     WHERE id = $${paramIndex}
-    RETURNING id, vehicle_id as "vehicleId", maintenance_id as "maintenanceId", 
-              kilometers_frequency as "kilometersFrequency", days_frequency as "daysFrequency"
+  RETURNING id, vehicle_id as "vehicleId", maintenance_id as "maintenanceId", 
+        kilometers_frequency as "kilometersFrequency", days_frequency as "daysFrequency",
+        observations as "observations", instructions as "instructions"
   `;
 
   return oneOrNone<AssignedMaintenance>(query, updateValues);

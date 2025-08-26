@@ -7,6 +7,8 @@ export const AssignedMaintenanceSchema = z.object({
   maintenanceId: z.string().uuid(),
   kilometersFrequency: z.number().optional(),
   daysFrequency: z.number().optional(),
+  observations: z.string().optional(),
+  instructions: z.string().optional(),
 });
 
 // Define the schema for updating assigned maintenance (only frequency fields)
@@ -14,6 +16,8 @@ export const UpdateAssignedMaintenanceSchema = z
   .object({
     kilometersFrequency: z.number().optional(),
     daysFrequency: z.number().optional(),
+    observations: z.string().optional(),
+    instructions: z.string().optional(),
   })
   .refine(
     (data) =>

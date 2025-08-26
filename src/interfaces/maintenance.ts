@@ -22,6 +22,11 @@ export interface AssignedMaintenance {
   // Additional fields from JOIN with maintenances table
   maintenance_name?: string;
   maintenance_category_name?: string;
+  maintenance_observations?: string;
+  maintenance_instructions?: string;
+  // fields stored on the assigned_maintenances table
+  observations?: string;
+  instructions?: string;
 }
 
 export interface MaintenanceRecord {
@@ -46,4 +51,9 @@ export interface MaintenanceVehicleAssignment {
   model: string;
   year: number;
   imgUrl?: string;
+  maintenance_observations?: string;
+  maintenance_instructions?: string;
+  // expose assigned observations/instructions if present
+  observations?: string;
+  instructions?: string;
 }

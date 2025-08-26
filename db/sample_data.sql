@@ -786,7 +786,9 @@ INSERT INTO
         vehicle_id,
         maintenance_id,
         kilometers_frequency,
-        days_frequency
+        days_frequency,
+        observations,
+        instructions
     )
 VALUES
     -- Oil changes every 5000km or 90 days
@@ -804,7 +806,9 @@ VALUES
                 name = 'Oil Change'
         ),
         5000,
-        90
+        90,
+    'Regular oil change',
+    'Replace oil filter and drain old oil'
     ),
     (
         (
@@ -819,8 +823,10 @@ VALUES
             WHERE
                 name = 'Oil Change'
         ),
-        5000,
-        90
+    5000,
+    90,
+    'Regular oil change',
+    'Replace oil filter and drain old oil'
     ),
     (
         (
@@ -835,8 +841,10 @@ VALUES
             WHERE
                 name = 'Oil Change'
         ),
-        5000,
-        90
+    5000,
+    90,
+    'Regular oil change',
+    'Replace oil filter and drain old oil'
     ),
     (
         (
@@ -851,8 +859,10 @@ VALUES
             WHERE
                 name = 'Oil Change'
         ),
-        5000,
-        90
+    5000,
+    90,
+    'Regular oil change',
+    'Replace oil filter and drain old oil'
     ),
     (
         (
@@ -867,8 +877,10 @@ VALUES
             WHERE
                 name = 'Oil Change'
         ),
-        5000,
-        90
+    5000,
+    90,
+    'Regular oil change',
+    'Replace oil filter and drain old oil'
     ),
     -- Tire rotation every 10000km or 180 days
     (
@@ -884,8 +896,10 @@ VALUES
             WHERE
                 name = 'Tire Rotation'
         ),
-        10000,
-        180
+    10000,
+    180,
+    'Rotate tires for even wear',
+    'Cross-rotate front and rear tires'
     ),
     (
         (
@@ -900,8 +914,10 @@ VALUES
             WHERE
                 name = 'Tire Rotation'
         ),
-        10000,
-        180
+    10000,
+    180,
+    'Rotate tires for even wear',
+    'Cross-rotate front and rear tires'
     ),
     (
         (
@@ -916,8 +932,10 @@ VALUES
             WHERE
                 name = 'Tire Rotation'
         ),
-        10000,
-        180
+    10000,
+    180,
+    'Rotate tires for even wear',
+    'Cross-rotate front and rear tires'
     ),
     -- Brake inspection every 20000km or 365 days
     (
@@ -933,8 +951,10 @@ VALUES
             WHERE
                 name = 'Brake Inspection'
         ),
-        20000,
-        365
+    20000,
+    365,
+    'Brake inspection',
+    'Measure pad thickness and check for abnormal noises'
     ),
     (
         (
@@ -949,8 +969,10 @@ VALUES
             WHERE
                 name = 'Brake Inspection'
         ),
-        20000,
-        365
+    20000,
+    365,
+    'Brake inspection',
+    'Measure pad thickness and check for abnormal noises'
     ),
     (
         (
@@ -965,8 +987,10 @@ VALUES
             WHERE
                 name = 'Brake Inspection'
         ),
-        20000,
-        365
+    20000,
+    365,
+    'Brake inspection',
+    'Measure pad thickness and check for abnormal noises'
     ),
     (
         (
@@ -981,8 +1005,10 @@ VALUES
             WHERE
                 name = 'Brake Inspection'
         ),
-        15000,
-        365
+    15000,
+    365,
+    'Brake inspection',
+    'Measure pad thickness and check for abnormal noises'
     ),
     (
         (
@@ -997,8 +1023,10 @@ VALUES
             WHERE
                 name = 'Brake Inspection'
         ),
-        15000,
-        365
+    15000,
+    365,
+    'Brake inspection',
+    'Measure pad thickness and check for abnormal noises'
     ),
     -- Annual safety inspections
     (
@@ -1014,8 +1042,10 @@ VALUES
             WHERE
                 name = 'Annual Safety Inspection'
         ),
-        NULL,
-        365
+    NULL,
+    365,
+    'Annual safety inspection',
+    'Check brakes, lights and safety systems'
     ),
     (
         (
@@ -1030,8 +1060,10 @@ VALUES
             WHERE
                 name = 'Annual Safety Inspection'
         ),
-        NULL,
-        365
+    NULL,
+    365,
+    'Annual safety inspection',
+    'Check brakes, lights and safety systems'
     ),
     (
         (
@@ -1046,8 +1078,10 @@ VALUES
             WHERE
                 name = 'Annual Safety Inspection'
         ),
-        NULL,
-        365
+    NULL,
+    365,
+    'Annual safety inspection',
+    'Check brakes, lights and safety systems'
     ),
     (
         (
@@ -1062,8 +1096,10 @@ VALUES
             WHERE
                 name = 'Annual Safety Inspection'
         ),
-        NULL,
-        365
+    NULL,
+    365,
+    'Annual safety inspection',
+    'Check brakes, lights and safety systems'
     ),
     (
         (
@@ -1078,8 +1114,10 @@ VALUES
             WHERE
                 name = 'Annual Safety Inspection'
         ),
-        NULL,
-        365
+    NULL,
+    365,
+    'Annual safety inspection',
+    'Check brakes, lights and safety systems'
     );
 
 -- =====================================================

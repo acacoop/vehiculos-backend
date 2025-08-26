@@ -63,7 +63,9 @@ CREATE TABLE IF NOT EXISTS assigned_maintenances (
     vehicle_id uuid not null references vehicles (id),
     maintenance_id uuid not null references maintenances (id),
     kilometers_frequency integer,
-    days_frequency integer
+    days_frequency integer,
+    observations text,
+    instructions text
 );
 
 -- Create the maintenance history table
