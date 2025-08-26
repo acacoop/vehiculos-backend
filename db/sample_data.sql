@@ -297,259 +297,245 @@ VALUES ('Preventive Maintenance'),
 -- INSERT MAINTENANCE TYPES
 -- =====================================================
 
-INSERT INTO
-    maintenances (category_id, name)
+INSERT INTO maintenances (
+    category_id,
+    name,
+    kilometers_frequency,
+    days_frequency,
+    observations,
+    instructions
+)
 VALUES
-    -- Preventive Maintenance
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Preventive Maintenance'
-        ),
-        'Oil Change'
-    ),
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Preventive Maintenance'
-        ),
-        'Tire Rotation'
-    ),
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Preventive Maintenance'
-        ),
-        'Air Filter Replacement'
-    ),
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Preventive Maintenance'
-        ),
-        'Brake Inspection'
-    ),
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Preventive Maintenance'
-        ),
-        'Battery Check'
-    ),
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Preventive Maintenance'
-        ),
-        'Coolant System Flush'
-    ),
-    -- Scheduled Service
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Scheduled Service'
-        ),
-        '5,000 KM Service'
-    ),
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Scheduled Service'
-        ),
-        '10,000 KM Service'
-    ),
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Scheduled Service'
-        ),
-        '20,000 KM Service'
-    ),
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Scheduled Service'
-        ),
-        '50,000 KM Service'
-    ),
-    -- Corrective Maintenance
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Corrective Maintenance'
-        ),
-        'Brake Pad Replacement'
-    ),
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Corrective Maintenance'
-        ),
-        'Tire Replacement'
-    ),
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Corrective Maintenance'
-        ),
-        'Battery Replacement'
-    ),
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Corrective Maintenance'
-        ),
-        'Engine Tune-up'
-    ),
-    -- Emergency Repairs
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Emergency Repairs'
-        ),
-        'Engine Repair'
-    ),
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Emergency Repairs'
-        ),
-        'Transmission Repair'
-    ),
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Emergency Repairs'
-        ),
-        'Electrical System Repair'
-    ),
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Emergency Repairs'
-        ),
-        'Accident Damage Repair'
-    ),
-    -- Safety Inspections
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Safety Inspections'
-        ),
-        'Annual Safety Inspection'
-    ),
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Safety Inspections'
-        ),
-        'Emissions Test'
-    ),
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Safety Inspections'
-        ),
-        'Brake System Check'
-    ),
-    -- Performance Upgrades
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Performance Upgrades'
-        ),
-        'Performance Exhaust'
-    ),
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Performance Upgrades'
-        ),
-        'Suspension Upgrade'
-    ),
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Performance Upgrades'
-        ),
-        'ECU Tuning'
-    ),
-    -- Cosmetic Repairs
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Cosmetic Repairs'
-        ),
-        'Paint Touch-up'
-    ),
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Cosmetic Repairs'
-        ),
-        'Interior Cleaning'
-    ),
-    (
-        (
-            SELECT id
-            FROM maintenance_categories
-            WHERE
-                name = 'Cosmetic Repairs'
-        ),
-        'Dent Removal'
-    );
+-- Preventive Maintenance
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Preventive Maintenance'),
+    'Oil Change',
+    5000,
+    90,
+    'Cambio de aceite estándar cada 5000 km o 3 meses',
+    'Utilizar aceite sintético 5W-30'
+),
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Preventive Maintenance'),
+    'Tire Rotation',
+    10000,
+    180,
+    'Rotar neumáticos para desgaste uniforme',
+    'Rotar cruzando neumáticos delanteros y traseros'
+),
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Preventive Maintenance'),
+    'Air Filter Replacement',
+    15000,
+    365,
+    'Reemplazo de filtro de aire cada 15,000 km o 1 año',
+    'Utilizar filtro OEM recomendado'
+),
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Preventive Maintenance'),
+    'Brake Inspection',
+    10000,
+    180,
+    'Revisar estado de pastillas y discos',
+    'Medir espesor y verificar ruidos anormales'
+),
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Preventive Maintenance'),
+    'Battery Check',
+    20000,
+    365,
+    'Chequeo de carga y estado de batería',
+    'Medir voltaje y limpiar bornes'
+),
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Preventive Maintenance'),
+    'Coolant System Flush',
+    40000,
+    730,
+    'Limpieza y reemplazo de refrigerante cada 40,000 km o 2 años',
+    'Drenar, enjuagar y rellenar con refrigerante aprobado'
+),
+
+-- Scheduled Service
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Scheduled Service'),
+    '5,000 KM Service',
+    5000,
+    180,
+    'Servicio general cada 5000 km',
+    'Cambio de aceite y revisión básica'
+),
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Scheduled Service'),
+    '10,000 KM Service',
+    10000,
+    365,
+    'Servicio general cada 10000 km',
+    'Incluye inspección de frenos y filtros'
+),
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Scheduled Service'),
+    '20,000 KM Service',
+    20000,
+    730,
+    'Servicio general mayor cada 20000 km',
+    'Revisión de suspensión, transmisión y frenos'
+),
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Scheduled Service'),
+    '50,000 KM Service',
+    50000,
+    1460,
+    'Servicio mayor cada 50000 km',
+    'Cambio de bujías, correas y fluidos principales'
+),
+
+-- Corrective Maintenance
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Corrective Maintenance'),
+    'Brake Pad Replacement',
+    30000,
+    730,
+    'Reemplazo de pastillas según desgaste',
+    'Usar repuestos originales o equivalentes'
+),
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Corrective Maintenance'),
+    'Tire Replacement',
+    40000,
+    1095,
+    'Reemplazo de neumáticos por desgaste',
+    'Alinear y balancear después del cambio'
+),
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Corrective Maintenance'),
+    'Battery Replacement',
+    60000,
+    1460,
+    'Reemplazo de batería defectuosa o vieja',
+    'Configurar sistema eléctrico tras instalación'
+),
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Corrective Maintenance'),
+    'Engine Tune-up',
+    40000,
+    1460,
+    'Afinación general del motor',
+    'Ajustar encendido, bujías y calibrar inyectores'
+),
+
+-- Emergency Repairs
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Emergency Repairs'),
+    'Engine Repair',
+    NULL,
+    NULL,
+    'Reparación en caso de fallas graves',
+    'Diagnóstico completo y reparación según daño'
+),
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Emergency Repairs'),
+    'Transmission Repair',
+    NULL,
+    NULL,
+    'Reparación de transmisión en fallas críticas',
+    'Reparación o reemplazo de componentes'
+),
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Emergency Repairs'),
+    'Electrical System Repair',
+    NULL,
+    NULL,
+    'Reparaciones eléctricas de emergencia',
+    'Verificar fusibles, cableado y alternador'
+),
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Emergency Repairs'),
+    'Accident Damage Repair',
+    NULL,
+    NULL,
+    'Reparación por daños de accidentes',
+    'Inspección estructural y de seguridad'
+),
+
+-- Safety Inspections
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Safety Inspections'),
+    'Annual Safety Inspection',
+    NULL,
+    365,
+    'Inspección de seguridad anual obligatoria',
+    'Revisar frenos, luces y sistemas de seguridad'
+),
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Safety Inspections'),
+    'Emissions Test',
+    NULL,
+    365,
+    'Prueba de emisiones contaminantes',
+    'Verificar niveles de CO2 y gases permitidos'
+),
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Safety Inspections'),
+    'Brake System Check',
+    10000,
+    365,
+    'Chequeo anual del sistema de frenos',
+    'Revisar discos, pastillas y líquido de frenos'
+),
+
+-- Performance Upgrades
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Performance Upgrades'),
+    'Performance Exhaust',
+    NULL,
+    NULL,
+    'Instalación de escape de alto rendimiento',
+    'Instalar sistema compatible y ajustar ECU'
+),
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Performance Upgrades'),
+    'Suspension Upgrade',
+    NULL,
+    NULL,
+    'Mejora de suspensión para mejor manejo',
+    'Instalar kit deportivo o reforzado'
+),
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Performance Upgrades'),
+    'ECU Tuning',
+    NULL,
+    NULL,
+    'Optimización del rendimiento mediante software',
+    'Reprogramar ECU con mapa personalizado'
+),
+
+-- Cosmetic Repairs
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Cosmetic Repairs'),
+    'Paint Touch-up',
+    NULL,
+    NULL,
+    'Corrección de pintura en zonas dañadas',
+    'Utilizar pintura original del fabricante'
+),
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Cosmetic Repairs'),
+    'Interior Cleaning',
+    NULL,
+    NULL,
+    'Limpieza interior profunda',
+    'Aspirado, limpieza de tapizados y plásticos'
+),
+(
+    (SELECT id FROM maintenance_categories WHERE name = 'Cosmetic Repairs'),
+    'Dent Removal',
+    NULL,
+    NULL,
+    'Reparación de abolladuras menores',
+    'Aplicar técnicas PDR (Paintless Dent Repair)'
+);
+
 
 -- =====================================================
 -- INSERT VEHICLE ASSIGNMENTS
@@ -804,7 +790,9 @@ INSERT INTO
         vehicle_id,
         maintenance_id,
         kilometers_frequency,
-        days_frequency
+        days_frequency,
+        observations,
+        instructions
     )
 VALUES
     -- Oil changes every 5000km or 90 days
@@ -822,7 +810,9 @@ VALUES
                 name = 'Oil Change'
         ),
         5000,
-        90
+        90,
+    'Regular oil change',
+    'Replace oil filter and drain old oil'
     ),
     (
         (
@@ -837,8 +827,10 @@ VALUES
             WHERE
                 name = 'Oil Change'
         ),
-        5000,
-        90
+    5000,
+    90,
+    'Regular oil change',
+    'Replace oil filter and drain old oil'
     ),
     (
         (
@@ -853,8 +845,10 @@ VALUES
             WHERE
                 name = 'Oil Change'
         ),
-        5000,
-        90
+    5000,
+    90,
+    'Regular oil change',
+    'Replace oil filter and drain old oil'
     ),
     (
         (
@@ -869,8 +863,10 @@ VALUES
             WHERE
                 name = 'Oil Change'
         ),
-        5000,
-        90
+    5000,
+    90,
+    'Regular oil change',
+    'Replace oil filter and drain old oil'
     ),
     (
         (
@@ -885,8 +881,10 @@ VALUES
             WHERE
                 name = 'Oil Change'
         ),
-        5000,
-        90
+    5000,
+    90,
+    'Regular oil change',
+    'Replace oil filter and drain old oil'
     ),
     -- Tire rotation every 10000km or 180 days
     (
@@ -902,8 +900,10 @@ VALUES
             WHERE
                 name = 'Tire Rotation'
         ),
-        10000,
-        180
+    10000,
+    180,
+    'Rotate tires for even wear',
+    'Cross-rotate front and rear tires'
     ),
     (
         (
@@ -918,8 +918,10 @@ VALUES
             WHERE
                 name = 'Tire Rotation'
         ),
-        10000,
-        180
+    10000,
+    180,
+    'Rotate tires for even wear',
+    'Cross-rotate front and rear tires'
     ),
     (
         (
@@ -934,8 +936,10 @@ VALUES
             WHERE
                 name = 'Tire Rotation'
         ),
-        10000,
-        180
+    10000,
+    180,
+    'Rotate tires for even wear',
+    'Cross-rotate front and rear tires'
     ),
     -- Brake inspection every 20000km or 365 days
     (
@@ -951,8 +955,10 @@ VALUES
             WHERE
                 name = 'Brake Inspection'
         ),
-        20000,
-        365
+    20000,
+    365,
+    'Brake inspection',
+    'Measure pad thickness and check for abnormal noises'
     ),
     (
         (
@@ -967,8 +973,10 @@ VALUES
             WHERE
                 name = 'Brake Inspection'
         ),
-        20000,
-        365
+    20000,
+    365,
+    'Brake inspection',
+    'Measure pad thickness and check for abnormal noises'
     ),
     (
         (
@@ -983,8 +991,10 @@ VALUES
             WHERE
                 name = 'Brake Inspection'
         ),
-        20000,
-        365
+    20000,
+    365,
+    'Brake inspection',
+    'Measure pad thickness and check for abnormal noises'
     ),
     (
         (
@@ -999,8 +1009,10 @@ VALUES
             WHERE
                 name = 'Brake Inspection'
         ),
-        15000,
-        365
+    15000,
+    365,
+    'Brake inspection',
+    'Measure pad thickness and check for abnormal noises'
     ),
     (
         (
@@ -1015,8 +1027,10 @@ VALUES
             WHERE
                 name = 'Brake Inspection'
         ),
-        15000,
-        365
+    15000,
+    365,
+    'Brake inspection',
+    'Measure pad thickness and check for abnormal noises'
     ),
     -- Annual safety inspections
     (
@@ -1032,8 +1046,10 @@ VALUES
             WHERE
                 name = 'Annual Safety Inspection'
         ),
-        NULL,
-        365
+    NULL,
+    365,
+    'Annual safety inspection',
+    'Check brakes, lights and safety systems'
     ),
     (
         (
@@ -1048,8 +1064,10 @@ VALUES
             WHERE
                 name = 'Annual Safety Inspection'
         ),
-        NULL,
-        365
+    NULL,
+    365,
+    'Annual safety inspection',
+    'Check brakes, lights and safety systems'
     ),
     (
         (
@@ -1064,8 +1082,10 @@ VALUES
             WHERE
                 name = 'Annual Safety Inspection'
         ),
-        NULL,
-        365
+    NULL,
+    365,
+    'Annual safety inspection',
+    'Check brakes, lights and safety systems'
     ),
     (
         (
@@ -1080,8 +1100,10 @@ VALUES
             WHERE
                 name = 'Annual Safety Inspection'
         ),
-        NULL,
-        365
+    NULL,
+    365,
+    'Annual safety inspection',
+    'Check brakes, lights and safety systems'
     ),
     (
         (
@@ -1096,8 +1118,10 @@ VALUES
             WHERE
                 name = 'Annual Safety Inspection'
         ),
-        NULL,
-        365
+    NULL,
+    365,
+    'Annual safety inspection',
+    'Check brakes, lights and safety systems'
     );
 
 -- =====================================================
