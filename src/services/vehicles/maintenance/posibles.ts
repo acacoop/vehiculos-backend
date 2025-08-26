@@ -9,23 +9,29 @@ const BASE_SELECT = `
     SELECT
         m.id,
         m.name,
-        mc.name as maintenanceCategoryName
+        mc.name as maintenanceCategoryName,
+        m.kilometers_frequency,
+        m.days_frequency,
+        m.observations,
+        m.instructions
     FROM
         maintenances as m
-        INNER JOIN
-            maintenance_categories as mc
-        ON
-            m.category_id = mc.id
-    `;
+        INNER JOIN maintenance_categories as mc
+        ON m.category_id = mc.id
+`;
 
 const SIMPLE_SELECT = `
     SELECT
         id,
         category_id as "categoryId",
-        name
+        name,
+        kilometers_frequency,
+        days_frequency,
+        observations,
+        instructions
     FROM
         maintenances
-    `;
+`;
 
 export const getAllMaintenances = async () => {
   const query = `${BASE_SELECT}`;
@@ -48,13 +54,33 @@ export const getMaintenanceWithDetailsById = async (id: string) => {
 export const createMaintenance = async (
   maintenance: Omit<Maintenance, "id">
 ): Promise<Maintenance | null> => {
-  const { categoryId, name } = maintenance;
+  const {
+    categoryId,
+    name,
+    kilometers_frequency,
+    days_frequency,
+    observations,
+    instructions,
+  } = maintenance;
 
-  // Validate that the category exists
+  // Validar categoría
   await validateMaintenanceCategoryExists(categoryId);
 
-  const query = `INSERT INTO maintenances (category_id, name) VALUES ($1, $2) RETURNING id, category_id as "categoryId", name`;
-  return await oneOrNone<Maintenance>(query, [categoryId, name]);
+  const query = `
+    INSERT INTO maintenances 
+      (category_id, name, kilometers_frequency, days_frequency, observations, instructions)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING id, category_id as "categoryId", name, kilometers_frequency, days_frequency, observations, instructions
+  `;
+
+  return await oneOrNone<Maintenance>(query, [
+    categoryId,
+    name,
+    kilometers_frequency ?? null,
+    days_frequency ?? null,
+    observations ?? null,
+    instructions ?? null,
+  ]);
 };
 
 export const updateMaintenance = async (
@@ -83,12 +109,37 @@ export const updateMaintenance = async (
     params.push(maintenance.name);
   }
 
+  if (maintenance.kilometers_frequency !== undefined) {
+    fields.push(`kilometers_frequency = $${paramIndex++}`);
+    params.push(maintenance.kilometers_frequency);
+  }
+
+  if (maintenance.days_frequency !== undefined) {
+    fields.push(`days_frequency = $${paramIndex++}`);
+    params.push(maintenance.days_frequency);
+  }
+
+  if (maintenance.observations !== undefined) {
+    fields.push(`observations = $${paramIndex++}`);
+    params.push(maintenance.observations);
+  }
+
+  if (maintenance.instructions !== undefined) {
+    fields.push(`instructions = $${paramIndex++}`);
+    params.push(maintenance.instructions);
+  }
+
   if (fields.length === 0) {
     return existingMaintenance;
   }
 
   params.push(id);
-  const query = `UPDATE maintenances SET ${fields.join(", ")} WHERE id = $${paramIndex} RETURNING id, category_id as "categoryId", name`;
+  const query = `
+  UPDATE maintenances 
+  SET ${fields.join(", ")} 
+  WHERE id = $${paramIndex} 
+  RETURNING id, category_id as "categoryId", name, kilometers_frequency, days_frequency, observations, instructions
+`;
 
   return await oneOrNone<Maintenance>(query, params);
 };
