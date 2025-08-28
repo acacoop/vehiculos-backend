@@ -7,7 +7,7 @@ import {
   getMaintenanceRecordById,
   getAllMaintenanceRecords,
 } from '../services/vehicles/maintenance/records';
-import { MaintenanceRecord } from '../interfaces/maintenance';
+import type { MaintenanceRecord } from '../types';
 import { ApiResponse } from './baseController';
 
 export class MaintenanceRecordsController {

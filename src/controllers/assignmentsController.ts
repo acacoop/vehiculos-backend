@@ -1,5 +1,5 @@
 import { BaseController } from './baseController';
-import { Assignment } from '../interfaces/assignment';
+import type { Assignment } from '../types';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { 
   getAllAssignments, 

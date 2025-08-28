@@ -27,5 +27,5 @@ RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodeuser -u 1001
 USER nodeuser
 
-# Start the application
-CMD ["npm", "start"]
+# Run app directly
+CMD ["node", "dist/index.js"]

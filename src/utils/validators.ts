@@ -1,5 +1,9 @@
-import { oneOrNone } from "../db";
+import { AppDataSource } from "../db";
 import { AppError } from "../middleware/errorHandler";
+import { Vehicle } from "../entities/Vehicle";
+import { User } from "../entities/User";
+import { MaintenanceCategory } from "../entities/MaintenanceCategory";
+import { Maintenance } from "../entities/Maintenance";
 
 /**
  * Validates that a vehicle exists in the database
@@ -7,19 +11,19 @@ import { AppError } from "../middleware/errorHandler";
  * @throws AppError if the vehicle doesn't exist
  */
 export const validateVehicleExists = async (
-  vehicleId: string
+  vehicleId: string,
 ): Promise<void> => {
-  const vehicleExists = await oneOrNone<{ id: string }>(
-    "SELECT id FROM vehicles WHERE id = $1",
-    [vehicleId]
-  );
+  const vehicleExists = await AppDataSource.getRepository(Vehicle).findOne({
+    where: { id: vehicleId },
+    select: ["id"],
+  });
 
   if (!vehicleExists) {
     throw new AppError(
       `Vehicle with ID ${vehicleId} does not exist`,
       404,
       "https://example.com/problems/vehicle-not-found",
-      "Vehicle Not Found"
+      "Vehicle Not Found",
     );
   }
 };
@@ -30,17 +34,17 @@ export const validateVehicleExists = async (
  * @throws AppError if the user doesn't exist
  */
 export const validateUserExists = async (userId: string): Promise<void> => {
-  const userExists = await oneOrNone<{ id: string }>(
-    "SELECT id FROM users WHERE id = $1",
-    [userId]
-  );
+  const userExists = await AppDataSource.getRepository(User).findOne({
+    where: { id: userId },
+    select: ["id"],
+  });
 
   if (!userExists) {
     throw new AppError(
       `User with ID ${userId} does not exist`,
       404,
       "https://example.com/problems/user-not-found",
-      "User Not Found"
+      "User Not Found",
     );
   }
 };
@@ -51,19 +55,18 @@ export const validateUserExists = async (userId: string): Promise<void> => {
  * @throws AppError if the maintenance category doesn't exist
  */
 export const validateMaintenanceCategoryExists = async (
-  categoryId: string
+  categoryId: string,
 ): Promise<void> => {
-  const categoryExists = await oneOrNone<{ id: string }>(
-    "SELECT id FROM maintenance_categories WHERE id = $1",
-    [categoryId]
-  );
+  const categoryExists = await AppDataSource.getRepository(
+    MaintenanceCategory,
+  ).findOne({ where: { id: categoryId }, select: ["id"] });
 
   if (!categoryExists) {
     throw new AppError(
       `Maintenance category with ID ${categoryId} does not exist`,
       404,
       "https://example.com/problems/maintenance-category-not-found",
-      "Maintenance Category Not Found"
+      "Maintenance Category Not Found",
     );
   }
 };
@@ -74,19 +77,18 @@ export const validateMaintenanceCategoryExists = async (
  * @throws AppError if the maintenance doesn't exist
  */
 export const validateMaintenanceExists = async (
-  maintenanceId: string
+  maintenanceId: string,
 ): Promise<void> => {
-  const maintenanceExists = await oneOrNone<{ id: string }>(
-    "SELECT id FROM maintenances WHERE id = $1",
-    [maintenanceId]
-  );
+  const maintenanceExists = await AppDataSource.getRepository(
+    Maintenance,
+  ).findOne({ where: { id: maintenanceId }, select: ["id"] });
 
   if (!maintenanceExists) {
     throw new AppError(
       `Maintenance with ID ${maintenanceId} does not exist`,
       404,
       "https://example.com/problems/maintenance-not-found",
-      "Maintenance Not Found"
+      "Maintenance Not Found",
     );
   }
 };

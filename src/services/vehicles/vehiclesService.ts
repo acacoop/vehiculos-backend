@@ -1,123 +1,87 @@
-import { oneOrNone, some } from "../../db";
-import { Vehicle } from "../../interfaces/vehicle";
+import { AppDataSource } from "../../db";
+import { Vehicle as VehicleEntity } from "../../entities/Vehicle";
+import type { Vehicle } from "../../types";
+import { Like } from "typeorm";
 import { getCurrentResponsibleForVehicle } from "../vehicleResponsiblesService";
 
+const repo = () => AppDataSource.getRepository(VehicleEntity);
+
+// Kept for backward compatibility (used by other raw-SQL services). To be removed when all refactored.
 export const BASE_SELECT =
   'SELECT v.id, v.license_plate as "licensePlate", v.brand, v.model, v.year, v.img_url as "imgUrl" FROM vehicles v';
 
-export const getAllVehicles = async (options?: { 
-  limit?: number; 
-  offset?: number; 
-  searchParams?: Record<string, string> 
+export const getAllVehicles = async (options?: {
+  limit?: number;
+  offset?: number;
+  searchParams?: Record<string, string>;
 }): Promise<{ items: Vehicle[]; total: number }> => {
-  const { limit, offset, searchParams } = options || {};
-  
-  // Build WHERE clause based on search parameters
-  const whereConditions: string[] = [];
-  const params: unknown[] = [];
-  let paramIndex = 1;
-
+  const { searchParams } = options || {};
+  const where: Partial<Record<string, unknown>> = {};
   if (searchParams) {
-    if (searchParams.licensePlate) {
-      whereConditions.push(`v.license_plate = $${paramIndex++}`);
-      params.push(searchParams.licensePlate);
-    }
-    if (searchParams.brand) {
-      whereConditions.push(`LOWER(v.brand) LIKE LOWER($${paramIndex++})`);
-      params.push(`%${searchParams.brand}%`);
-    }
-    if (searchParams.model) {
-      whereConditions.push(`LOWER(v.model) LIKE LOWER($${paramIndex++})`);
-      params.push(`%${searchParams.model}%`);
-    }
-    if (searchParams.year) {
-      whereConditions.push(`v.year = $${paramIndex++}`);
-      params.push(parseInt(searchParams.year));
-    }
+    if (searchParams.licensePlate)
+      where.licensePlate = searchParams.licensePlate;
+    if (searchParams.brand) where.brand = Like(`%${searchParams.brand}%`);
+    if (searchParams.model) where.model = Like(`%${searchParams.model}%`);
+    if (searchParams.year) where.year = Number(searchParams.year);
   }
-
-  const whereClause = whereConditions.length > 0 ? ` WHERE ${whereConditions.join(' AND ')}` : '';
-  
-  // Get total count
-  const countSql = `SELECT COUNT(*) as total FROM vehicles v${whereClause}`;
-  const countResult = await oneOrNone<{ total: string }>(countSql, params);
-  const total = parseInt(countResult?.total || '0');
-  
-  // Get paginated results
-  let sql = `${BASE_SELECT}${whereClause}`;
-  
-  if (limit && offset !== undefined) {
-    sql += ` LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
-    params.push(limit, offset);
-  }
-  
-  const items = await some<Vehicle>(sql, params);
-  
+  const [entities, total] = await repo().findAndCount({
+    where,
+    take: options?.limit,
+    skip: options?.offset,
+    order: { brand: "ASC", model: "ASC" },
+  });
+  const items: Vehicle[] = entities.map(mapEntity);
   return { items, total };
 };
 
 export const getVehicleById = async (id: string): Promise<Vehicle | null> => {
-  const sql = `${BASE_SELECT} WHERE id = $1`;
-  const vehicle = await oneOrNone<Vehicle>(sql, [id]);
-  
-  if (!vehicle) {
-    return null;
-  }
-
-  // Add current responsible to the vehicle
+  const entity = await repo().findOne({ where: { id } });
+  if (!entity) return null;
   const currentResponsible = await getCurrentResponsibleForVehicle(id);
-  
-  return {
-    ...vehicle,
-    currentResponsible
-  };
+  return { ...mapEntity(entity), currentResponsible };
 };
 
 export const addVehicle = async (vehicle: Vehicle): Promise<Vehicle | null> => {
-  const { licensePlate, brand, model, year, imgUrl } = vehicle;
-  const sql = `INSERT INTO vehicles (license_plate, brand, model, year, img_url) VALUES ($1, $2, $3, $4, $5) RETURNING id, license_plate as "licensePlate", brand, model, year, img_url as "imgUrl"`;
-  const params = [licensePlate, brand, model, year, imgUrl || null];
-  return await oneOrNone<Vehicle>(sql, params);
+  const created = repo().create({
+    licensePlate: vehicle.licensePlate,
+    brand: vehicle.brand,
+    model: vehicle.model,
+    year: vehicle.year,
+    imgUrl: vehicle.imgUrl ?? null,
+  });
+  const saved = await repo().save(created);
+  return mapEntity(saved);
 };
 
-export const updateVehicle = async (id: string, vehicle: Partial<Vehicle>): Promise<Vehicle | null> => {
-  const fields: string[] = [];
-  const params: unknown[] = [];
-  let paramIndex = 1;
-
-  if (vehicle.licensePlate !== undefined) {
-    fields.push(`license_plate = $${paramIndex++}`);
-    params.push(vehicle.licensePlate);
-  }
-  if (vehicle.brand !== undefined) {
-    fields.push(`brand = $${paramIndex++}`);
-    params.push(vehicle.brand);
-  }
-  if (vehicle.model !== undefined) {
-    fields.push(`model = $${paramIndex++}`);
-    params.push(vehicle.model);
-  }
-  if (vehicle.year !== undefined) {
-    fields.push(`year = $${paramIndex++}`);
-    params.push(vehicle.year);
-  }
-  if (vehicle.imgUrl !== undefined) {
-    fields.push(`img_url = $${paramIndex++}`);
-    params.push(vehicle.imgUrl || null); // Allow null to clear the image
-  }
-
-  if (fields.length === 0) {
-    return getVehicleById(id);
-  }
-
-  params.push(id);
-  const sql = `UPDATE vehicles SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING id, license_plate as "licensePlate", brand, model, year, img_url as "imgUrl"`;
-  
-  return await oneOrNone<Vehicle>(sql, params);
+export const updateVehicle = async (
+  id: string,
+  vehicle: Partial<Vehicle>,
+): Promise<Vehicle | null> => {
+  const existing = await repo().findOne({ where: { id } });
+  if (!existing) return null;
+  Object.assign(existing, {
+    licensePlate: vehicle.licensePlate ?? existing.licensePlate,
+    brand: vehicle.brand ?? existing.brand,
+    model: vehicle.model ?? existing.model,
+    year: vehicle.year ?? existing.year,
+    imgUrl: vehicle.imgUrl !== undefined ? vehicle.imgUrl : existing.imgUrl,
+  });
+  const saved = await repo().save(existing);
+  return mapEntity(saved);
 };
 
 export const deleteVehicle = async (id: string): Promise<boolean> => {
-  const sql = `DELETE FROM vehicles WHERE id = $1`;
-  const result = await some(sql, [id]);
-  return Array.isArray(result);
+  const res = await repo().delete(id);
+  return res.affected === 1;
 };
+
+function mapEntity(e: VehicleEntity): Vehicle {
+  return {
+    id: e.id,
+    licensePlate: e.licensePlate,
+    brand: e.brand,
+    model: e.model,
+    year: e.year,
+    imgUrl: e.imgUrl ?? undefined,
+  };
+}

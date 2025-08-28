@@ -1,27 +1,29 @@
 # Docker Compose for Vehiculos Application
 services:
-  # PostgreSQL Database
+  # Microsoft SQL Server 2022
   db:
-    image: postgres:15-alpine
-    container_name: vehiculos-db
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: vehiculos-mssql
     restart: unless-stopped
     environment:
-      POSTGRES_DB: vehicles_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Your_password123" # Override via env / .env for production
+      MSSQL_PID: "Developer"
     ports:
-      - "5433:5432" # Expose PostgreSQL on port 5433 to avoid conflicts
+      - "1433:1433"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-      - ./db/sample_data.sql:/docker-entrypoint-initdb.d/02-sample_data.sql
+      - mssql_data:/var/opt/mssql
     networks:
       - vehiculos-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d vehicles_db"]
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P $${MSSQL_SA_PASSWORD} -Q 'SELECT 1' || exit 1",
+        ]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   # Node.js Backend
   backend:
@@ -34,9 +36,9 @@ services:
       APP_PORT: 3000
       APP_HOST: 0.0.0.0
       DB_HOST: db
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: postgres
+      DB_PORT: 1433
+      DB_USER: sa
+      DB_PASSWORD: Your_password123
       DB_NAME: vehicles_db
       NODE_ENV: development
       RATE_LIMIT_WINDOW_MS: 60000 # 1 minute
@@ -53,7 +55,7 @@ services:
 
 # Named volumes
 volumes:
-  postgres_data:
+  mssql_data:
     driver: local
 
 # Networks

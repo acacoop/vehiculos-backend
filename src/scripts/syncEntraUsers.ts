@@ -14,16 +14,27 @@ import {
   getUserByEntraId,
   updateUser,
 } from "../services/usersService";
-import { oneOrNone, some } from "../db";
-import { User } from "../interfaces/user";
+import { AppDataSource } from "../db";
+import type { User } from "../types";
 
-const VERBOSE = process.env.VERBOSE === "1" || process.argv.includes("--verbose");
+const VERBOSE =
+  process.env.VERBOSE === "1" || process.argv.includes("--verbose");
 
 type SkipReason =
   | { kind: "missing_email"; entraId: string }
   | { kind: "missing_dni"; entraId: string; employeeId?: string }
-  | { kind: "email_conflict"; entraId: string; email: string; existingUserId: string }
-  | { kind: "dni_conflict"; entraId: string; dni: number; existingUserId: string };
+  | {
+      kind: "email_conflict";
+      entraId: string;
+      email: string;
+      existingUserId: string;
+    }
+  | {
+      kind: "dni_conflict";
+      entraId: string;
+      dni: number;
+      existingUserId: string;
+    };
 
 type Stats = {
   created: number;
@@ -87,15 +98,58 @@ async function fetchAllUsers(token: string): Promise<GraphUser[]> {
 
 // Local helpers to check uniqueness
 async function findUserByEmail(email: string): Promise<User | null> {
-  const sql =
-    'SELECT u.id, u.first_name AS "firstName", u.last_name AS "lastName", u.dni, u.email, u.active, u.entra_id AS "entraId" FROM users u WHERE u.email = $1';
-  return await oneOrNone<User>(sql, [email]);
+  const repo = AppDataSource.getRepository("users");
+  // Using query builder to select needed columns and map manually
+  const row = await repo
+    .createQueryBuilder("u")
+    .select([
+      "u.id",
+      "u.first_name",
+      "u.last_name",
+      "u.dni",
+      "u.email",
+      "u.active",
+      "u.entra_id",
+    ]) // raw columns
+    .where("u.email = :email", { email })
+    .getRawOne();
+  if (!row) return null;
+  return {
+    id: row.u_id,
+    firstName: row.u_first_name,
+    lastName: row.u_last_name,
+    dni: row.u_dni,
+    email: row.u_email,
+    active: row.u_active,
+    entraId: row.u_entra_id,
+  } as User;
 }
 
 async function findUserByDni(dni: number): Promise<User | null> {
-  const sql =
-    'SELECT u.id, u.first_name AS "firstName", u.last_name AS "lastName", u.dni, u.email, u.active, u.entra_id AS "entraId" FROM users u WHERE u.dni = $1';
-  return await oneOrNone<User>(sql, [dni]);
+  const repo = AppDataSource.getRepository("users");
+  const row = await repo
+    .createQueryBuilder("u")
+    .select([
+      "u.id",
+      "u.first_name",
+      "u.last_name",
+      "u.dni",
+      "u.email",
+      "u.active",
+      "u.entra_id",
+    ])
+    .where("u.dni = :dni", { dni })
+    .getRawOne();
+  if (!row) return null;
+  return {
+    id: row.u_id,
+    firstName: row.u_first_name,
+    lastName: row.u_last_name,
+    dni: row.u_dni,
+    email: row.u_email,
+    active: row.u_active,
+    entraId: row.u_entra_id,
+  } as User;
 }
 
 export async function runSync({
@@ -105,7 +159,12 @@ export async function runSync({
   const graphUsers = await fetchAllUsers(token);
 
   const seenEntraIds = new Set<string>();
-  const stats: Stats = { created: 0, updated: 0, skippedCreate: [], cannotUpdateCount: 0 };
+  const stats: Stats = {
+    created: 0,
+    updated: 0,
+    skippedCreate: [],
+    cannotUpdateCount: 0,
+  };
 
   function parseDniFromCuit(input?: string): number | undefined {
     if (!input) return undefined;
@@ -207,7 +266,11 @@ export async function runSync({
         continue;
       }
       if (!dniFromEmployeeId) {
-        stats.skippedCreate.push({ kind: "missing_dni", entraId, employeeId: gu.employeeId });
+        stats.skippedCreate.push({
+          kind: "missing_dni",
+          entraId,
+          employeeId: gu.employeeId,
+        });
         continue;
       }
 
@@ -217,11 +280,21 @@ export async function runSync({
         findUserByDni(dniFromEmployeeId),
       ]);
       if (byEmail) {
-        stats.skippedCreate.push({ kind: "email_conflict", entraId, email, existingUserId: byEmail.id });
+        stats.skippedCreate.push({
+          kind: "email_conflict",
+          entraId,
+          email,
+          existingUserId: byEmail.id,
+        });
         continue;
       }
       if (byDni) {
-        stats.skippedCreate.push({ kind: "dni_conflict", entraId, dni: dniFromEmployeeId, existingUserId: byDni.id });
+        stats.skippedCreate.push({
+          kind: "dni_conflict",
+          entraId,
+          dni: dniFromEmployeeId,
+          existingUserId: byDni.id,
+        });
         continue;
       }
 
@@ -247,10 +320,31 @@ export async function runSync({
   if (disableMissing) {
     const ids = Array.from(seenEntraIds);
     // Deactivate users whose entra_id is not in the current set
-    await some(
-      "UPDATE users SET active = false WHERE entra_id IS NOT NULL AND active = true AND NOT (entra_id = ANY($1::text[]))",
-      [ids],
-    );
+    // Deactivate users whose entra_id not in list (raw query via queryRunner for efficiency)
+    const queryRunner = AppDataSource.createQueryRunner();
+    await queryRunner.connect();
+    // For MSSQL we'll use a temporary table logic; simpler approach: fetch and iterate
+    const userRepo = AppDataSource.getRepository("users");
+    const toDeactivate = await userRepo
+      .createQueryBuilder("u")
+      .where("u.entra_id IS NOT NULL")
+      .andWhere("u.active = :active", { active: true })
+      .getMany();
+    // Entities returned include entraId (camel case) if mapped; fallback to raw property names
+    interface MutableUserEntity {
+      id: string;
+      entraId?: string;
+      entra_id?: string;
+      active: boolean;
+    }
+    for (const u of toDeactivate as unknown as MutableUserEntity[]) {
+      const currentEntra = u.entraId ?? u.entra_id;
+      if (currentEntra && !ids.includes(currentEntra)) {
+        u.active = false;
+        await userRepo.save(u as object as unknown as Record<string, unknown>);
+      }
+    }
+    await queryRunner.release();
   }
 
   // Output section
@@ -261,13 +355,19 @@ export async function runSync({
           console.log(`skip:create missing_email entraId=${s.entraId}`);
           break;
         case "missing_dni":
-          console.log(`skip:create missing_dni entraId=${s.entraId} employeeId=${s.employeeId ?? ""}`);
+          console.log(
+            `skip:create missing_dni entraId=${s.entraId} employeeId=${s.employeeId ?? ""}`,
+          );
           break;
         case "email_conflict":
-          console.log(`skip:create email_conflict entraId=${s.entraId} email=${s.email} usedBy=${s.existingUserId}`);
+          console.log(
+            `skip:create email_conflict entraId=${s.entraId} email=${s.email} usedBy=${s.existingUserId}`,
+          );
           break;
         case "dni_conflict":
-          console.log(`skip:create dni_conflict entraId=${s.entraId} dni=${s.dni} usedBy=${s.existingUserId}`);
+          console.log(
+            `skip:create dni_conflict entraId=${s.entraId} dni=${s.dni} usedBy=${s.existingUserId}`,
+          );
           break;
       }
     }

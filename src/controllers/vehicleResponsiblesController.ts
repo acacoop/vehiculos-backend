@@ -1,5 +1,5 @@
 import { BaseController } from './baseController';
-import { VehicleResponsible } from '../interfaces/vehicleResponsible';
+import type { VehicleResponsible } from '../types';
 import { AppError } from '../middleware/errorHandler';
 import { Request, Response } from 'express';
 import { asyncHandler } from '../middleware/errorHandler';

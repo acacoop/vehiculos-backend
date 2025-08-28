@@ -5,7 +5,7 @@ import {
   addVehicle,
 } from "../../services/vehicles/vehiclesService";
 import { VehicleSchema } from "../../schemas/vehicle";
-import { Vehicle } from "../../interfaces/vehicle";
+import type { Vehicle } from "../../types";
 import { validateId } from "../../middleware/validation";
 
 const router = express.Router();

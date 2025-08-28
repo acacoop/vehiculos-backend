@@ -6,9 +6,9 @@ import { z } from "zod";
 const envSchema = z.object({
   APP_PORT: z.coerce.number().default(3000),
   DB_HOST: z.string().default("localhost"),
-  DB_PORT: z.coerce.number().default(5432),
-  DB_USER: z.string().default("postgres"),
-  DB_PASSWORD: z.string().default("postgres"),
+  DB_PORT: z.coerce.number().default(1433),
+  DB_USER: z.string().default("sa"),
+  DB_PASSWORD: z.string().default("Your_password123"),
   DB_NAME: z.string().default("vehicles_db"),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60 * 1000), // 1 minute
   RATE_LIMIT_MAX: z.coerce.number().default(1000), // 1000 requests per window
@@ -27,9 +27,17 @@ if (!success) {
   process.exit(1);
 }
 
-export const { 
-  APP_PORT, DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, 
-  RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX,
+export const {
+  APP_PORT,
+  DB_HOST,
+  DB_PORT,
+  DB_USER,
+  DB_PASSWORD,
+  DB_NAME,
+  RATE_LIMIT_WINDOW_MS,
+  RATE_LIMIT_MAX,
   ENTRA_TENANT_ID,
-  ENTRA_CLIENT_ID, ENTRA_CLIENT_SECRET, ENTRA_GROUP_ID,
+  ENTRA_CLIENT_ID,
+  ENTRA_CLIENT_SECRET,
+  ENTRA_GROUP_ID,
 } = data;

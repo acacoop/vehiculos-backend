@@ -1,5 +1,5 @@
 import { BaseController } from './baseController';
-import { MaintenanceCategory } from '../interfaces/maintenance';
+import type { MaintenanceCategory } from '../types';
 import { 
   getAllMaintenancesCategories, 
   getMaintenanceCategoryById, 
@@ -14,7 +14,7 @@ export class MaintenanceCategoriesController extends BaseController {
   }
 
   // Implement abstract methods from BaseController
-  protected async getAllService(options: { limit: number; offset: number; searchParams?: Record<string, string> }) {
+  protected async getAllService(_options: { limit: number; offset: number; searchParams?: Record<string, string> }) {
     // Maintenance categories don't typically need pagination, but we'll adapt the response
     const categories = await getAllMaintenancesCategories();
     return { items: categories, total: categories.length };

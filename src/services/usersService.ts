@@ -1,156 +1,113 @@
-import { oneOrNone, some } from "../db";
-import { User } from "../interfaces/user";
+import { AppDataSource } from "../db";
+import { User as UserEntity } from "../entities/User";
+import type { User } from "../types";
+import { ILike } from "typeorm";
 
-export const BASE_SELECT =
-  'SELECT u.id, u.first_name AS "firstName", u.last_name AS "lastName", u.dni, u.email, u.active, u.entra_id AS "entraId" FROM users u';
+const repo = () => AppDataSource.getRepository(UserEntity);
 
-export const getAllUsers = async (options?: { 
-  limit?: number; 
-  offset?: number; 
-  searchParams?: Record<string, string> 
+export const getAllUsers = async (options?: {
+  limit?: number;
+  offset?: number;
+  searchParams?: Record<string, string>;
 }): Promise<{ items: User[]; total: number }> => {
   const { limit, offset, searchParams } = options || {};
-  
-  // Build WHERE clause based on search parameters
-  const whereConditions: string[] = [];
-  const params: unknown[] = [];
-  let paramIndex = 1;
 
+  const where: Partial<Record<string, unknown>> = {};
   if (searchParams) {
-    if (searchParams.email) {
-      whereConditions.push(`u.email = $${paramIndex++}`);
-      params.push(searchParams.email);
-    }
-    if (searchParams.dni) {
-      whereConditions.push(`u.dni = $${paramIndex++}`);
-      params.push(searchParams.dni);
-    }
-    if (searchParams.firstName) {
-      whereConditions.push(`LOWER(u.first_name) LIKE LOWER($${paramIndex++})`);
-      params.push(`%${searchParams.firstName}%`);
-    }
-    if (searchParams.lastName) {
-      whereConditions.push(`LOWER(u.last_name) LIKE LOWER($${paramIndex++})`);
-      params.push(`%${searchParams.lastName}%`);
-    }
-    if (searchParams.active !== undefined) {
-      whereConditions.push(`u.active = $${paramIndex++}`);
-      params.push(searchParams.active === 'true');
-    }
+    if (searchParams.email) where.email = searchParams.email;
+    if (searchParams.dni) where.dni = Number(searchParams.dni);
+    if (searchParams.firstName)
+      where.firstName = ILike(`%${searchParams.firstName}%`);
+    if (searchParams.lastName)
+      where.lastName = ILike(`%${searchParams.lastName}%`);
+    if (searchParams.active !== undefined)
+      where.active = searchParams.active === "true";
   }
 
-  const whereClause = whereConditions.length > 0 ? ` WHERE ${whereConditions.join(' AND ')}` : '';
-  
-  // Get total count
-  const countSql = `SELECT COUNT(*) as total FROM users u${whereClause}`;
-  const countResult = await oneOrNone<{ total: string }>(countSql, params);
-  const total = parseInt(countResult?.total || '0');
-  
-  // Get paginated results
-  let sql = `${BASE_SELECT}${whereClause}`;
-  
-  if (limit && offset !== undefined) {
-    sql += ` LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
-    params.push(limit, offset);
-  }
-  
-  const items = await some<User>(sql, params);
-  
-  return { items, total };
+  const [items, total] = await repo().findAndCount({
+    where,
+    take: limit,
+    skip: offset,
+    order: { lastName: "ASC" },
+  });
+
+  return { items: items.map(mapEntity), total };
 };
 
 export const getUserById = async (id: string): Promise<User | null> => {
-  const sql = `${BASE_SELECT} WHERE id = $1`;
-  return await oneOrNone<User>(sql, [id]);
+  const entity = await repo().findOne({ where: { id } });
+  return entity ? mapEntity(entity) : null;
 };
 
-export const getUserByEntraId = async (entraId: string): Promise<User | null> => {
-  const sql = `${BASE_SELECT} WHERE entra_id = $1`;
-  return await oneOrNone<User>(sql, [entraId]);
+export const getUserByEntraId = async (
+  entraId: string,
+): Promise<User | null> => {
+  const entity = await repo().findOne({ where: { entraId } });
+  return entity ? mapEntity(entity) : null;
 };
 
 export const addUser = async (user: User): Promise<User | null> => {
-  const { firstName, lastName, dni, email, active = true, entraId } = user;
-
-  const sql = `INSERT INTO users (first_name, last_name, dni, email, active, entra_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, first_name AS "firstName", last_name AS "lastName", dni, email, active, entra_id AS "entraId"`;
-  const params = [firstName, lastName, dni, email, active, entraId ?? null];
-  return await oneOrNone<User>(sql, params);
+  const created = repo().create({
+    firstName: user.firstName,
+    lastName: user.lastName,
+    dni: user.dni,
+    email: user.email,
+    active: user.active ?? true,
+    entraId: user.entraId ?? null,
+  });
+  const saved = await repo().save(created);
+  return mapEntity(saved);
 };
 
-export const updateUser = async (id: string, user: Partial<User>): Promise<User | null> => {
-  const fields: string[] = [];
-  const params: unknown[] = [];
-  let paramIndex = 1;
-
-  if (user.firstName !== undefined) {
-    fields.push(`first_name = $${paramIndex++}`);
-    params.push(user.firstName);
-  }
-  if (user.lastName !== undefined) {
-    fields.push(`last_name = $${paramIndex++}`);
-    params.push(user.lastName);
-  }
-  if (user.dni !== undefined) {
-    fields.push(`dni = $${paramIndex++}`);
-    params.push(user.dni);
-  }
-  if (user.email !== undefined) {
-    fields.push(`email = $${paramIndex++}`);
-    params.push(user.email);
-  }
-  if (user.entraId !== undefined) {
-    fields.push(`entra_id = $${paramIndex++}`);
-    params.push(user.entraId);
-  }
-  if (user.active !== undefined) {
-    fields.push(`active = $${paramIndex++}`);
-    params.push(user.active);
-  }
-
-  if (fields.length === 0) {
-    return getUserById(id);
-  }
-
-  params.push(id);
-  const sql = `UPDATE users SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING id, first_name AS "firstName", last_name AS "lastName", dni, email, active, entra_id AS "entraId"`;
-  
-  return await oneOrNone<User>(sql, params);
+export const updateUser = async (
+  id: string,
+  user: Partial<User>,
+): Promise<User | null> => {
+  const existing = await repo().findOne({ where: { id } });
+  if (!existing) return null;
+  Object.assign(existing, {
+    firstName: user.firstName ?? existing.firstName,
+    lastName: user.lastName ?? existing.lastName,
+    dni: user.dni ?? existing.dni,
+    email: user.email ?? existing.email,
+    entraId: user.entraId ?? existing.entraId,
+    active: user.active ?? existing.active,
+  });
+  const saved = await repo().save(existing);
+  return mapEntity(saved);
 };
 
 export const deleteUser = async (id: string): Promise<boolean> => {
-  const sql = `DELETE FROM users WHERE id = $1`;
-  const result = await some(sql, [id]);
-  return Array.isArray(result);
+  const res = await repo().delete(id);
+  return res.affected === 1;
 };
 
 export const activateUser = async (id: string): Promise<User | null> => {
-  // First check if user exists and get current state
-  const currentUser = await getUserById(id);
-  if (!currentUser) {
-    return null;
-  }
-  
-  // Check if user is already active
-  if (currentUser.active) {
-    throw new Error('ALREADY_ACTIVE');
-  }
-  
-  const sql = `UPDATE users SET active = true WHERE id = $1 RETURNING id, first_name AS "firstName", last_name AS "lastName", dni, email, active`;
-  return await oneOrNone<User>(sql, [id]);
+  const existing = await repo().findOne({ where: { id } });
+  if (!existing) return null;
+  if (existing.active) throw new Error("ALREADY_ACTIVE");
+  existing.active = true;
+  const saved = await repo().save(existing);
+  return mapEntity(saved);
 };
 
 export const deactivateUser = async (id: string): Promise<User | null> => {
-  // First check if user exists and get current state
-  const currentUser = await getUserById(id);
-  if (!currentUser) {
-    return null;
-  }
-  
-  // Check if user is already inactive
-  if (!currentUser.active) {
-    throw new Error('ALREADY_INACTIVE');
-  }
-  
-  const sql = `UPDATE users SET active = false WHERE id = $1 RETURNING id, first_name AS "firstName", last_name AS "lastName", dni, email, active`;
-  return await oneOrNone<User>(sql, [id]);
+  const existing = await repo().findOne({ where: { id } });
+  if (!existing) return null;
+  if (!existing.active) throw new Error("ALREADY_INACTIVE");
+  existing.active = false;
+  const saved = await repo().save(existing);
+  return mapEntity(saved);
 };
+
+function mapEntity(e: UserEntity): User {
+  return {
+    id: e.id,
+    firstName: e.firstName,
+    lastName: e.lastName,
+    dni: e.dni,
+    email: e.email,
+    active: e.active,
+    entraId: e.entraId ?? undefined,
+  };
+}

@@ -1,5 +1,5 @@
 import { BaseController } from './baseController';
-import { Vehicle } from '../interfaces/vehicle';
+import type { Vehicle } from '../types';
 import { 
   getAllVehicles, 
   getVehicleById, 

@@ -1,4 +1,5 @@
-import { Pool } from "pg";
+import "reflect-metadata";
+import { DataSource } from "typeorm";
 import {
   DB_HOST,
   DB_PORT,
@@ -7,45 +8,46 @@ import {
   DB_NAME,
 } from "./config/env.config";
 
-const pool = new Pool({
+// Entities will be added here progressively
+import { Vehicle } from "./entities/Vehicle";
+import { User } from "./entities/User";
+import { Assignment } from "./entities/Assignment";
+import { Reservation } from "./entities/Reservation";
+import { VehicleKilometers } from "./entities/VehicleKilometers";
+import { MaintenanceCategory } from "./entities/MaintenanceCategory";
+import { Maintenance } from "./entities/Maintenance";
+import { AssignedMaintenance } from "./entities/AssignedMaintenance";
+import { MaintenanceRecord } from "./entities/MaintenanceRecord";
+import { VehicleResponsible } from "./entities/VehicleResponsible";
+
+export const AppDataSource = new DataSource({
+  type: "mssql",
   host: DB_HOST,
   port: DB_PORT,
-  user: DB_USER,
+  username: DB_USER,
   password: DB_PASSWORD,
   database: DB_NAME,
+  synchronize: true, // NOTE: for dev only. For prod use migrations.
+  logging: false,
+  options: { encrypt: false },
+  entities: [
+    Vehicle,
+    User,
+    Assignment,
+    Reservation,
+    VehicleKilometers,
+    MaintenanceCategory,
+    Maintenance,
+    AssignedMaintenance,
+    MaintenanceRecord,
+    VehicleResponsible,
+  ],
 });
 
-pool.connect()
-  .then(client => {
-    console.log("✅ Database connection successful");
-    client.release();
-  })
-  .catch(err => {
-    console.error("❌ Database connection failed:", err.message);
-  });
+AppDataSource.initialize()
+  .then(() => console.log("✅ SQL Server connection established (TypeORM)"))
+  .catch((err: unknown) =>
+    console.error("❌ SQL Server connection failed:", err),
+  );
 
-export const some = async <T>(
-  text: string,
-  params?: unknown[]
-): Promise<T[]> => {
-  try {
-    const { rows } = await pool.query(text, params);
-    return rows;
-  } catch (error) {
-    console.error("❌ Database query error in 'some':", error);
-    throw error;
-  }
-};
-
-export const oneOrNone = async <T>(
-  text: string,
-  params?: unknown[]
-): Promise<T | null> => {
-  try {
-    const { rows } = await pool.query(text, params);
-    return rows[0];
-  } catch (error) {
-    console.error("❌ Database query error in 'oneOrNone':", error);
-    throw error;
-  }
-};
+// Legacy raw query helpers removed after full migration to TypeORM repositories.

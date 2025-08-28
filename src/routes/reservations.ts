@@ -8,7 +8,7 @@ import {
   getTodayReservationsByUserId,
 } from "../services/reservationsService";
 import { ReservationSchema } from "../schemas/reservation";
-import { Reservation } from "../interfaces/reservation";
+import type { Reservation } from "../types";
 import { validateId } from "../middleware/validation";
 
 const router = express.Router();

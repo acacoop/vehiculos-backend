@@ -1,5 +1,5 @@
 import { BaseController } from './baseController';
-import { User } from '../interfaces/user';
+import type { User } from '../types';
 import { Request, Response } from 'express';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { 

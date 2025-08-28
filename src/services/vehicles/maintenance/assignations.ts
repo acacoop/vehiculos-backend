@@ -1,67 +1,80 @@
-import { some, oneOrNone } from "../../../db";
-import { AssignedMaintenance } from "../../../interfaces/maintenance";
-import { validateVehicleExists } from "../../../utils/validators";
-import { validateMaintenanceExists } from "../../../utils/validators";
+import { AppDataSource } from "../../../db";
+import { AssignedMaintenance as AssignedMaintenanceEntity } from "../../../entities/AssignedMaintenance";
+import { Maintenance } from "../../../entities/Maintenance";
+import { Vehicle } from "../../../entities/Vehicle";
+import type { AssignedMaintenance } from "../../../types";
+import {
+  validateVehicleExists,
+  validateMaintenanceExists,
+} from "../../../utils/validators";
 
-const BASE_SELECT = `SELECT 
-    am.id,
-    am.vehicle_id as "vehicleId",
-    am.maintenance_id as "maintenanceId",
-    am.kilometers_frequency as "kilometersFrequency",
-    am.days_frequency as "daysFrequency",
-  am.observations as "observations",
-  am.instructions as "instructions",
-    m.name as maintenance_name,
-    mc.name as maintenance_category_name
-  FROM 
-    assigned_maintenances as am 
-    INNER JOIN 
-      maintenances as m 
-    ON 
-      am.maintenance_id = m.id 
-    INNER JOIN 
-      maintenance_categories as mc 
-    ON 
-      m.category_id = mc.id`;
+const repo = () => AppDataSource.getRepository(AssignedMaintenanceEntity);
+const maintenanceRepo = () => AppDataSource.getRepository(Maintenance);
+const vehicleRepo = () => AppDataSource.getRepository(Vehicle);
+
+const mapEntity = (am: AssignedMaintenanceEntity): AssignedMaintenance => ({
+  id: am.id,
+  vehicleId: am.vehicle.id,
+  maintenanceId: am.maintenance.id,
+  kilometersFrequency: am.kilometersFrequency ?? undefined,
+  daysFrequency: am.daysFrequency ?? undefined,
+  observations: am.observations ?? undefined,
+  instructions: am.instructions ?? undefined,
+  maintenance_name: am.maintenance.name,
+  maintenance_category_name: am.maintenance.category?.name,
+  maintenance_observations: am.maintenance.observations ?? undefined,
+  maintenance_instructions: am.maintenance.instructions ?? undefined,
+});
 
 export const getAssignedMaintenancesByVehicle = async (
-  vehicleId: string
+  vehicleId: string,
 ): Promise<AssignedMaintenance[]> => {
-  const sql = `${BASE_SELECT} WHERE am.vehicle_id = $1`;
-  return some<AssignedMaintenance>(sql, [vehicleId]);
+  const list = await repo().find({
+    where: { vehicle: { id: vehicleId } },
+    relations: ["maintenance", "maintenance.category", "vehicle"],
+  });
+  return list.map(mapEntity);
 };
 
 export const getAssignedMaintenanceById = async (
-  id: string
+  id: string,
 ): Promise<AssignedMaintenance | null> => {
-  const sql = `${BASE_SELECT} WHERE am.id = $1`;
-  return oneOrNone<AssignedMaintenance>(sql, [id]);
+  const found = await repo().findOne({
+    where: { id },
+    relations: ["maintenance", "maintenance.category", "vehicle"],
+  });
+  return found ? mapEntity(found) : null;
 };
 
 export const assignMaintenance = async (
-  assignedMaintenance: AssignedMaintenance
+  assignedMaintenance: AssignedMaintenance,
 ): Promise<AssignedMaintenance | null> => {
-  const { vehicleId, maintenanceId, kilometersFrequency, daysFrequency } =
-    assignedMaintenance;
-
-  // Validate that vehicle and maintenance exist
-  await validateVehicleExists(vehicleId);
-  await validateMaintenanceExists(maintenanceId);
-
-  const { observations, instructions } = assignedMaintenance;
-
-  const query = `INSERT INTO assigned_maintenances (vehicle_id, maintenance_id, kilometers_frequency, days_frequency, observations, instructions) 
-                 VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, vehicle_id as "vehicleId", maintenance_id as "maintenanceId", kilometers_frequency as "kilometersFrequency", days_frequency as "daysFrequency", observations as "observations", instructions as "instructions"`;
-  const params = [
+  const {
     vehicleId,
     maintenanceId,
     kilometersFrequency,
     daysFrequency,
     observations,
     instructions,
-  ];
-
-  return oneOrNone<AssignedMaintenance>(query, params);
+  } = assignedMaintenance;
+  await validateVehicleExists(vehicleId);
+  await validateMaintenanceExists(maintenanceId);
+  const vehicle = await vehicleRepo().findOne({ where: { id: vehicleId } });
+  const maintenance = await maintenanceRepo().findOne({
+    where: { id: maintenanceId },
+    relations: ["category"],
+  });
+  if (!vehicle || !maintenance) return null;
+  const created = repo().create({
+    vehicle,
+    maintenance,
+    kilometersFrequency: kilometersFrequency ?? null,
+    daysFrequency: daysFrequency ?? null,
+    observations: observations ?? null,
+    instructions: instructions ?? null,
+  });
+  const saved = await repo().save(created);
+  return mapEntity(saved);
 };
 
 export const updateAssignedMaintenance = async (
@@ -71,67 +84,28 @@ export const updateAssignedMaintenance = async (
       AssignedMaintenance,
       "kilometersFrequency" | "daysFrequency" | "observations" | "instructions"
     >
-  >
+  >,
 ): Promise<AssignedMaintenance | null> => {
-  // Check if the assigned maintenance exists before attempting to update
-  const existingAssignment = await getAssignedMaintenanceById(id);
-  if (!existingAssignment) {
-    return null;
-  }
-
-  const updateFields = [];
-  const updateValues = [];
-  let paramIndex = 1;
-
-  if (updateData.kilometersFrequency !== undefined) {
-    updateFields.push(`kilometers_frequency = $${paramIndex++}`);
-    updateValues.push(updateData.kilometersFrequency);
-  }
-
-  if (updateData.daysFrequency !== undefined) {
-    updateFields.push(`days_frequency = $${paramIndex++}`);
-    updateValues.push(updateData.daysFrequency);
-  }
-
-  // allow updating observations and instructions
-  if ((updateData as any).observations !== undefined) {
-    updateFields.push(`observations = $${paramIndex++}`);
-    updateValues.push((updateData as any).observations);
-  }
-
-  if ((updateData as any).instructions !== undefined) {
-    updateFields.push(`instructions = $${paramIndex++}`);
-    updateValues.push((updateData as any).instructions);
-  }
-
-  if (updateFields.length === 0) {
-    // No fields to update, return existing assignment
-    return existingAssignment;
-  }
-
-  updateValues.push(id); // Add id as the last parameter
-  const query = `
-    UPDATE assigned_maintenances 
-    SET ${updateFields.join(", ")} 
-    WHERE id = $${paramIndex}
-  RETURNING id, vehicle_id as "vehicleId", maintenance_id as "maintenanceId", 
-        kilometers_frequency as "kilometersFrequency", days_frequency as "daysFrequency",
-        observations as "observations", instructions as "instructions"
-  `;
-
-  return oneOrNone<AssignedMaintenance>(query, updateValues);
+  const existing = await repo().findOne({
+    where: { id },
+    relations: ["maintenance", "maintenance.category", "vehicle"],
+  });
+  if (!existing) return null;
+  if (updateData.kilometersFrequency !== undefined)
+    existing.kilometersFrequency = updateData.kilometersFrequency ?? null;
+  if (updateData.daysFrequency !== undefined)
+    existing.daysFrequency = updateData.daysFrequency ?? null;
+  if (updateData.observations !== undefined)
+    existing.observations = updateData.observations ?? null;
+  if (updateData.instructions !== undefined)
+    existing.instructions = updateData.instructions ?? null;
+  const saved = await repo().save(existing);
+  return mapEntity(saved);
 };
 
 export const deleteAssignedMaintenance = async (
-  id: string
+  id: string,
 ): Promise<boolean> => {
-  // Check if the assigned maintenance exists before attempting to delete
-  const existingAssignment = await getAssignedMaintenanceById(id);
-  if (!existingAssignment) {
-    return false;
-  }
-
-  const query = `DELETE FROM assigned_maintenances WHERE id = $1`;
-  await some(query, [id]);
-  return true;
+  const res = await repo().delete(id);
+  return res.affected === 1;
 };

@@ -1,77 +1,48 @@
-import { some, oneOrNone } from "../../../db";
+import { AppDataSource } from "../../../db";
+import { MaintenanceCategory as MaintenanceCategoryEntity } from "../../../entities/MaintenanceCategory";
 import { MaintenanceCategory } from "../../../interfaces/maintenance";
 
-const BASE_SELECT = `
-    SELECT
-        id,
-        name
-    FROM
-        maintenance_categories
-    `;
+const repo = () => AppDataSource.getRepository(MaintenanceCategoryEntity);
+
+const map = (e: MaintenanceCategoryEntity): MaintenanceCategory => ({
+  id: e.id,
+  name: e.name,
+});
 
 export const getAllMaintenancesCategories = async () => {
-  const query = `${BASE_SELECT}`;
-  const maintenanceCategoryRecords = await some(query, []);
-  return maintenanceCategoryRecords;
+  const all = await repo().find({ order: { name: "ASC" } });
+  return all.map(map);
 };
 
 export const getMaintenanceCategoryById = async (
-  id: string
+  id: string,
 ): Promise<MaintenanceCategory | null> => {
-  const query = `${BASE_SELECT} WHERE id = $1`;
-  return await oneOrNone<MaintenanceCategory>(query, [id]);
+  const found = await repo().findOne({ where: { id } });
+  return found ? map(found) : null;
 };
 
 export const createMaintenanceCategory = async (
-  category: Omit<MaintenanceCategory, "id">
+  category: Omit<MaintenanceCategory, "id">,
 ): Promise<MaintenanceCategory | null> => {
-  const { name } = category;
-  const query = `INSERT INTO maintenance_categories (name) VALUES ($1) RETURNING id, name`;
-  return await oneOrNone<MaintenanceCategory>(query, [name]);
+  const created = repo().create({ name: category.name });
+  const saved = await repo().save(created);
+  return map(saved);
 };
 
 export const updateMaintenanceCategory = async (
   id: string,
-  category: Partial<MaintenanceCategory>
+  category: Partial<MaintenanceCategory>,
 ): Promise<MaintenanceCategory | null> => {
-  // Validate that the category exists first
-  const existingCategory = await getMaintenanceCategoryById(id);
-  if (!existingCategory) {
-    return null;
-  }
-
-  const fields: string[] = [];
-  const params: unknown[] = [];
-  let paramIndex = 1;
-
-  if (category.name !== undefined) {
-    fields.push(`name = $${paramIndex++}`);
-    params.push(category.name);
-  }
-
-  if (fields.length === 0) {
-    return existingCategory;
-  }
-
-  params.push(id);
-  const query = `UPDATE maintenance_categories SET ${fields.join(", ")} WHERE id = $${paramIndex} RETURNING id, name`;
-
-  return await oneOrNone<MaintenanceCategory>(query, params);
+  const existing = await repo().findOne({ where: { id } });
+  if (!existing) return null;
+  if (category.name !== undefined) existing.name = category.name;
+  const saved = await repo().save(existing);
+  return map(saved);
 };
 
 export const deleteMaintenanceCategory = async (
-  id: string
+  id: string,
 ): Promise<boolean> => {
-  // Check if category exists before attempting to delete
-  const existingCategory = await getMaintenanceCategoryById(id);
-  if (!existingCategory) {
-    return false;
-  }
-
-  const query = `DELETE FROM maintenance_categories WHERE id = $1`;
-
-  console.log(`Deleting maintenance category with ID: ${id}`);
-
-  await some(query, [id]);
-  return true;
+  const res = await repo().delete(id);
+  return res.affected === 1;
 };

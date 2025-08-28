@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import { asyncHandler, AppError } from "../middleware/errorHandler";
+import { asyncHandler } from "../middleware/errorHandler";
 import {
   AssignedMaintenanceSchema,
   UpdateAssignedMaintenanceSchema,
 } from "../schemas/maintenance/assignMaintance";
-import { AssignedMaintenance } from "../interfaces/maintenance";
+import type { AssignedMaintenance } from "../types";
 import {
   assignMaintenance,
   getAssignedMaintenancesByVehicle,
@@ -73,58 +73,42 @@ export class MaintenanceAssignmentsController {
     const id = req.params.id;
     const updateData = UpdateAssignedMaintenanceSchema.parse(req.body);
 
-    try {
-      const result = await updateAssignedMaintenance(id, updateData);
-
-      if (!result) {
-        const response: ApiResponse<null> = {
-          status: "error",
-          message: `Maintenance assignment with ID ${id} was not found`,
-        };
-        res.status(404).json(response);
-        return;
-      }
-
-      const response: ApiResponse<typeof result> = {
-        status: "success",
-        data: result,
-        message: "Maintenance assignment updated successfully",
+    const result = await updateAssignedMaintenance(id, updateData);
+    if (!result) {
+      const response: ApiResponse<null> = {
+        status: "error",
+        message: `Maintenance assignment with ID ${id} was not found`,
       };
-
-      res.status(200).json(response);
-    } catch (error) {
-      // Re-throw other errors to be handled by global error handler
-      throw error;
+      res.status(404).json(response);
+      return;
     }
+    const response: ApiResponse<typeof result> = {
+      status: "success",
+      data: result,
+      message: "Maintenance assignment updated successfully",
+    };
+    res.status(200).json(response);
   });
 
   // DELETE: Remove a maintenance assignment
   delete = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
 
-    try {
-      const success = await deleteAssignedMaintenance(id);
-
-      if (!success) {
-        const response: ApiResponse<null> = {
-          status: "error",
-          message: `Maintenance assignment with ID ${id} was not found`,
-        };
-        res.status(404).json(response);
-        return;
-      }
-
+    const success = await deleteAssignedMaintenance(id);
+    if (!success) {
       const response: ApiResponse<null> = {
-        status: "success",
-        data: null,
-        message: "Maintenance assignment deleted successfully",
+        status: "error",
+        message: `Maintenance assignment with ID ${id} was not found`,
       };
-
-      res.status(200).json(response);
-    } catch (error) {
-      // Re-throw to be handled by global error handler
-      throw error;
+      res.status(404).json(response);
+      return;
     }
+    const response: ApiResponse<null> = {
+      status: "success",
+      data: null,
+      message: "Maintenance assignment deleted successfully",
+    };
+    res.status(200).json(response);
   });
 }
 

@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { asyncHandler } from '../middleware/errorHandler';
 import { VehicleKilometersLogCreateSchema } from '../schemas/vehicleKilometers';
 import { getVehicleKilometers, addVehicleKilometers } from '../services/vehicles/kilometers';
-import { VehicleKilometersLog } from '../interfaces/vehicleKilometers';
+import type { VehicleKilometersLog } from '../types';
 
 export class VehicleKilometersController {
   // GET: list logs for a vehicle

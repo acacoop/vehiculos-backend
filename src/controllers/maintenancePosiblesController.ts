@@ -1,5 +1,5 @@
 import { BaseController } from "./baseController";
-import { Maintenance } from "../interfaces/maintenance";
+import type { Maintenance } from "../types";
 import {
   getAllMaintenances,
   getMaintenanceById,
@@ -18,7 +18,7 @@ export class MaintenancePosiblesController extends BaseController {
   }
 
   // Implement abstract methods from BaseController
-  protected async getAllService(options: {
+  protected async getAllService(_options: {
     limit: number;
     offset: number;
     searchParams?: Record<string, string>;
