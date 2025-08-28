@@ -1,8 +1,6 @@
 import { z } from "zod";
 
-// Define the schema for the environment variables
-// Coerce is used to convert the string to a number
-
+// Environment variable schema & export. Keep this in sync with .env.example documentation.
 const envSchema = z.object({
   APP_PORT: z.coerce.number().default(3000),
   DB_HOST: z.string().default("localhost"),
@@ -10,28 +8,21 @@ const envSchema = z.object({
   DB_USER: z.string().default("postgres"),
   DB_PASSWORD: z.string().default("postgres"),
   DB_NAME: z.string().default("vehicles_db"),
-  RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60 * 1000), // 1 minute
-  RATE_LIMIT_MAX: z.coerce.number().default(1000), // 1000 requests per window
-  // Optional Entra tenant id (not required for Graph /me validation)
+  RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60 * 1000),
+  RATE_LIMIT_MAX: z.coerce.number().default(1000),
   ENTRA_TENANT_ID: z.string().optional(),
-  // Sync script credentials (client credentials flow)
   ENTRA_CLIENT_ID: z.string().optional(),
   ENTRA_CLIENT_SECRET: z.string().optional(),
-  ENTRA_GROUP_ID: z.string().optional(), // optional group to scope sync
-  // API protected resource (audience) - usually the Application (client) ID of this API or an App ID URI
+  ENTRA_GROUP_ID: z.string().optional(),
   ENTRA_API_AUDIENCE: z.string().optional(),
-  // Comma separated list of accepted client app IDs (azp / appid). Optional.
   ENTRA_ALLOWED_CLIENT_IDS: z.string().optional(),
-  // Optionally override issuer (normally https://login.microsoftonline.com/{tenantId}/v2.0)
   ENTRA_EXPECTED_ISSUER: z.string().optional(),
-  // Scope requerido para acceso a la API
   ENTRA_REQUIRED_SCOPE: z.string().optional(),
 });
 
-const { success, error, data } = envSchema.safeParse(process.env);
-
-if (!success) {
-  console.error("Environment validation error:", error);
+const parsed = envSchema.safeParse(process.env);
+if (!parsed.success) {
+  console.error("Environment validation error:", parsed.error.flatten().fieldErrors);
   process.exit(1);
 }
 
@@ -52,4 +43,4 @@ export const {
   ENTRA_ALLOWED_CLIENT_IDS,
   ENTRA_EXPECTED_ISSUER,
   ENTRA_REQUIRED_SCOPE,
-} = data;
+} = parsed.data;

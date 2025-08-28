@@ -61,7 +61,7 @@ export interface VerifiedEntraToken {
 export async function verifyEntraAccessToken(
   token: string,
 ): Promise<VerifiedEntraToken> {
-  const issuer = getIssuer();
+  const issuer = getIssuer(); // canonical v2 issuer (login.microsoftonline.com/<tenant>/v2.0/)
   const audience = ENTRA_API_AUDIENCE;
   const allowedClients = (ENTRA_ALLOWED_CLIENT_IDS || "")
     .split(",")
@@ -70,14 +70,37 @@ export async function verifyEntraAccessToken(
   const requiredScope = ENTRA_REQUIRED_SCOPE;
 
   const jwks = await getRemoteJWKSVerified();
+  // Build accepted issuers list (v2 canonical + legacy v1 sts.windows.net form) if tenant known
+  const baseIssuers: string[] = [issuer.replace(/\/+$/, "")];
+  if (ENTRA_TENANT_ID)
+    baseIssuers.push(`https://sts.windows.net/${ENTRA_TENANT_ID}`);
+  const issuerSet = new Set<string>();
+  for (const i of baseIssuers) {
+    const trimmed = i.replace(/\/+$/, "");
+    issuerSet.add(trimmed);
+    issuerSet.add(`${trimmed}/`);
+  }
+  const acceptedIssuers = Array.from(issuerSet);
+  // Normalize audiences (support GUID and api://GUID forms interchangeably)
+  const rawAudList = audience
+    ? audience
+        .split(",")
+        .map((a) => a.trim())
+        .filter(Boolean)
+    : [];
+  const audSet = new Set<string>(rawAudList);
+  for (const a of rawAudList) {
+    if (/^[0-9a-fA-F-]{36}$/.test(a)) audSet.add(`api://${a}`);
+    if (a.startsWith("api://")) {
+      const tail = a.slice(6);
+      if (/^[0-9a-fA-F-]{36}$/.test(tail)) audSet.add(tail);
+    }
+  }
+  const acceptedAudiences = audSet.size ? Array.from(audSet) : undefined;
+
   const { payload, protectedHeader } = await jwtVerify(token, jwks, {
-    issuer: issuer.replace(/\/$/, ""),
-    audience: audience
-      ? audience
-          .split(",")
-          .map((a) => a.trim())
-          .filter(Boolean)
-      : undefined,
+    issuer: acceptedIssuers,
+    audience: acceptedAudiences,
   });
 
   // Tenant validation
