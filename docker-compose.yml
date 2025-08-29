@@ -30,6 +30,8 @@ services:
       dockerfile: Dockerfile
     container_name: vehiculos-backend
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       APP_PORT: 3000
       APP_HOST: 0.0.0.0
