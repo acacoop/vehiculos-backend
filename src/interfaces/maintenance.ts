@@ -31,7 +31,10 @@ export interface AssignedMaintenance {
 
 export interface MaintenanceRecord {
   id?: string; // UUID
-  assignedMaintenanceId: string; // UUID
+  // For created records, either assignedMaintenanceId OR (vehicleId + maintenanceId) can be provided
+  assignedMaintenanceId?: string; // UUID
+  vehicleId?: string; // UUID (optional during create)
+  maintenanceId?: string; // UUID (optional during create)
   userId: string; // UUID
   date: Date;
   kilometers: number;
