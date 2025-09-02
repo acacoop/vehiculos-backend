@@ -8,7 +8,19 @@ const router = express.Router();
 router.get("/", maintenanceRecordsController.getAll);
 
 // GET: Fetch maintenance records by vehicle ID
-router.get("/vehicle/:vehicleId", validateUUIDParam("vehicleId"), maintenanceRecordsController.getByVehicle);
+router.get(
+  "/vehicle/:vehicleId",
+  validateUUIDParam("vehicleId"),
+  maintenanceRecordsController.getByVehicle
+);
+
+// ✅ Nuevo: Fetch maintenance records by vehicleId + maintenanceId
+router.get(
+  "/vehicle/:vehicleId/maintenance/:maintenanceId",
+  validateUUIDParam("vehicleId"),
+  validateUUIDParam("maintenanceId"),
+  maintenanceRecordsController.getByVehicleAndMaintenance
+);
 
 // GET: Fetch maintenance record by ID
 router.get("/:id", validateId, maintenanceRecordsController.getById);

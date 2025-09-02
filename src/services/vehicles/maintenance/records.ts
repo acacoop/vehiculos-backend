@@ -95,13 +95,15 @@ export const getAllMaintenanceRecords = async (options?: {
     whereConditions.length > 0 ? ` WHERE ${whereConditions.join(" AND ")}` : "";
 
   // Base query with joins to get vehicle information when filtering by vehicleId
-  const baseQuery = searchParams?.vehicleId
+  const needsJoin = searchParams?.vehicleId || searchParams?.maintenanceId;
+
+  const baseQuery = needsJoin
     ? `${BASE_SELECT} INNER JOIN assigned_maintenances am ON mr.assigned_maintenance_id = am.id`
     : BASE_SELECT;
 
   // Get total count
   const countSql = `SELECT COUNT(*) as total FROM maintenance_records mr ${
-    searchParams?.vehicleId
+    needsJoin
       ? "INNER JOIN assigned_maintenances am ON mr.assigned_maintenance_id = am.id"
       : ""
   }${whereClause}`;
@@ -126,4 +128,17 @@ export const getMaintenanceRecordsByAssignedMaintenanceId = async (
 ): Promise<MaintenanceRecord[]> => {
   const sql = `${BASE_SELECT} WHERE mr.assigned_maintenance_id = $1`;
   return some<MaintenanceRecord>(sql, [assignedMaintenanceId]);
+};
+
+export const getMaintenanceRecordsByVehicleAndMaintenance = async (
+  vehicleId: string,
+  maintenanceId: string
+): Promise<MaintenanceRecord[]> => {
+  const sql = `
+    ${BASE_SELECT}
+    INNER JOIN assigned_maintenances am ON mr.assigned_maintenance_id = am.id
+    WHERE am.vehicle_id = $1 AND am.maintenance_id = $2
+    ORDER BY mr.date DESC
+  `;
+  return some<MaintenanceRecord>(sql, [vehicleId, maintenanceId]);
 };

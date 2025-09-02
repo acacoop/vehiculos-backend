@@ -9,6 +9,7 @@ import {
   getMaintenanceRecordsByVehicle,
   getMaintenanceRecordById,
   getAllMaintenanceRecords,
+  getMaintenanceRecordsByVehicleAndMaintenance,
 } from "../services/vehicles/maintenance/records";
 import { MaintenanceRecord } from "../interfaces/maintenance";
 import { ApiResponse } from "./baseController";
@@ -110,6 +111,25 @@ export class MaintenanceRecordsController {
 
     res.status(201).json(response);
   });
+
+  getByVehicleAndMaintenance = asyncHandler(
+    async (req: Request, res: Response) => {
+      const vehicleId = req.params.vehicleId;
+      const maintenanceId = req.params.maintenanceId;
+
+      const records = await getMaintenanceRecordsByVehicleAndMaintenance(
+        vehicleId,
+        maintenanceId
+      );
+
+      const response: ApiResponse<MaintenanceRecord[]> = {
+        status: "success",
+        data: records,
+      };
+
+      res.status(200).json(response);
+    }
+  );
 }
 
 export const maintenanceRecordsController = new MaintenanceRecordsController();
