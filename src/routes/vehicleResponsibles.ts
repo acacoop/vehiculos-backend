@@ -1,8 +1,9 @@
 import express from "express";
-import { vehicleResponsiblesController } from "../controllers/vehicleResponsiblesController";
+import { createVehicleResponsiblesController } from "../controllers/vehicleResponsiblesController";
 import { validateUUIDParam } from "../middleware/validation";
 
 const router = express.Router();
+const vehicleResponsiblesController = createVehicleResponsiblesController();
 
 // Standard CRUD endpoints using BaseController
 router.get("/", vehicleResponsiblesController.getAll);
@@ -13,7 +14,15 @@ router.patch("/:id", vehicleResponsiblesController.patch);
 router.delete("/:id", vehicleResponsiblesController.delete);
 
 // Custom endpoints for specific functionality
-router.get("/vehicle/:vehicleId/current", validateUUIDParam("vehicleId"), vehicleResponsiblesController.getCurrentForVehicle);
-router.get("/user/:userId/current", validateUUIDParam("userId"), vehicleResponsiblesController.getCurrentVehiclesForUser);
+router.get(
+  "/vehicle/:vehicleId/current",
+  validateUUIDParam("vehicleId"),
+  vehicleResponsiblesController.getCurrentForVehicle,
+);
+router.get(
+  "/user/:userId/current",
+  validateUUIDParam("userId"),
+  vehicleResponsiblesController.getCurrentVehiclesForUser,
+);
 
 export default router;

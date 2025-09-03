@@ -9,3 +9,5 @@ export const MaintenanceRecordSchema = z.object({
   kilometers: z.number().positive(),
   notes: z.string().optional(),
 });
+
+export type MaintenanceRecord = z.infer<typeof MaintenanceRecordSchema>;

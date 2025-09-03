@@ -9,13 +9,9 @@ import {
   ENTRA_CLIENT_SECRET,
   ENTRA_TENANT_ID,
 } from "../config/env.config";
-import {
-  addUser,
-  getUserByEntraId,
-  updateUser,
-} from "../services/usersService";
+import UsersService from "../services/usersService";
 import { AppDataSource } from "../db";
-import type { User } from "../types";
+import type { User } from "../schemas/user";
 
 const VERBOSE =
   process.env.VERBOSE === "1" || process.argv.includes("--verbose");
@@ -103,25 +99,25 @@ async function findUserByEmail(email: string): Promise<User | null> {
   const row = await repo
     .createQueryBuilder("u")
     .select([
-      "u.id",
-      "u.first_name",
-      "u.last_name",
-      "u.dni",
-      "u.email",
-      "u.active",
-      "u.entra_id",
-    ]) // raw columns
+      "u.id as id",
+      "u.first_name as first_name",
+      "u.last_name as last_name",
+      "u.dni as dni",
+      "u.email as email",
+      "u.active as active",
+      "u.entra_id as entra_id",
+    ])
     .where("u.email = :email", { email })
     .getRawOne();
   if (!row) return null;
   return {
-    id: row.u_id,
-    firstName: row.u_first_name,
-    lastName: row.u_last_name,
-    dni: row.u_dni,
-    email: row.u_email,
-    active: row.u_active,
-    entraId: row.u_entra_id,
+    id: row.id,
+    firstName: row.first_name,
+    lastName: row.last_name,
+    dni: row.dni,
+    email: row.email,
+    active: row.active,
+    entraId: row.entra_id,
   } as User;
 }
 
@@ -130,31 +126,32 @@ async function findUserByDni(dni: number): Promise<User | null> {
   const row = await repo
     .createQueryBuilder("u")
     .select([
-      "u.id",
-      "u.first_name",
-      "u.last_name",
-      "u.dni",
-      "u.email",
-      "u.active",
-      "u.entra_id",
+      "u.id as id",
+      "u.first_name as first_name",
+      "u.last_name as last_name",
+      "u.dni as dni",
+      "u.email as email",
+      "u.active as active",
+      "u.entra_id as entra_id",
     ])
     .where("u.dni = :dni", { dni })
     .getRawOne();
   if (!row) return null;
   return {
-    id: row.u_id,
-    firstName: row.u_first_name,
-    lastName: row.u_last_name,
-    dni: row.u_dni,
-    email: row.u_email,
-    active: row.u_active,
-    entraId: row.u_entra_id,
+    id: row.id,
+    firstName: row.first_name,
+    lastName: row.last_name,
+    dni: row.dni,
+    email: row.email,
+    active: row.active,
+    entraId: row.entra_id,
   } as User;
 }
 
 export async function runSync({
   disableMissing = true,
 }: { disableMissing?: boolean } = {}) {
+  const usersService = new UsersService();
   const token = await getAccessToken();
   const graphUsers = await fetchAllUsers(token);
 
@@ -197,7 +194,7 @@ export async function runSync({
     const active = gu.accountEnabled ?? true;
     const dniFromEmployeeId = parseDniFromCuit(gu.employeeId);
 
-    const existing = await getUserByEntraId(entraId);
+    const existing = await usersService.getByEntraId(entraId);
     if (existing) {
       // Build patch only with changed values
       const patch: Partial<User> = {};
@@ -245,7 +242,7 @@ export async function runSync({
 
       const keys = Object.keys(patch);
       if (keys.length > 0) {
-        await updateUser(existing.id, patch);
+        await usersService.update(existing.id as string, patch);
         stats.updated += 1;
         if (VERBOSE) {
           console.log(
@@ -279,7 +276,7 @@ export async function runSync({
         findUserByEmail(email),
         findUserByDni(dniFromEmployeeId),
       ]);
-      if (byEmail) {
+      if (byEmail && byEmail.id) {
         stats.skippedCreate.push({
           kind: "email_conflict",
           entraId,
@@ -288,7 +285,7 @@ export async function runSync({
         });
         continue;
       }
-      if (byDni) {
+      if (byDni && byDni.id) {
         stats.skippedCreate.push({
           kind: "dni_conflict",
           entraId,
@@ -298,16 +295,14 @@ export async function runSync({
         continue;
       }
 
-      const newUser: User = {
-        id: "00000000-0000-0000-0000-000000000000",
+      const created = await usersService.create({
         firstName: firstName || "User",
         lastName: lastName || "-",
         email,
         dni: dniFromEmployeeId,
         active,
         entraId,
-      };
-      const created = await addUser(newUser);
+      } as User);
       stats.created += 1;
       if (VERBOSE) {
         console.log(

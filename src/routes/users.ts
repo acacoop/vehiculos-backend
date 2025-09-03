@@ -1,15 +1,16 @@
 import { Router } from "express";
-import { usersController } from "../controllers/usersController";
+import { createUsersController } from "../controllers/usersController";
 import { validateSchema } from "../middleware/errorHandler";
 import { validateId } from "../middleware/validation";
 import { UserSchema } from "../schemas/user";
 
 const router = Router();
+const usersController = createUsersController();
 
 // GET /users - Get all users with pagination and search
 // Supports query parameters: page, limit, email, dni, firstName, lastName
-// Examples: 
-// - /users?email=user@example.com 
+// Examples:
+// - /users?email=user@example.com
 // - /users?dni=12345678
 // - /users?firstName=John&lastName=Doe
 router.get("/", usersController.getAll);
@@ -21,10 +22,20 @@ router.get("/:id", validateId, usersController.getById);
 router.post("/", validateSchema(UserSchema), usersController.create);
 
 // PUT /users/:id - Update user (replace)
-router.put("/:id", validateId, validateSchema(UserSchema.partial()), usersController.update);
+router.put(
+  "/:id",
+  validateId,
+  validateSchema(UserSchema.partial()),
+  usersController.update,
+);
 
 // PATCH /users/:id - Partial update user
-router.patch("/:id", validateId, validateSchema(UserSchema.partial()), usersController.patch);
+router.patch(
+  "/:id",
+  validateId,
+  validateSchema(UserSchema.partial()),
+  usersController.patch,
+);
 
 // DELETE /users/:id - Delete user
 router.delete("/:id", validateId, usersController.delete);

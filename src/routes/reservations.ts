@@ -1,123 +1,34 @@
-import express, { Request, Response } from "express";
-import {
-  addReservation,
-  getAllReservations,
-  getReservationsByUserId,
-  getReservationsByVehicleId,
-  getReservatiosOfAssignedVehiclesByUserId,
-  getTodayReservationsByUserId,
-} from "../services/reservationsService";
-import { ReservationSchema } from "../schemas/reservation";
-import type { Reservation } from "../types";
+import express from "express";
 import { validateId } from "../middleware/validation";
+import { createReservationsController } from "../controllers/reservationsController";
+import { ReservationSchema } from "../schemas/reservation";
 
 const router = express.Router();
+const controller = createReservationsController();
 
 // GET: Fetch all reservations with pagination and search
-router.get("/", async (req: Request, res: Response) => {
-  try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const offset = (page - 1) * limit;
-
-    // Extract search parameters (excluding pagination params)
-    const searchParams: Record<string, string> = {};
-    for (const [key, value] of Object.entries(req.query)) {
-      if (key !== 'page' && key !== 'limit' && typeof value === 'string') {
-        searchParams[key] = value;
-      }
-    }
-
-    const { items, total } = await getAllReservations({ limit, offset, searchParams });
-    
-    res.status(200).json({
-      status: 'success',
-      data: items,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error) {
-    res.status(500).json({ error: `Internal Server Error: ${error}` });
-  }
-});
+router.get("/", controller.getAll);
 
 // GET: Fetch reservations for a specific user
-router.get("/user/:id", validateId, async (req: Request, res: Response) => {
-  const id = req.params.id;
-
-  try {
-    const reservations = await getReservationsByUserId(id);
-    res.status(200).json({
-      status: 'success',
-      data: reservations
-    });
-  } catch (error) {
-    res.status(500).json({ error: `Internal Server Error: ${error}` });
-  }
-});
+router.get("/user/:id", validateId, controller.getByUser);
 
 // GET: Fetch reservations for a specific vehicle
-router.get("/vehicle/:id", validateId, async (req: Request, res: Response) => {
-  const id = req.params.id;
+router.get("/vehicle/:id", validateId, controller.getByVehicle);
 
-  try {
-    const reservations = await getReservationsByVehicleId(id);
-    res.status(200).json({
-      status: 'success',
-      data: reservations
-    });
-  } catch (error) {
-    res.status(500).json({ error: `Internal Server Error: ${error}` });
-  }
-});
-
-// GET: Fetch reservations for all vehicles assigned to a specific user  
-router.get("/user/:id/assigned", validateId, async (req: Request, res: Response) => {
-  const id = req.params.id;
-
-  try {
-    const reservations = await getReservatiosOfAssignedVehiclesByUserId(id);
-    res.status(200).json({
-      status: 'success',
-      data: reservations
-    });
-  } catch (error) {
-    res.status(500).json({ error: `Internal Server Error: ${error}` });
-  }
-});
+// GET: Fetch reservations for all vehicles assigned to a specific user
+router.get("/user/:id/assigned", validateId, controller.getAssignedVehicles);
 
 // GET: Fetch reservations for a specific user that are scheduled for today
-router.get("/user/:id/today", validateId, async (req: Request, res: Response) => {
-  const id = req.params.id;
-
-  try {
-    const reservations = await getTodayReservationsByUserId(id);
-    res.status(200).json({
-      status: 'success',
-      data: reservations
-    });
-  } catch (error) {
-    res.status(500).json({ error: `Internal Server Error: ${error}` });
-  }
-});
+router.get("/user/:id/today", validateId, controller.getTodayByUser);
 
 // POST: Create a new reservation
-router.post("/", async (req: Request, res: Response) => {
-  const reservation: Reservation = ReservationSchema.parse(req.body);
-
+router.post("/", (req, res, next) => {
   try {
-    const newReservation = await addReservation(reservation);
-    res.status(201).json({
-      status: 'success',
-      data: newReservation
-    });
-  } catch (error) {
-    res.status(500).json({ error: `Internal Server Error: ${error}` });
+    ReservationSchema.parse(req.body);
+  } catch (e) {
+    return next(e);
   }
+  return controller.create(req, res, next);
 });
 
 export default router;

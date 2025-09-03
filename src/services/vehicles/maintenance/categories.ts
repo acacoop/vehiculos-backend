@@ -1,6 +1,6 @@
 import { AppDataSource } from "../../../db";
 import { MaintenanceCategory as MaintenanceCategoryEntity } from "../../../entities/MaintenanceCategory";
-import { MaintenanceCategory } from "../../../interfaces/maintenance";
+import type { MaintenanceCategory } from "../../../schemas/maintenance/category";
 
 const repo = () => AppDataSource.getRepository(MaintenanceCategoryEntity);
 

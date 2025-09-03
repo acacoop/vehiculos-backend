@@ -1,5 +1,6 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
+import sql from "mssql";
 import {
   DB_HOST,
   DB_PORT,
@@ -29,7 +30,7 @@ export const AppDataSource = new DataSource({
   database: DB_NAME,
   synchronize: true, // NOTE: for dev only. For prod use migrations.
   logging: false,
-  options: { encrypt: false },
+  options: { encrypt: false, trustServerCertificate: true },
   entities: [
     Vehicle,
     User,
@@ -44,10 +45,70 @@ export const AppDataSource = new DataSource({
   ],
 });
 
-AppDataSource.initialize()
-  .then(() => console.log("✅ SQL Server connection established (TypeORM)"))
-  .catch((err: unknown) =>
-    console.error("❌ SQL Server connection failed:", err),
-  );
+// Ensure target database exists (dev convenience). Skips if cannot connect to master.
+async function ensureDatabase(retries = 3, delayMs = 2000) {
+  const masterConfig: sql.config = {
+    user: DB_USER,
+    password: DB_PASSWORD,
+    server: DB_HOST,
+    port: DB_PORT,
+    database: "master",
+    options: { encrypt: false, trustServerCertificate: true },
+  } as sql.config;
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const pool = await sql.connect(masterConfig);
+      const dbs = await pool
+        .request()
+        .query<{ name: string }>("SELECT name FROM sys.databases;");
+      const exists = dbs.recordset.some((r) => r.name === DB_NAME);
+      if (!exists) {
+        console.log(`ℹ️  Creating database '${DB_NAME}' (attempt ${attempt})`);
+        await pool.request().query(`CREATE DATABASE [${DB_NAME}]`);
+        console.log(`✅ Database '${DB_NAME}' created`);
+      } else if (attempt === 1) {
+        console.log(`ℹ️  Database '${DB_NAME}' already exists`);
+      }
+      await pool.close();
+      return;
+    } catch (e: unknown) {
+      const err = e as {
+        code?: string;
+        originalError?: { info?: { number?: string }; message?: string };
+        message?: string;
+      };
+      const code = err?.code || err?.originalError?.info?.number;
+      const msg = err?.message || err?.originalError?.message || "";
+      if (code === "ESOCKET" || code === "ECONNREFUSED") {
+        console.log(
+          `⏳ SQL Server not reachable yet (attempt ${attempt}/${retries}) code=${code}. Waiting ${delayMs}ms...`,
+        );
+      } else {
+        console.log(
+          `⚠️  DB ensure attempt ${attempt}/${retries} failed (code=${code}) ${msg}. Retrying in ${delayMs}ms...`,
+        );
+      }
+      if (attempt === retries) {
+        console.warn(
+          "⚠️  Exhausted retries ensuring database; continuing anyway",
+        );
+        return;
+      }
+      await new Promise((res) => setTimeout(res, delayMs));
+    } finally {
+      // pool closed above on success
+    }
+  }
+}
+
+(async () => {
+  await ensureDatabase();
+  AppDataSource.initialize()
+    .then(() => console.log("✅ SQL Server connection established (TypeORM)"))
+    .catch((err: unknown) =>
+      console.error("❌ SQL Server connection failed:", err),
+    );
+})();
 
 // Legacy raw query helpers removed after full migration to TypeORM repositories.

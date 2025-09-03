@@ -2,7 +2,7 @@ import { AppDataSource } from "../../../db";
 import { AssignedMaintenance as AssignedMaintenanceEntity } from "../../../entities/AssignedMaintenance";
 import { Maintenance } from "../../../entities/Maintenance";
 import { Vehicle } from "../../../entities/Vehicle";
-import type { AssignedMaintenance } from "../../../types";
+import type { AssignedMaintenance } from "../../../schemas/maintenance/assignMaintance";
 import {
   validateVehicleExists,
   validateMaintenanceExists,
@@ -12,7 +12,17 @@ const repo = () => AppDataSource.getRepository(AssignedMaintenanceEntity);
 const maintenanceRepo = () => AppDataSource.getRepository(Maintenance);
 const vehicleRepo = () => AppDataSource.getRepository(Vehicle);
 
-const mapEntity = (am: AssignedMaintenanceEntity): AssignedMaintenance => ({
+// Extend base AssignedMaintenance with maintenance metadata (composite view model)
+type AssignedMaintenanceWithMeta = AssignedMaintenance & {
+  maintenance_name: string;
+  maintenance_category_name?: string;
+  maintenance_observations?: string;
+  maintenance_instructions?: string;
+};
+
+const mapEntity = (
+  am: AssignedMaintenanceEntity,
+): AssignedMaintenanceWithMeta => ({
   id: am.id,
   vehicleId: am.vehicle.id,
   maintenanceId: am.maintenance.id,
@@ -28,7 +38,7 @@ const mapEntity = (am: AssignedMaintenanceEntity): AssignedMaintenance => ({
 
 export const getAssignedMaintenancesByVehicle = async (
   vehicleId: string,
-): Promise<AssignedMaintenance[]> => {
+): Promise<AssignedMaintenanceWithMeta[]> => {
   const list = await repo().find({
     where: { vehicle: { id: vehicleId } },
     relations: ["maintenance", "maintenance.category", "vehicle"],
@@ -38,7 +48,7 @@ export const getAssignedMaintenancesByVehicle = async (
 
 export const getAssignedMaintenanceById = async (
   id: string,
-): Promise<AssignedMaintenance | null> => {
+): Promise<AssignedMaintenanceWithMeta | null> => {
   const found = await repo().findOne({
     where: { id },
     relations: ["maintenance", "maintenance.category", "vehicle"],
@@ -48,7 +58,7 @@ export const getAssignedMaintenanceById = async (
 
 export const assignMaintenance = async (
   assignedMaintenance: AssignedMaintenance,
-): Promise<AssignedMaintenance | null> => {
+): Promise<AssignedMaintenanceWithMeta | null> => {
   const {
     vehicleId,
     maintenanceId,

@@ -2,7 +2,29 @@ import { AppDataSource } from "../../db";
 import { Assignment as AssignmentEntity } from "../../entities/Assignment";
 import { User as UserEntity } from "../../entities/User";
 import { Vehicle as VehicleEntity } from "../../entities/Vehicle";
-import type { Assignment, AssignmentWithDetails } from "../../types";
+import type { Assignment } from "../../schemas/assignment";
+// Local composite type previously from ../../types
+export interface AssignmentWithDetails {
+  id: string;
+  startDate: string;
+  endDate?: string;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    dni: number;
+    email: string;
+    active: boolean;
+    entraId: string;
+  };
+  vehicle: {
+    id: string;
+    licensePlate: string;
+    brand: string;
+    model: string;
+    year: number;
+  };
+}
 import {
   validateUserExists,
   validateVehicleExists,
@@ -25,6 +47,7 @@ function mapEntityToDetails(a: AssignmentEntity): AssignmentWithDetails {
       dni: a.user.dni,
       email: a.user.email,
       active: a.user.active,
+      entraId: a.user.entraId,
     },
     vehicle: {
       id: a.vehicle.id,
@@ -32,7 +55,6 @@ function mapEntityToDetails(a: AssignmentEntity): AssignmentWithDetails {
       brand: a.vehicle.brand,
       model: a.vehicle.model,
       year: a.vehicle.year,
-      imgUrl: a.vehicle.imgUrl ?? undefined,
     },
   };
 }
@@ -99,7 +121,6 @@ export const getVehiclesAssignedByUserId = async (userId: string) => {
     brand: a.vehicle.brand,
     model: a.vehicle.model,
     year: a.vehicle.year,
-    imgUrl: a.vehicle.imgUrl ?? undefined,
   }));
 };
 
@@ -135,7 +156,7 @@ export const addAssignment = async (
   const { userId, vehicleId, startDate, endDate } = assignment;
   await validateUserExists(userId);
   await validateVehicleExists(vehicleId);
-  if (endDate && new Date(endDate) <= new Date(startDate)) {
+  if (endDate && startDate && new Date(endDate) <= new Date(startDate)) {
     throw new Error("End date must be after start date.");
   }
   const user = await userRepo().findOne({ where: { id: userId } });
@@ -223,7 +244,7 @@ export const finishAssignment = async (
   const entity = await repo().findOne({ where: { id } });
   if (!entity) return null;
   const finalEnd = endDate || new Date().toISOString().split("T")[0];
-  if (new Date(finalEnd) <= new Date(entity.startDate))
+  if (entity.startDate && new Date(finalEnd) <= new Date(entity.startDate))
     throw new Error("End date must be after start date.");
   entity.endDate = finalEnd;
   const saved = await repo().save(entity);

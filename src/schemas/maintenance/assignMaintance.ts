@@ -26,5 +26,10 @@ export const UpdateAssignedMaintenanceSchema = z
     {
       message:
         "At least one field (kilometersFrequency or daysFrequency) must be provided for update",
-    }
+    },
   );
+
+export type AssignedMaintenance = z.infer<typeof AssignedMaintenanceSchema>;
+export type UpdateAssignedMaintenance = z.infer<
+  typeof UpdateAssignedMaintenanceSchema
+>;

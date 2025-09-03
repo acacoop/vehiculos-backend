@@ -1635,6 +1635,10 @@ components:
           type: string
           format: email
           example: "juan.perez@example.com"
+        entraId:
+          type: string
+          example: ""
+          description: "Microsoft Entra ID unique identifier. Empty string means not yet linked."
         active:
           type: boolean
           example: true
@@ -1645,6 +1649,7 @@ components:
         - lastName
         - dni
         - email
+        - entraId
         - active
 
     UserInput:
@@ -1701,10 +1706,6 @@ components:
           minimum: 1900
           maximum: 2030
           example: 2022
-        imgUrl:
-          type: string
-          format: uri
-          example: "https://example.com/vehicle.jpg"
         currentResponsible:
           allOf:
             - $ref: "#/components/schemas/VehicleResponsibleWithDetails"
@@ -1716,7 +1717,6 @@ components:
         - brand
         - model
         - year
-        - imgUrl
 
     VehicleInput:
       type: object
@@ -1736,15 +1736,11 @@ components:
           type: integer
           minimum: 1900
           maximum: 2030
-        imgUrl:
-          type: string
-          format: uri
       required:
         - licensePlate
         - brand
         - model
         - year
-        - imgUrl
 
     # VEHICLE RESPONSIBLE SCHEMAS
     VehicleResponsible:
@@ -2322,12 +2318,6 @@ components:
           maximum: 2100
           description: Vehicle year
           example: 2020
-        imgUrl:
-          type: string
-          format: uri
-          nullable: true
-          description: Vehicle image URL (null if no image)
-          example: "https://example.com/images/vehicle-123.jpg"
       required:
         - id
         - vehicleId
@@ -2359,7 +2349,6 @@ components:
                 brand: "Toyota"
                 model: "Corolla"
                 year: 2020
-                imgUrl: "https://example.com/images/vehicle-123.jpg"
               - id: "5f879c10-d3b0-4dde-8c14-316f50c93b5b"
                 vehicleId: "fe6ec984-6ce0-4bbe-88a0-421b8f2e8b9d"
                 maintenanceId: "a06b00cc-13bf-4286-a517-59b8f3fadae2"
@@ -2369,7 +2358,6 @@ components:
                 brand: "Honda"
                 model: "Civic"
                 year: 2019
-                imgUrl: null
             message: "Found 2 vehicle(s) assigned to maintenance"
 
     # MAINTENANCE RECORD SCHEMAS

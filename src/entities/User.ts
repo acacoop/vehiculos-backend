@@ -20,6 +20,6 @@ export class User {
   @Column({ default: true })
   active!: boolean;
 
-  @Column({ name: "entra_id", nullable: true })
-  entraId!: string | null;
+  @Column({ name: "entra_id", default: "" })
+  entraId!: string;
 }

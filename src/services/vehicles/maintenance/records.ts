@@ -2,7 +2,7 @@ import { AppDataSource } from "../../../db";
 import { MaintenanceRecord as MaintenanceRecordEntity } from "../../../entities/MaintenanceRecord";
 import { AssignedMaintenance } from "../../../entities/AssignedMaintenance";
 import { User } from "../../../entities/User";
-import type { MaintenanceRecord } from "../../../types";
+import type { MaintenanceRecord } from "../../../schemas/maintenance/maintanceRecord";
 
 const repo = () => AppDataSource.getRepository(MaintenanceRecordEntity);
 const assignedRepo = () => AppDataSource.getRepository(AssignedMaintenance);

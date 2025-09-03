@@ -1,48 +1,52 @@
-import { BaseController } from './baseController';
-import type { MaintenanceCategory } from '../types';
-import { 
-  getAllMaintenancesCategories, 
-  getMaintenanceCategoryById, 
-  createMaintenanceCategory, 
-  updateMaintenanceCategory, 
-  deleteMaintenanceCategory
-} from '../services/vehicles/maintenance/categories';
+import { BaseController } from "./baseController";
+import type { MaintenanceCategory } from "../schemas/maintenance/category";
+import {
+  MaintenanceCategoriesService,
+  createMaintenanceCategoriesService,
+} from "../services/maintenanceCategoriesService";
 
 export class MaintenanceCategoriesController extends BaseController {
-  constructor() {
-    super('Maintenance Category');
+  constructor(private readonly service: MaintenanceCategoriesService) {
+    super("Maintenance Category");
   }
 
   // Implement abstract methods from BaseController
-  protected async getAllService(_options: { limit: number; offset: number; searchParams?: Record<string, string> }) {
+  protected async getAllService(_options: {
+    limit: number;
+    offset: number;
+    searchParams?: Record<string, string>;
+  }) {
     // Maintenance categories don't typically need pagination, but we'll adapt the response
-    const categories = await getAllMaintenancesCategories();
+    const categories = await this.service.getAll();
     return { items: categories, total: categories.length };
   }
 
   protected async getByIdService(id: string) {
-    return await getMaintenanceCategoryById(id);
+    return await this.service.getById(id);
   }
 
   protected async createService(data: unknown) {
-    const categoryData = data as Omit<MaintenanceCategory, 'id'>;
-    return await createMaintenanceCategory(categoryData);
+    const categoryData = data as Omit<MaintenanceCategory, "id">;
+    return await this.service.create(categoryData);
   }
 
   protected async updateService(id: string, data: unknown) {
     const categoryData = data as Partial<MaintenanceCategory>;
-    return await updateMaintenanceCategory(id, categoryData);
+    return await this.service.update(id, categoryData);
   }
 
   protected async patchService(id: string, data: unknown) {
     // For PATCH, use the same logic as update since both accept partial data
     const categoryData = data as Partial<MaintenanceCategory>;
-    return await updateMaintenanceCategory(id, categoryData);
+    return await this.service.update(id, categoryData);
   }
 
   protected async deleteService(id: string) {
-    return await deleteMaintenanceCategory(id);
+    return await this.service.delete(id);
   }
 }
-
-export const maintenanceCategoriesController = new MaintenanceCategoriesController();
+export function createMaintenanceCategoriesController() {
+  return new MaintenanceCategoriesController(
+    createMaintenanceCategoriesService(),
+  );
+}

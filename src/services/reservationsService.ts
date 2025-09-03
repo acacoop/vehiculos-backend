@@ -2,13 +2,32 @@ import { AppDataSource } from "../db";
 import { Reservation as ReservationEntity } from "../entities/Reservation";
 import { User } from "../entities/User";
 import { Vehicle } from "../entities/Vehicle";
-import type { Reservation, ReservationWithDetails } from "../types";
+import type { Reservation } from "../schemas/reservation";
 import { validateUserExists, validateVehicleExists } from "../utils/validators";
-import { In } from "typeorm";
+import { ReservationRepository } from "../repositories/ReservationRepository";
 
-const repo = () => AppDataSource.getRepository(ReservationEntity);
-const userRepo = () => AppDataSource.getRepository(User);
-const vehicleRepo = () => AppDataSource.getRepository(Vehicle);
+// Composite return type (was previously in ../types)
+export interface ReservationWithDetails {
+  id: string;
+  startDate: Date;
+  endDate: Date;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    dni: number;
+    email: string;
+    active: boolean;
+    entraId: string;
+  };
+  vehicle: {
+    id: string;
+    licensePlate: string;
+    brand: string;
+    model: string;
+    year: number;
+  };
+}
 
 function mapEntity(e: ReservationEntity): ReservationWithDetails {
   return {
@@ -22,6 +41,7 @@ function mapEntity(e: ReservationEntity): ReservationWithDetails {
       dni: e.user.dni,
       email: e.user.email,
       active: e.user.active,
+      entraId: e.user.entraId,
     },
     vehicle: {
       id: e.vehicle.id,
@@ -29,108 +49,89 @@ function mapEntity(e: ReservationEntity): ReservationWithDetails {
       brand: e.vehicle.brand,
       model: e.vehicle.model,
       year: e.vehicle.year,
-      imgUrl: e.vehicle.imgUrl ?? undefined,
     },
   };
 }
 
-export const getAllReservations = async (options?: {
+export interface GetAllReservationsOptions {
   limit?: number;
   offset?: number;
   searchParams?: Record<string, string>;
-}): Promise<{ items: ReservationWithDetails[]; total: number }> => {
-  const { limit, offset, searchParams } = options || {};
-  const where: Record<string, unknown> = {};
-  if (searchParams?.userId) where.user = { id: searchParams.userId };
-  if (searchParams?.vehicleId) where.vehicle = { id: searchParams.vehicleId };
-  const [rows, total] = await repo().findAndCount({
-    where,
-    take: limit,
-    skip: offset,
-    order: { startDate: "DESC" },
-  });
-  return { items: rows.map(mapEntity), total };
-};
+}
 
-export const getReservationsByUserId = async (
-  userId: string,
-): Promise<ReservationWithDetails[]> => {
-  const rows = await repo().find({
-    where: { user: { id: userId } },
-    order: { startDate: "DESC" },
-  });
-  return rows.map(mapEntity);
-};
+export class ReservationsService {
+  private readonly repo: ReservationRepository;
+  private readonly userRepo = () => AppDataSource.getRepository(User);
+  private readonly vehicleRepo = () => AppDataSource.getRepository(Vehicle);
+  constructor(repo?: ReservationRepository) {
+    this.repo = repo ?? new ReservationRepository(AppDataSource);
+  }
 
-export const getReservationsByVehicleId = async (
-  vehicleId: string,
-): Promise<ReservationWithDetails[]> => {
-  const rows = await repo().find({
-    where: { vehicle: { id: vehicleId } },
-    order: { startDate: "DESC" },
-  });
-  return rows.map(mapEntity);
-};
+  async getAll(
+    options?: GetAllReservationsOptions,
+  ): Promise<{ items: ReservationWithDetails[]; total: number }> {
+    const { limit, offset, searchParams } = options || {};
+    const [rows, total] = await this.repo.findAndCount({
+      limit,
+      offset,
+      searchParams,
+    });
+    return { items: rows.map(mapEntity), total };
+  }
+  async getById(id: string): Promise<ReservationWithDetails | null> {
+    const r = await this.repo.findOne(id);
+    return r ? mapEntity(r) : null;
+  }
+  async getByUserId(userId: string) {
+    const rows = await this.repo.find({ user: { id: userId } });
+    return rows.map(mapEntity);
+  }
+  async getByVehicleId(vehicleId: string) {
+    const rows = await this.repo.find({ vehicle: { id: vehicleId } });
+    return rows.map(mapEntity);
+  }
+  async getAssignedVehiclesReservations(userId: string) {
+    const vehicleIds = (
+      await this.repo.distinctVehicleIdsByAssignedUser(userId)
+    ).map((r) => r.vehicleId);
+    if (!vehicleIds.length) return [];
+    const rows = await this.repo.findByVehicleIds(vehicleIds);
+    return rows.map(mapEntity);
+  }
+  async getTodayByUserId(userId: string) {
+    const today = new Date().toISOString().split("T")[0];
+    const rows = await this.repo
+      .qb()
+      .leftJoinAndSelect("r.user", "user")
+      .leftJoinAndSelect("r.vehicle", "vehicle")
+      .where("r.user_id = :userId", { userId })
+      .andWhere("r.start_date = :today", { today })
+      .orderBy("r.start_date", "DESC")
+      .getMany();
+    return rows.map(mapEntity);
+  }
+  async create(
+    reservation: Reservation,
+  ): Promise<ReservationWithDetails | null> {
+    const { userId, vehicleId, startDate, endDate } = reservation;
+    await validateUserExists(userId);
+    await validateVehicleExists(vehicleId);
+    const user = await this.userRepo().findOne({ where: { id: userId } });
+    const vehicle = await this.vehicleRepo().findOne({
+      where: { id: vehicleId },
+    });
+    if (!user || !vehicle) return null;
+    const entity = this.repo.create({
+      user,
+      vehicle,
+      startDate: startDate.toISOString().split("T")[0],
+      endDate: endDate.toISOString().split("T")[0],
+    });
+    const saved = await this.repo.save(entity);
+    return mapEntity(saved);
+  }
+}
 
-export const getReservatiosOfAssignedVehiclesByUserId = async (
-  userId: string,
-): Promise<ReservationWithDetails[]> => {
-  // Fetch reservations where vehicle is among vehicles reserved by assignments of this user
-  const vehicleIds = (
-    await AppDataSource.getRepository(ReservationEntity)
-      .createQueryBuilder("r")
-      .select("DISTINCT r.vehicle_id", "vehicleId")
-      .innerJoin("assignments", "a", "a.vehicle_id = r.vehicle_id")
-      .where("a.user_id = :userId", { userId })
-      .getRawMany()
-  ).map((r) => r.vehicleId);
-  if (vehicleIds.length === 0) return [];
-  const rows = await repo().find({
-    where: { vehicle: { id: In(vehicleIds) } },
-    order: { startDate: "DESC" },
-  });
-  return rows.map(mapEntity);
-};
-
-// No custom helper needed; using TypeORM In operator
-
-export const getTodayReservationsByUserId = async (
-  userId: string,
-): Promise<ReservationWithDetails[]> => {
-  const today = new Date().toISOString().split("T")[0];
-  const rows = await repo()
-    .createQueryBuilder("r")
-    .leftJoinAndSelect("r.user", "user")
-    .leftJoinAndSelect("r.vehicle", "vehicle")
-    .where("r.user_id = :userId", { userId })
-    .andWhere("r.start_date = :today", { today })
-    .orderBy("r.start_date", "DESC")
-    .getMany();
-  return rows.map(mapEntity);
-};
-
-export const addReservation = async (
-  reservation: Reservation,
-): Promise<ReservationWithDetails | null> => {
-  const { userId, vehicleId, startDate, endDate } = reservation;
-  await validateUserExists(userId);
-  await validateVehicleExists(vehicleId);
-  const user = await userRepo().findOne({ where: { id: userId } });
-  const vehicle = await vehicleRepo().findOne({ where: { id: vehicleId } });
-  if (!user || !vehicle) return null;
-  const created = repo().create({
-    user,
-    vehicle,
-    startDate: startDate.toISOString().split("T")[0],
-    endDate: endDate.toISOString().split("T")[0],
-  });
-  const saved = await repo().save(created);
-  return mapEntity(saved);
-};
-
-export const getReservationById = async (
-  id: string,
-): Promise<ReservationWithDetails | null> => {
-  const r = await repo().findOne({ where: { id } });
-  return r ? mapEntity(r) : null;
-};
+export function createReservationsService() {
+  return new ReservationsService();
+}

@@ -16,7 +16,4 @@ export class Vehicle {
 
   @Column()
   year!: number;
-
-  @Column({ name: "img_url", nullable: true })
-  imgUrl!: string | null;
 }

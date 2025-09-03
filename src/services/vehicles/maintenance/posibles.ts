@@ -3,20 +3,38 @@ import { Maintenance as MaintenanceEntity } from "../../../entities/Maintenance"
 import { MaintenanceCategory } from "../../../entities/MaintenanceCategory";
 import { AssignedMaintenance } from "../../../entities/AssignedMaintenance";
 import { validateMaintenanceCategoryExists } from "../../../utils/validators";
-import type {
-  Maintenance,
-  MaintenanceVehicleAssignment,
-} from "../../../types";
+import type { Maintenance } from "../../../schemas/maintenance/maintenance";
+
+// Local interface (previously from types)
+export interface MaintenanceVehicleAssignment {
+  id: string;
+  vehicleId: string;
+  maintenanceId: string;
+  kilometersFrequency?: number;
+  daysFrequency?: number;
+  licensePlate: string;
+  brand: string;
+  model: string;
+  year: number;
+}
 
 const maintenanceRepo = () => AppDataSource.getRepository(MaintenanceEntity);
 const assignedRepo = () => AppDataSource.getRepository(AssignedMaintenance);
 
-const mapMaintenance = (m: MaintenanceEntity): Maintenance => ({
+// Map entity to a Maintenance shape extended with optional extra fields (not yet in zod schema)
+const mapMaintenance = (
+  m: MaintenanceEntity,
+): Maintenance & {
+  kilometersFrequency?: number;
+  daysFrequency?: number;
+  observations?: string;
+  instructions?: string;
+} => ({
   id: m.id,
   categoryId: m.category.id,
   name: m.name,
-  kilometers_frequency: m.kilometersFrequency ?? undefined,
-  days_frequency: m.daysFrequency ?? undefined,
+  kilometersFrequency: m.kilometersFrequency ?? undefined,
+  daysFrequency: m.daysFrequency ?? undefined,
   observations: m.observations ?? undefined,
   instructions: m.instructions ?? undefined,
 });
@@ -52,7 +70,12 @@ export const getMaintenanceWithDetailsById = async (id: string) => {
 };
 
 export const createMaintenance = async (
-  maintenance: Omit<Maintenance, "id">,
+  maintenance: Omit<Maintenance, "id"> & {
+    kilometersFrequency?: number;
+    daysFrequency?: number;
+    observations?: string;
+    instructions?: string;
+  },
 ): Promise<Maintenance | null> => {
   await validateMaintenanceCategoryExists(maintenance.categoryId);
   const categoryRef = await AppDataSource.getRepository(
@@ -62,8 +85,8 @@ export const createMaintenance = async (
   const created = maintenanceRepo().create({
     category: categoryRef,
     name: maintenance.name,
-    kilometersFrequency: maintenance.kilometers_frequency ?? null,
-    daysFrequency: maintenance.days_frequency ?? null,
+    kilometersFrequency: maintenance.kilometersFrequency ?? null,
+    daysFrequency: maintenance.daysFrequency ?? null,
     observations: maintenance.observations ?? null,
     instructions: maintenance.instructions ?? null,
   });
@@ -73,7 +96,12 @@ export const createMaintenance = async (
 
 export const updateMaintenance = async (
   id: string,
-  maintenance: Partial<Maintenance>,
+  maintenance: Partial<Maintenance> & {
+    kilometersFrequency?: number | null;
+    daysFrequency?: number | null;
+    observations?: string | null;
+    instructions?: string | null;
+  },
 ): Promise<Maintenance | null> => {
   const existing = await maintenanceRepo().findOne({
     where: { id },
@@ -88,10 +116,10 @@ export const updateMaintenance = async (
     if (categoryRef) existing.category = categoryRef;
   }
   if (maintenance.name !== undefined) existing.name = maintenance.name;
-  if (maintenance.kilometers_frequency !== undefined)
-    existing.kilometersFrequency = maintenance.kilometers_frequency ?? null;
-  if (maintenance.days_frequency !== undefined)
-    existing.daysFrequency = maintenance.days_frequency ?? null;
+  if (maintenance.kilometersFrequency !== undefined)
+    existing.kilometersFrequency = maintenance.kilometersFrequency ?? null;
+  if (maintenance.daysFrequency !== undefined)
+    existing.daysFrequency = maintenance.daysFrequency ?? null;
   if (maintenance.observations !== undefined)
     existing.observations = maintenance.observations ?? null;
   if (maintenance.instructions !== undefined)
@@ -122,6 +150,5 @@ export const getVehiclesByMaintenanceId = async (
     brand: am.vehicle.brand,
     model: am.vehicle.model,
     year: am.vehicle.year,
-    imgUrl: am.vehicle.imgUrl ?? undefined,
   }));
 };
