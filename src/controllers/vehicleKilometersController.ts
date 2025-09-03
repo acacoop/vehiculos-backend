@@ -27,13 +27,11 @@ export class VehicleKilometersController {
 
     const inserted = await this.service.create(parsed);
 
-    res
-      .status(201)
-      .json({
-        status: "success",
-        data: inserted,
-        message: "Kilometers log created successfully",
-      });
+    res.status(201).json({
+      status: "success",
+      data: inserted,
+      message: "Kilometers log created successfully",
+    });
   });
 }
 

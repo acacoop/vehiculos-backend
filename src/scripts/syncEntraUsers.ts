@@ -12,13 +12,14 @@ import {
 import UsersService from "../services/usersService";
 import { AppDataSource } from "../db";
 import type { User } from "../schemas/user";
+import { User as UserEntity } from "../entities/User";
 
 const VERBOSE =
   process.env.VERBOSE === "1" || process.argv.includes("--verbose");
 
 type SkipReason =
   | { kind: "missing_email"; entraId: string }
-  | { kind: "missing_dni"; entraId: string; employeeId?: string }
+  | { kind: "missing_cuit"; entraId: string; employeeId?: string }
   | {
       kind: "email_conflict";
       entraId: string;
@@ -26,9 +27,9 @@ type SkipReason =
       existingUserId: string;
     }
   | {
-      kind: "dni_conflict";
+      kind: "cuit_conflict";
       entraId: string;
-      dni: number;
+      cuit: number;
       existingUserId: string;
     };
 
@@ -92,62 +93,6 @@ async function fetchAllUsers(token: string): Promise<GraphUser[]> {
   return users;
 }
 
-// Local helpers to check uniqueness
-async function findUserByEmail(email: string): Promise<User | null> {
-  const repo = AppDataSource.getRepository("users");
-  // Using query builder to select needed columns and map manually
-  const row = await repo
-    .createQueryBuilder("u")
-    .select([
-      "u.id as id",
-      "u.first_name as first_name",
-      "u.last_name as last_name",
-      "u.dni as dni",
-      "u.email as email",
-      "u.active as active",
-      "u.entra_id as entra_id",
-    ])
-    .where("u.email = :email", { email })
-    .getRawOne();
-  if (!row) return null;
-  return {
-    id: row.id,
-    firstName: row.first_name,
-    lastName: row.last_name,
-    dni: row.dni,
-    email: row.email,
-    active: row.active,
-    entraId: row.entra_id,
-  } as User;
-}
-
-async function findUserByDni(dni: number): Promise<User | null> {
-  const repo = AppDataSource.getRepository("users");
-  const row = await repo
-    .createQueryBuilder("u")
-    .select([
-      "u.id as id",
-      "u.first_name as first_name",
-      "u.last_name as last_name",
-      "u.dni as dni",
-      "u.email as email",
-      "u.active as active",
-      "u.entra_id as entra_id",
-    ])
-    .where("u.dni = :dni", { dni })
-    .getRawOne();
-  if (!row) return null;
-  return {
-    id: row.id,
-    firstName: row.first_name,
-    lastName: row.last_name,
-    dni: row.dni,
-    email: row.email,
-    active: row.active,
-    entraId: row.entra_id,
-  } as User;
-}
-
 export async function runSync({
   disableMissing = true,
 }: { disableMissing?: boolean } = {}) {
@@ -163,22 +108,10 @@ export async function runSync({
     cannotUpdateCount: 0,
   };
 
-  function parseDniFromCuit(input?: string): number | undefined {
+  function parseCuit(input?: string): number | undefined {
     if (!input) return undefined;
     const digits = input.replace(/\D+/g, "");
-    // CUIT/CUIL: 2 base digits + DNI (7 or 8 digits) + 1 check digit => total 10 or 11 digits
-    if (digits.length === 10 || digits.length === 11) {
-      const dniDigits = digits.slice(2, -1); // middle portion
-      if (dniDigits.length === 7 || dniDigits.length === 8) {
-        const n = parseInt(dniDigits, 10);
-        if (!Number.isNaN(n)) return n;
-      }
-    }
-    // If employeeId is already just DNI (7-8 digits), accept it
-    if (digits.length === 7 || digits.length === 8) {
-      const n = parseInt(digits, 10);
-      if (!Number.isNaN(n)) return n;
-    }
+    if (digits.length === 11) return Number(digits);
     return undefined;
   }
 
@@ -192,7 +125,7 @@ export async function runSync({
       gu.surname ||
       (gu.displayName ? gu.displayName.split(" ").slice(1).join(" ") : "");
     const active = gu.accountEnabled ?? true;
-    const dniFromEmployeeId = parseDniFromCuit(gu.employeeId);
+    const cuitFromEmployeeId = parseCuit(gu.employeeId);
 
     const existing = await usersService.getByEntraId(entraId);
     if (existing) {
@@ -211,7 +144,7 @@ export async function runSync({
 
       // Email update with uniqueness check
       if (email && email !== existing.email) {
-        const byEmail = await findUserByEmail(email);
+        const byEmail = await usersService.getByEmail(email);
         if (byEmail && byEmail.id !== existing.id) {
           hadConflicts = true;
           if (VERBOSE) {
@@ -225,18 +158,18 @@ export async function runSync({
         }
       }
 
-      // DNI update with uniqueness check
-      if (dniFromEmployeeId && existing.dni !== dniFromEmployeeId) {
-        const byDni = await findUserByDni(dniFromEmployeeId);
-        if (byDni && byDni.id !== existing.id) {
+      // CUIT update with uniqueness check
+      if (cuitFromEmployeeId && existing.cuit !== cuitFromEmployeeId) {
+        const byCuit = await usersService.getByCuit(cuitFromEmployeeId);
+        if (byCuit && byCuit.id !== existing.id) {
           hadConflicts = true;
           if (VERBOSE) {
             console.log(
-              `conflict:update dni entraId=${entraId} dni=${dniFromEmployeeId} usedBy=${byDni.id}`,
+              `conflict:update cuit entraId=${entraId} cuit=${cuitFromEmployeeId} usedBy=${byCuit.id}`,
             );
           }
         } else {
-          patch.dni = dniFromEmployeeId;
+          patch.cuit = cuitFromEmployeeId;
         }
       }
 
@@ -257,14 +190,14 @@ export async function runSync({
         console.log(`ok:noop entraId=${entraId} userId=${existing.id}`);
       }
     } else {
-      // Creation path: require both email and DNI
+      // Creation path: require both email and CUIT
       if (!email) {
         stats.skippedCreate.push({ kind: "missing_email", entraId });
         continue;
       }
-      if (!dniFromEmployeeId) {
+      if (!cuitFromEmployeeId) {
         stats.skippedCreate.push({
-          kind: "missing_dni",
+          kind: "missing_cuit",
           entraId,
           employeeId: gu.employeeId,
         });
@@ -272,9 +205,9 @@ export async function runSync({
       }
 
       // Uniqueness checks prior to creation
-      const [byEmail, byDni] = await Promise.all([
-        findUserByEmail(email),
-        findUserByDni(dniFromEmployeeId),
+      const [byEmail, byCuit] = await Promise.all([
+        usersService.getByEmail(email),
+        usersService.getByCuit(cuitFromEmployeeId),
       ]);
       if (byEmail && byEmail.id) {
         stats.skippedCreate.push({
@@ -285,12 +218,12 @@ export async function runSync({
         });
         continue;
       }
-      if (byDni && byDni.id) {
+      if (byCuit && byCuit.id) {
         stats.skippedCreate.push({
-          kind: "dni_conflict",
+          kind: "cuit_conflict",
           entraId,
-          dni: dniFromEmployeeId,
-          existingUserId: byDni.id,
+          cuit: cuitFromEmployeeId,
+          existingUserId: byCuit.id,
         });
         continue;
       }
@@ -299,7 +232,7 @@ export async function runSync({
         firstName: firstName || "User",
         lastName: lastName || "-",
         email,
-        dni: dniFromEmployeeId,
+        cuit: cuitFromEmployeeId as number,
         active,
         entraId,
       } as User);
@@ -319,24 +252,12 @@ export async function runSync({
     const queryRunner = AppDataSource.createQueryRunner();
     await queryRunner.connect();
     // For MSSQL we'll use a temporary table logic; simpler approach: fetch and iterate
-    const userRepo = AppDataSource.getRepository("users");
-    const toDeactivate = await userRepo
-      .createQueryBuilder("u")
-      .where("u.entra_id IS NOT NULL")
-      .andWhere("u.active = :active", { active: true })
-      .getMany();
-    // Entities returned include entraId (camel case) if mapped; fallback to raw property names
-    interface MutableUserEntity {
-      id: string;
-      entraId?: string;
-      entra_id?: string;
-      active: boolean;
-    }
-    for (const u of toDeactivate as unknown as MutableUserEntity[]) {
-      const currentEntra = u.entraId ?? u.entra_id;
-      if (currentEntra && !ids.includes(currentEntra)) {
+    const userRepo = AppDataSource.getRepository(UserEntity);
+    const activeUsers = await userRepo.find({ where: { active: true } });
+    for (const u of activeUsers) {
+      if (u.entraId && !ids.includes(u.entraId)) {
         u.active = false;
-        await userRepo.save(u as object as unknown as Record<string, unknown>);
+        await userRepo.save(u);
       }
     }
     await queryRunner.release();
@@ -349,9 +270,9 @@ export async function runSync({
         case "missing_email":
           console.log(`skip:create missing_email entraId=${s.entraId}`);
           break;
-        case "missing_dni":
+        case "missing_cuit":
           console.log(
-            `skip:create missing_dni entraId=${s.entraId} employeeId=${s.employeeId ?? ""}`,
+            `skip:create missing_cuit entraId=${s.entraId} employeeId=${s.employeeId ?? ""}`,
           );
           break;
         case "email_conflict":
@@ -359,9 +280,9 @@ export async function runSync({
             `skip:create email_conflict entraId=${s.entraId} email=${s.email} usedBy=${s.existingUserId}`,
           );
           break;
-        case "dni_conflict":
+        case "cuit_conflict":
           console.log(
-            `skip:create dni_conflict entraId=${s.entraId} dni=${s.dni} usedBy=${s.existingUserId}`,
+            `skip:create cuit_conflict entraId=${s.entraId} cuit=${s.cuit} usedBy=${s.existingUserId}`,
           );
           break;
       }

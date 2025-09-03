@@ -1,31 +1,36 @@
-# Use Node.js 22 LTS version
-FROM node:22-alpine
-
-# Set working directory
+########## Stage 1: Builder ##########
+FROM node:22-alpine AS builder
 WORKDIR /app
 
-# Copy package.json and package-lock.json (if available)
+# Install deps separately for better layer caching
 COPY package*.json ./
-
-# Install all dependencies (including dev dependencies for build)
 RUN npm ci
 
-# Copy source code
+# Copy source
 COPY . .
 
-# Build the TypeScript code
+# Build (produces dist/)
 RUN npm run build
 
-# Clean up dev dependencies for production
-RUN npm ci --only=production && npm cache clean --force
+########## Stage 2: Runtime ##########
+FROM node:22-alpine AS runtime
+WORKDIR /app
 
-# Expose the port the app runs on
+# Copy only needed files from builder (prune dev deps by reinstalling prod only)
+COPY package*.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+
+# Copy compiled output and any runtime assets (openAPI, etc.)
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/openAPI.yaml ./
+
+# Environment (to allow NODE_ENV override at runtime if desired)
+ENV NODE_ENV=production
+
 EXPOSE 3000
 
-# Create a non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodeuser -u 1001
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && adduser -S nodeuser -u 1001
 USER nodeuser
 
-# Run app directly
 CMD ["node", "dist/index.js"]

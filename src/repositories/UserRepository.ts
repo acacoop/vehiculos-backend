@@ -3,7 +3,7 @@ import { User as UserEntity } from "../entities/User";
 
 export interface UserSearchParams {
   email?: string;
-  dni?: string; // raw from query
+  cuit?: string; // raw from query (was dni)
   firstName?: string;
   lastName?: string;
   active?: string; // 'true' | 'false'
@@ -24,7 +24,7 @@ export class UserRepository {
     const where: Record<string, unknown> = {};
     if (searchParams) {
       if (searchParams.email) where.email = searchParams.email;
-      if (searchParams.dni) where.dni = Number(searchParams.dni);
+      if (searchParams.cuit) where.cuit = Number(searchParams.cuit);
       if (searchParams.firstName)
         where.firstName = ILike(`%${searchParams.firstName}%`);
       if (searchParams.lastName)
@@ -45,6 +45,12 @@ export class UserRepository {
   }
   findByEntraId(entraId: string) {
     return this.repo.findOne({ where: { entraId } });
+  }
+  findByEmail(email: string) {
+    return this.repo.findOne({ where: { email } });
+  }
+  findByCuit(cuit: number) {
+    return this.repo.findOne({ where: { cuit } });
   }
   create(data: Partial<UserEntity>) {
     return this.repo.create(data);

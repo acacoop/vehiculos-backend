@@ -20,7 +20,7 @@ export interface VehicleResponsibleWithDetails {
     id: string;
     firstName: string;
     lastName: string;
-    dni: number;
+    cuit: number;
     email: string;
     active: boolean;
     entraId: string;
@@ -43,7 +43,7 @@ function mapEntity(e: VehicleResponsibleEntity): VehicleResponsibleWithDetails {
       id: e.user.id,
       firstName: e.user.firstName,
       lastName: e.user.lastName,
-      dni: e.user.dni,
+      cuit: e.user.cuit,
       email: e.user.email,
       active: e.user.active,
       entraId: e.user.entraId,

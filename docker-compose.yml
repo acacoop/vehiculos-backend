@@ -32,17 +32,8 @@ services:
       dockerfile: Dockerfile
     container_name: vehiculos-backend
     restart: unless-stopped
-    environment:
-      APP_PORT: 3000
-      APP_HOST: 0.0.0.0
-      DB_HOST: db
-      DB_PORT: 1433
-      DB_USER: sa
-      DB_PASSWORD: Your_password123
-      DB_NAME: vehicles_db
-      NODE_ENV: development
-      RATE_LIMIT_WINDOW_MS: 60000 # 1 minute
-      RATE_LIMIT_MAX: 1000 # 1000 requests per window
+    env_file:
+      - .env
     ports:
       - "3000:3000"
     depends_on:

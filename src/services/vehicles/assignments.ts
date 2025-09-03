@@ -12,7 +12,7 @@ export interface AssignmentWithDetails {
     id: string;
     firstName: string;
     lastName: string;
-    dni: number;
+    cuit: number;
     email: string;
     active: boolean;
     entraId: string;
@@ -44,7 +44,7 @@ function mapEntityToDetails(a: AssignmentEntity): AssignmentWithDetails {
       id: a.user.id,
       firstName: a.user.firstName,
       lastName: a.user.lastName,
-      dni: a.user.dni,
+      cuit: a.user.cuit,
       email: a.user.email,
       active: a.user.active,
       entraId: a.user.entraId,
@@ -134,7 +134,7 @@ export const getUsersAssignedByVehicleId = async (vehicleId: string) => {
     id: a.user.id,
     firstName: a.user.firstName,
     lastName: a.user.lastName,
-    dni: a.user.dni,
+    cuit: a.user.cuit,
     email: a.user.email,
     active: a.user.active,
   }));

@@ -25,11 +25,21 @@ export class UsersService {
     return ent ? mapEntity(ent) : null;
   }
 
+  async getByEmail(email: string): Promise<User | null> {
+    const ent = await this.userRepo.findByEmail(email);
+    return ent ? mapEntity(ent) : null;
+  }
+
+  async getByCuit(cuit: number): Promise<User | null> {
+    const ent = await this.userRepo.findByCuit(cuit);
+    return ent ? mapEntity(ent) : null;
+  }
+
   async create(user: User): Promise<User | null> {
     const created = this.userRepo.create({
       firstName: user.firstName,
       lastName: user.lastName,
-      dni: user.dni,
+      cuit: user.cuit,
       email: user.email,
       active: user.active ?? true,
       entraId: user.entraId || "",
@@ -44,7 +54,7 @@ export class UsersService {
     Object.assign(existing, {
       firstName: user.firstName ?? existing.firstName,
       lastName: user.lastName ?? existing.lastName,
-      dni: user.dni ?? existing.dni,
+      cuit: user.cuit ?? existing.cuit,
       email: user.email ?? existing.email,
       active: user.active ?? existing.active,
     });
@@ -82,7 +92,7 @@ function mapEntity(e: UserEntity): User {
     id: e.id,
     firstName: e.firstName,
     lastName: e.lastName,
-    dni: e.dni,
+    cuit: e.cuit,
     email: e.email,
     active: e.active,
     entraId: e.entraId || "",

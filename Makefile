@@ -1,10 +1,21 @@
 ## Simplified Makefile (core workflows only)
 ## Targets: up, down, dev, sample-data, sync, sync-verbose
+## Automatically loads .env into the environment and suppresses noisy recursive make messages.
 
-.PHONY: up down dev sample-data sync sync-verbose
+MAKEFLAGS += --no-print-directory
 
-WAIT_RETRIES?=40
+# Auto-load .env (simple parser: KEY=VALUE lines). Values become exported for all recipes.
+ifneq (,$(wildcard .env))
+include .env
+export $(shell sed -nE 's/^([A-Za-z_][A-Za-z0-9_]*)=.*/\1/p' .env)
+endif
+
+.PHONY: up down dev sample-data sync sync-verbose clean help
+
+WAIT_RETRIES?=5
 MSSQL_SA_PASSWORD?=Your_password123
+# Host override used when running Node on the host (not inside backend container)
+HOST_DB_HOST?=localhost
 
 wait-db:
 	@echo "Waiting for DB (max $(WAIT_RETRIES) attempts)..."; \
@@ -31,7 +42,7 @@ down:
 dev:
 	@docker compose up -d db
 	@$(MAKE) wait-db
-	@DB_HOST=localhost DB_PORT=1433 DB_USER=sa DB_PASSWORD=$(MSSQL_SA_PASSWORD) npm run dev
+	@DB_HOST=$(HOST_DB_HOST) npm run dev
 
 sample-data:
 	@read -p "Load sample data (destructive)? (y/N): " c; \
@@ -40,8 +51,26 @@ sample-data:
 
 sync:
 	@$(MAKE) wait-db
-	@npm run --silent sync:users
+	@DB_HOST=$(HOST_DB_HOST) npm run --silent sync:users
 
 sync-verbose:
 	@$(MAKE) wait-db
-	@VERBOSE=1 npm run --silent sync:users
+	@DB_HOST=$(HOST_DB_HOST) VERBOSE=1 npm run --silent sync:users
+
+clean:
+	@echo "Cleaning dist/, node_modules/, Docker artifacts..."
+	@rm -rf dist
+	@rm -rf node_modules
+	@docker image prune -f >/dev/null 2>&1 || true
+	@echo "Done. Run 'npm ci' to reinstall dependencies."
+
+help:
+	@echo "Available targets:"; \
+	echo "  up              Build and start containers (API + DB)"; \
+	echo "  down            Stop and remove containers"; \
+	echo "  dev             Start local dev (DB in docker, API on host)"; \
+	echo "  sample-data     Load sample data into DB (destructive)"; \
+	echo "  sync            Run Entra users sync script"; \
+	echo "  sync-verbose    Run sync with VERBOSE=1"; \
+	echo "  clean           Remove build artifacts and prune dangling images"; \
+	echo "  help            Show this help message";

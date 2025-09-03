@@ -24,18 +24,18 @@ export class VehicleResponsiblesController extends BaseController {
   }
 
   protected async createService(data: unknown) {
-  const responsibleData = data as VehicleResponsibleInput;
-  return await this.service.create(responsibleData);
+    const responsibleData = data as VehicleResponsibleInput;
+    return await this.service.create(responsibleData);
   }
 
   protected async updateService(id: string, data: unknown) {
-  const responsibleData = data as Partial<VehicleResponsibleInput>;
-  return await this.service.update(id, responsibleData);
+    const responsibleData = data as Partial<VehicleResponsibleInput>;
+    return await this.service.update(id, responsibleData);
   }
 
   protected async patchService(id: string, data: unknown) {
-  const responsibleData = data as Partial<VehicleResponsibleInput>;
-  return await this.service.update(id, responsibleData);
+    const responsibleData = data as Partial<VehicleResponsibleInput>;
+    return await this.service.update(id, responsibleData);
   }
 
   protected async deleteService(id: string) {
