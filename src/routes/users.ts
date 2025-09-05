@@ -8,10 +8,10 @@ const router = Router();
 const usersController = createUsersController();
 
 // GET /users - Get all users with pagination and search
-// Supports query parameters: page, limit, email, dni, firstName, lastName
+// Supports query parameters: page, limit, email, cuit, firstName, lastName
 // Examples:
 // - /users?email=user@example.com
-// - /users?dni=12345678
+// - /users?cuit=12345678
 // - /users?firstName=John&lastName=Doe
 router.get("/", usersController.getAll);
 

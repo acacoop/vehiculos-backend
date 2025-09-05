@@ -18,7 +18,7 @@ MSSQL_SA_PASSWORD?=Your_password123
 HOST_DB_HOST?=localhost
 
 wait-db:
-	@echo "Waiting for DB (max $(WAIT_RETRIES) attempts)..."; \
+	@echo "Waiting for DB"; \
 	i=0; \
 	while [ $$i -lt $(WAIT_RETRIES) ]; do \
 		if docker compose exec -T db /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$(MSSQL_SA_PASSWORD)" -Q "SELECT 1" >/dev/null 2>&1; then \

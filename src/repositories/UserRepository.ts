@@ -3,7 +3,7 @@ import { User as UserEntity } from "../entities/User";
 
 export interface UserSearchParams {
   email?: string;
-  cuit?: string; // raw from query (was dni)
+  cuit?: string;
   firstName?: string;
   lastName?: string;
   active?: string; // 'true' | 'false'
