@@ -11,7 +11,6 @@ export class User {
   @Column({ name: "last_name" })
   lastName!: string;
 
-  // CUIT 11-digit identifier
   @Column({ name: "cuit", unique: true, type: "bigint" })
   cuit!: number;
 

@@ -42,19 +42,24 @@ down:
 dev:
 	@docker compose up -d db
 	@$(MAKE) wait-db
+	@npm ci
 	@DB_HOST=$(HOST_DB_HOST) npm run dev
 
 sample-data:
 	@read -p "Load sample data (destructive)? (y/N): " c; \
 	[ "$$c" = "y" -o "$$c" = "Y" ] || { echo "Cancelled"; exit 0; }; \
-	cat db/sample_data.sql | docker compose exec -T db /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$(MSSQL_SA_PASSWORD)" -d vehicles_db && echo "Sample data loaded"
+	npm ci; \
+	$(MAKE) wait-db; \
+	DB_HOST=$(HOST_DB_HOST) npm run sample-data && echo "Sample data loaded"
 
 sync:
 	@$(MAKE) wait-db
+	@npm ci
 	@DB_HOST=$(HOST_DB_HOST) npm run --silent sync:users
 
 sync-verbose:
 	@$(MAKE) wait-db
+	@npm ci
 	@DB_HOST=$(HOST_DB_HOST) VERBOSE=1 npm run --silent sync:users
 
 clean:
@@ -69,7 +74,7 @@ help:
 	echo "  up              Build and start containers (API + DB)"; \
 	echo "  down            Stop and remove containers"; \
 	echo "  dev             Start local dev (DB in docker, API on host)"; \
-	echo "  sample-data     Load sample data into DB (destructive)"; \
+	echo "  sample-data     Load sample data using TypeORM (destructive)"; \
 	echo "  sync            Run Entra users sync script"; \
 	echo "  sync-verbose    Run sync with VERBOSE=1"; \
 	echo "  clean           Remove build artifacts and prune dangling images"; \

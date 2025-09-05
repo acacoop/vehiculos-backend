@@ -8,7 +8,8 @@
     "dev": "ts-node-dev --env-file=.env --respawn --quiet src/index.ts",
     "dev:verbose": "ts-node-dev --respawn src/index.ts",
     "build": "tsc",
-    "sync:users": "ts-node-dev --env-file=.env src/scripts/syncEntraUsers.ts"
+    "sync:users": "ts-node-dev --env-file=.env src/scripts/syncEntraUsers.ts",
+    "sample-data": "ts-node-dev --env-file=.env src/scripts/loadSampleData.ts"
   },
   "keywords": [],
   "author": "",
