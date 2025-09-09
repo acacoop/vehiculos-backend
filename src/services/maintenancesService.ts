@@ -28,6 +28,7 @@ export type MaintenanceDTO = MaintenanceSchemaType & {
   daysFrequency?: number;
   observations?: string;
   instructions?: string;
+  categoryName?: string;
 };
 export interface MaintenanceVehicleAssignment {
   id: string;
@@ -63,6 +64,7 @@ function map(m: Maintenance): MaintenanceDTO & {
   return {
     id: m.id,
     categoryId: m.category.id,
+  categoryName: m.category?.name,
     name: m.name,
     kilometersFrequency: m.kilometersFrequency ?? undefined,
     daysFrequency: m.daysFrequency ?? undefined,
@@ -97,9 +99,7 @@ export class MaintenancesService {
   }
   async getWithDetails(id: string) {
     const ent = await this.repo.findOne(id);
-    return ent
-      ? { ...map(ent), maintenanceCategoryName: ent.category.name }
-      : null;
+  return ent ? map(ent) : null;
   }
   async create(
     data: Omit<MaintenanceDTO, "id">,

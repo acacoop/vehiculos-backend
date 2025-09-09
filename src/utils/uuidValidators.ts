@@ -1,5 +1,6 @@
 // UUID v4 regex pattern - centralized to avoid duplication
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Validates if a string is a valid UUID v4 format
@@ -16,11 +17,14 @@ export const isValidUUID = (id: string): boolean => {
  * @param paramName The parameter name for error messages
  * @throws Error if UUID format is invalid
  */
-export const validateUUIDFormat = (id: string, paramName: string = "id"): void => {
+export const validateUUIDFormat = (
+  id: string,
+  paramName: string = "id"
+): void => {
   if (!id) {
     throw new Error(`${paramName} parameter is required`);
   }
-  
+
   if (!isValidUUID(id)) {
     throw new Error(`Invalid UUID format for ${paramName}`);
   }

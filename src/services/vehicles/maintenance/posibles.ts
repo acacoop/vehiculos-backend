@@ -5,6 +5,15 @@ import { AssignedMaintenance } from "../../../entities/AssignedMaintenance";
 import { validateMaintenanceCategoryExists } from "../../../utils/validators";
 import type { Maintenance } from "../../../schemas/maintenance/maintenance";
 
+// Local extended type that includes categoryName for API responses
+export type MaintenanceWithCategory = Maintenance & {
+  categoryName?: string;
+  kilometersFrequency?: number;
+  daysFrequency?: number;
+  observations?: string;
+  instructions?: string;
+};
+
 // Local interface (previously from types)
 export interface MaintenanceVehicleAssignment {
   id: string;
@@ -24,14 +33,10 @@ const assignedRepo = () => AppDataSource.getRepository(AssignedMaintenance);
 // Map entity to a Maintenance shape extended with optional extra fields (not yet in zod schema)
 const mapMaintenance = (
   m: MaintenanceEntity,
-): Maintenance & {
-  kilometersFrequency?: number;
-  daysFrequency?: number;
-  observations?: string;
-  instructions?: string;
-} => ({
+): MaintenanceWithCategory => ({
   id: m.id,
   categoryId: m.category.id,
+  categoryName: m.category?.name,
   name: m.name,
   kilometersFrequency: m.kilometersFrequency ?? undefined,
   daysFrequency: m.daysFrequency ?? undefined,
@@ -64,8 +69,8 @@ export const getMaintenanceWithDetailsById = async (id: string) => {
   });
   if (!entity) return null;
   return {
-    ...mapMaintenance(entity),
-    maintenanceCategoryName: entity.category.name,
+  ...mapMaintenance(entity),
+  categoryName: entity.category.name,
   };
 };
 

@@ -68,7 +68,7 @@ export class ReservationsService {
   }
 
   async getAll(
-    options?: GetAllReservationsOptions,
+    options?: GetAllReservationsOptions
   ): Promise<{ items: ReservationWithDetails[]; total: number }> {
     const { limit, offset, searchParams } = options || {};
     const [rows, total] = await this.repo.findAndCount({
@@ -104,14 +104,14 @@ export class ReservationsService {
       .qb()
       .leftJoinAndSelect("r.user", "user")
       .leftJoinAndSelect("r.vehicle", "vehicle")
-      .where("r.user_id = :userId", { userId })
-      .andWhere("r.start_date = :today", { today })
-      .orderBy("r.start_date", "DESC")
+      .where("r.user.id = :userId", { userId })
+      .andWhere("r.startDate = :today", { today })
+      .orderBy("r.startDate", "DESC")
       .getMany();
     return rows.map(mapEntity);
   }
   async create(
-    reservation: Reservation,
+    reservation: Reservation
   ): Promise<ReservationWithDetails | null> {
     const { userId, vehicleId, startDate, endDate } = reservation;
     await validateUserExists(userId);
