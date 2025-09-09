@@ -7,24 +7,26 @@ import { ApiResponse } from "./baseController";
 
 export class MaintenanceRecordsController {
   constructor(private readonly service: MaintenanceRecordsService) {}
-  // GET: Fetch all maintenance records with pagination and search
+  // GET: Fetch all maintenance records with pagination and filtering
   getAll = asyncHandler(async (req: Request, res: Response) => {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const offset = (page - 1) * limit;
 
-    // Extract search parameters (excluding pagination params)
-    const searchParams: Record<string, string> = {};
+    // Extract filtering parameters
+    const filters: Record<string, string> = {};
+    const allowedFilters = ["vehicleId", "maintenanceId", "userId"];
+
     for (const [key, value] of Object.entries(req.query)) {
-      if (key !== "page" && key !== "limit" && typeof value === "string") {
-        searchParams[key] = value;
+      if (allowedFilters.includes(key) && typeof value === "string") {
+        filters[key] = value;
       }
     }
 
     const { items, total } = await this.service.getAll({
       limit,
       offset,
-      searchParams,
+      filters,
     });
 
     const totalPages = Math.ceil(total / limit);
@@ -38,20 +40,6 @@ export class MaintenanceRecordsController {
         total,
         pages: totalPages,
       },
-    };
-
-    res.status(200).json(response);
-  });
-
-  // GET: Fetch maintenance records for a specific vehicle
-  getByVehicle = asyncHandler(async (req: Request, res: Response) => {
-    const vehicleId = req.params.vehicleId;
-
-    const records = await this.service.getByVehicle(vehicleId);
-
-    const response: ApiResponse<MaintenanceRecord[]> = {
-      status: "success",
-      data: records,
     };
 
     res.status(200).json(response);

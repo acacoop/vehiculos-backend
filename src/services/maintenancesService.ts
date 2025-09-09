@@ -292,7 +292,7 @@ export class MaintenanceRecordsService {
   async getAll(options?: {
     limit?: number;
     offset?: number;
-    searchParams?: Record<string, string>;
+    filters?: Record<string, string>;
   }) {
     const [rows, total] = await this.recordRepo.findAndCount(options);
     return {
