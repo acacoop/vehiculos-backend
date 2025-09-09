@@ -4,6 +4,7 @@ import { MaintenanceRecord } from "../entities/MaintenanceRecord";
 export interface MaintenanceRecordSearchParams {
   userId?: string;
   vehicleId?: string;
+  maintenanceId?: string;
 }
 
 export class MaintenanceRecordRepository {
@@ -17,17 +18,24 @@ export class MaintenanceRecordRepository {
   findAndCount(opts?: {
     limit?: number;
     offset?: number;
-    searchParams?: MaintenanceRecordSearchParams;
+    filters?: MaintenanceRecordSearchParams;
   }) {
-    const { searchParams } = opts || {};
+    const { filters } = opts || {};
     const qb = this.qb()
       .leftJoinAndSelect("mr.assignedMaintenance", "am")
       .leftJoinAndSelect("am.vehicle", "v")
+      .leftJoinAndSelect("am.maintenance", "m")
       .leftJoinAndSelect("mr.user", "u");
-    if (searchParams?.userId)
-      qb.andWhere("u.id = :userId", { userId: searchParams.userId });
-    if (searchParams?.vehicleId)
-      qb.andWhere("v.id = :vehicleId", { vehicleId: searchParams.vehicleId });
+
+    if (filters?.userId)
+      qb.andWhere("u.id = :userId", { userId: filters.userId });
+    if (filters?.vehicleId)
+      qb.andWhere("v.id = :vehicleId", { vehicleId: filters.vehicleId });
+    if (filters?.maintenanceId)
+      qb.andWhere("m.id = :maintenanceId", {
+        maintenanceId: filters.maintenanceId,
+      });
+
     return qb
       .orderBy("mr.date", "DESC")
       .skip(opts?.offset)
@@ -41,6 +49,7 @@ export class MaintenanceRecordRepository {
     return this.qb()
       .leftJoinAndSelect("mr.assignedMaintenance", "am")
       .leftJoinAndSelect("am.vehicle", "v")
+      .leftJoinAndSelect("am.maintenance", "m")
       .leftJoinAndSelect("mr.user", "u")
       .where("v.id = :vehicleId", { vehicleId })
       .orderBy("mr.date", "DESC")
