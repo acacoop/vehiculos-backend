@@ -1,36 +1,28 @@
 import { BaseController } from "./baseController";
-import { Maintenance } from "../interfaces/maintenance";
-import {
-  getAllMaintenances,
-  getMaintenanceById,
-  getMaintenanceWithDetailsById,
-  createMaintenance,
-  updateMaintenance,
-  deleteMaintenance,
-  getVehiclesByMaintenanceId,
-} from "../services/vehicles/maintenance/posibles";
+import type { Maintenance } from "../schemas/maintenance/maintenance";
+import { MaintenancesService } from "../services/maintenancesService";
 import { Request, Response } from "express";
 import { asyncHandler, AppError } from "../middleware/errorHandler";
 
 export class MaintenancePosiblesController extends BaseController {
-  constructor() {
+  constructor(private readonly service: MaintenancesService) {
     super("Maintenance");
   }
 
   // Implement abstract methods from BaseController
-  protected async getAllService(options: {
+  protected async getAllService(_options: {
     limit: number;
     offset: number;
     searchParams?: Record<string, string>;
   }) {
     // Maintenance posibles don't typically need pagination, but we'll adapt the response
-    const maintenances = await getAllMaintenances();
+    const maintenances = await this.service.getAll();
     return { items: maintenances, total: maintenances.length };
   }
 
   protected async getByIdService(id: string) {
     // Return maintenance with details (includes category name)
-    const maintenance = await getMaintenanceWithDetailsById(id);
+    const maintenance = await this.service.getWithDetails(id);
     if (!maintenance) {
       return null;
     }
@@ -41,14 +33,14 @@ export class MaintenancePosiblesController extends BaseController {
     const maintenanceData = data as Omit<Maintenance, "id">;
 
     try {
-      return await createMaintenance(maintenanceData);
+      return await this.service.create(maintenanceData);
     } catch (error) {
       if (error instanceof Error) {
         throw new AppError(
           error.message,
           400,
           "https://example.com/problems/validation-error",
-          "Validation Error"
+          "Validation Error",
         );
       }
       throw error;
@@ -59,14 +51,14 @@ export class MaintenancePosiblesController extends BaseController {
     const maintenanceData = data as Partial<Maintenance>;
 
     try {
-      return await updateMaintenance(id, maintenanceData);
+      return await this.service.update(id, maintenanceData);
     } catch (error) {
       if (error instanceof Error) {
         throw new AppError(
           error.message,
           400,
           "https://example.com/problems/validation-error",
-          "Validation Error"
+          "Validation Error",
         );
       }
       throw error;
@@ -78,14 +70,14 @@ export class MaintenancePosiblesController extends BaseController {
     const maintenanceData = data as Partial<Maintenance>;
 
     try {
-      return await updateMaintenance(id, maintenanceData);
+      return await this.service.update(id, maintenanceData);
     } catch (error) {
       if (error instanceof Error) {
         throw new AppError(
           error.message,
           400,
           "https://example.com/problems/validation-error",
-          "Validation Error"
+          "Validation Error",
         );
       }
       throw error;
@@ -93,27 +85,27 @@ export class MaintenancePosiblesController extends BaseController {
   }
 
   protected async deleteService(id: string) {
-    return await deleteMaintenance(id);
+    return await this.service.delete(id);
   }
 
   // Get all vehicles assigned to a specific maintenance
-  getVehiclesByMaintenance = asyncHandler(
+  public getVehiclesByMaintenance = asyncHandler(
     async (req: Request, res: Response) => {
       const maintenanceId = req.params.id;
 
       try {
         // First verify that the maintenance exists
-        const maintenance = await getMaintenanceById(maintenanceId);
+        const maintenance = await this.service.getById(maintenanceId);
         if (!maintenance) {
           throw new AppError(
             `Maintenance with ID ${maintenanceId} not found`,
             404,
             "https://example.com/problems/maintenance-not-found",
-            "Maintenance Not Found"
+            "Maintenance Not Found",
           );
         }
 
-        const vehicles = await getVehiclesByMaintenanceId(maintenanceId);
+        const vehicles = await this.service.getVehicles(maintenanceId);
 
         res.status(200).json({
           status: "success",
@@ -131,12 +123,17 @@ export class MaintenancePosiblesController extends BaseController {
           "Failed to retrieve vehicles for maintenance",
           500,
           "https://example.com/problems/database-error",
-          "Database Error"
+          "Database Error",
         );
       }
-    }
+    },
   );
 }
 
+export function createMaintenancePosiblesController() {
+  const service = new MaintenancesService();
+  return new MaintenancePosiblesController(service);
+}
+
 export const maintenancePosiblesController =
-  new MaintenancePosiblesController();
+  createMaintenancePosiblesController();

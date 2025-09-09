@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from "express";
-import { vehiclesController } from "../controllers/vehiclesController";
+import { createVehiclesController } from "../controllers/vehiclesController";
 import vehicleKilometersRoutes from "./vehicles/kilometers";
 import { validateSchema, AppError } from "../middleware/errorHandler";
 import { validateId } from "../middleware/validation";
@@ -7,16 +7,22 @@ import { VehicleSchema } from "../schemas/vehicle";
 import { licensePlateRegex } from "../schemas/validations";
 
 const router = Router();
+// Each router instance gets its own controller (and underlying service/repository instances)
+const vehiclesController = createVehiclesController();
 
 // Middleware to validate license plate in query parameters
-const validateLicensePlateQuery = (req: Request, res: Response, next: NextFunction) => {
+const validateLicensePlateQuery = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   const licensePlate = req.query.licensePlate as string;
   if (licensePlate && !licensePlateRegex.test(licensePlate)) {
     throw new AppError(
-      'The provided license plate format is invalid. Expected format: ABC123 or AB123CD',
+      "The provided license plate format is invalid. Expected format: ABC123 or AB123CD",
       400,
-      'https://example.com/problems/invalid-license-plate',
-      'Invalid License Plate Format'
+      "https://example.com/problems/invalid-license-plate",
+      "Invalid License Plate Format",
     );
   }
   next();
@@ -24,8 +30,8 @@ const validateLicensePlateQuery = (req: Request, res: Response, next: NextFuncti
 
 // GET /vehicles - Get all vehicles with pagination and search
 // Supports query parameters: page, limit, license-plate, brand, model, year
-// Examples: 
-// - /vehicles?license-plate=AAA-123 
+// Examples:
+// - /vehicles?license-plate=AAA-123
 // - /vehicles?brand=Toyota&model=Corolla
 // - /vehicles?year=2020&page=1&limit=5
 router.get("/", validateLicensePlateQuery, vehiclesController.getAll);
@@ -37,10 +43,20 @@ router.get("/:id", validateId, vehiclesController.getById);
 router.post("/", validateSchema(VehicleSchema), vehiclesController.create);
 
 // PUT /vehicles/:id - Update vehicle (replace)
-router.put("/:id", validateId, validateSchema(VehicleSchema.partial()), vehiclesController.update);
+router.put(
+  "/:id",
+  validateId,
+  validateSchema(VehicleSchema.partial()),
+  vehiclesController.update,
+);
 
 // PATCH /vehicles/:id - Partial update vehicle
-router.patch("/:id", validateId, validateSchema(VehicleSchema.partial()), vehiclesController.patch);
+router.patch(
+  "/:id",
+  validateId,
+  validateSchema(VehicleSchema.partial()),
+  vehiclesController.patch,
+);
 
 // DELETE /vehicles/:id - Delete vehicle
 router.delete("/:id", validateId, vehiclesController.delete);

@@ -4,9 +4,9 @@ import { z } from "zod";
 const envSchema = z.object({
   APP_PORT: z.coerce.number().default(3000),
   DB_HOST: z.string().default("localhost"),
-  DB_PORT: z.coerce.number().default(5432),
-  DB_USER: z.string().default("postgres"),
-  DB_PASSWORD: z.string().default("postgres"),
+  DB_PORT: z.coerce.number().default(1433),
+  DB_USER: z.string().default("sa"),
+  DB_PASSWORD: z.string().default("Your_password123"),
   DB_NAME: z.string().default("vehicles_db"),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60 * 1000),
   RATE_LIMIT_MAX: z.coerce.number().default(1000),
@@ -22,7 +22,10 @@ const envSchema = z.object({
 
 const parsed = envSchema.safeParse(process.env);
 if (!parsed.success) {
-  console.error("Environment validation error:", parsed.error.flatten().fieldErrors);
+  console.error(
+    "Environment validation error:",
+    parsed.error.flatten().fieldErrors,
+  );
   process.exit(1);
 }
 

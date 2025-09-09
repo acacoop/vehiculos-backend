@@ -4,7 +4,9 @@ import { z } from "zod";
 export const ReservationSchema = z.object({
   id: z.string().uuid().optional(), // UUID, optional for creation
   vehicleId: z.string().uuid(),
-  userId: z.string().uuid(), 
+  userId: z.string().uuid(),
   startDate: z.coerce.date(),
   endDate: z.coerce.date(),
 });
+
+export type Reservation = z.infer<typeof ReservationSchema>;

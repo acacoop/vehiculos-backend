@@ -1,182 +1,154 @@
-import { some, oneOrNone } from "../../../db";
-import {
-  Maintenance,
-  MaintenanceVehicleAssignment,
-} from "../../../interfaces/maintenance";
+import { AppDataSource } from "../../../db";
+import { Maintenance as MaintenanceEntity } from "../../../entities/Maintenance";
+import { MaintenanceCategory } from "../../../entities/MaintenanceCategory";
+import { AssignedMaintenance } from "../../../entities/AssignedMaintenance";
 import { validateMaintenanceCategoryExists } from "../../../utils/validators";
+import type { Maintenance } from "../../../schemas/maintenance/maintenance";
 
-const BASE_SELECT = `
-    SELECT
-        m.id,
-        m.name,
-        mc.name as maintenanceCategoryName,
-        m.kilometers_frequency,
-        m.days_frequency,
-        m.observations,
-        m.instructions
-    FROM
-        maintenances as m
-        INNER JOIN maintenance_categories as mc
-        ON m.category_id = mc.id
-`;
+// Local interface (previously from types)
+export interface MaintenanceVehicleAssignment {
+  id: string;
+  vehicleId: string;
+  maintenanceId: string;
+  kilometersFrequency?: number;
+  daysFrequency?: number;
+  licensePlate: string;
+  brand: string;
+  model: string;
+  year: number;
+}
 
-const SIMPLE_SELECT = `
-    SELECT
-        id,
-        category_id as "categoryId",
-        name,
-        kilometers_frequency,
-        days_frequency,
-        observations,
-        instructions
-    FROM
-        maintenances
-`;
+const maintenanceRepo = () => AppDataSource.getRepository(MaintenanceEntity);
+const assignedRepo = () => AppDataSource.getRepository(AssignedMaintenance);
+
+// Map entity to a Maintenance shape extended with optional extra fields (not yet in zod schema)
+const mapMaintenance = (
+  m: MaintenanceEntity,
+): Maintenance & {
+  kilometersFrequency?: number;
+  daysFrequency?: number;
+  observations?: string;
+  instructions?: string;
+} => ({
+  id: m.id,
+  categoryId: m.category.id,
+  name: m.name,
+  kilometersFrequency: m.kilometersFrequency ?? undefined,
+  daysFrequency: m.daysFrequency ?? undefined,
+  observations: m.observations ?? undefined,
+  instructions: m.instructions ?? undefined,
+});
 
 export const getAllMaintenances = async () => {
-  const query = `${BASE_SELECT}`;
-  const maintenanceRecords = await some(query, []);
-  return maintenanceRecords;
+  const list = await maintenanceRepo().find({
+    relations: ["category"],
+    order: { name: "ASC" },
+  });
+  return list.map(mapMaintenance);
 };
 
 export const getMaintenanceById = async (
-  id: string
+  id: string,
 ): Promise<Maintenance | null> => {
-  const query = `${SIMPLE_SELECT} WHERE id = $1`;
-  return await oneOrNone<Maintenance>(query, [id]);
+  const entity = await maintenanceRepo().findOne({
+    where: { id },
+    relations: ["category"],
+  });
+  return entity ? mapMaintenance(entity) : null;
 };
 
 export const getMaintenanceWithDetailsById = async (id: string) => {
-  const query = `${BASE_SELECT} WHERE m.id = $1`;
-  return await oneOrNone(query, [id]);
+  const entity = await maintenanceRepo().findOne({
+    where: { id },
+    relations: ["category"],
+  });
+  if (!entity) return null;
+  return {
+    ...mapMaintenance(entity),
+    maintenanceCategoryName: entity.category.name,
+  };
 };
 
 export const createMaintenance = async (
-  maintenance: Omit<Maintenance, "id">
+  maintenance: Omit<Maintenance, "id"> & {
+    kilometersFrequency?: number;
+    daysFrequency?: number;
+    observations?: string;
+    instructions?: string;
+  },
 ): Promise<Maintenance | null> => {
-  const {
-    categoryId,
-    name,
-    kilometers_frequency,
-    days_frequency,
-    observations,
-    instructions,
-  } = maintenance;
-
-  // Validar categoría
-  await validateMaintenanceCategoryExists(categoryId);
-
-  const query = `
-    INSERT INTO maintenances 
-      (category_id, name, kilometers_frequency, days_frequency, observations, instructions)
-    VALUES ($1, $2, $3, $4, $5, $6)
-    RETURNING id, category_id as "categoryId", name, kilometers_frequency, days_frequency, observations, instructions
-  `;
-
-  return await oneOrNone<Maintenance>(query, [
-    categoryId,
-    name,
-    kilometers_frequency ?? null,
-    days_frequency ?? null,
-    observations ?? null,
-    instructions ?? null,
-  ]);
+  await validateMaintenanceCategoryExists(maintenance.categoryId);
+  const categoryRef = await AppDataSource.getRepository(
+    MaintenanceCategory,
+  ).findOne({ where: { id: maintenance.categoryId } });
+  if (!categoryRef) return null; // race condition safe-guard
+  const created = maintenanceRepo().create({
+    category: categoryRef,
+    name: maintenance.name,
+    kilometersFrequency: maintenance.kilometersFrequency ?? null,
+    daysFrequency: maintenance.daysFrequency ?? null,
+    observations: maintenance.observations ?? null,
+    instructions: maintenance.instructions ?? null,
+  });
+  const saved = await maintenanceRepo().save(created);
+  return mapMaintenance(saved);
 };
 
 export const updateMaintenance = async (
   id: string,
-  maintenance: Partial<Maintenance>
+  maintenance: Partial<Maintenance> & {
+    kilometersFrequency?: number | null;
+    daysFrequency?: number | null;
+    observations?: string | null;
+    instructions?: string | null;
+  },
 ): Promise<Maintenance | null> => {
-  // Validate that the maintenance exists first
-  const existingMaintenance = await getMaintenanceById(id);
-  if (!existingMaintenance) {
-    return null;
-  }
-
-  const fields: string[] = [];
-  const params: unknown[] = [];
-  let paramIndex = 1;
-
-  if (maintenance.categoryId !== undefined) {
-    // Validate that the category exists
+  const existing = await maintenanceRepo().findOne({
+    where: { id },
+    relations: ["category"],
+  });
+  if (!existing) return null;
+  if (maintenance.categoryId) {
     await validateMaintenanceCategoryExists(maintenance.categoryId);
-    fields.push(`category_id = $${paramIndex++}`);
-    params.push(maintenance.categoryId);
+    const categoryRef = await AppDataSource.getRepository(
+      MaintenanceCategory,
+    ).findOne({ where: { id: maintenance.categoryId } });
+    if (categoryRef) existing.category = categoryRef;
   }
-
-  if (maintenance.name !== undefined) {
-    fields.push(`name = $${paramIndex++}`);
-    params.push(maintenance.name);
-  }
-
-  if (maintenance.kilometers_frequency !== undefined) {
-    fields.push(`kilometers_frequency = $${paramIndex++}`);
-    params.push(maintenance.kilometers_frequency);
-  }
-
-  if (maintenance.days_frequency !== undefined) {
-    fields.push(`days_frequency = $${paramIndex++}`);
-    params.push(maintenance.days_frequency);
-  }
-
-  if (maintenance.observations !== undefined) {
-    fields.push(`observations = $${paramIndex++}`);
-    params.push(maintenance.observations);
-  }
-
-  if (maintenance.instructions !== undefined) {
-    fields.push(`instructions = $${paramIndex++}`);
-    params.push(maintenance.instructions);
-  }
-
-  if (fields.length === 0) {
-    return existingMaintenance;
-  }
-
-  params.push(id);
-  const query = `
-  UPDATE maintenances 
-  SET ${fields.join(", ")} 
-  WHERE id = $${paramIndex} 
-  RETURNING id, category_id as "categoryId", name, kilometers_frequency, days_frequency, observations, instructions
-`;
-
-  return await oneOrNone<Maintenance>(query, params);
+  if (maintenance.name !== undefined) existing.name = maintenance.name;
+  if (maintenance.kilometersFrequency !== undefined)
+    existing.kilometersFrequency = maintenance.kilometersFrequency ?? null;
+  if (maintenance.daysFrequency !== undefined)
+    existing.daysFrequency = maintenance.daysFrequency ?? null;
+  if (maintenance.observations !== undefined)
+    existing.observations = maintenance.observations ?? null;
+  if (maintenance.instructions !== undefined)
+    existing.instructions = maintenance.instructions ?? null;
+  const saved = await maintenanceRepo().save(existing);
+  return mapMaintenance(saved);
 };
 
 export const deleteMaintenance = async (id: string): Promise<boolean> => {
-  // Check if maintenance exists before attempting to delete
-  const existingMaintenance = await getMaintenanceById(id);
-  if (!existingMaintenance) {
-    return false;
-  }
-
-  const query = `DELETE FROM maintenances WHERE id = $1`;
-  await some(query, [id]);
-  return true;
+  const res = await maintenanceRepo().delete(id);
+  return res.affected === 1;
 };
 
-// Get all vehicles assigned to a specific maintenance
 export const getVehiclesByMaintenanceId = async (
-  maintenanceId: string
+  maintenanceId: string,
 ): Promise<MaintenanceVehicleAssignment[]> => {
-  const query = `
-    SELECT 
-      am.id,
-      am.vehicle_id as "vehicleId",
-      am.maintenance_id as "maintenanceId",
-      am.kilometers_frequency as "kilometersFrequency",
-      am.days_frequency as "daysFrequency",
-      v.license_plate as "licensePlate",
-      v.brand,
-      v.model,
-      v.year,
-      v.img_url as "imgUrl"
-    FROM assigned_maintenances am
-    INNER JOIN vehicles v ON am.vehicle_id = v.id
-    WHERE am.maintenance_id = $1
-    ORDER BY v.license_plate ASC
-  `;
-
-  return await some<MaintenanceVehicleAssignment>(query, [maintenanceId]);
+  const list = await assignedRepo().find({
+    where: { maintenance: { id: maintenanceId } },
+    relations: ["vehicle", "maintenance", "maintenance.category"],
+  });
+  return list.map((am) => ({
+    id: am.id,
+    vehicleId: am.vehicle.id,
+    maintenanceId: am.maintenance.id,
+    kilometersFrequency: am.kilometersFrequency ?? undefined,
+    daysFrequency: am.daysFrequency ?? undefined,
+    licensePlate: am.vehicle.licensePlate,
+    brand: am.vehicle.brand,
+    model: am.vehicle.model,
+    year: am.vehicle.year,
+  }));
 };

@@ -4,22 +4,17 @@ import {
   AssignedMaintenanceSchema,
   UpdateAssignedMaintenanceSchema,
 } from "../schemas/maintenance/assignMaintance";
-import { AssignedMaintenance } from "../interfaces/maintenance";
-import {
-  assignMaintenance,
-  getAssignedMaintenancesByVehicle,
-  deleteAssignedMaintenance,
-  updateAssignedMaintenance,
-} from "../services/vehicles/maintenance/assignations";
+import type { AssignedMaintenance } from "../schemas/maintenance/assignMaintance";
+import { AssignedMaintenancesService } from "../services/maintenancesService";
 import { ApiResponse } from "./baseController";
 
 export class MaintenanceAssignmentsController {
+  constructor(private readonly service: AssignedMaintenancesService) {}
   // GET: Fetch all maintenance assignments for a specific vehicle
   getByVehicle = asyncHandler(async (req: Request, res: Response) => {
     const vehicleId = req.params.vehicleId;
 
-    const maintenanceRecords =
-      await getAssignedMaintenancesByVehicle(vehicleId);
+    const maintenanceRecords = await this.service.getByVehicle(vehicleId);
 
     const response: ApiResponse<AssignedMaintenance[]> = {
       status: "success",
@@ -35,7 +30,7 @@ export class MaintenanceAssignmentsController {
       AssignedMaintenanceSchema.parse(req.body);
 
     try {
-      const result = await assignMaintenance(assignedMaintenance);
+      const result = await this.service.create(assignedMaintenance);
 
       if (!result) {
         const response: ApiResponse<null> = {
@@ -74,8 +69,7 @@ export class MaintenanceAssignmentsController {
     const updateData = UpdateAssignedMaintenanceSchema.parse(req.body);
 
     try {
-      const result = await updateAssignedMaintenance(id, updateData);
-
+      const result = await this.service.update(id, updateData);
       if (!result) {
         const response: ApiResponse<null> = {
           status: "error",
@@ -84,16 +78,22 @@ export class MaintenanceAssignmentsController {
         res.status(404).json(response);
         return;
       }
-
       const response: ApiResponse<typeof result> = {
         status: "success",
         data: result,
         message: "Maintenance assignment updated successfully",
       };
-
       res.status(200).json(response);
     } catch (error) {
-      // Re-throw other errors to be handled by global error handler
+      if (error instanceof AppError) throw error;
+      if (error instanceof Error) {
+        throw new AppError(
+          error.message,
+          400,
+          "https://example.com/problems/validation-error",
+          "Validation Error",
+        );
+      }
       throw error;
     }
   });
@@ -102,31 +102,28 @@ export class MaintenanceAssignmentsController {
   delete = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
 
-    try {
-      const success = await deleteAssignedMaintenance(id);
-
-      if (!success) {
-        const response: ApiResponse<null> = {
-          status: "error",
-          message: `Maintenance assignment with ID ${id} was not found`,
-        };
-        res.status(404).json(response);
-        return;
-      }
-
+    const success = await this.service.delete(id);
+    if (!success) {
       const response: ApiResponse<null> = {
-        status: "success",
-        data: null,
-        message: "Maintenance assignment deleted successfully",
+        status: "error",
+        message: `Maintenance assignment with ID ${id} was not found`,
       };
-
-      res.status(200).json(response);
-    } catch (error) {
-      // Re-throw to be handled by global error handler
-      throw error;
+      res.status(404).json(response);
+      return;
     }
+    const response: ApiResponse<null> = {
+      status: "success",
+      data: null,
+      message: "Maintenance assignment deleted successfully",
+    };
+    res.status(200).json(response);
   });
 }
 
+export function createMaintenanceAssignmentsController() {
+  const service = new AssignedMaintenancesService();
+  return new MaintenanceAssignmentsController(service);
+}
+
 export const maintenanceAssignmentsController =
-  new MaintenanceAssignmentsController();
+  createMaintenanceAssignmentsController();

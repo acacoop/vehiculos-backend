@@ -1,49 +1,24 @@
 import express from "express";
-import { assignmentsController } from "../../controllers/assignmentsController";
-import {
-  getUsersAssignedByVehicleId,
-  getVehiclesAssignedByUserId,
-} from "../../services/vehicles/assignments";
+import { createAssignmentsController } from "../../controllers/assignmentsController";
 import { validateId } from "../../middleware/validation";
 
 const router = express.Router();
+const controller = createAssignmentsController();
 
 // GET: Fetch all assignments with pagination and filters
-router.get("/", assignmentsController.getAll);
+router.get("/", controller.getAll);
 
 // GET: Fetch assignment by ID
-router.get("/:id", assignmentsController.getById);
+router.get("/:id", controller.getById);
 
 // POST: Create a new assignment
-router.post("/", assignmentsController.create);
+router.post("/", controller.create);
 
 // PATCH: Update an assignment
-router.patch("/:id", validateId, assignmentsController.patch);
+router.patch("/:id", validateId, controller.patch);
 
 // PATCH: Finish/end an assignment
-router.patch("/:id/finish", validateId, assignmentsController.finishAssignment);
-
-// Legacy routes for backward compatibility
-router.get("/user/:id", validateId, async (req, res) => {
-  const id = req.params.id;
-  
-  try {
-    const vehicles = await getVehiclesAssignedByUserId(id);
-    res.status(200).json(vehicles);
-  } catch (error) {
-    res.status(500).json({ error: `Internal Server Error: ${error}` });
-  }
-});
-
-router.get("/vehicle/:id", validateId, async (req, res) => {
-  const id = req.params.id;
-  
-  try {
-    const users = await getUsersAssignedByVehicleId(id);
-    res.status(200).json(users);
-  } catch (error) {
-    res.status(500).json({ error: `Internal Server Error: ${error}` });
-  }
-});
+router.patch("/:id/finish", validateId, controller.finishAssignment);
+// Legacy routes removed
 
 export default router;

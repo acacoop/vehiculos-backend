@@ -1,176 +1,137 @@
-import { oneOrNone, some } from "../db";
-import { Reservation, ReservationWithDetails } from "../interfaces/reservation";
+import { AppDataSource } from "../db";
+import { Reservation as ReservationEntity } from "../entities/Reservation";
+import { User } from "../entities/User";
+import { Vehicle } from "../entities/Vehicle";
+import type { Reservation } from "../schemas/reservation";
 import { validateUserExists, validateVehicleExists } from "../utils/validators";
+import { ReservationRepository } from "../repositories/ReservationRepository";
 
-export const BASE_SELECT =
-  'SELECT id, user_id as "userId", vehicle_id as "vehicleId", start_date as "startDate", end_date as "endDate" FROM reservations';
-
-export const BASE_SELECT_WITH_DETAILS = `
-  SELECT 
-    r.id,
-    r.start_date as "startDate",
-    r.end_date as "endDate",
-    u.id as "user_id",
-    u.first_name as "user_firstName",
-    u.last_name as "user_lastName",
-    u.dni as "user_dni",
-    u.email as "user_email",
-    u.active as "user_active",
-    v.id as "vehicle_id",
-    v.license_plate as "vehicle_licensePlate",
-    v.brand as "vehicle_brand",
-    v.model as "vehicle_model",
-    v.year as "vehicle_year",
-    v.img_url as "vehicle_imgUrl"
-  FROM reservations r
-  INNER JOIN users u ON r.user_id = u.id
-  INNER JOIN vehicles v ON r.vehicle_id = v.id
-`;
-
-const mapRowToReservationWithDetails = (row: ReservationRow): ReservationWithDetails => ({
-  id: row.id,
-  startDate: row.startDate,
-  endDate: row.endDate,
-  user: {
-    id: row.user_id,
-    firstName: row.user_firstName,
-    lastName: row.user_lastName,
-    dni: row.user_dni,
-    email: row.user_email,
-    active: row.user_active
-  },
-  vehicle: {
-    id: row.vehicle_id,
-    licensePlate: row.vehicle_licensePlate,
-    brand: row.vehicle_brand,
-    model: row.vehicle_model,
-    year: row.vehicle_year,
-    imgUrl: row.vehicle_imgUrl
-  }
-});
-
-interface ReservationRow {
+// Composite return type (was previously in ../types)
+export interface ReservationWithDetails {
   id: string;
   startDate: Date;
   endDate: Date;
-  user_id: string;
-  user_firstName: string;
-  user_lastName: string;
-  user_dni: number;
-  user_email: string;
-  user_active: boolean;
-  vehicle_id: string;
-  vehicle_licensePlate: string;
-  vehicle_brand: string;
-  vehicle_model: string;
-  vehicle_year: number;
-  vehicle_imgUrl?: string; // Made optional
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    cuit: number;
+    email: string;
+    active: boolean;
+    entraId: string;
+  };
+  vehicle: {
+    id: string;
+    licensePlate: string;
+    brand: string;
+    model: string;
+    year: number;
+  };
 }
 
-export const getAllReservations = async (options?: { 
-  limit?: number; 
-  offset?: number; 
+function mapEntity(e: ReservationEntity): ReservationWithDetails {
+  return {
+    id: e.id,
+    startDate: new Date(e.startDate),
+    endDate: new Date(e.endDate),
+    user: {
+      id: e.user.id,
+      firstName: e.user.firstName,
+      lastName: e.user.lastName,
+      cuit: e.user.cuit,
+      email: e.user.email,
+      active: e.user.active,
+      entraId: e.user.entraId,
+    },
+    vehicle: {
+      id: e.vehicle.id,
+      licensePlate: e.vehicle.licensePlate,
+      brand: e.vehicle.brand,
+      model: e.vehicle.model,
+      year: e.vehicle.year,
+    },
+  };
+}
+
+export interface GetAllReservationsOptions {
+  limit?: number;
+  offset?: number;
   searchParams?: Record<string, string>;
-}): Promise<{ items: ReservationWithDetails[]; total: number }> => {
-  const { limit, offset, searchParams } = options || {};
-  
-  // Build WHERE clause based on search parameters
-  const whereConditions: string[] = [];
-  const params: unknown[] = [];
-  let paramIndex = 1;
+}
 
-  if (searchParams) {
-    if (searchParams.userId) {
-      whereConditions.push(`r.user_id = $${paramIndex++}`);
-      params.push(searchParams.userId);
-    }
-    if (searchParams.vehicleId) {
-      whereConditions.push(`r.vehicle_id = $${paramIndex++}`);
-      params.push(searchParams.vehicleId);
-    }
+export class ReservationsService {
+  private readonly repo: ReservationRepository;
+  private readonly userRepo = () => AppDataSource.getRepository(User);
+  private readonly vehicleRepo = () => AppDataSource.getRepository(Vehicle);
+  constructor(repo?: ReservationRepository) {
+    this.repo = repo ?? new ReservationRepository(AppDataSource);
   }
 
-  const whereClause = whereConditions.length > 0 ? ` WHERE ${whereConditions.join(' AND ')}` : '';
-  
-  // Get total count
-  const countSql = `SELECT COUNT(*) as total FROM reservations r${whereClause}`;
-  const countResult = await oneOrNone<{ total: string }>(countSql, params);
-  const total = parseInt(countResult?.total || '0');
-  
-  // Get paginated results
-  let sql = `${BASE_SELECT_WITH_DETAILS}${whereClause} ORDER BY r.start_date DESC`;
-  
-  if (limit && offset !== undefined) {
-    sql += ` LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
-    params.push(limit, offset);
+  async getAll(
+    options?: GetAllReservationsOptions,
+  ): Promise<{ items: ReservationWithDetails[]; total: number }> {
+    const { limit, offset, searchParams } = options || {};
+    const [rows, total] = await this.repo.findAndCount({
+      limit,
+      offset,
+      searchParams,
+    });
+    return { items: rows.map(mapEntity), total };
   }
-  
-  const rows = await some<ReservationRow>(sql, params);
-  const items = rows.map(mapRowToReservationWithDetails);
-  
-  return { items, total };
-};
-
-export const getReservationsByUserId = async (
-  userId: string
-): Promise<ReservationWithDetails[]> => {
-  const sql = `${BASE_SELECT_WITH_DETAILS} WHERE r.user_id = $1`;
-  const rows = await some<ReservationRow>(sql, [userId]);
-  return rows.map(mapRowToReservationWithDetails);
-};
-
-export const getReservationsByVehicleId = async (
-  vehicleId: string
-): Promise<ReservationWithDetails[]> => {
-  const sql = `${BASE_SELECT_WITH_DETAILS} WHERE r.vehicle_id = $1`;
-  const rows = await some<ReservationRow>(sql, [vehicleId]);
-  return rows.map(mapRowToReservationWithDetails);
-};
-
-export const getReservatiosOfAssignedVehiclesByUserId = async (
-  userId: string
-): Promise<ReservationWithDetails[]> => {
-  const sql = `${BASE_SELECT_WITH_DETAILS} WHERE r.vehicle_id IN (SELECT vehicle_id FROM assignments WHERE user_id = $1)`;
-  const rows = await some<ReservationRow>(sql, [userId]);
-  return rows.map(mapRowToReservationWithDetails);
-};
-
-export const getTodayReservationsByUserId = async (
-  userId: string
-): Promise<ReservationWithDetails[]> => {
-  const sql = `${BASE_SELECT_WITH_DETAILS} WHERE r.user_id = $1 AND r.start_date = CURRENT_DATE`;
-  const rows = await some<ReservationRow>(sql, [userId]);
-  return rows.map(mapRowToReservationWithDetails);
-};
-
-export const addReservation = async (
-  reservation: Reservation
-): Promise<ReservationWithDetails | null> => {
-  const { userId, vehicleId, startDate, endDate } = reservation;
-  
-  // Validate that user and vehicle exist
-  await validateUserExists(userId);
-  await validateVehicleExists(vehicleId);
-  
-  const insertSql = `INSERT INTO reservations (user_id, vehicle_id, start_date, end_date) VALUES ($1, $2, $3, $4) RETURNING id`;
-  const params = [userId, vehicleId, startDate, endDate];
-  const result = await oneOrNone<{ id: string }>(insertSql, params);
-  
-  if (!result) {
-    return null;
+  async getById(id: string): Promise<ReservationWithDetails | null> {
+    const r = await this.repo.findOne(id);
+    return r ? mapEntity(r) : null;
   }
-  
-  // Get the full reservation with details
-  const getSql = `${BASE_SELECT_WITH_DETAILS} WHERE r.id = $1`;
-  const row = await oneOrNone<ReservationRow>(getSql, [result.id]);
-  
-  return row ? mapRowToReservationWithDetails(row) : null;
-};
+  async getByUserId(userId: string) {
+    const rows = await this.repo.find({ user: { id: userId } });
+    return rows.map(mapEntity);
+  }
+  async getByVehicleId(vehicleId: string) {
+    const rows = await this.repo.find({ vehicle: { id: vehicleId } });
+    return rows.map(mapEntity);
+  }
+  async getAssignedVehiclesReservations(userId: string) {
+    const vehicleIds = (
+      await this.repo.distinctVehicleIdsByAssignedUser(userId)
+    ).map((r) => r.vehicleId);
+    if (!vehicleIds.length) return [];
+    const rows = await this.repo.findByVehicleIds(vehicleIds);
+    return rows.map(mapEntity);
+  }
+  async getTodayByUserId(userId: string) {
+    const today = new Date().toISOString().split("T")[0];
+    const rows = await this.repo
+      .qb()
+      .leftJoinAndSelect("r.user", "user")
+      .leftJoinAndSelect("r.vehicle", "vehicle")
+      .where("r.user_id = :userId", { userId })
+      .andWhere("r.start_date = :today", { today })
+      .orderBy("r.start_date", "DESC")
+      .getMany();
+    return rows.map(mapEntity);
+  }
+  async create(
+    reservation: Reservation,
+  ): Promise<ReservationWithDetails | null> {
+    const { userId, vehicleId, startDate, endDate } = reservation;
+    await validateUserExists(userId);
+    await validateVehicleExists(vehicleId);
+    const user = await this.userRepo().findOne({ where: { id: userId } });
+    const vehicle = await this.vehicleRepo().findOne({
+      where: { id: vehicleId },
+    });
+    if (!user || !vehicle) return null;
+    const entity = this.repo.create({
+      user,
+      vehicle,
+      startDate: startDate.toISOString().split("T")[0],
+      endDate: endDate.toISOString().split("T")[0],
+    });
+    const saved = await this.repo.save(entity);
+    return mapEntity(saved);
+  }
+}
 
-export const getReservationById = async (
-  id: string
-): Promise<ReservationWithDetails | null> => {
-  const sql = `${BASE_SELECT_WITH_DETAILS} WHERE r.id = $1`;
-  const row = await oneOrNone<ReservationRow>(sql, [id]);
-  return row ? mapRowToReservationWithDetails(row) : null;
-};
+export function createReservationsService() {
+  return new ReservationsService();
+}
