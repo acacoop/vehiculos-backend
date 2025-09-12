@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { createUsersController } from "../controllers/usersController";
 import { validateSchema } from "../middleware/errorHandler";
-import { validateId } from "../middleware/validation";
+import { validateUUIDParam } from "../middleware/validation";
 import { UserSchema } from "../schemas/user";
 
 const router = Router();
@@ -16,7 +16,7 @@ const usersController = createUsersController();
 router.get("/", usersController.getAll);
 
 // GET /users/:id - Get user by ID
-router.get("/:id", validateId, usersController.getById);
+router.get("/:id", validateUUIDParam("id"), usersController.getById);
 
 // POST /users - Create new user
 router.post("/", validateSchema(UserSchema), usersController.create);
@@ -24,7 +24,7 @@ router.post("/", validateSchema(UserSchema), usersController.create);
 // PUT /users/:id - Update user (replace)
 router.put(
   "/:id",
-  validateId,
+  validateUUIDParam("id"),
   validateSchema(UserSchema.partial()),
   usersController.update,
 );
@@ -32,13 +32,13 @@ router.put(
 // PATCH /users/:id - Partial update user
 router.patch(
   "/:id",
-  validateId,
+  validateUUIDParam("id"),
   validateSchema(UserSchema.partial()),
   usersController.patch,
 );
 
 // DELETE /users/:id - Delete user
-router.delete("/:id", validateId, usersController.delete);
+router.delete("/:id", validateUUIDParam("id"), usersController.delete);
 
 // POST /users/:id/activate - Activate user
 router.post("/:id/activate", usersController.activate);

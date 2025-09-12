@@ -9,13 +9,13 @@ export const MaintenanceSchema = z.object({
     .min(1, "Name is required")
     .max(255, "Name must be less than 255 characters"),
   // Optional extended fields (legacy support)
-  kilometersFrequency: z.number().int().positive().optional(),
-  daysFrequency: z.number().int().positive().optional(),
+  kilometersFrequency: z.number().int().min(0).optional(),
+  daysFrequency: z.number().int().min(0).optional(),
   observations: z.string().optional(),
   instructions: z.string().optional(),
 });
 
-// Schema for creating maintenances (id is excluded)
+// Schema for creating maintenances (id is excluded) - only name and categoryId required
 export const MaintenanceCreateSchema = MaintenanceSchema.omit({ id: true });
 
 // Schema for updating maintenances (all fields optional)
@@ -26,6 +26,10 @@ export const MaintenanceUpdateSchema = z.object({
     .min(1, "Name is required")
     .max(255, "Name must be less than 255 characters")
     .optional(),
+  kilometersFrequency: z.number().int().min(0).optional(),
+  daysFrequency: z.number().int().min(0).optional(),
+  observations: z.string().optional(),
+  instructions: z.string().optional(),
 });
 
 export type MaintenanceInput = z.infer<typeof MaintenanceSchema>;

@@ -1,5 +1,8 @@
 import { BaseController } from "./baseController";
-import type { Maintenance } from "../schemas/maintenance/maintenance";
+import {
+  MaintenanceCreateSchema,
+  MaintenanceUpdateSchema,
+} from "../schemas/maintenance/maintenance";
 import { MaintenancesService } from "../services/maintenancesService";
 import { Request, Response } from "express";
 import { asyncHandler, AppError } from "../middleware/errorHandler";
@@ -15,7 +18,7 @@ export class MaintenancePosiblesController extends BaseController {
     offset: number;
     searchParams?: Record<string, string>;
   }) {
-    // Maintenance posibles don't typically need pagination, but we'll adapt the response
+    // Fetch all possible maintenances
     const maintenances = await this.service.getAll();
     return { items: maintenances, total: maintenances.length };
   }
@@ -30,7 +33,7 @@ export class MaintenancePosiblesController extends BaseController {
   }
 
   protected async createService(data: unknown) {
-    const maintenanceData = data as Omit<Maintenance, "id">;
+    const maintenanceData = MaintenanceCreateSchema.parse(data);
 
     try {
       return await this.service.create(maintenanceData);
@@ -48,7 +51,7 @@ export class MaintenancePosiblesController extends BaseController {
   }
 
   protected async updateService(id: string, data: unknown) {
-    const maintenanceData = data as Partial<Maintenance>;
+    const maintenanceData = MaintenanceUpdateSchema.parse(data);
 
     try {
       return await this.service.update(id, maintenanceData);
@@ -67,7 +70,7 @@ export class MaintenancePosiblesController extends BaseController {
 
   protected async patchService(id: string, data: unknown) {
     // For PATCH, use the same logic as update since both accept partial data
-    const maintenanceData = data as Partial<Maintenance>;
+    const maintenanceData = MaintenanceUpdateSchema.parse(data);
 
     try {
       return await this.service.update(id, maintenanceData);

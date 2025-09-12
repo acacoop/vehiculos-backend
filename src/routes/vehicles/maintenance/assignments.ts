@@ -1,6 +1,11 @@
 import express from "express";
-import { validateUUIDParam, validateId } from "../../../middleware/validation";
+import { validateUUIDParam } from "../../../middleware/validation";
 import { maintenanceAssignmentsController } from "../../../controllers/maintenanceAssignmentsController";
+import { validateBody } from "../../../middleware/validation";
+import {
+  AssignedMaintenanceSchema,
+  UpdateAssignedMaintenanceSchema,
+} from "../../../schemas/maintenance/assignMaintance";
 
 const router = express.Router();
 
@@ -8,16 +13,29 @@ const router = express.Router();
 router.get(
   "/:vehicleId",
   validateUUIDParam("vehicleId"),
-  maintenanceAssignmentsController.getByVehicle
+  maintenanceAssignmentsController.getByVehicle,
 );
 
 // POST: Associate a maintenance with a vehicle
-router.post("/", maintenanceAssignmentsController.create);
+router.post(
+  "/",
+  validateBody(AssignedMaintenanceSchema),
+  maintenanceAssignmentsController.create,
+);
 
 // PUT: Update a maintenance assignment
-router.put("/:id", validateId, maintenanceAssignmentsController.update);
+router.put(
+  "/:id",
+  validateUUIDParam("id"),
+  validateBody(UpdateAssignedMaintenanceSchema),
+  maintenanceAssignmentsController.update,
+);
 
 // DELETE: Remove a maintenance assignment
-router.delete("/:id", validateId, maintenanceAssignmentsController.delete);
+router.delete(
+  "/:id",
+  validateUUIDParam("id"),
+  maintenanceAssignmentsController.delete,
+);
 
 export default router;

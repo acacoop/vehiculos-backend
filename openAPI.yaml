@@ -861,11 +861,10 @@ paths:
       parameters:
         - name: id
           in: path
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Maintenance"
-                  example: []
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         "200":
           description: Maintenance type retrieved successfully
@@ -2134,6 +2133,24 @@ components:
         name:
           type: string
           example: "Cambio de aceite"
+        kilometersFrequency:
+          type: integer
+          minimum: 0
+          nullable: true
+          example: 10000
+        daysFrequency:
+          type: integer
+          minimum: 0
+          nullable: true
+          example: 90
+        observations:
+          type: string
+          nullable: true
+          example: "Usar aceite sintético"
+        instructions:
+          type: string
+          nullable: true
+          example: "Cambiar filtro y revisar tapa"
         categoryName:
           type: string
           example: "Motor"
@@ -2155,6 +2172,20 @@ components:
           minLength: 1
           maxLength: 100
           example: "Cambio de aceite"
+        kilometersFrequency:
+          type: integer
+          minimum: 0
+          description: "Frequency in kilometers"
+        daysFrequency:
+          type: integer
+          minimum: 0
+          description: "Frequency in days"
+        observations:
+          type: string
+          description: "Observation notes"
+        instructions:
+          type: string
+          description: "Step-by-step instructions"
       required:
         - categoryId
         - name

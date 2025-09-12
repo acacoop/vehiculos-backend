@@ -1,5 +1,5 @@
 import express from "express";
-import { validateId } from "../middleware/validation";
+import { validateUUIDParam } from "../middleware/validation";
 import { createReservationsController } from "../controllers/reservationsController";
 import { ReservationSchema } from "../schemas/reservation";
 
@@ -10,16 +10,24 @@ const controller = createReservationsController();
 router.get("/", controller.getAll);
 
 // GET: Fetch reservations for a specific user
-router.get("/user/:id", validateId, controller.getByUser);
+router.get("/user/:id", validateUUIDParam("id"), controller.getByUser);
 
 // GET: Fetch reservations for a specific vehicle
-router.get("/vehicle/:id", validateId, controller.getByVehicle);
+router.get("/vehicle/:id", validateUUIDParam("id"), controller.getByVehicle);
 
 // GET: Fetch reservations for all vehicles assigned to a specific user
-router.get("/user/:id/assigned", validateId, controller.getAssignedVehicles);
+router.get(
+  "/user/:id/assigned",
+  validateUUIDParam("id"),
+  controller.getAssignedVehicles,
+);
 
 // GET: Fetch reservations for a specific user that are scheduled for today
-router.get("/user/:id/today", validateId, controller.getTodayByUser);
+router.get(
+  "/user/:id/today",
+  validateUUIDParam("id"),
+  controller.getTodayByUser,
+);
 
 // POST: Create a new reservation
 router.post("/", (req, res, next) => {

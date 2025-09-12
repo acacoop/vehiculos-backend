@@ -83,7 +83,7 @@ export class MaintenancesService {
   private readonly assignedRepo: AssignedMaintenanceRepository;
   constructor(
     repo?: MaintenanceRepository,
-    assignedRepo?: AssignedMaintenanceRepository
+    assignedRepo?: AssignedMaintenanceRepository,
   ) {
     this.repo = repo ?? new MaintenanceRepository(AppDataSource);
     this.assignedRepo =
@@ -101,42 +101,47 @@ export class MaintenancesService {
     const ent = await this.repo.findOne(id);
     return ent ? map(ent) : null;
   }
-  async create(
-    data: Omit<MaintenanceDTO, "id">
-  ): Promise<MaintenanceDTO | null> {
+  async create(data: {
+    categoryId: string;
+    name: string;
+    kilometersFrequency?: number;
+    daysFrequency?: number;
+    observations?: string;
+    instructions?: string;
+  }): Promise<MaintenanceDTO | null> {
     await validateMaintenanceCategoryExists(data.categoryId);
     const category = await AppDataSource.getRepository(
-      MaintenanceCategory
+      MaintenanceCategory,
     ).findOne({ where: { id: data.categoryId } });
     if (!category) return null;
-    type Ext = typeof data & {
-      kilometersFrequency?: number;
-      daysFrequency?: number;
-      observations?: string;
-      instructions?: string;
-    };
-    const ext = data as Ext;
     const created = this.repo.create({
       category,
       name: data.name,
-      kilometersFrequency: ext.kilometersFrequency ?? null,
-      daysFrequency: ext.daysFrequency ?? null,
-      observations: ext.observations ?? null,
-      instructions: ext.instructions ?? null,
+      kilometersFrequency: data.kilometersFrequency ?? null,
+      daysFrequency: data.daysFrequency ?? null,
+      observations: data.observations ?? null,
+      instructions: data.instructions ?? null,
     });
     const saved = await this.repo.save(created as Maintenance);
     return map(saved);
   }
   async update(
     id: string,
-    patch: Partial<MaintenanceDTO>
+    patch: {
+      categoryId?: string;
+      name?: string;
+      kilometersFrequency?: number | null;
+      daysFrequency?: number | null;
+      observations?: string | null;
+      instructions?: string | null;
+    },
   ): Promise<MaintenanceDTO | null> {
     const existing = await this.repo.findOne(id);
     if (!existing) return null;
     if (patch.categoryId) {
       await validateMaintenanceCategoryExists(patch.categoryId);
       const category = await AppDataSource.getRepository(
-        MaintenanceCategory
+        MaintenanceCategory,
       ).findOne({ where: { id: patch.categoryId } });
       if (category) existing.category = category;
     }
@@ -164,7 +169,7 @@ export class MaintenancesService {
     return res.affected === 1;
   }
   async getVehicles(
-    maintenanceId: string
+    maintenanceId: string,
   ): Promise<MaintenanceVehicleAssignment[]> {
     const list = await this.assignedRepo.findByMaintenance(maintenanceId);
     return list.map((am) => ({
@@ -246,7 +251,7 @@ export class AssignedMaintenancesService {
       daysFrequency?: number | null;
       observations?: string | null;
       instructions?: string | null;
-    }
+    },
   ): Promise<AssignedMaintenanceDTO | null> {
     const existing = await this.repo.findOne(id);
     if (!existing) return null;
@@ -270,7 +275,7 @@ export class AssignedMaintenancesService {
 export class MaintenanceRecordsService {
   private readonly recordRepo: MaintenanceRecordRepository;
   private readonly maintenanceRecordRepo = AppDataSource.getRepository(
-    MaintenanceRecordEntity
+    MaintenanceRecordEntity,
   );
   private readonly assignedRepo =
     AppDataSource.getRepository(AssignedMaintenance);
@@ -332,7 +337,7 @@ export class MaintenanceRecordsService {
   }
   async getByAssignedMaintenance(assignedMaintenanceId: string) {
     const list = await this.recordRepo.findByAssignedMaintenance(
-      assignedMaintenanceId
+      assignedMaintenanceId,
     );
     return list.map((r) => this.mapEntity(r as MaintenanceRecordEntity));
   }

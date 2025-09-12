@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import { createVehiclesController } from "../controllers/vehiclesController";
 import vehicleKilometersRoutes from "./vehicles/kilometers";
 import { validateSchema, AppError } from "../middleware/errorHandler";
-import { validateId } from "../middleware/validation";
+import { validateUUIDParam } from "../middleware/validation";
 import { VehicleSchema } from "../schemas/vehicle";
 import { licensePlateRegex } from "../schemas/validations";
 
@@ -37,7 +37,7 @@ const validateLicensePlateQuery = (
 router.get("/", validateLicensePlateQuery, vehiclesController.getAll);
 
 // GET /vehicles/:id - Get vehicle by ID
-router.get("/:id", validateId, vehiclesController.getById);
+router.get("/:id", validateUUIDParam("id"), vehiclesController.getById);
 
 // POST /vehicles - Create new vehicle
 router.post("/", validateSchema(VehicleSchema), vehiclesController.create);
@@ -45,7 +45,7 @@ router.post("/", validateSchema(VehicleSchema), vehiclesController.create);
 // PUT /vehicles/:id - Update vehicle (replace)
 router.put(
   "/:id",
-  validateId,
+  validateUUIDParam("id"),
   validateSchema(VehicleSchema.partial()),
   vehiclesController.update,
 );
@@ -53,13 +53,13 @@ router.put(
 // PATCH /vehicles/:id - Partial update vehicle
 router.patch(
   "/:id",
-  validateId,
+  validateUUIDParam("id"),
   validateSchema(VehicleSchema.partial()),
   vehiclesController.patch,
 );
 
 // DELETE /vehicles/:id - Delete vehicle
-router.delete("/:id", validateId, vehiclesController.delete);
+router.delete("/:id", validateUUIDParam("id"), vehiclesController.delete);
 
 // Nested kilometers routes for a vehicle
 router.use("/:id/kilometers", vehicleKilometersRoutes);

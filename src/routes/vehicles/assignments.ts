@@ -1,6 +1,6 @@
 import express from "express";
 import { createAssignmentsController } from "../../controllers/assignmentsController";
-import { validateId } from "../../middleware/validation";
+import { validateUUIDParam } from "../../middleware/validation";
 
 const router = express.Router();
 const controller = createAssignmentsController();
@@ -15,10 +15,14 @@ router.get("/:id", controller.getById);
 router.post("/", controller.create);
 
 // PATCH: Update an assignment
-router.patch("/:id", validateId, controller.patch);
+router.patch("/:id", validateUUIDParam("id"), controller.patch);
 
 // PATCH: Finish/end an assignment
-router.patch("/:id/finish", validateId, controller.finishAssignment);
+router.patch(
+  "/:id/finish",
+  validateUUIDParam("id"),
+  controller.finishAssignment,
+);
 // Legacy routes removed
 
 export default router;

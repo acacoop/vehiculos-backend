@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "./errorHandler";
 import { isValidUUID } from "../utils/uuidValidators";
+import type { ZodSchema } from "zod";
 
 /**
  * Internal function to validate UUID format for middleware (throws AppError)
@@ -15,87 +16,28 @@ const validateUUIDFormat = (id: string, paramName: string = "id"): void => {
   }
 };
 
-/**
- * Middleware to validate UUID format in request parameters (expects :id param)
- */
-export const validateId = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  validateUUIDFormat(req.params.id, "id");
-  next();
+// Generic UUID param validator (defaults to 'id')
+export const validateUUIDParam = (paramName: string = "id") => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    validateUUIDFormat(req.params[paramName], paramName);
+    next();
+  };
 };
 
 /**
  * Middleware to validate maintenance category data
  */
-export const validateMaintenanceCategoryData = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  const { name } = req.body;
-
-  // Validate name is provided and is a non-empty string
-  if (!name || typeof name !== "string" || name.trim().length === 0) {
-    throw new AppError("Name is required and must be a non-empty string", 400);
-  }
-
-  // Validate name length
-  if (name.length > 255) {
-    throw new AppError("Name must be less than 255 characters", 400);
-  }
-
-  // Trim whitespace
-  req.body.name = name.trim();
-
-  next();
-};
-
-/**
- * Middleware to validate maintenance data
- */
-export const validateMaintenanceData = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  const { name, categoryId } = req.body;
-
-  // Validate name is provided and is a non-empty string
-  if (!name || typeof name !== "string" || name.trim().length === 0) {
-    throw new AppError("Name is required and must be a non-empty string", 400);
-  }
-
-  // Validate name length
-  if (name.length > 255) {
-    throw new AppError("Name must be less than 255 characters", 400);
-  }
-
-  // Validate categoryId is provided and is a valid UUID
-  if (!categoryId || typeof categoryId !== "string") {
-    throw new AppError("Category ID is required", 400);
-  }
-
-  const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(categoryId)) {
-    throw new AppError("Invalid UUID format for categoryId", 400);
-  }
-
-  // Trim whitespace
-  req.body.name = name.trim();
-
-  next();
-};
-
-/**
- * Middleware to validate UUID format for specific parameter names
- */
-export const validateUUIDParam = (paramName: string) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    validateUUIDFormat(req.params[paramName], paramName);
-    next();
+// Generic body validator using Zod schemas
+export const validateBody = <T>(schema: ZodSchema<T>) => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
+    try {
+      // Validate body shape; controllers can re-parse to get typed data if needed
+      schema.parse(req.body);
+      next();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Invalid request body";
+      throw new AppError(message, 400);
+    }
   };
 };
