@@ -1,13 +1,7 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
 import sql from "mssql";
-import {
-  DB_HOST,
-  DB_PORT,
-  DB_USER,
-  DB_PASSWORD,
-  DB_NAME,
-} from "./config/env.config";
+import { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_LOGGING } from "./config/env.config";
 
 // Entities will be added here progressively
 import { Vehicle } from "./entities/Vehicle";
@@ -31,8 +25,8 @@ export const AppDataSource = new DataSource({
   password: DB_PASSWORD,
   database: DB_NAME,
   synchronize: !isProd,
-  logging: !isProd,
-  options: { encrypt: true, trustServerCertificate: false },
+  logging: DB_LOGGING,
+  options: { encrypt: true, trustServerCertificate: !isProd }, // In non-prod we allow self-signed certs to simplify setup; prod remains strict
   entities: [
     Vehicle,
     User,
@@ -112,5 +106,3 @@ async function ensureDatabase(retries = 3, delayMs = 2000) {
       console.error("❌ SQL Server connection failed:", err),
     );
 })();
-
-// Legacy raw query helpers removed after full migration to TypeORM repositories.
