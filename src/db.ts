@@ -1,7 +1,14 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
 import sql from "mssql";
-import { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_LOGGING } from "./config/env.config";
+import {
+  DB_HOST,
+  DB_PORT,
+  DB_USER,
+  DB_PASSWORD,
+  DB_NAME,
+  DB_LOGGING,
+} from "./config/env.config";
 
 // Entities will be added here progressively
 import { Vehicle } from "./entities/Vehicle";
