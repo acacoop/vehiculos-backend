@@ -75,14 +75,14 @@ paths:
 
         **Search Parameters:**
         - `email`: Exact match by email address
-        - `dni`: Exact match by DNI
+        - `cuit`: Exact match by CUIT (11 digits)
         - `firstName`: Partial match by first name (case-insensitive)
         - `lastName`: Partial match by last name (case-insensitive)
         - `active`: Filter by active status (true/false)
 
         **Examples:**
         - `/users?email=user@example.com`
-        - `/users?dni=12345678`
+        - `/users?cuit=20345678901`
         - `/users?firstName=John&lastName=Doe`
         - `/users?active=false`
         - `/users?firstName=Ana&page=1&limit=5`
@@ -107,11 +107,13 @@ paths:
           schema:
             type: string
             format: email
-        - name: dni
+        - name: cuit
           in: query
-          description: Filter by exact DNI
+          description: Filter by exact CUIT (11 digits)
           schema:
             type: string
+            pattern: "^[0-9]{11}$"
+            example: "20345678901"
         - name: firstName
           in: query
           description: Filter by first name (partial match, case-insensitive)
@@ -859,10 +861,11 @@ paths:
       parameters:
         - name: id
           in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Maintenance"
+                  example: []
       responses:
         "200":
           description: Maintenance type retrieved successfully
@@ -1628,9 +1631,10 @@ components:
         lastName:
           type: string
           example: "Pérez"
-        dni:
-          type: integer
-          example: 12345678
+        cuit:
+          type: string
+          example: "20345678901"
+          description: "CUIT (11 digits)"
         email:
           type: string
           format: email
@@ -1647,7 +1651,7 @@ components:
         - id
         - firstName
         - lastName
-        - dni
+        - cuit
         - email
         - entraId
         - active
@@ -1663,10 +1667,11 @@ components:
           type: string
           minLength: 1
           maxLength: 50
-        dni:
-          type: integer
-          minimum: 1000000
-          maximum: 99999999
+        cuit:
+          type: string
+          pattern: "^[0-9]{11}$"
+          example: "20345678901"
+          description: "CUIT (11 digits)"
         email:
           type: string
           format: email
@@ -1677,7 +1682,7 @@ components:
       required:
         - firstName
         - lastName
-        - dni
+        - cuit
         - email
 
     UserUpdateInput:

@@ -5,6 +5,15 @@ import { AssignedMaintenance } from "../../../entities/AssignedMaintenance";
 import { validateMaintenanceCategoryExists } from "../../../utils/validators";
 import type { Maintenance } from "../../../schemas/maintenance/maintenance";
 
+// Local extended type that includes categoryName for API responses
+export type MaintenanceWithCategory = Maintenance & {
+  categoryName?: string;
+  kilometersFrequency?: number;
+  daysFrequency?: number;
+  observations?: string;
+  instructions?: string;
+};
+
 // Local interface (previously from types)
 export interface MaintenanceVehicleAssignment {
   id: string;
@@ -22,16 +31,10 @@ const maintenanceRepo = () => AppDataSource.getRepository(MaintenanceEntity);
 const assignedRepo = () => AppDataSource.getRepository(AssignedMaintenance);
 
 // Map entity to a Maintenance shape extended with optional extra fields (not yet in zod schema)
-const mapMaintenance = (
-  m: MaintenanceEntity,
-): Maintenance & {
-  kilometersFrequency?: number;
-  daysFrequency?: number;
-  observations?: string;
-  instructions?: string;
-} => ({
+const mapMaintenance = (m: MaintenanceEntity): MaintenanceWithCategory => ({
   id: m.id,
   categoryId: m.category.id,
+  categoryName: m.category?.name,
   name: m.name,
   kilometersFrequency: m.kilometersFrequency ?? undefined,
   daysFrequency: m.daysFrequency ?? undefined,
@@ -48,7 +51,7 @@ export const getAllMaintenances = async () => {
 };
 
 export const getMaintenanceById = async (
-  id: string,
+  id: string
 ): Promise<Maintenance | null> => {
   const entity = await maintenanceRepo().findOne({
     where: { id },
@@ -65,7 +68,7 @@ export const getMaintenanceWithDetailsById = async (id: string) => {
   if (!entity) return null;
   return {
     ...mapMaintenance(entity),
-    maintenanceCategoryName: entity.category.name,
+    categoryName: entity.category.name,
   };
 };
 
@@ -75,11 +78,11 @@ export const createMaintenance = async (
     daysFrequency?: number;
     observations?: string;
     instructions?: string;
-  },
+  }
 ): Promise<Maintenance | null> => {
   await validateMaintenanceCategoryExists(maintenance.categoryId);
   const categoryRef = await AppDataSource.getRepository(
-    MaintenanceCategory,
+    MaintenanceCategory
   ).findOne({ where: { id: maintenance.categoryId } });
   if (!categoryRef) return null; // race condition safe-guard
   const created = maintenanceRepo().create({
@@ -101,7 +104,7 @@ export const updateMaintenance = async (
     daysFrequency?: number | null;
     observations?: string | null;
     instructions?: string | null;
-  },
+  }
 ): Promise<Maintenance | null> => {
   const existing = await maintenanceRepo().findOne({
     where: { id },
@@ -111,7 +114,7 @@ export const updateMaintenance = async (
   if (maintenance.categoryId) {
     await validateMaintenanceCategoryExists(maintenance.categoryId);
     const categoryRef = await AppDataSource.getRepository(
-      MaintenanceCategory,
+      MaintenanceCategory
     ).findOne({ where: { id: maintenance.categoryId } });
     if (categoryRef) existing.category = categoryRef;
   }
@@ -134,7 +137,7 @@ export const deleteMaintenance = async (id: string): Promise<boolean> => {
 };
 
 export const getVehiclesByMaintenanceId = async (
-  maintenanceId: string,
+  maintenanceId: string
 ): Promise<MaintenanceVehicleAssignment[]> => {
   const list = await assignedRepo().find({
     where: { maintenance: { id: maintenanceId } },

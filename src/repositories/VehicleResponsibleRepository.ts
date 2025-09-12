@@ -49,11 +49,11 @@ export class VehicleResponsibleRepository {
       qb.andWhere("vr.end_date IS NOT NULL");
     if (searchParams?.date)
       qb.andWhere(
-        "vr.start_date <= :d AND (vr.end_date IS NULL OR vr.end_date >= :d)",
-        { d: searchParams.date },
+        "vr.startDate <= :d AND (vr.endDate IS NULL OR vr.endDate >= :d)",
+        { d: searchParams.date }
       );
     return qb
-      .orderBy("vr.start_date", "DESC")
+      .orderBy("vr.startDate", "DESC")
       .skip(offset)
       .take(limit)
       .getManyAndCount();
@@ -75,23 +75,23 @@ export class VehicleResponsibleRepository {
       .leftJoinAndSelect("vr.vehicle", "vehicle")
       .where("user.id = :userId", { userId })
       .andWhere(
-        "vr.start_date <= :d AND (vr.end_date IS NULL OR vr.end_date >= :d)",
-        { d: date },
+        "vr.startDate <= :d AND (vr.endDate IS NULL OR vr.endDate >= :d)",
+        { d: date }
       )
-      .orderBy("vr.start_date", "DESC")
+      .orderBy("vr.startDate", "DESC")
       .getMany();
   }
   getOverlap(
     vehicleId: string,
     startDate: string,
     endDate: string | null,
-    excludeId?: string,
+    excludeId?: string
   ) {
-    const qb = this.qb().where("vr.vehicle_id = :vehicleId", { vehicleId });
+    const qb = this.qb().where("vr.vehicle.id = :vehicleId", { vehicleId });
     if (excludeId) qb.andWhere("vr.id != :excludeId", { excludeId });
     qb.andWhere(
-      "(:start < COALESCE(vr.end_date, :max)) AND (COALESCE(:end, :max) > vr.start_date)",
-      { start: startDate, end: endDate, max: "9999-12-31" },
+      "(:start < COALESCE(vr.endDate, :max)) AND (COALESCE(:end, :max) > vr.startDate)",
+      { start: startDate, end: endDate, max: "9999-12-31" }
     );
     return qb.getOne();
   }
