@@ -21,6 +21,8 @@ import { AssignedMaintenance } from "./entities/AssignedMaintenance";
 import { MaintenanceRecord } from "./entities/MaintenanceRecord";
 import { VehicleResponsible } from "./entities/VehicleResponsible";
 
+const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
+
 export const AppDataSource = new DataSource({
   type: "mssql",
   host: DB_HOST,
@@ -28,9 +30,9 @@ export const AppDataSource = new DataSource({
   username: DB_USER,
   password: DB_PASSWORD,
   database: DB_NAME,
-  synchronize: true, // NOTE: for dev only. For prod use migrations.
-  logging: false,
-  options: { encrypt: false, trustServerCertificate: true },
+  synchronize: !isProd,
+  logging: !isProd,
+  options: { encrypt: true, trustServerCertificate: false },
   entities: [
     Vehicle,
     User,
