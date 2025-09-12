@@ -11,6 +11,9 @@
     "sync:users": "ts-node-dev --env-file=.env src/scripts/syncEntraUsers.ts",
     "sample-data": "ts-node-dev --env-file=.env src/scripts/loadSampleData.ts"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

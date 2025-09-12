@@ -47,3 +47,9 @@ export const {
   ENTRA_EXPECTED_ISSUER,
   ENTRA_REQUIRED_SCOPE,
 } = parsed.data;
+
+export const SERVER_PORT =
+  Number(process.env.PORT) || // inyectado por Azure (8080)
+  Number(process.env.APP_PORT) ||
+  Number(APP_PORT) || // el de tu schema zod
+  3000;

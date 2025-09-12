@@ -25,7 +25,7 @@ import assignedMaintenanceRoutes from "./routes/vehicles/maintenance/assignments
 import maintenanceRecordsRoutes from "./routes/vehicles/maintenance/records";
 import vehicleKilometersRoutes from "./routes/vehicles/kilometers";
 
-import { APP_PORT } from "./config/env.config";
+import { SERVER_PORT } from "./config/env.config";
 
 const app = express();
 
@@ -94,17 +94,19 @@ app.use("*", (req: Request, res: Response) => {
 app.use(globalErrorHandler);
 
 // Start server
-app.listen(APP_PORT, () => {
+app.listen(SERVER_PORT, "0.0.0.0", () => {
   if (process.env.NODE_ENV !== "development") {
     console.log(
-      `🚗 Vehiculos API Server running on http://localhost:${APP_PORT}`,
+      `🚗 Vehiculos API Server running on http://localhost:${SERVER_PORT}`,
     );
-    console.log(`📖 API Documentation: http://localhost:${APP_PORT}/docs`);
+    console.log(`📖 API Documentation: http://localhost:${SERVER_PORT}/docs`);
     console.log(
-      `📊 Health check available at http://localhost:${APP_PORT}/health`,
+      `📊 Health check available at http://localhost:${SERVER_PORT}/health`,
     );
     console.log(`🐛 Environment: ${process.env.NODE_ENV || "development"}`);
   } else {
-    console.log(`✅ Server ready → http://localhost:${APP_PORT} | Docs: /docs`);
+    console.log(
+      `✅ Server ready → http://localhost:${SERVER_PORT} | Docs: /docs`,
+    );
   }
 });
