@@ -53,3 +53,7 @@ export const SERVER_PORT =
   Number(process.env.APP_PORT) ||
   Number(APP_PORT) || // el de tu schema zod
   3000;
+
+console.log(
+  `[boot] PORT=${process.env.PORT ?? "(unset)"} APP_PORT=${APP_PORT} -> SERVER_PORT=${SERVER_PORT}`,
+);
