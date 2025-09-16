@@ -19,7 +19,7 @@ info:
 servers:
   - url: http://localhost:3000
     description: Development server
-  - url: https://api.vehiculos.example.com
+  - url: https://api-vehiculos.azurewebsites.net
     description: Production server
 
 paths:
