@@ -7,7 +7,7 @@ import { VehicleRepository } from "../../repositories/VehicleRepository";
 export class VehiclesService {
   constructor(
     private readonly vehicleRepo = new VehicleRepository(AppDataSource),
-    private readonly responsiblesService = new VehicleResponsiblesService(),
+    private readonly responsiblesService = new VehicleResponsiblesService()
   ) {}
 
   async getAll(options?: {
@@ -20,7 +20,7 @@ export class VehiclesService {
   }
 
   async getById(
-    id: string,
+    id: string
   ): Promise<(Vehicle & { currentResponsible?: unknown }) | null> {
     const entity = await this.vehicleRepo.findOne(id);
     if (!entity) return null;
@@ -38,6 +38,11 @@ export class VehiclesService {
       brand: vehicle.brand,
       model: vehicle.model,
       year: vehicle.year,
+      chassisNumber: vehicle.chassisNumber,
+      engineNumber: vehicle.engineNumber,
+      vehicleType: vehicle.vehicleType,
+      transmission: vehicle.transmission,
+      fuelType: vehicle.fuelType,
     });
     const saved = await this.vehicleRepo.save(created);
     return mapEntity(saved);
@@ -51,6 +56,11 @@ export class VehiclesService {
       brand: vehicle.brand ?? existing.brand,
       model: vehicle.model ?? existing.model,
       year: vehicle.year ?? existing.year,
+      chassisNumber: vehicle.chassisNumber ?? existing.chassisNumber,
+      engineNumber: vehicle.engineNumber ?? existing.engineNumber,
+      vehicleType: vehicle.vehicleType ?? existing.vehicleType,
+      transmission: vehicle.transmission ?? existing.transmission,
+      fuelType: vehicle.fuelType ?? existing.fuelType,
     });
     const saved = await this.vehicleRepo.save(existing);
     return mapEntity(saved);
@@ -70,6 +80,11 @@ function mapEntity(e: VehicleEntity): Vehicle {
     brand: e.brand,
     model: e.model,
     year: e.year,
+    chassisNumber: e.chassisNumber,
+    engineNumber: e.engineNumber,
+    vehicleType: e.vehicleType,
+    transmission: e.transmission,
+    fuelType: e.fuelType,
   };
 }
 

@@ -16,4 +16,19 @@ export class Vehicle {
 
   @Column()
   year!: number;
+
+  @Column({ name: "chassis_number", nullable: true })
+  chassisNumber?: string;
+
+  @Column({ name: "engine_number", nullable: true })
+  engineNumber?: string;
+
+  @Column({ name: "vehicle_type", nullable: true })
+  vehicleType?: string;
+
+  @Column({ nullable: true })
+  transmission?: string;
+
+  @Column({ name: "fuel_type", nullable: true })
+  fuelType?: string;
 }

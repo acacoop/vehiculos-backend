@@ -391,6 +391,10 @@ paths:
       responses:
         "200":
           description: Vehicle found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleResponse"
         "404":
           description: Vehicle not found
     put:
@@ -408,10 +412,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/VehicleInput"
+              $ref: "#/components/schemas/VehicleUpdateInput"
       responses:
         "200":
           description: Vehicle updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleResponse"
         "404":
           $ref: "#/components/responses/NotFound"
     patch:
@@ -429,10 +437,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/VehicleInput"
+              $ref: "#/components/schemas/VehicleUpdateInput"
       responses:
         "200":
           description: Vehicle partially updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleResponse"
         "400":
           $ref: "#/components/responses/ValidationError"
         "404":
@@ -1710,6 +1722,31 @@ components:
           minimum: 1900
           maximum: 2030
           example: 2022
+        chassisNumber:
+          type: string
+          nullable: true
+          description: "Número de chasis"
+          example: "8ADZZZ12345678901"
+        engineNumber:
+          type: string
+          nullable: true
+          description: "Número de motor"
+          example: "1NZ-FE-987654321"
+        vehicleType:
+          type: string
+          nullable: true
+          description: "Tipo de vehículo (sedán, pickup, SUV, utilitario, etc.)"
+          example: "SUV"
+        transmission:
+          type: string
+          nullable: true
+          description: "Tipo de transmisión (manual, automática, CVT, etc.)"
+          example: "Automática"
+        fuelType:
+          type: string
+          nullable: true
+          description: "Tipo de combustible (nafta, diésel, híbrido, eléctrico, etc.)"
+          example: "Nafta"
         currentResponsible:
           allOf:
             - $ref: "#/components/schemas/VehicleResponsibleWithDetails"
@@ -1740,11 +1777,57 @@ components:
           type: integer
           minimum: 1900
           maximum: 2030
+        chassisNumber:
+          type: string
+          description: "Número de chasis"
+        engineNumber:
+          type: string
+          description: "Número de motor"
+        vehicleType:
+          type: string
+          description: "Tipo de vehículo"
+        transmission:
+          type: string
+          description: "Transmisión"
+        fuelType:
+          type: string
+          description: "Combustible"
       required:
         - licensePlate
         - brand
         - model
         - year
+
+    VehicleUpdateInput:
+      type: object
+      description: Campos de vehículo para actualización parcial o total. Todos los campos son opcionales.
+      properties:
+        licensePlate:
+          type: string
+          pattern: "^[A-Z]{3}[0-9]{3}$"
+        brand:
+          type: string
+          minLength: 1
+          maxLength: 50
+        model:
+          type: string
+          minLength: 1
+          maxLength: 50
+        year:
+          type: integer
+          minimum: 1900
+          maximum: 2030
+        chassisNumber:
+          type: string
+        engineNumber:
+          type: string
+        vehicleType:
+          type: string
+        transmission:
+          type: string
+        fuelType:
+          type: string
+      minProperties: 1
 
     # VEHICLE RESPONSIBLE SCHEMAS
     VehicleResponsible:
