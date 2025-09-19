@@ -25,30 +25,25 @@ import { VehicleResponsible } from "./entities/VehicleResponsible";
 
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
 
-// Parse Azure connection string to extract parameters
 function parseConnectionString(connStr: string) {
   const params: Record<string, string> = {};
   connStr.split(";").forEach((pair) => {
-    const [key, value] = pair.split("=");
-    if (key && value) {
-      params[key.toLowerCase()] = value;
-    }
+    const [k, v] = pair.split("=");
+    if (k && v) params[k.toLowerCase()] = v;
   });
-
-  const server = params.server?.replace("tcp:", "").split(",")[0];
-  const port = parseInt(params.server?.split(",")[1] || "1433");
+  const server = params.server?.replace(/^tcp:/i, "").split(",")[0];
+  const port = Number(params.server?.split(",")[1] || 1433);
 
   return {
     server,
     port,
     database: params.database,
-    encrypt: params.encrypt === "true",
-    trustServerCertificate: params.trustservercertificate === "true",
-    authentication: params.authentication,
+    encrypt: String(params.encrypt).toLowerCase() === "true",
+    trustServerCertificate:
+      String(params.trustservercertificate).toLowerCase() === "true",
   };
 }
 
-// Create DataSource configuration based on available connection options
 const createDataSourceConfig = () => {
   const entities = [
     Vehicle,
@@ -71,22 +66,25 @@ const createDataSourceConfig = () => {
   };
 
   if (SQL_AAD_CONNECTION_STRING) {
-    const connParams = parseConnectionString(SQL_AAD_CONNECTION_STRING);
+    const c = parseConnectionString(SQL_AAD_CONNECTION_STRING);
     return {
       ...baseConfig,
-      host: connParams.server,
-      port: connParams.port,
-      database: connParams.database,
+      host: c.server,
+      port: c.port,
+      database: c.database,
       options: {
-        encrypt: connParams.encrypt,
-        trustServerCertificate: connParams.trustServerCertificate,
+        encrypt: c.encrypt,
+        trustServerCertificate: c.trustServerCertificate,
+      },
+      extra: {
         authentication: {
-          type: "azure-active-directory-msi-app-service" as const,
+          type: "azure-active-directory-msi-v2",
         },
       },
     };
   }
 
+  // Fallback local con SQL auth
   return {
     ...baseConfig,
     host: DB_HOST,
