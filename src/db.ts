@@ -25,65 +25,90 @@ import { VehicleResponsible } from "./entities/VehicleResponsible";
 
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
 
+// Parse Azure connection string to extract parameters
+function parseConnectionString(connStr: string) {
+  const params: Record<string, string> = {};
+  connStr.split(";").forEach((pair) => {
+    const [key, value] = pair.split("=");
+    if (key && value) {
+      params[key.toLowerCase()] = value;
+    }
+  });
+
+  const server = params.server?.replace("tcp:", "").split(",")[0];
+  const port = parseInt(params.server?.split(",")[1] || "1433");
+
+  return {
+    server,
+    port,
+    database: params.database,
+    encrypt: params.encrypt === "true",
+    trustServerCertificate: params.trustservercertificate === "true",
+    authentication: params.authentication,
+  };
+}
+
 // Create DataSource configuration based on available connection options
 const createDataSourceConfig = () => {
+  const entities = [
+    Vehicle,
+    User,
+    Assignment,
+    Reservation,
+    VehicleKilometers,
+    MaintenanceCategory,
+    Maintenance,
+    AssignedMaintenance,
+    MaintenanceRecord,
+    VehicleResponsible,
+  ];
+
+  const baseConfig = {
+    type: "mssql" as const,
+    synchronize: !isProd,
+    logging: DB_LOGGING,
+    entities,
+  };
+
   if (SQL_AAD_CONNECTION_STRING) {
+    const connParams = parseConnectionString(SQL_AAD_CONNECTION_STRING);
     return {
-      type: "mssql" as const,
-      connectionString: SQL_AAD_CONNECTION_STRING,
-      synchronize: !isProd,
-      logging: DB_LOGGING,
+      ...baseConfig,
+      host: connParams.server,
+      port: connParams.port,
+      database: connParams.database,
       options: {
-        encrypt: true,
-        trustServerCertificate: false,
+        encrypt: connParams.encrypt,
+        trustServerCertificate: connParams.trustServerCertificate,
+        authentication: {
+          type: "azure-active-directory-msi-app-service" as const,
+        },
       },
-      entities: [
-        Vehicle,
-        User,
-        Assignment,
-        Reservation,
-        VehicleKilometers,
-        MaintenanceCategory,
-        Maintenance,
-        AssignedMaintenance,
-        MaintenanceRecord,
-        VehicleResponsible,
-      ],
     };
   }
 
   return {
-    type: "mssql" as const,
+    ...baseConfig,
     host: DB_HOST,
     port: DB_PORT,
     username: DB_USER,
     password: DB_PASSWORD,
     database: DB_NAME,
-    synchronize: !isProd,
-    logging: DB_LOGGING,
     options: {
       encrypt: true,
       trustServerCertificate: !isProd,
     },
-    entities: [
-      Vehicle,
-      User,
-      Assignment,
-      Reservation,
-      VehicleKilometers,
-      MaintenanceCategory,
-      Maintenance,
-      AssignedMaintenance,
-      MaintenanceRecord,
-      VehicleResponsible,
-    ],
   };
 };
 
 export const AppDataSource = new DataSource(createDataSourceConfig());
 
-// Ensure target database exists (dev convenience). Skips if cannot connect to master.
+// Ensure target database exists (dev convenience). Only for local SQL auth.
 async function ensureDatabase(retries = 3, delayMs = 2000) {
+  if (SQL_AAD_CONNECTION_STRING) {
+    return;
+  }
+
   const masterConfig: sql.config = {
     user: DB_USER,
     password: DB_PASSWORD,
@@ -140,9 +165,7 @@ async function ensureDatabase(retries = 3, delayMs = 2000) {
 }
 
 (async () => {
-  if (!SQL_AAD_CONNECTION_STRING) {
-    await ensureDatabase();
-  }
+  await ensureDatabase();
 
   AppDataSource.initialize()
     .then(() => console.log("✅ SQL Server connection established (TypeORM)"))
