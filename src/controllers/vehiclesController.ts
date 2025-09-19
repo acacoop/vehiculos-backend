@@ -1,5 +1,5 @@
 import { BaseController } from "./baseController";
-import type { Vehicle } from "../schemas/vehicle";
+import type { VehicleInput, VehicleUpdate } from "../schemas/vehicle";
 import VehiclesService from "../services/vehicles/vehiclesService";
 
 export class VehiclesController extends BaseController {
@@ -21,15 +21,14 @@ export class VehiclesController extends BaseController {
   }
 
   protected async createService(data: unknown) {
-    return await this.service.create(data as Vehicle);
+    return await this.service.create(data as VehicleInput);
   }
 
-  protected async updateService(id: string, data: Partial<Vehicle>) {
+  protected async updateService(id: string, data: VehicleUpdate) {
     return await this.service.update(id, data);
   }
 
-  protected async patchService(id: string, data: Partial<Vehicle>) {
-    // Para PATCH, usamos la misma lógica que update ya que ambos aceptan datos parciales
+  protected async patchService(id: string, data: VehicleUpdate) {
     return await this.service.update(id, data);
   }
 

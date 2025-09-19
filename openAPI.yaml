@@ -302,12 +302,18 @@ paths:
 
         **Search Parameters:**
         - `licensePlate`: Exact match by license plate
+        - `brandId`: Exact match by brand UUID
+        - `modelId`: Exact match by model UUID
         - `brand`: Partial match by brand name (case-insensitive)
         - `model`: Partial match by model name (case-insensitive)
         - `year`: Exact match by year
 
+        Use `brandId` / `modelId` for precise filtering, or `brand` / `model` for partial searches.
+
         **Examples:**
         - `/vehicles?licensePlate=AAA-123`
+        - `/vehicles?brandId=11111111-2222-3333-4444-555555555555`
+        - `/vehicles?modelId=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee`
         - `/vehicles?brand=Toyota&model=Corolla`
         - `/vehicles?year=2020&page=1&limit=5`
         - `/vehicles?brand=Honda&year=2021`
@@ -333,6 +339,20 @@ paths:
             type: string
             pattern: '^[A-Z]{2,3}-?\d{3,4}[A-Z]{0,2}$'
             example: "AAA-123"
+        - name: brandId
+          in: query
+          description: Filter by exact brand UUID
+          schema:
+            type: string
+            format: uuid
+            example: "11111111-2222-3333-4444-555555555555"
+        - name: modelId
+          in: query
+          description: Filter by exact model UUID
+          schema:
+            type: string
+            format: uuid
+            example: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
         - name: brand
           in: query
           description: Filter by brand name (partial match, case-insensitive)
@@ -391,6 +411,10 @@ paths:
       responses:
         "200":
           description: Vehicle found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleResponse"
         "404":
           description: Vehicle not found
     put:
@@ -408,10 +432,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/VehicleInput"
+              $ref: "#/components/schemas/VehicleUpdateInput"
       responses:
         "200":
           description: Vehicle updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleResponse"
         "404":
           $ref: "#/components/responses/NotFound"
     patch:
@@ -429,10 +457,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/VehicleInput"
+              $ref: "#/components/schemas/VehicleUpdateInput"
       responses:
         "200":
           description: Vehicle partially updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleResponse"
         "400":
           $ref: "#/components/responses/ValidationError"
         "404":
@@ -1498,6 +1530,282 @@ paths:
                     items:
                       $ref: "#/components/schemas/VehicleResponsibleWithDetails"
 
+  # VEHICLE BRANDS
+  /vehicle-brands:
+    get:
+      summary: List vehicle brands
+      tags: [Vehicle Brands]
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: name
+          in: query
+          description: Partial match by brand name (case-insensitive)
+          schema:
+            type: string
+            example: "Toy"
+      responses:
+        "200":
+          description: List of brands
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleBrandListResponse"
+    post:
+      summary: Create vehicle brand
+      tags: [Vehicle Brands]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VehicleBrandInput"
+      responses:
+        "201":
+          description: Brand created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleBrandResponse"
+
+  /vehicle-brands/{id}:
+    get:
+      summary: Get vehicle brand by ID
+      tags: [Vehicle Brands]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Brand found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleBrandResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      summary: Update vehicle brand (full)
+      tags: [Vehicle Brands]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VehicleBrandInput"
+      responses:
+        "200":
+          description: Brand updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleBrandResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      summary: Update vehicle brand (partial)
+      tags: [Vehicle Brands]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VehicleBrandInput"
+      responses:
+        "200":
+          description: Brand updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleBrandResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      summary: Delete vehicle brand
+      tags: [Vehicle Brands]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Brand deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # VEHICLE MODELS
+  /vehicle-models:
+    get:
+      summary: List vehicle models
+      tags: [Vehicle Models]
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: name
+          in: query
+          description: Partial match by model name (case-insensitive)
+          schema:
+            type: string
+            example: "Coro"
+        - name: brandId
+          in: query
+          description: Filter by brand UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of models
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleModelListResponse"
+    post:
+      summary: Create vehicle model
+      tags: [Vehicle Models]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VehicleModelInput"
+      responses:
+        "201":
+          description: Model created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleModelResponse"
+
+  /vehicle-models/{id}:
+    get:
+      summary: Get vehicle model by ID
+      tags: [Vehicle Models]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Model found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleModelResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      summary: Update vehicle model (full)
+      tags: [Vehicle Models]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VehicleModelInput"
+      responses:
+        "200":
+          description: Model updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleModelResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      summary: Update vehicle model (partial)
+      tags: [Vehicle Models]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VehicleModelInput"
+      responses:
+        "200":
+          description: Model updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleModelResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      summary: Delete vehicle model
+      tags: [Vehicle Models]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Model deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
 components:
   schemas:
     VehicleKilometersLog:
@@ -1699,17 +2007,64 @@ components:
           type: string
           pattern: "^[A-Z]{3}[0-9]{3}$"
           example: "ABC123"
-        brand:
-          type: string
-          example: "Toyota"
         model:
-          type: string
-          example: "Corolla"
+          type: object
+          description: Vehicle model with nested brand
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+            name:
+              type: string
+              example: "Corolla"
+            brand:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  example: "11111111-2222-3333-4444-555555555555"
+                name:
+                  type: string
+                  example: "Toyota"
+              required:
+                - id
+                - name
+          required:
+            - id
+            - name
+            - brand
         year:
           type: integer
           minimum: 1900
           maximum: 2030
           example: 2022
+        chassisNumber:
+          type: string
+          nullable: true
+          description: "Número de chasis"
+          example: "8ADZZZ12345678901"
+        engineNumber:
+          type: string
+          nullable: true
+          description: "Número de motor"
+          example: "1NZ-FE-987654321"
+        vehicleType:
+          type: string
+          nullable: true
+          description: "Tipo de vehículo (sedán, pickup, SUV, utilitario, etc.)"
+          example: "SUV"
+        transmission:
+          type: string
+          nullable: true
+          description: "Tipo de transmisión (manual, automática, CVT, etc.)"
+          example: "Automática"
+        fuelType:
+          type: string
+          nullable: true
+          description: "Tipo de combustible (nafta, diésel, híbrido, eléctrico, etc.)"
+          example: "Nafta"
         currentResponsible:
           allOf:
             - $ref: "#/components/schemas/VehicleResponsibleWithDetails"
@@ -1718,7 +2073,6 @@ components:
       required:
         - id
         - licensePlate
-        - brand
         - model
         - year
 
@@ -1728,23 +2082,152 @@ components:
         licensePlate:
           type: string
           pattern: "^[A-Z]{3}[0-9]{3}$"
-        brand:
+        modelId:
           type: string
-          minLength: 1
-          maxLength: 50
-        model:
-          type: string
-          minLength: 1
-          maxLength: 50
+          format: uuid
+          description: UUID del modelo del vehículo
         year:
           type: integer
           minimum: 1900
           maximum: 2030
+        chassisNumber:
+          type: string
+          description: "Número de chasis"
+        engineNumber:
+          type: string
+          description: "Número de motor"
+        vehicleType:
+          type: string
+          description: "Tipo de vehículo"
+        transmission:
+          type: string
+          description: "Transmisión"
+        fuelType:
+          type: string
+          description: "Combustible"
       required:
         - licensePlate
-        - brand
-        - model
+        - modelId
         - year
+
+    VehicleUpdateInput:
+      type: object
+      description: Campos de vehículo para actualización parcial o total. Todos los campos son opcionales.
+      properties:
+        licensePlate:
+          type: string
+          pattern: "^[A-Z]{3}[0-9]{3}$"
+        modelId:
+          type: string
+          format: uuid
+          description: UUID del modelo (para cambiar el modelo del vehículo)
+        year:
+          type: integer
+          minimum: 1900
+          maximum: 2030
+        chassisNumber:
+          type: string
+        engineNumber:
+          type: string
+        vehicleType:
+          type: string
+        transmission:
+          type: string
+        fuelType:
+          type: string
+      minProperties: 1
+
+    # VEHICLE BRAND & MODEL SCHEMAS
+    VehicleBrand:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "11111111-2222-3333-4444-555555555555"
+        name:
+          type: string
+          example: "Toyota"
+      required:
+        - id
+        - name
+
+    VehicleBrandInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+      required:
+        - name
+
+    VehicleBrandResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/VehicleBrand"
+
+    VehicleBrandListResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/VehicleBrand"
+
+    VehicleModel:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        name:
+          type: string
+          example: "Corolla"
+        brand:
+          $ref: "#/components/schemas/VehicleBrand"
+      required:
+        - id
+        - name
+        - brand
+
+    VehicleModelInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        brandId:
+          type: string
+          format: uuid
+      required:
+        - name
+        - brandId
+
+    VehicleModelResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/VehicleModel"
+
+    VehicleModelListResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/VehicleModel"
 
     # VEHICLE RESPONSIBLE SCHEMAS
     VehicleResponsible:

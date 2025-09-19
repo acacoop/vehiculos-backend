@@ -1,11 +1,15 @@
-import { DataSource, Like, Repository } from "typeorm";
+import { DataSource, Repository } from "typeorm";
 import { Vehicle as VehicleEntity } from "../entities/Vehicle";
+import { VehicleModel } from "../entities/VehicleModel";
+import { VehicleBrand } from "../entities/VehicleBrand";
 
 export interface VehicleSearchParams {
   licensePlate?: string;
-  brand?: string;
-  model?: string;
-  year?: string; // kept as string because it comes from query params
+  brand?: string; // partial brand name search
+  model?: string; // partial model name search
+  brandId?: string;
+  modelId?: string;
+  year?: string; // still string from query params
 }
 
 export class VehicleRepository {
@@ -20,25 +24,52 @@ export class VehicleRepository {
     offset?: number;
     searchParams?: VehicleSearchParams;
   }): Promise<[VehicleEntity[], number]> {
-    const { searchParams } = options || {};
-    const where: Record<string, unknown> = {};
+    const { searchParams, limit, offset } = options || {};
+    const qb = this.repo
+      .createQueryBuilder("v")
+      .leftJoinAndSelect("v.model", "m")
+      .leftJoinAndSelect("m.brand", "b")
+      .orderBy("b.name", "ASC")
+      .addOrderBy("m.name", "ASC")
+      .addOrderBy("v.licensePlate", "ASC");
+
     if (searchParams) {
-      if (searchParams.licensePlate)
-        where.licensePlate = searchParams.licensePlate;
-      if (searchParams.brand) where.brand = Like(`%${searchParams.brand}%`);
-      if (searchParams.model) where.model = Like(`%${searchParams.model}%`);
-      if (searchParams.year) where.year = Number(searchParams.year);
+      if (searchParams.licensePlate) {
+        qb.andWhere("v.licensePlate = :lp", {
+          lp: searchParams.licensePlate,
+        });
+      }
+      if (searchParams.year) {
+        qb.andWhere("v.year = :year", { year: Number(searchParams.year) });
+      }
+      if (searchParams.brandId) {
+        qb.andWhere("b.id = :brandId", { brandId: searchParams.brandId });
+      }
+      if (searchParams.modelId) {
+        qb.andWhere("m.id = :modelId", { modelId: searchParams.modelId });
+      }
+      if (searchParams.brand) {
+        qb.andWhere("b.name LIKE :brandName", {
+          brandName: `%${searchParams.brand}%`,
+        });
+      }
+      if (searchParams.model) {
+        qb.andWhere("m.name LIKE :modelName", {
+          modelName: `%${searchParams.model}%`,
+        });
+      }
     }
-    return this.repo.findAndCount({
-      where,
-      take: options?.limit,
-      skip: options?.offset,
-      order: { brand: "ASC", model: "ASC" },
-    });
+
+    if (typeof limit === "number") qb.take(limit);
+    if (typeof offset === "number") qb.skip(offset);
+    return qb.getManyAndCount();
   }
 
   findOne(id: string) {
-    return this.repo.findOne({ where: { id } });
+    return this.repo.findOne({
+      where: { id },
+      relations: { model: { brand: true } },
+    });
   }
 
   create(data: Partial<VehicleEntity>) {

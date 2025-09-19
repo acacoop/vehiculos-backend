@@ -21,6 +21,8 @@ import { Maintenance } from "./entities/Maintenance";
 import { AssignedMaintenance } from "./entities/AssignedMaintenance";
 import { MaintenanceRecord } from "./entities/MaintenanceRecord";
 import { VehicleResponsible } from "./entities/VehicleResponsible";
+import { VehicleBrand } from "./entities/VehicleBrand";
+import { VehicleModel } from "./entities/VehicleModel";
 
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
 
@@ -36,6 +38,8 @@ export const AppDataSource = new DataSource({
   options: { encrypt: true, trustServerCertificate: !isProd }, // In non-prod we allow self-signed certs to simplify setup; prod remains strict
   entities: [
     Vehicle,
+    VehicleBrand,
+    VehicleModel,
     User,
     Assignment,
     Reservation,
@@ -85,16 +89,16 @@ async function ensureDatabase(retries = 3, delayMs = 2000) {
       const msg = err?.message || err?.originalError?.message || "";
       if (code === "ESOCKET" || code === "ECONNREFUSED") {
         console.log(
-          `⏳ SQL Server not reachable yet (attempt ${attempt}/${retries}) code=${code}. Waiting ${delayMs}ms...`,
+          `⏳ SQL Server not reachable yet (attempt ${attempt}/${retries}) code=${code}. Waiting ${delayMs}ms...`
         );
       } else {
         console.log(
-          `⚠️  DB ensure attempt ${attempt}/${retries} failed (code=${code}) ${msg}. Retrying in ${delayMs}ms...`,
+          `⚠️  DB ensure attempt ${attempt}/${retries} failed (code=${code}) ${msg}. Retrying in ${delayMs}ms...`
         );
       }
       if (attempt === retries) {
         console.warn(
-          "⚠️  Exhausted retries ensuring database; continuing anyway",
+          "⚠️  Exhausted retries ensuring database; continuing anyway"
         );
         return;
       }
@@ -110,6 +114,6 @@ async function ensureDatabase(retries = 3, delayMs = 2000) {
   AppDataSource.initialize()
     .then(() => console.log("✅ SQL Server connection established (TypeORM)"))
     .catch((err: unknown) =>
-      console.error("❌ SQL Server connection failed:", err),
+      console.error("❌ SQL Server connection failed:", err)
     );
 })();

@@ -24,8 +24,11 @@ export interface AssignmentWithDetails {
   vehicle: {
     id: string;
     licensePlate: string;
-    brand: string;
-    model: string;
+    model: {
+      id: string;
+      name: string;
+      brand: { id: string; name: string };
+    };
     year: number;
   };
 }
@@ -47,8 +50,14 @@ function mapEntityToDetails(a: AssignmentEntity): AssignmentWithDetails {
     vehicle: {
       id: a.vehicle.id,
       licensePlate: a.vehicle.licensePlate,
-      brand: a.vehicle.brand,
-      model: a.vehicle.model,
+      model: {
+        id: a.vehicle.model.id,
+        name: a.vehicle.model.name,
+        brand: {
+          id: a.vehicle.model.brand.id,
+          name: a.vehicle.model.brand.name,
+        },
+      },
       year: a.vehicle.year,
     },
   };
@@ -71,7 +80,7 @@ export class AssignmentsService {
   }
 
   async getAll(
-    options?: GetAllAssignmentsOptions,
+    options?: GetAllAssignmentsOptions
   ): Promise<{ items: AssignmentWithDetails[]; total: number }> {
     const { limit, offset, searchParams } = options || {};
     const { 0: list, 1: total } = await this.repo.findAndCount({
@@ -102,7 +111,7 @@ export class AssignmentsService {
 
   async isVehicleAssignedToUser(
     userId: string,
-    vehicleId: string,
+    vehicleId: string
   ): Promise<boolean> {
     const count = await this.repo.count({
       user: { id: userId },
@@ -140,7 +149,7 @@ export class AssignmentsService {
 
   async update(
     id: string,
-    patch: Partial<Assignment>,
+    patch: Partial<Assignment>
   ): Promise<AssignmentWithDetails | null> {
     const entity = await this.repo.findOne(id);
     if (!entity) return null;
@@ -178,7 +187,7 @@ export class AssignmentsService {
 
   async finish(
     id: string,
-    endDate?: string,
+    endDate?: string
   ): Promise<AssignmentWithDetails | null> {
     const entity = await this.repo.findOne(id);
     if (!entity) return null;

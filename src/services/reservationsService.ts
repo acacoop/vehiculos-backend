@@ -23,8 +23,11 @@ export interface ReservationWithDetails {
   vehicle: {
     id: string;
     licensePlate: string;
-    brand: string;
-    model: string;
+    model: {
+      id: string;
+      name: string;
+      brand: { id: string; name: string };
+    };
     year: number;
   };
 }
@@ -46,8 +49,14 @@ function mapEntity(e: ReservationEntity): ReservationWithDetails {
     vehicle: {
       id: e.vehicle.id,
       licensePlate: e.vehicle.licensePlate,
-      brand: e.vehicle.brand,
-      model: e.vehicle.model,
+      model: {
+        id: e.vehicle.model.id,
+        name: e.vehicle.model.name,
+        brand: {
+          id: e.vehicle.model.brand.id,
+          name: e.vehicle.model.brand.name,
+        },
+      },
       year: e.vehicle.year,
     },
   };
