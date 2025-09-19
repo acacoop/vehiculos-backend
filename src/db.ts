@@ -33,7 +33,6 @@ function parseConnectionString(connStr: string) {
   });
   const server = params.server?.replace(/^tcp:/i, "").split(",")[0];
   const port = Number(params.server?.split(",")[1] || 1433);
-
   return {
     server,
     port,
@@ -78,7 +77,7 @@ const createDataSourceConfig = () => {
       },
       extra: {
         authentication: {
-          type: "azure-active-directory-msi-v2",
+          type: "azure-active-directory-msi-app-service",
         },
       },
     };
