@@ -24,6 +24,8 @@ import maintenanceRoutes from "./routes/vehicles/maintenance/posibles";
 import assignedMaintenanceRoutes from "./routes/vehicles/maintenance/assignments";
 import maintenanceRecordsRoutes from "./routes/vehicles/maintenance/records";
 import vehicleKilometersRoutes from "./routes/vehicles/kilometers";
+import vehicleBrandsRoutes from "./routes/vehicleBrands";
+import vehicleModelsRoutes from "./routes/vehicleModels";
 
 import { SERVER_PORT } from "./config/env.config";
 
@@ -75,6 +77,8 @@ app.use("/vehicles", vehiclesRoutes);
 app.use("/assignments", assignmentsRoutes);
 app.use("/reservations", reservationsRoutes);
 app.use("/vehicle-responsibles", vehicleResponsiblesRoutes);
+app.use("/vehicle-brands", vehicleBrandsRoutes);
+app.use("/vehicle-models", vehicleModelsRoutes);
 app.use("/maintenance/categories", maintenanceCategoriesRoutes);
 app.use("/maintenance/posibles", maintenanceRoutes);
 app.use("/maintenance/assignments", assignedMaintenanceRoutes);

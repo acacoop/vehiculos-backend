@@ -20,9 +20,8 @@ export interface AssignmentWithDetails {
   vehicle: {
     id: string;
     licensePlate: string;
-    brand: string;
-    model: string;
     year: number;
+    model: { id: string; name: string; brand: { id: string; name: string } };
   };
 }
 import {
@@ -52,9 +51,12 @@ function mapEntityToDetails(a: AssignmentEntity): AssignmentWithDetails {
     vehicle: {
       id: a.vehicle.id,
       licensePlate: a.vehicle.licensePlate,
-      brand: a.vehicle.brand,
-      model: a.vehicle.model,
       year: a.vehicle.year,
+      model: {
+        id: a.vehicle.model.id,
+        name: a.vehicle.model.name,
+        brand: { id: a.vehicle.model.brand.id, name: a.vehicle.model.brand.name },
+      },
     },
   };
 }
@@ -118,9 +120,12 @@ export const getVehiclesAssignedByUserId = async (userId: string) => {
   return list.map((a) => ({
     id: a.vehicle.id,
     licensePlate: a.vehicle.licensePlate,
-    brand: a.vehicle.brand,
-    model: a.vehicle.model,
     year: a.vehicle.year,
+    model: {
+      id: a.vehicle.model.id,
+      name: a.vehicle.model.name,
+      brand: { id: a.vehicle.model.brand.id, name: a.vehicle.model.brand.name },
+    },
   }));
 };
 

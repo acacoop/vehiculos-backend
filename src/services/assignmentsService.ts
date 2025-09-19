@@ -24,8 +24,11 @@ export interface AssignmentWithDetails {
   vehicle: {
     id: string;
     licensePlate: string;
-    brand: string;
-    model: string;
+    model: {
+      id: string;
+      name: string;
+      brand: { id: string; name: string };
+    };
     year: number;
   };
 }
@@ -47,8 +50,14 @@ function mapEntityToDetails(a: AssignmentEntity): AssignmentWithDetails {
     vehicle: {
       id: a.vehicle.id,
       licensePlate: a.vehicle.licensePlate,
-      brand: a.vehicle.brand,
-      model: a.vehicle.model,
+      model: {
+        id: a.vehicle.model.id,
+        name: a.vehicle.model.name,
+        brand: {
+          id: a.vehicle.model.brand.id,
+          name: a.vehicle.model.brand.name,
+        },
+      },
       year: a.vehicle.year,
     },
   };

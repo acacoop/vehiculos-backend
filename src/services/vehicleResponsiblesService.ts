@@ -28,9 +28,8 @@ export interface VehicleResponsibleWithDetails {
   vehicle: {
     id: string;
     licensePlate: string;
-    brand: string;
-    model: string;
     year: number;
+    model: { id: string; name: string; brand: { id: string; name: string } };
   };
 }
 
@@ -51,9 +50,12 @@ function mapEntity(e: VehicleResponsibleEntity): VehicleResponsibleWithDetails {
     vehicle: {
       id: e.vehicle.id,
       licensePlate: e.vehicle.licensePlate,
-      brand: e.vehicle.brand,
-      model: e.vehicle.model,
       year: e.vehicle.year,
+      model: {
+        id: e.vehicle.model.id,
+        name: e.vehicle.model.name,
+        brand: { id: e.vehicle.model.brand.id, name: e.vehicle.model.brand.name },
+      },
     },
   };
 }

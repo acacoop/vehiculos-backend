@@ -37,8 +37,11 @@ export interface MaintenanceVehicleAssignment {
   kilometersFrequency?: number;
   daysFrequency?: number;
   licensePlate: string;
-  brand: string;
-  model: string;
+  model: {
+    id: string;
+    name: string;
+    brand: { id: string; name: string };
+  };
   year: number;
 }
 export interface AssignedMaintenanceDTO {
@@ -179,8 +182,14 @@ export class MaintenancesService {
       kilometersFrequency: am.kilometersFrequency ?? undefined,
       daysFrequency: am.daysFrequency ?? undefined,
       licensePlate: am.vehicle.licensePlate,
-      brand: am.vehicle.brand,
-      model: am.vehicle.model,
+      model: {
+        id: am.vehicle.model.id,
+        name: am.vehicle.model.name,
+        brand: {
+          id: am.vehicle.model.brand.id,
+            name: am.vehicle.model.brand.name,
+        },
+      },
       year: am.vehicle.year,
     }));
   }

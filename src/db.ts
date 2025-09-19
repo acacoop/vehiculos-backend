@@ -21,6 +21,8 @@ import { Maintenance } from "./entities/Maintenance";
 import { AssignedMaintenance } from "./entities/AssignedMaintenance";
 import { MaintenanceRecord } from "./entities/MaintenanceRecord";
 import { VehicleResponsible } from "./entities/VehicleResponsible";
+import { VehicleBrand } from "./entities/VehicleBrand";
+import { VehicleModel } from "./entities/VehicleModel";
 
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
 
@@ -36,6 +38,8 @@ export const AppDataSource = new DataSource({
   options: { encrypt: true, trustServerCertificate: !isProd }, // In non-prod we allow self-signed certs to simplify setup; prod remains strict
   entities: [
     Vehicle,
+  VehicleBrand,
+  VehicleModel,
     User,
     Assignment,
     Reservation,
