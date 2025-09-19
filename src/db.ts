@@ -33,9 +33,9 @@ const createDataSourceConfig = () => {
       connectionString: SQL_AAD_CONNECTION_STRING,
       synchronize: !isProd,
       logging: DB_LOGGING,
-      options: { 
-        encrypt: true, 
-        trustServerCertificate: false
+      options: {
+        encrypt: true,
+        trustServerCertificate: false,
       },
       entities: [
         Vehicle,
@@ -61,9 +61,9 @@ const createDataSourceConfig = () => {
     database: DB_NAME,
     synchronize: !isProd,
     logging: DB_LOGGING,
-    options: { 
-      encrypt: true, 
-      trustServerCertificate: !isProd
+    options: {
+      encrypt: true,
+      trustServerCertificate: !isProd,
     },
     entities: [
       Vehicle,
@@ -143,7 +143,7 @@ async function ensureDatabase(retries = 3, delayMs = 2000) {
   if (!SQL_AAD_CONNECTION_STRING) {
     await ensureDatabase();
   }
-  
+
   AppDataSource.initialize()
     .then(() => console.log("✅ SQL Server connection established (TypeORM)"))
     .catch((err: unknown) =>
