@@ -8,6 +8,7 @@ import {
   DB_PASSWORD,
   DB_NAME,
   DB_LOGGING,
+  SQL_AAD_CONNECTION_STRING,
 } from "./config/env.config";
 
 // Entities will be added here progressively
@@ -24,29 +25,62 @@ import { VehicleResponsible } from "./entities/VehicleResponsible";
 
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
 
-export const AppDataSource = new DataSource({
-  type: "mssql",
-  host: DB_HOST,
-  port: DB_PORT,
-  username: DB_USER,
-  password: DB_PASSWORD,
-  database: DB_NAME,
-  synchronize: !isProd,
-  logging: DB_LOGGING,
-  options: { encrypt: true, trustServerCertificate: !isProd }, // In non-prod we allow self-signed certs to simplify setup; prod remains strict
-  entities: [
-    Vehicle,
-    User,
-    Assignment,
-    Reservation,
-    VehicleKilometers,
-    MaintenanceCategory,
-    Maintenance,
-    AssignedMaintenance,
-    MaintenanceRecord,
-    VehicleResponsible,
-  ],
-});
+// Create DataSource configuration based on available connection options
+const createDataSourceConfig = () => {
+  if (SQL_AAD_CONNECTION_STRING) {
+    return {
+      type: "mssql" as const,
+      connectionString: SQL_AAD_CONNECTION_STRING,
+      synchronize: !isProd,
+      logging: DB_LOGGING,
+      options: { 
+        encrypt: true, 
+        trustServerCertificate: false
+      },
+      entities: [
+        Vehicle,
+        User,
+        Assignment,
+        Reservation,
+        VehicleKilometers,
+        MaintenanceCategory,
+        Maintenance,
+        AssignedMaintenance,
+        MaintenanceRecord,
+        VehicleResponsible,
+      ],
+    };
+  }
+
+  return {
+    type: "mssql" as const,
+    host: DB_HOST,
+    port: DB_PORT,
+    username: DB_USER,
+    password: DB_PASSWORD,
+    database: DB_NAME,
+    synchronize: !isProd,
+    logging: DB_LOGGING,
+    options: { 
+      encrypt: true, 
+      trustServerCertificate: !isProd
+    },
+    entities: [
+      Vehicle,
+      User,
+      Assignment,
+      Reservation,
+      VehicleKilometers,
+      MaintenanceCategory,
+      Maintenance,
+      AssignedMaintenance,
+      MaintenanceRecord,
+      VehicleResponsible,
+    ],
+  };
+};
+
+export const AppDataSource = new DataSource(createDataSourceConfig());
 
 // Ensure target database exists (dev convenience). Skips if cannot connect to master.
 async function ensureDatabase(retries = 3, delayMs = 2000) {
@@ -106,7 +140,10 @@ async function ensureDatabase(retries = 3, delayMs = 2000) {
 }
 
 (async () => {
-  await ensureDatabase();
+  if (!SQL_AAD_CONNECTION_STRING) {
+    await ensureDatabase();
+  }
+  
   AppDataSource.initialize()
     .then(() => console.log("✅ SQL Server connection established (TypeORM)"))
     .catch((err: unknown) =>
