@@ -8,7 +8,7 @@ import type {
 
 export class VehicleModelService {
   constructor(
-    private readonly repo = new VehicleModelRepository(AppDataSource),
+    private readonly repo = new VehicleModelRepository(AppDataSource)
   ) {}
 
   async getAll(options?: {
@@ -52,12 +52,16 @@ export class VehicleModelService {
     if (!brand) return null;
     const created = this.repo.create({ name: data.name, brand });
     const saved = await this.repo.save(created);
-    return { id: saved.id, name: saved.name, brand: { id: brand.id, name: brand.name } };
+    return {
+      id: saved.id,
+      name: saved.name,
+      brand: { id: brand.id, name: brand.name },
+    };
   }
 
   async update(
     id: string,
-    data: Partial<VehicleModelInput>,
+    data: Partial<VehicleModelInput>
   ): Promise<VehicleModelType | null> {
     const existing = await this.repo.findOne(id);
     if (!existing) return null;

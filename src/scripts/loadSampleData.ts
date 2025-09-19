@@ -58,7 +58,7 @@ async function clearSampleData(): Promise<void> {
     .execute();
 
   console.log(
-    `✅ Sample data cleared (${result.affected || 0} sample users removed, real users preserved)`,
+    `✅ Sample data cleared (${result.affected || 0} sample users removed, real users preserved)`
   );
 }
 
@@ -197,7 +197,10 @@ async function createSampleUsers(): Promise<User[]> {
   return savedUsers;
 }
 
-async function createBrandsAndModels(): Promise<{ brands: VehicleBrand[]; models: VehicleModel[] }> {
+async function createBrandsAndModels(): Promise<{
+  brands: VehicleBrand[];
+  models: VehicleModel[];
+}> {
   const brandRepo = AppDataSource.getRepository(VehicleBrand);
   const modelRepo = AppDataSource.getRepository(VehicleModel);
 
@@ -212,8 +215,19 @@ async function createBrandsAndModels(): Promise<{ brands: VehicleBrand[]; models
     "Chevrolet",
     "Mercedes-Benz",
     "Tesla",
+    "Volkswagen",
+    "Peugeot",
+    "Renault",
+    "Fiat",
+    "Kia",
+    "Jeep",
+    "BMW",
+    "Audi",
+    "Citroën",
   ];
-  const brands = await brandRepo.save(brandRepo.create(brandNames.map((name) => ({ name }))));
+  const brands = await brandRepo.save(
+    brandRepo.create(brandNames.map((name) => ({ name })))
+  );
 
   const findBrand = (name: string) => brands.find((b) => b.name === name)!;
 
@@ -234,13 +248,33 @@ async function createBrandsAndModels(): Promise<{ brands: VehicleBrand[]; models
     { name: "Colorado", brand: findBrand("Chevrolet") },
     { name: "Sprinter", brand: findBrand("Mercedes-Benz") },
     { name: "Model 3", brand: findBrand("Tesla") },
+    { name: "Golf", brand: findBrand("Volkswagen") },
+    { name: "Amarok", brand: findBrand("Volkswagen") },
+    { name: "208", brand: findBrand("Peugeot") },
+    { name: "2008", brand: findBrand("Peugeot") },
+    { name: "Clio", brand: findBrand("Renault") },
+    { name: "Kwid", brand: findBrand("Renault") },
+    { name: "Cronos", brand: findBrand("Fiat") },
+    { name: "Argo", brand: findBrand("Fiat") },
+    { name: "Sportage", brand: findBrand("Kia") },
+    { name: "Seltos", brand: findBrand("Kia") },
+    { name: "Renegade", brand: findBrand("Jeep") },
+    { name: "Compass", brand: findBrand("Jeep") },
+    { name: "X1", brand: findBrand("BMW") },
+    { name: "320i", brand: findBrand("BMW") },
+    { name: "A3", brand: findBrand("Audi") },
+    { name: "Q5", brand: findBrand("Audi") },
+    { name: "C3", brand: findBrand("Citroën") },
+    { name: "C4 Cactus", brand: findBrand("Citroën") },
   ];
 
   const models = await modelRepo.save(modelRepo.create(modelData));
   return { brands, models };
 }
 
-async function createSampleVehicles(models: VehicleModel[]): Promise<Vehicle[]> {
+async function createSampleVehicles(
+  models: VehicleModel[]
+): Promise<Vehicle[]> {
   const vehicleRepo = AppDataSource.getRepository(Vehicle);
   const findModel = (name: string) => models.find((m) => m.name === name)!;
 
@@ -261,6 +295,24 @@ async function createSampleVehicles(models: VehicleModel[]): Promise<Vehicle[]> 
     { licensePlate: "NOP012", model: findModel("Versa"), year: 2022 },
     { licensePlate: "QRS345", model: findModel("Model 3"), year: 2023 },
     { licensePlate: "TUV678", model: findModel("Leaf"), year: 2022 },
+    { licensePlate: "AAA111", model: findModel("Golf"), year: 2023 },
+    { licensePlate: "BBB222", model: findModel("Amarok"), year: 2024 },
+    { licensePlate: "CCC333", model: findModel("208"), year: 2023 },
+    { licensePlate: "DDD444", model: findModel("2008"), year: 2024 },
+    { licensePlate: "EEE555", model: findModel("Clio"), year: 2022 },
+    { licensePlate: "FFF666", model: findModel("Kwid"), year: 2023 },
+    { licensePlate: "GGG777", model: findModel("Cronos"), year: 2024 },
+    { licensePlate: "HHH888", model: findModel("Argo"), year: 2023 },
+    { licensePlate: "III999", model: findModel("Sportage"), year: 2023 },
+    { licensePlate: "JJJ000", model: findModel("Seltos"), year: 2024 },
+    { licensePlate: "KKK111", model: findModel("Renegade"), year: 2023 },
+    { licensePlate: "LLL222", model: findModel("Compass"), year: 2024 },
+    { licensePlate: "MMM333", model: findModel("X1"), year: 2023 },
+    { licensePlate: "NNN444", model: findModel("320i"), year: 2024 },
+    { licensePlate: "OOO555", model: findModel("A3"), year: 2023 },
+    { licensePlate: "PPP666", model: findModel("Q5"), year: 2024 },
+    { licensePlate: "QQQ777", model: findModel("C3"), year: 2023 },
+    { licensePlate: "RRR888", model: findModel("C4 Cactus"), year: 2024 },
   ];
 
   const vehicles = vehicleRepo.create(vehiclesData);
@@ -400,7 +452,7 @@ async function createMaintenanceData(): Promise<{
 
 async function createAssignments(
   users: User[],
-  vehicles: Vehicle[],
+  vehicles: Vehicle[]
 ): Promise<Assignment[]> {
   const assignmentRepo = AppDataSource.getRepository(Assignment);
 
@@ -499,7 +551,7 @@ async function createAssignments(
 
 async function createAssignedMaintenances(
   vehicles: Vehicle[],
-  maintenances: Maintenance[],
+  maintenances: Maintenance[]
 ): Promise<AssignedMaintenance[]> {
   const assignedMaintenanceRepo =
     AppDataSource.getRepository(AssignedMaintenance);
@@ -609,7 +661,7 @@ async function createAssignedMaintenances(
   ];
 
   const assignedMaintenances = assignedMaintenanceRepo.create(
-    assignedMaintenancesData,
+    assignedMaintenancesData
   );
   const savedAssignedMaintenances =
     await assignedMaintenanceRepo.save(assignedMaintenances);
@@ -620,7 +672,7 @@ async function createAssignedMaintenances(
 
 async function createSampleReservations(
   users: User[],
-  vehicles: Vehicle[],
+  vehicles: Vehicle[]
 ): Promise<Reservation[]> {
   const reservationRepo = AppDataSource.getRepository(Reservation);
 
@@ -658,7 +710,7 @@ async function createSampleReservations(
 
 async function createVehicleResponsibles(
   users: User[],
-  vehicles: Vehicle[],
+  vehicles: Vehicle[]
 ): Promise<VehicleResponsible[]> {
   const responsibleRepo = AppDataSource.getRepository(VehicleResponsible);
 
@@ -709,7 +761,7 @@ async function createVehicleResponsibles(
 
 async function createVehicleKilometers(
   users: User[],
-  vehicles: Vehicle[],
+  vehicles: Vehicle[]
 ): Promise<VehicleKilometers[]> {
   const kilometerRepo = AppDataSource.getRepository(VehicleKilometers);
 
@@ -770,7 +822,7 @@ async function createVehicleKilometers(
 
 async function createMaintenanceRecords(
   users: User[],
-  assignedMaintenances: AssignedMaintenance[],
+  assignedMaintenances: AssignedMaintenance[]
 ): Promise<MaintenanceRecord[]> {
   const recordRepo = AppDataSource.getRepository(MaintenanceRecord);
 
@@ -781,17 +833,17 @@ async function createMaintenanceRecords(
   const oilChangeABC = assignedMaintenances.find(
     (am) =>
       am.vehicle.licensePlate === "ABC123" &&
-      am.maintenance.name === "Oil Change",
+      am.maintenance.name === "Oil Change"
   );
   const oilChangeDEF = assignedMaintenances.find(
     (am) =>
       am.vehicle.licensePlate === "DEF456" &&
-      am.maintenance.name === "Oil Change",
+      am.maintenance.name === "Oil Change"
   );
   const tireRotationABC = assignedMaintenances.find(
     (am) =>
       am.vehicle.licensePlate === "ABC123" &&
-      am.maintenance.name === "Tire Rotation",
+      am.maintenance.name === "Tire Rotation"
   );
 
   const recordsData = [];
@@ -855,14 +907,14 @@ export async function loadSampleData(): Promise<SampleDataStats> {
   const assignments = await createAssignments(users, vehicles);
   const assignedMaintenances = await createAssignedMaintenances(
     vehicles,
-    maintenances,
+    maintenances
   );
   const reservations = await createSampleReservations(users, vehicles);
   const vehicleResponsibles = await createVehicleResponsibles(users, vehicles);
   const vehicleKilometers = await createVehicleKilometers(users, vehicles);
   const maintenanceRecords = await createMaintenanceRecords(
     users,
-    assignedMaintenances,
+    assignedMaintenances
   );
 
   const stats: SampleDataStats = {

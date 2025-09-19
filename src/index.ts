@@ -101,16 +101,16 @@ app.use(globalErrorHandler);
 app.listen(SERVER_PORT, "0.0.0.0", () => {
   if (process.env.NODE_ENV !== "development") {
     console.log(
-      `🚗 Vehiculos API Server running on http://localhost:${SERVER_PORT}`,
+      `🚗 Vehiculos API Server running on http://localhost:${SERVER_PORT}`
     );
     console.log(`📖 API Documentation: http://localhost:${SERVER_PORT}/docs`);
     console.log(
-      `📊 Health check available at http://localhost:${SERVER_PORT}/health`,
+      `📊 Health check available at http://localhost:${SERVER_PORT}/health`
     );
     console.log(`🐛 Environment: ${process.env.NODE_ENV || "development"}`);
   } else {
     console.log(
-      `✅ Server ready → http://localhost:${SERVER_PORT} | Docs: /docs`,
+      `✅ Server ready → http://localhost:${SERVER_PORT} | Docs: /docs`
     );
   }
 });

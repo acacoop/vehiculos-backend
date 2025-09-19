@@ -23,7 +23,9 @@ export class VehicleModelRepository {
       .orderBy("b.name", "ASC")
       .addOrderBy("m.name", "ASC");
     if (options?.searchParams?.name) {
-      qb.andWhere("m.name ILIKE :name", { name: `%${options.searchParams.name}%` });
+      qb.andWhere("m.name ILIKE :name", {
+        name: `%${options.searchParams.name}%`,
+      });
     }
     if (options?.searchParams?.brandId) {
       qb.andWhere("b.id = :brandId", { brandId: options.searchParams.brandId });
