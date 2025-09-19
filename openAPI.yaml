@@ -19,8 +19,10 @@ info:
 servers:
   - url: http://localhost:3000
     description: Development server
-  - url: https://api-vehiculos.azurewebsites.net
+  - url: https://app-vehiculos-api-prod.azurewebsites.net
     description: Production server
+  - url: https://app-vehiculos-api-test.azurewebsites.net
+    description: Test server
 
 paths:
   # HEALTH CHECK
