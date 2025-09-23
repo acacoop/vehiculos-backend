@@ -17,8 +17,18 @@ export class VehicleResponsibleRepository {
   qb() {
     return this.repo.createQueryBuilder("vr");
   }
+  private baseQuery() {
+    return this.qb()
+      .leftJoinAndSelect("vr.user", "user")
+      .leftJoinAndSelect("vr.vehicle", "vehicle")
+      .leftJoinAndSelect("vehicle.model", "model")
+      .leftJoinAndSelect("model.brand", "brand");
+  }
   findOne(id: string) {
     return this.repo.findOne({ where: { id } });
+  }
+  findDetailedById(id: string) {
+    return this.baseQuery().where("vr.id = :id", { id }).getOne();
   }
   save(ent: VehicleResponsibleEntity) {
     return this.repo.save(ent);
@@ -35,9 +45,7 @@ export class VehicleResponsibleRepository {
     offset?: number;
   }) {
     const { searchParams, limit, offset } = options || {};
-    const qb = this.qb()
-      .leftJoinAndSelect("vr.user", "user")
-      .leftJoinAndSelect("vr.vehicle", "vehicle");
+    const qb = this.baseQuery();
     if (searchParams?.vehicleId)
       qb.andWhere("vehicle.id = :vehicleId", {
         vehicleId: searchParams.vehicleId,
@@ -59,15 +67,17 @@ export class VehicleResponsibleRepository {
       .getManyAndCount();
   }
   findCurrentByVehicle(vehicleId: string) {
-    return this.repo.findOne({
-      where: { vehicle: { id: vehicleId }, endDate: IsNull() },
-    });
+    return this.baseQuery()
+      .where("vehicle.id = :vehicleId", { vehicleId })
+      .andWhere("vr.end_date IS NULL")
+      .getOne();
   }
   findCurrentForUser(userId: string) {
-    return this.repo.find({
-      where: { user: { id: userId }, endDate: IsNull() },
-      order: { startDate: "DESC" },
-    });
+    return this.baseQuery()
+      .where("user.id = :userId", { userId })
+      .andWhere("vr.end_date IS NULL")
+      .orderBy("vr.startDate", "DESC")
+      .getMany();
   }
   findVehiclesForUserOnDate(userId: string, date: string) {
     return this.qb()

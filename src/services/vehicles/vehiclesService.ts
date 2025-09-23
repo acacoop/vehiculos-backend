@@ -54,6 +54,7 @@ export class VehiclesService {
       transmission: input.transmission,
       fuelType: input.fuelType,
     });
+
     const saved = await this.vehicleRepo.save(created);
     return mapEntity(saved);
   }

@@ -3,7 +3,7 @@ import { createVehiclesController } from "../controllers/vehiclesController";
 import vehicleKilometersRoutes from "./vehicles/kilometers";
 import { validateSchema, AppError } from "../middleware/errorHandler";
 import { validateUUIDParam } from "../middleware/validation";
-import { VehicleSchema } from "../schemas/vehicle";
+import { VehicleInputSchema, VehicleUpdateSchema } from "../schemas/vehicle";
 import { licensePlateRegex } from "../schemas/validations";
 
 const router = Router();
@@ -14,7 +14,7 @@ const vehiclesController = createVehiclesController();
 const validateLicensePlateQuery = (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const licensePlate = req.query.licensePlate as string;
   if (licensePlate && !licensePlateRegex.test(licensePlate)) {
@@ -22,7 +22,7 @@ const validateLicensePlateQuery = (
       "The provided license plate format is invalid. Expected format: ABC123 or AB123CD",
       400,
       "https://example.com/problems/invalid-license-plate",
-      "Invalid License Plate Format",
+      "Invalid License Plate Format"
     );
   }
   next();
@@ -39,23 +39,23 @@ router.get("/", validateLicensePlateQuery, vehiclesController.getAll);
 // GET /vehicles/:id - Get vehicle by ID
 router.get("/:id", validateUUIDParam("id"), vehiclesController.getById);
 
-// POST /vehicles - Create new vehicle
-router.post("/", validateSchema(VehicleSchema), vehiclesController.create);
+// POST /vehicles - Create new vehicle (validate input schema)
+router.post("/", validateSchema(VehicleInputSchema), vehiclesController.create);
 
 // PUT /vehicles/:id - Update vehicle (replace)
 router.put(
   "/:id",
   validateUUIDParam("id"),
-  validateSchema(VehicleSchema.partial()),
-  vehiclesController.update,
+  validateSchema(VehicleUpdateSchema),
+  vehiclesController.update
 );
 
 // PATCH /vehicles/:id - Partial update vehicle
 router.patch(
   "/:id",
   validateUUIDParam("id"),
-  validateSchema(VehicleSchema.partial()),
-  vehiclesController.patch,
+  validateSchema(VehicleUpdateSchema),
+  vehiclesController.patch
 );
 
 // DELETE /vehicles/:id - Delete vehicle

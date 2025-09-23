@@ -3,10 +3,7 @@ import { Vehicle } from "../entities/Vehicle";
 import { User } from "../entities/User";
 import { VehicleResponsible as VehicleResponsibleEntity } from "../entities/VehicleResponsible";
 import { VehicleResponsibleRepository } from "../repositories/VehicleResponsibleRepository";
-import type {
-  VehicleResponsible,
-  VehicleResponsibleInput,
-} from "../schemas/vehicleResponsible";
+import type { VehicleResponsibleInput } from "../schemas/vehicleResponsible";
 import { AppError } from "../middleware/errorHandler";
 import { validateUserExists, validateVehicleExists } from "../utils/validators";
 import { IsNull } from "typeorm";
@@ -76,8 +73,10 @@ export class VehicleResponsiblesService {
     const [rows, total] = await this.repo.find(options);
     return { items: rows.map(mapEntity), total };
   }
-  getById(id: string) {
-    return this.repo.findOne(id).then((e) => (e ? mapEntity(e) : null));
+  getById(id: string): Promise<VehicleResponsibleWithDetails | null> {
+    return this.repo
+      .findDetailedById(id)
+      .then((e) => (e ? mapEntity(e) : null));
   }
   async getCurrentForVehicle(vehicleId: string) {
     const ent = await this.repo.findCurrentByVehicle(vehicleId);
@@ -112,7 +111,8 @@ export class VehicleResponsiblesService {
 
   async create(
     data: VehicleResponsibleInput
-  ): Promise<VehicleResponsible | null> {
+    //): Promise<VehicleResponsible | null> {
+  ): Promise<VehicleResponsibleWithDetails | null> {
     const { vehicleId, userId, startDate, endDate = null } = data;
     await validateUserExists(userId);
     await validateVehicleExists(vehicleId);
@@ -140,21 +140,16 @@ export class VehicleResponsiblesService {
     }
     const created = this.repo.create({ vehicle, user, startDate, endDate });
     const saved = await this.repo.save(created);
-    return {
-      id: saved.id,
-      vehicleId: saved.vehicle.id,
-      userId: saved.user.id,
-      startDate: saved.startDate,
-      endDate: saved.endDate,
-      createdAt: saved.createdAt,
-      updatedAt: saved.updatedAt,
-    };
+    // Reload with model + brand for consistency
+    const full = await this.repo.findDetailedById(saved.id);
+    return full ? mapEntity(full) : null;
   }
 
   async update(
     id: string,
     data: Partial<VehicleResponsibleInput>
-  ): Promise<VehicleResponsible | null> {
+    //): Promise<VehicleResponsible | null> {
+  ): Promise<VehicleResponsibleWithDetails | null> {
     const ent = await this.vehicleRepo.manager
       .getRepository(VehicleResponsibleEntity)
       .findOne({ where: { id }, relations: ["vehicle", "user"] });
@@ -192,15 +187,8 @@ export class VehicleResponsiblesService {
     }
     ent.updatedAt = new Date();
     const saved = await this.repo.save(ent);
-    return {
-      id: saved.id,
-      vehicleId: saved.vehicle.id,
-      userId: saved.user.id,
-      startDate: saved.startDate,
-      endDate: saved.endDate,
-      createdAt: saved.createdAt,
-      updatedAt: saved.updatedAt,
-    };
+    const full = await this.repo.findDetailedById(saved.id);
+    return full ? mapEntity(full) : null;
   }
 
   async delete(id: string): Promise<boolean> {
