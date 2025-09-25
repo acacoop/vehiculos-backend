@@ -9,6 +9,8 @@
 import { AppDataSource } from "../db";
 import { User } from "../entities/User";
 import { Vehicle } from "../entities/Vehicle";
+import { VehicleBrand } from "../entities/VehicleBrand";
+import { VehicleModel } from "../entities/VehicleModel";
 import { MaintenanceCategory } from "../entities/MaintenanceCategory";
 import { Maintenance } from "../entities/Maintenance";
 import { Assignment } from "../entities/Assignment";
@@ -43,6 +45,8 @@ async function clearSampleData(): Promise<void> {
   await AppDataSource.query("DELETE FROM maintenances WHERE 1=1");
   await AppDataSource.query("DELETE FROM maintenance_categories WHERE 1=1");
   await AppDataSource.query("DELETE FROM vehicles WHERE 1=1");
+  await AppDataSource.query("DELETE FROM vehicle_models WHERE 1=1");
+  await AppDataSource.query("DELETE FROM vehicle_brands WHERE 1=1");
 
   // Only delete sample users (those with SAMPLE_ prefix in entraId or @sample.test domain)
   // This preserves all real users from Entra sync
@@ -54,7 +58,7 @@ async function clearSampleData(): Promise<void> {
     .execute();
 
   console.log(
-    `✅ Sample data cleared (${result.affected || 0} sample users removed, real users preserved)`,
+    `✅ Sample data cleared (${result.affected || 0} sample users removed, real users preserved)`
   );
 }
 
@@ -193,53 +197,126 @@ async function createSampleUsers(): Promise<User[]> {
   return savedUsers;
 }
 
-async function createSampleVehicles(): Promise<Vehicle[]> {
+async function createBrandsAndModels(): Promise<{
+  brands: VehicleBrand[];
+  models: VehicleModel[];
+}> {
+  const brandRepo = AppDataSource.getRepository(VehicleBrand);
+  const modelRepo = AppDataSource.getRepository(VehicleModel);
+
+  const brandNames = [
+    "Toyota",
+    "Honda",
+    "Nissan",
+    "Hyundai",
+    "Mazda",
+    "Subaru",
+    "Ford",
+    "Chevrolet",
+    "Mercedes-Benz",
+    "Tesla",
+    "Volkswagen",
+    "Peugeot",
+    "Renault",
+    "Fiat",
+    "Kia",
+    "Jeep",
+    "BMW",
+    "Audi",
+    "Citroën",
+  ];
+  const brands = await brandRepo.save(
+    brandRepo.create(brandNames.map((name) => ({ name })))
+  );
+
+  const findBrand = (name: string) => brands.find((b) => b.name === name)!;
+
+  const modelData = [
+    { name: "Corolla", brand: findBrand("Toyota") },
+    { name: "RAV4", brand: findBrand("Toyota") },
+    { name: "Yaris", brand: findBrand("Toyota") },
+    { name: "Civic", brand: findBrand("Honda") },
+    { name: "CR-V", brand: findBrand("Honda") },
+    { name: "Sentra", brand: findBrand("Nissan") },
+    { name: "Versa", brand: findBrand("Nissan") },
+    { name: "Leaf", brand: findBrand("Nissan") },
+    { name: "Elantra", brand: findBrand("Hyundai") },
+    { name: "CX-5", brand: findBrand("Mazda") },
+    { name: "Outback", brand: findBrand("Subaru") },
+    { name: "Ranger", brand: findBrand("Ford") },
+    { name: "Transit", brand: findBrand("Ford") },
+    { name: "Colorado", brand: findBrand("Chevrolet") },
+    { name: "Sprinter", brand: findBrand("Mercedes-Benz") },
+    { name: "Model 3", brand: findBrand("Tesla") },
+    { name: "Golf", brand: findBrand("Volkswagen") },
+    { name: "Amarok", brand: findBrand("Volkswagen") },
+    { name: "208", brand: findBrand("Peugeot") },
+    { name: "2008", brand: findBrand("Peugeot") },
+    { name: "Clio", brand: findBrand("Renault") },
+    { name: "Kwid", brand: findBrand("Renault") },
+    { name: "Cronos", brand: findBrand("Fiat") },
+    { name: "Argo", brand: findBrand("Fiat") },
+    { name: "Sportage", brand: findBrand("Kia") },
+    { name: "Seltos", brand: findBrand("Kia") },
+    { name: "Renegade", brand: findBrand("Jeep") },
+    { name: "Compass", brand: findBrand("Jeep") },
+    { name: "X1", brand: findBrand("BMW") },
+    { name: "320i", brand: findBrand("BMW") },
+    { name: "A3", brand: findBrand("Audi") },
+    { name: "Q5", brand: findBrand("Audi") },
+    { name: "C3", brand: findBrand("Citroën") },
+    { name: "C4 Cactus", brand: findBrand("Citroën") },
+  ];
+
+  const models = await modelRepo.save(modelRepo.create(modelData));
+  return { brands, models };
+}
+
+async function createSampleVehicles(
+  models: VehicleModel[]
+): Promise<Vehicle[]> {
   const vehicleRepo = AppDataSource.getRepository(Vehicle);
+  const findModel = (name: string) => models.find((m) => m.name === name)!;
 
   const vehiclesData = [
-    // Sedans for city operations
-    { licensePlate: "ABC123", brand: "Toyota", model: "Corolla", year: 2023 },
-    { licensePlate: "DEF456", brand: "Honda", model: "Civic", year: 2022 },
-    { licensePlate: "GHI789", brand: "Nissan", model: "Sentra", year: 2023 },
-    { licensePlate: "JKL012", brand: "Hyundai", model: "Elantra", year: 2022 },
-
-    // SUVs for mixed terrain
-    { licensePlate: "MNO345", brand: "Toyota", model: "RAV4", year: 2023 },
-    { licensePlate: "PQR678", brand: "Honda", model: "CR-V", year: 2022 },
-    { licensePlate: "STU901", brand: "Mazda", model: "CX-5", year: 2023 },
-    { licensePlate: "VWX234", brand: "Subaru", model: "Outback", year: 2022 },
-
-    // Pickup trucks for heavy duty
-    { licensePlate: "YZA567", brand: "Ford", model: "Ranger", year: 2023 },
-    {
-      licensePlate: "BCD890",
-      brand: "Chevrolet",
-      model: "Colorado",
-      year: 2022,
-    },
-
-    // Vans for cargo transport
-    { licensePlate: "EFG123", brand: "Ford", model: "Transit", year: 2023 },
-    {
-      licensePlate: "HIJ456",
-      brand: "Mercedes-Benz",
-      model: "Sprinter",
-      year: 2022,
-    },
-
-    // Compact cars for efficiency
-    { licensePlate: "KLM789", brand: "Toyota", model: "Yaris", year: 2023 },
-    { licensePlate: "NOP012", brand: "Nissan", model: "Versa", year: 2022 },
-
-    // Electric vehicles
-    { licensePlate: "QRS345", brand: "Tesla", model: "Model 3", year: 2023 },
-    { licensePlate: "TUV678", brand: "Nissan", model: "Leaf", year: 2022 },
+    { licensePlate: "ABC123", model: findModel("Corolla"), year: 2023 },
+    { licensePlate: "DEF456", model: findModel("Civic"), year: 2022 },
+    { licensePlate: "GHI789", model: findModel("Sentra"), year: 2023 },
+    { licensePlate: "JKL012", model: findModel("Elantra"), year: 2022 },
+    { licensePlate: "MNO345", model: findModel("RAV4"), year: 2023 },
+    { licensePlate: "PQR678", model: findModel("CR-V"), year: 2022 },
+    { licensePlate: "STU901", model: findModel("CX-5"), year: 2023 },
+    { licensePlate: "VWX234", model: findModel("Outback"), year: 2022 },
+    { licensePlate: "YZA567", model: findModel("Ranger"), year: 2023 },
+    { licensePlate: "BCD890", model: findModel("Colorado"), year: 2022 },
+    { licensePlate: "EFG123", model: findModel("Transit"), year: 2023 },
+    { licensePlate: "HIJ456", model: findModel("Sprinter"), year: 2022 },
+    { licensePlate: "KLM789", model: findModel("Yaris"), year: 2023 },
+    { licensePlate: "NOP012", model: findModel("Versa"), year: 2022 },
+    { licensePlate: "QRS345", model: findModel("Model 3"), year: 2023 },
+    { licensePlate: "TUV678", model: findModel("Leaf"), year: 2022 },
+    { licensePlate: "AAA111", model: findModel("Golf"), year: 2023 },
+    { licensePlate: "BBB222", model: findModel("Amarok"), year: 2024 },
+    { licensePlate: "CCC333", model: findModel("208"), year: 2023 },
+    { licensePlate: "DDD444", model: findModel("2008"), year: 2024 },
+    { licensePlate: "EEE555", model: findModel("Clio"), year: 2022 },
+    { licensePlate: "FFF666", model: findModel("Kwid"), year: 2023 },
+    { licensePlate: "GGG777", model: findModel("Cronos"), year: 2024 },
+    { licensePlate: "HHH888", model: findModel("Argo"), year: 2023 },
+    { licensePlate: "III999", model: findModel("Sportage"), year: 2023 },
+    { licensePlate: "JJJ000", model: findModel("Seltos"), year: 2024 },
+    { licensePlate: "KKK111", model: findModel("Renegade"), year: 2023 },
+    { licensePlate: "LLL222", model: findModel("Compass"), year: 2024 },
+    { licensePlate: "MMM333", model: findModel("X1"), year: 2023 },
+    { licensePlate: "NNN444", model: findModel("320i"), year: 2024 },
+    { licensePlate: "OOO555", model: findModel("A3"), year: 2023 },
+    { licensePlate: "PPP666", model: findModel("Q5"), year: 2024 },
+    { licensePlate: "QQQ777", model: findModel("C3"), year: 2023 },
+    { licensePlate: "RRR888", model: findModel("C4 Cactus"), year: 2024 },
   ];
 
   const vehicles = vehicleRepo.create(vehiclesData);
-  const savedVehicles = await vehicleRepo.save(vehicles);
-
-  return savedVehicles;
+  return vehicleRepo.save(vehicles);
 }
 
 async function createMaintenanceData(): Promise<{
@@ -375,7 +452,7 @@ async function createMaintenanceData(): Promise<{
 
 async function createAssignments(
   users: User[],
-  vehicles: Vehicle[],
+  vehicles: Vehicle[]
 ): Promise<Assignment[]> {
   const assignmentRepo = AppDataSource.getRepository(Assignment);
 
@@ -474,7 +551,7 @@ async function createAssignments(
 
 async function createAssignedMaintenances(
   vehicles: Vehicle[],
-  maintenances: Maintenance[],
+  maintenances: Maintenance[]
 ): Promise<AssignedMaintenance[]> {
   const assignedMaintenanceRepo =
     AppDataSource.getRepository(AssignedMaintenance);
@@ -584,7 +661,7 @@ async function createAssignedMaintenances(
   ];
 
   const assignedMaintenances = assignedMaintenanceRepo.create(
-    assignedMaintenancesData,
+    assignedMaintenancesData
   );
   const savedAssignedMaintenances =
     await assignedMaintenanceRepo.save(assignedMaintenances);
@@ -595,7 +672,7 @@ async function createAssignedMaintenances(
 
 async function createSampleReservations(
   users: User[],
-  vehicles: Vehicle[],
+  vehicles: Vehicle[]
 ): Promise<Reservation[]> {
   const reservationRepo = AppDataSource.getRepository(Reservation);
 
@@ -633,7 +710,7 @@ async function createSampleReservations(
 
 async function createVehicleResponsibles(
   users: User[],
-  vehicles: Vehicle[],
+  vehicles: Vehicle[]
 ): Promise<VehicleResponsible[]> {
   const responsibleRepo = AppDataSource.getRepository(VehicleResponsible);
 
@@ -684,7 +761,7 @@ async function createVehicleResponsibles(
 
 async function createVehicleKilometers(
   users: User[],
-  vehicles: Vehicle[],
+  vehicles: Vehicle[]
 ): Promise<VehicleKilometers[]> {
   const kilometerRepo = AppDataSource.getRepository(VehicleKilometers);
 
@@ -745,7 +822,7 @@ async function createVehicleKilometers(
 
 async function createMaintenanceRecords(
   users: User[],
-  assignedMaintenances: AssignedMaintenance[],
+  assignedMaintenances: AssignedMaintenance[]
 ): Promise<MaintenanceRecord[]> {
   const recordRepo = AppDataSource.getRepository(MaintenanceRecord);
 
@@ -756,17 +833,17 @@ async function createMaintenanceRecords(
   const oilChangeABC = assignedMaintenances.find(
     (am) =>
       am.vehicle.licensePlate === "ABC123" &&
-      am.maintenance.name === "Oil Change",
+      am.maintenance.name === "Oil Change"
   );
   const oilChangeDEF = assignedMaintenances.find(
     (am) =>
       am.vehicle.licensePlate === "DEF456" &&
-      am.maintenance.name === "Oil Change",
+      am.maintenance.name === "Oil Change"
   );
   const tireRotationABC = assignedMaintenances.find(
     (am) =>
       am.vehicle.licensePlate === "ABC123" &&
-      am.maintenance.name === "Tire Rotation",
+      am.maintenance.name === "Tire Rotation"
   );
 
   const recordsData = [];
@@ -824,19 +901,20 @@ export async function loadSampleData(): Promise<SampleDataStats> {
 
   // Create sample data in order
   const users = await createSampleUsers();
-  const vehicles = await createSampleVehicles();
+  const { brands, models } = await createBrandsAndModels();
+  const vehicles = await createSampleVehicles(models);
   const { categories, maintenances } = await createMaintenanceData();
   const assignments = await createAssignments(users, vehicles);
   const assignedMaintenances = await createAssignedMaintenances(
     vehicles,
-    maintenances,
+    maintenances
   );
   const reservations = await createSampleReservations(users, vehicles);
   const vehicleResponsibles = await createVehicleResponsibles(users, vehicles);
   const vehicleKilometers = await createVehicleKilometers(users, vehicles);
   const maintenanceRecords = await createMaintenanceRecords(
     users,
-    assignedMaintenances,
+    assignedMaintenances
   );
 
   const stats: SampleDataStats = {
@@ -851,6 +929,9 @@ export async function loadSampleData(): Promise<SampleDataStats> {
     vehicleResponsibles: vehicleResponsibles.length,
     vehicleKilometers: vehicleKilometers.length,
   };
+
+  console.log(`   Brands: ${brands.length}`);
+  console.log(`   Models: ${models.length}`);
 
   console.log("\n✅ Sample data loading completed!");
   console.log(`   Users: ${stats.users}`);

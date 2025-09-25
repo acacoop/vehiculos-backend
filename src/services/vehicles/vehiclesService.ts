@@ -1,13 +1,18 @@
 import { AppDataSource } from "../../db";
 import { Vehicle as VehicleEntity } from "../../entities/Vehicle";
-import type { Vehicle } from "../../schemas/vehicle";
+import { VehicleModel } from "../../entities/VehicleModel";
+import type {
+  Vehicle,
+  VehicleInput,
+  VehicleUpdate,
+} from "../../schemas/vehicle";
 import VehicleResponsiblesService from "../vehicleResponsiblesService";
 import { VehicleRepository } from "../../repositories/VehicleRepository";
 
 export class VehiclesService {
   constructor(
     private readonly vehicleRepo = new VehicleRepository(AppDataSource),
-    private readonly responsiblesService = new VehicleResponsiblesService(),
+    private readonly responsiblesService = new VehicleResponsiblesService()
   ) {}
 
   async getAll(options?: {
@@ -20,7 +25,7 @@ export class VehiclesService {
   }
 
   async getById(
-    id: string,
+    id: string
   ): Promise<(Vehicle & { currentResponsible?: unknown }) | null> {
     const entity = await this.vehicleRepo.findOne(id);
     if (!entity) return null;
@@ -32,26 +37,50 @@ export class VehiclesService {
     };
   }
 
-  async create(vehicle: Vehicle): Promise<Vehicle | null> {
-    const created = this.vehicleRepo.create({
-      licensePlate: vehicle.licensePlate,
-      brand: vehicle.brand,
-      model: vehicle.model,
-      year: vehicle.year,
+  async create(input: VehicleInput): Promise<Vehicle | null> {
+    const modelRepo = AppDataSource.getRepository(VehicleModel);
+    const model = await modelRepo.findOne({
+      where: { id: input.modelId },
+      relations: { brand: true },
     });
+    if (!model) return null;
+    const created = this.vehicleRepo.create({
+      licensePlate: input.licensePlate,
+      model,
+      year: input.year,
+      chassisNumber: input.chassisNumber,
+      engineNumber: input.engineNumber,
+      vehicleType: input.vehicleType,
+      transmission: input.transmission,
+      fuelType: input.fuelType,
+    });
+
     const saved = await this.vehicleRepo.save(created);
     return mapEntity(saved);
   }
 
-  async update(id: string, vehicle: Partial<Vehicle>): Promise<Vehicle | null> {
+  async update(id: string, data: VehicleUpdate): Promise<Vehicle | null> {
     const existing = await this.vehicleRepo.findOne(id);
     if (!existing) return null;
-    Object.assign(existing, {
-      licensePlate: vehicle.licensePlate ?? existing.licensePlate,
-      brand: vehicle.brand ?? existing.brand,
-      model: vehicle.model ?? existing.model,
-      year: vehicle.year ?? existing.year,
-    });
+    if (data.modelId) {
+      const model = await AppDataSource.getRepository(VehicleModel).findOne({
+        where: { id: data.modelId },
+        relations: { brand: true },
+      });
+      if (!model) return null;
+      existing.model = model;
+    }
+    if (data.licensePlate) existing.licensePlate = data.licensePlate;
+    if (typeof data.year === "number") existing.year = data.year;
+    if ("chassisNumber" in data)
+      existing.chassisNumber = data.chassisNumber ?? undefined;
+    if ("engineNumber" in data)
+      existing.engineNumber = data.engineNumber ?? undefined;
+    if ("vehicleType" in data)
+      existing.vehicleType = data.vehicleType ?? undefined;
+    if ("transmission" in data)
+      existing.transmission = data.transmission ?? undefined;
+    if ("fuelType" in data) existing.fuelType = data.fuelType ?? undefined;
     const saved = await this.vehicleRepo.save(existing);
     return mapEntity(saved);
   }
@@ -67,10 +96,18 @@ function mapEntity(e: VehicleEntity): Vehicle {
   return {
     id: e.id,
     licensePlate: e.licensePlate,
-    brand: e.brand,
-    model: e.model,
     year: e.year,
-  };
+    chassisNumber: e.chassisNumber ?? undefined,
+    engineNumber: e.engineNumber ?? undefined,
+    vehicleType: e.vehicleType ?? undefined,
+    transmission: e.transmission ?? undefined,
+    fuelType: e.fuelType ?? undefined,
+    model: {
+      id: e.model.id,
+      name: e.model.name,
+      brand: { id: e.model.brand.id, name: e.model.brand.name },
+    },
+  } as Vehicle;
 }
 
 export default VehiclesService;
