@@ -15,7 +15,12 @@ export class MaintenanceRecordsController {
 
     // Extract filtering parameters
     const filters: Record<string, string> = {};
-    const allowedFilters = ["vehicleId", "maintenanceId", "userId"];
+    const allowedFilters = [
+      "vehicleId",
+      "maintenanceId",
+      "userId",
+      "assignedMaintenanceId",
+    ];
 
     for (const [key, value] of Object.entries(req.query)) {
       if (allowedFilters.includes(key) && typeof value === "string") {
@@ -70,7 +75,7 @@ export class MaintenanceRecordsController {
   // POST: Create a new maintenance record
   create = asyncHandler(async (req: Request, res: Response) => {
     const maintenanceRecord: MaintenanceRecord = MaintenanceRecordSchema.parse(
-      req.body,
+      req.body
     );
 
     try {
@@ -89,7 +94,7 @@ export class MaintenanceRecordsController {
           error.message,
           400,
           "https://example.com/problems/validation-error",
-          "Validation Error",
+          "Validation Error"
         );
       }
       throw error;
