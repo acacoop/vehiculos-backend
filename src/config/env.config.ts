@@ -3,12 +3,15 @@ import { z } from "zod";
 // Environment variable schema & export. Keep this in sync with .env.example documentation.
 const envSchema = z.object({
   APP_PORT: z.coerce.number().default(3000),
+  // Individual DB parameters (for local development)
   DB_HOST: z.string().default("localhost"),
   DB_PORT: z.coerce.number().default(1433),
   DB_USER: z.string().default("sa"),
   DB_PASSWORD: z.string().default("Your_password123"),
   DB_NAME: z.string().default("vehicles_db"),
   DB_LOGGING: z.coerce.boolean().default(false),
+  // Azure AAD connection string (for production)
+  SQL_AAD_CONNECTION_STRING: z.string().optional(),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60 * 1000),
   RATE_LIMIT_MAX: z.coerce.number().default(1000),
   ENTRA_TENANT_ID: z.string().optional(),
@@ -38,6 +41,7 @@ export const {
   DB_PASSWORD,
   DB_NAME,
   DB_LOGGING,
+  SQL_AAD_CONNECTION_STRING,
   RATE_LIMIT_WINDOW_MS,
   RATE_LIMIT_MAX,
   ENTRA_TENANT_ID,

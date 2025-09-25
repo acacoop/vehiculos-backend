@@ -8,6 +8,7 @@ import {
   DB_PASSWORD,
   DB_NAME,
   DB_LOGGING,
+  SQL_AAD_CONNECTION_STRING,
 } from "./config/env.config";
 
 // Entities will be added here progressively
@@ -26,17 +27,26 @@ import { VehicleModel } from "./entities/VehicleModel";
 
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
 
-export const AppDataSource = new DataSource({
-  type: "mssql",
-  host: DB_HOST,
-  port: DB_PORT,
-  username: DB_USER,
-  password: DB_PASSWORD,
-  database: DB_NAME,
-  synchronize: !isProd,
-  logging: DB_LOGGING,
-  options: { encrypt: true, trustServerCertificate: !isProd }, // In non-prod we allow self-signed certs to simplify setup; prod remains strict
-  entities: [
+function parseConnectionString(connStr: string) {
+  const params: Record<string, string> = {};
+  connStr.split(";").forEach((pair) => {
+    const [k, v] = pair.split("=");
+    if (k && v) params[k.toLowerCase()] = v;
+  });
+  const server = params.server?.replace(/^tcp:/i, "").split(",")[0];
+  const port = Number(params.server?.split(",")[1] || 1433);
+  return {
+    server,
+    port,
+    database: params.database,
+    encrypt: String(params.encrypt).toLowerCase() === "true",
+    trustServerCertificate:
+      String(params.trustservercertificate).toLowerCase() === "true",
+  };
+}
+
+const createDataSourceConfig = () => {
+  const entities = [
     Vehicle,
     VehicleBrand,
     VehicleModel,
@@ -49,11 +59,57 @@ export const AppDataSource = new DataSource({
     AssignedMaintenance,
     MaintenanceRecord,
     VehicleResponsible,
-  ],
-});
+  ];
 
-// Ensure target database exists (dev convenience). Skips if cannot connect to master.
+  const baseConfig = {
+    type: "mssql" as const,
+    synchronize: !isProd,
+    logging: DB_LOGGING,
+    entities,
+  };
+
+  if (SQL_AAD_CONNECTION_STRING) {
+    const c = parseConnectionString(SQL_AAD_CONNECTION_STRING);
+    return {
+      ...baseConfig,
+      host: c.server,
+      port: c.port,
+      database: c.database,
+      options: {
+        encrypt: c.encrypt,
+        trustServerCertificate: c.trustServerCertificate,
+      },
+      extra: {
+        authentication: {
+          type: "azure-active-directory-msi-app-service",
+        },
+      },
+    };
+  }
+
+  // Fallback local con SQL auth
+  return {
+    ...baseConfig,
+    host: DB_HOST,
+    port: DB_PORT,
+    username: DB_USER,
+    password: DB_PASSWORD,
+    database: DB_NAME,
+    options: {
+      encrypt: true,
+      trustServerCertificate: !isProd,
+    },
+  };
+};
+
+export const AppDataSource = new DataSource(createDataSourceConfig());
+
+// Ensure target database exists (dev convenience). Only for local SQL auth.
 async function ensureDatabase(retries = 3, delayMs = 2000) {
+  if (SQL_AAD_CONNECTION_STRING) {
+    return;
+  }
+
   const masterConfig: sql.config = {
     user: DB_USER,
     password: DB_PASSWORD,
@@ -111,6 +167,7 @@ async function ensureDatabase(retries = 3, delayMs = 2000) {
 
 (async () => {
   await ensureDatabase();
+
   AppDataSource.initialize()
     .then(() => console.log("✅ SQL Server connection established (TypeORM)"))
     .catch((err: unknown) =>
