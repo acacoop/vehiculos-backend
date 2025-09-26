@@ -1322,6 +1322,7 @@ paths:
         - `/vehicle-responsibles?vehicleId=650e8400-e29b-41d4-a716-446655440001`
         - `/vehicle-responsibles?active=true`
         - `/vehicle-responsibles?date=2025-01-15`
+        - `/vehicle-responsibles?ceco=10001605`
       tags: [Vehicle Responsibles]
       parameters:
         - name: page
@@ -1351,6 +1352,13 @@ paths:
             type: string
             format: uuid
           description: "Filter by vehicle ID"
+        - name: ceco
+          in: query
+          schema:
+            type: integer
+            minimum: 10000000
+            maximum: 99999999
+          description: "Filter by cost center (ceco) 8-digit code"
         - name: active
           in: query
           schema:
@@ -2247,6 +2255,10 @@ components:
           type: string
           format: uuid
           example: "550e8400-e29b-41d4-a716-446655440000"
+        ceco:
+          type: integer
+          description: "Cost center (ceco) associated with the user at the time of assignment"
+          example: 10001605
         startDate:
           type: string
           format: date
@@ -2309,6 +2321,9 @@ components:
         userId:
           type: string
           format: uuid
+        ceco:
+          type: integer
+          description: "Cost center (ceco) associated with the user at the time of assignment"
         startDate:
           type: string
           format: date

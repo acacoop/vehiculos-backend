@@ -1,9 +1,10 @@
-import { DataSource, IsNull, Repository } from "typeorm";
+import { DataSource, Repository } from "typeorm";
 import { VehicleResponsible as VehicleResponsibleEntity } from "../entities/VehicleResponsible";
 
 export interface VehicleResponsibleSearchParams {
   vehicleId?: string;
   userId?: string;
+  ceco?: string;
   active?: string; // 'true' | 'false'
   date?: string; // ISO date
 }
@@ -52,14 +53,17 @@ export class VehicleResponsibleRepository {
       });
     if (searchParams?.userId)
       qb.andWhere("user.id = :userId", { userId: searchParams.userId });
+    if (searchParams?.ceco)
+      qb.andWhere("vr.ceco = :ceco", { ceco: searchParams.ceco });
     if (searchParams?.active === "true") qb.andWhere("vr.end_date IS NULL");
     if (searchParams?.active === "false")
       qb.andWhere("vr.end_date IS NOT NULL");
     if (searchParams?.date)
       qb.andWhere(
         "vr.startDate <= :d AND (vr.endDate IS NULL OR vr.endDate >= :d)",
-        { d: searchParams.date }
+        { d: searchParams.date },
       );
+
     return qb
       .orderBy("vr.startDate", "DESC")
       .skip(offset)
@@ -86,7 +90,7 @@ export class VehicleResponsibleRepository {
       .where("user.id = :userId", { userId })
       .andWhere(
         "vr.startDate <= :d AND (vr.endDate IS NULL OR vr.endDate >= :d)",
-        { d: date }
+        { d: date },
       )
       .orderBy("vr.startDate", "DESC")
       .getMany();
@@ -95,13 +99,13 @@ export class VehicleResponsibleRepository {
     vehicleId: string,
     startDate: string,
     endDate: string | null,
-    excludeId?: string
+    excludeId?: string,
   ) {
     const qb = this.qb().where("vr.vehicle.id = :vehicleId", { vehicleId });
     if (excludeId) qb.andWhere("vr.id != :excludeId", { excludeId });
     qb.andWhere(
       "(:start < COALESCE(vr.endDate, :max)) AND (COALESCE(:end, :max) > vr.startDate)",
-      { start: startDate, end: endDate, max: "9999-12-31" }
+      { start: startDate, end: endDate, max: "9999-12-31" },
     );
     return qb.getOne();
   }
