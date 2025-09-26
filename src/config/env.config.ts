@@ -59,8 +59,3 @@ export const SERVER_PORT =
   Number(process.env.APP_PORT) ||
   Number(APP_PORT) || // el de tu schema zod
   3000;
-
-// print process env
-if (process.env.NODE_ENV !== "production") {
-  console.log("Process Environment Variables:", process.env);
-}

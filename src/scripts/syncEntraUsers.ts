@@ -19,7 +19,7 @@ const VERBOSE =
 
 type SkipReason =
   | { kind: "missing_email"; entraId: string }
-  | { kind: "missing_cuit"; entraId: string; employeeId?: string }
+  | { kind: "missing_cuit"; entraId: string }
   | {
       kind: "email_conflict";
       entraId: string;
@@ -70,13 +70,13 @@ type GraphUser = {
   mail?: string;
   userPrincipalName?: string;
   accountEnabled?: boolean;
-  employeeId?: string;
+  onPremisesExtensionAttributes?: { extensionAttribute1?: string };
 };
 
 async function fetchAllUsers(token: string): Promise<GraphUser[]> {
   const users: GraphUser[] = [];
   let url =
-    "https://graph.microsoft.com/v1.0/users?$select=id,givenName,surname,displayName,mail,userPrincipalName,accountEnabled,employeeId";
+    "https://graph.microsoft.com/v1.0/users?$select=id,givenName,surname,displayName,mail,userPrincipalName,accountEnabled,onPremisesExtensionAttributes";
   while (url) {
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
@@ -125,7 +125,8 @@ export async function runSync({
       gu.surname ||
       (gu.displayName ? gu.displayName.split(" ").slice(1).join(" ") : "");
     const active = gu.accountEnabled ?? true;
-    const cuitFromEmployeeId = parseCuit(gu.employeeId);
+    const entraCuit = gu.onPremisesExtensionAttributes?.extensionAttribute1;
+    const cuit = parseCuit(entraCuit);
 
     const existing = await usersService.getByEntraId(entraId);
     if (existing) {
@@ -159,17 +160,17 @@ export async function runSync({
       }
 
       // CUIT update with uniqueness check
-      if (cuitFromEmployeeId && existing.cuit !== cuitFromEmployeeId) {
-        const byCuit = await usersService.getByCuit(cuitFromEmployeeId);
+      if (cuit && existing.cuit !== cuit) {
+        const byCuit = await usersService.getByCuit(cuit);
         if (byCuit && byCuit.id !== existing.id) {
           hadConflicts = true;
           if (VERBOSE) {
             console.log(
-              `conflict:update cuit entraId=${entraId} cuit=${cuitFromEmployeeId} usedBy=${byCuit.id}`,
+              `conflict:update cuit entraId=${entraId} cuit=${cuit} usedBy=${byCuit.id}`,
             );
           }
         } else {
-          patch.cuit = cuitFromEmployeeId;
+          patch.cuit = cuit;
         }
       }
 
@@ -195,11 +196,10 @@ export async function runSync({
         stats.skippedCreate.push({ kind: "missing_email", entraId });
         continue;
       }
-      if (!cuitFromEmployeeId) {
+      if (!cuit) {
         stats.skippedCreate.push({
           kind: "missing_cuit",
           entraId,
-          employeeId: gu.employeeId,
         });
         continue;
       }
@@ -207,7 +207,7 @@ export async function runSync({
       // Uniqueness checks prior to creation
       const [byEmail, byCuit] = await Promise.all([
         usersService.getByEmail(email),
-        usersService.getByCuit(cuitFromEmployeeId),
+        usersService.getByCuit(cuit),
       ]);
       if (byEmail && byEmail.id) {
         stats.skippedCreate.push({
@@ -222,7 +222,7 @@ export async function runSync({
         stats.skippedCreate.push({
           kind: "cuit_conflict",
           entraId,
-          cuit: cuitFromEmployeeId,
+          cuit: cuit,
           existingUserId: byCuit.id,
         });
         continue;
@@ -232,7 +232,7 @@ export async function runSync({
         firstName: firstName || "User",
         lastName: lastName || "-",
         email,
-        cuit: cuitFromEmployeeId as number,
+        cuit: cuit as number,
         active,
         entraId,
       } as User);
@@ -271,9 +271,7 @@ export async function runSync({
           console.log(`skip:create missing_email entraId=${s.entraId}`);
           break;
         case "missing_cuit":
-          console.log(
-            `skip:create missing_cuit entraId=${s.entraId} employeeId=${s.employeeId ?? ""}`,
-          );
+          console.log(`skip:create missing_cuit entraId=${s.entraId}`);
           break;
         case "email_conflict":
           console.log(

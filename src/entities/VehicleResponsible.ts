@@ -21,6 +21,9 @@ export class VehicleResponsible {
   @JoinColumn({ name: "user_id" })
   user!: User;
 
+  @Column({ name: "ceco", length: 8, default: "99999999" })
+  ceco!: string;
+
   @Column({ name: "start_date", type: "date", default: () => "GETDATE()" })
   startDate!: string;
 
