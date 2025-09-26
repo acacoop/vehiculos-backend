@@ -5,6 +5,7 @@ export interface MaintenanceRecordSearchParams {
   userId?: string;
   vehicleId?: string;
   maintenanceId?: string;
+  assignedMaintenanceId?: string;
 }
 
 export class MaintenanceRecordRepository {
@@ -34,6 +35,10 @@ export class MaintenanceRecordRepository {
     if (filters?.maintenanceId)
       qb.andWhere("m.id = :maintenanceId", {
         maintenanceId: filters.maintenanceId,
+      });
+    if (filters?.assignedMaintenanceId)
+      qb.andWhere("am.id = :assignedMaintenanceId", {
+        assignedMaintenanceId: filters.assignedMaintenanceId,
       });
 
     return qb
