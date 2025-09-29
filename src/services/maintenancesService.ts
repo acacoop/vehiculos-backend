@@ -187,7 +187,7 @@ export class MaintenancesService {
         name: am.vehicle.model.name,
         brand: {
           id: am.vehicle.model.brand.id,
-            name: am.vehicle.model.brand.name,
+          name: am.vehicle.model.brand.name,
         },
       },
       year: am.vehicle.year,

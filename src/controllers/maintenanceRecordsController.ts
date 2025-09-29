@@ -75,7 +75,7 @@ export class MaintenanceRecordsController {
   // POST: Create a new maintenance record
   create = asyncHandler(async (req: Request, res: Response) => {
     const maintenanceRecord: MaintenanceRecord = MaintenanceRecordSchema.parse(
-      req.body
+      req.body,
     );
 
     try {
@@ -94,7 +94,7 @@ export class MaintenanceRecordsController {
           error.message,
           400,
           "https://example.com/problems/validation-error",
-          "Validation Error"
+          "Validation Error",
         );
       }
       throw error;

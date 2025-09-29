@@ -10,7 +10,7 @@ export const isValidISODate = (dateString: string): boolean => {
   if (!ISO_DATE_REGEX.test(dateString)) {
     return false;
   }
-  
+
   const date = new Date(dateString);
   return date instanceof Date && !isNaN(date.getTime());
 };
@@ -21,7 +21,10 @@ export const isValidISODate = (dateString: string): boolean => {
  * @param paramName The parameter name for error messages
  * @throws Error if date format is invalid
  */
-export const validateISODateFormat = (dateString: string, paramName: string): void => {
+export const validateISODateFormat = (
+  dateString: string,
+  paramName: string,
+): void => {
   if (!isValidISODate(dateString)) {
     throw new Error(`Invalid ${paramName} format. Expected ISO 8601 format.`);
   }

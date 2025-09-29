@@ -4,7 +4,7 @@ import type { VehicleBrandInput, VehicleBrand } from "../schemas/vehicleBrand";
 
 export class VehicleBrandService {
   constructor(
-    private readonly repo = new VehicleBrandRepository(AppDataSource)
+    private readonly repo = new VehicleBrandRepository(AppDataSource),
   ) {}
 
   async getAll(options?: {
@@ -34,7 +34,7 @@ export class VehicleBrandService {
 
   async update(
     id: string,
-    data: Partial<VehicleBrandInput>
+    data: Partial<VehicleBrandInput>,
   ): Promise<VehicleBrand | null> {
     const existing = await this.repo.findOne(id);
     if (!existing) return null;

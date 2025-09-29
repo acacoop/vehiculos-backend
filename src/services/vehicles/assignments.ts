@@ -83,7 +83,7 @@ export const getAllAssignments = async (options?: {
 };
 
 export const getAssignmentsByUserId = async (
-  userId: string
+  userId: string,
 ): Promise<Assignment[]> => {
   const list = await repo().find({
     where: { user: { id: userId } },
@@ -99,7 +99,7 @@ export const getAssignmentsByUserId = async (
 };
 
 export const getAssignmentsByVehicleId = async (
-  vehicleId: string
+  vehicleId: string,
 ): Promise<Assignment[]> => {
   const list = await repo().find({
     where: { vehicle: { id: vehicleId } },
@@ -150,7 +150,7 @@ export const getUsersAssignedByVehicleId = async (vehicleId: string) => {
 
 export const isVehicleAssignedToUser = async (
   userId: string,
-  vehicleId: string
+  vehicleId: string,
 ): Promise<boolean> => {
   const count = await repo().count({
     where: { user: { id: userId }, vehicle: { id: vehicleId } },
@@ -159,7 +159,7 @@ export const isVehicleAssignedToUser = async (
 };
 
 export const addAssignment = async (
-  assignment: Omit<Assignment, "id">
+  assignment: Omit<Assignment, "id">,
 ): Promise<Assignment | null> => {
   const { userId, vehicleId, startDate, endDate } = assignment;
   await validateUserExists(userId);
@@ -188,7 +188,7 @@ export const addAssignment = async (
 
 export const updateAssignment = async (
   id: string,
-  assignment: Partial<Assignment>
+  assignment: Partial<Assignment>,
 ): Promise<AssignmentWithDetails | null> => {
   const entity = await repo().findOne({ where: { id } });
   if (!entity) return null;
@@ -224,7 +224,7 @@ export const updateAssignment = async (
 };
 
 export const getAssignmentById = async (
-  id: string
+  id: string,
 ): Promise<Assignment | null> => {
   const a = await repo().findOne({ where: { id } });
   return a
@@ -239,7 +239,7 @@ export const getAssignmentById = async (
 };
 
 export const getAssignmentWithDetailsById = async (
-  id: string
+  id: string,
 ): Promise<AssignmentWithDetails | null> => {
   const a = await repo().findOne({ where: { id } });
   return a ? mapEntityToDetails(a) : null;
@@ -247,7 +247,7 @@ export const getAssignmentWithDetailsById = async (
 
 export const finishAssignment = async (
   id: string,
-  endDate?: string
+  endDate?: string,
 ): Promise<AssignmentWithDetails | null> => {
   const entity = await repo().findOne({ where: { id } });
   if (!entity) return null;

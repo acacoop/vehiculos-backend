@@ -36,4 +36,5 @@ export class RolesController extends BaseController {
   }
 }
 
-export const createRolesController = () => new RolesController(new RolesService());
+export const createRolesController = () =>
+  new RolesController(new RolesService());

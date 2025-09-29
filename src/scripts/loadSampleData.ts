@@ -58,7 +58,7 @@ async function clearSampleData(): Promise<void> {
     .execute();
 
   console.log(
-    `✅ Sample data cleared (${result.affected || 0} sample users removed, real users preserved)`
+    `✅ Sample data cleared (${result.affected || 0} sample users removed, real users preserved)`,
   );
 }
 
@@ -226,7 +226,7 @@ async function createBrandsAndModels(): Promise<{
     "Citroën",
   ];
   const brands = await brandRepo.save(
-    brandRepo.create(brandNames.map((name) => ({ name })))
+    brandRepo.create(brandNames.map((name) => ({ name }))),
   );
 
   const findBrand = (name: string) => brands.find((b) => b.name === name)!;
@@ -273,7 +273,7 @@ async function createBrandsAndModels(): Promise<{
 }
 
 async function createSampleVehicles(
-  models: VehicleModel[]
+  models: VehicleModel[],
 ): Promise<Vehicle[]> {
   const vehicleRepo = AppDataSource.getRepository(Vehicle);
   const findModel = (name: string) => models.find((m) => m.name === name)!;
@@ -452,7 +452,7 @@ async function createMaintenanceData(): Promise<{
 
 async function createAssignments(
   users: User[],
-  vehicles: Vehicle[]
+  vehicles: Vehicle[],
 ): Promise<Assignment[]> {
   const assignmentRepo = AppDataSource.getRepository(Assignment);
 
@@ -551,7 +551,7 @@ async function createAssignments(
 
 async function createAssignedMaintenances(
   vehicles: Vehicle[],
-  maintenances: Maintenance[]
+  maintenances: Maintenance[],
 ): Promise<AssignedMaintenance[]> {
   const assignedMaintenanceRepo =
     AppDataSource.getRepository(AssignedMaintenance);
@@ -661,7 +661,7 @@ async function createAssignedMaintenances(
   ];
 
   const assignedMaintenances = assignedMaintenanceRepo.create(
-    assignedMaintenancesData
+    assignedMaintenancesData,
   );
   const savedAssignedMaintenances =
     await assignedMaintenanceRepo.save(assignedMaintenances);
@@ -672,7 +672,7 @@ async function createAssignedMaintenances(
 
 async function createSampleReservations(
   users: User[],
-  vehicles: Vehicle[]
+  vehicles: Vehicle[],
 ): Promise<Reservation[]> {
   const reservationRepo = AppDataSource.getRepository(Reservation);
 
@@ -710,7 +710,7 @@ async function createSampleReservations(
 
 async function createVehicleResponsibles(
   users: User[],
-  vehicles: Vehicle[]
+  vehicles: Vehicle[],
 ): Promise<VehicleResponsible[]> {
   const responsibleRepo = AppDataSource.getRepository(VehicleResponsible);
 
@@ -761,7 +761,7 @@ async function createVehicleResponsibles(
 
 async function createVehicleKilometers(
   users: User[],
-  vehicles: Vehicle[]
+  vehicles: Vehicle[],
 ): Promise<VehicleKilometers[]> {
   const kilometerRepo = AppDataSource.getRepository(VehicleKilometers);
 
@@ -822,7 +822,7 @@ async function createVehicleKilometers(
 
 async function createMaintenanceRecords(
   users: User[],
-  assignedMaintenances: AssignedMaintenance[]
+  assignedMaintenances: AssignedMaintenance[],
 ): Promise<MaintenanceRecord[]> {
   const recordRepo = AppDataSource.getRepository(MaintenanceRecord);
 
@@ -833,17 +833,17 @@ async function createMaintenanceRecords(
   const oilChangeABC = assignedMaintenances.find(
     (am) =>
       am.vehicle.licensePlate === "ABC123" &&
-      am.maintenance.name === "Oil Change"
+      am.maintenance.name === "Oil Change",
   );
   const oilChangeDEF = assignedMaintenances.find(
     (am) =>
       am.vehicle.licensePlate === "DEF456" &&
-      am.maintenance.name === "Oil Change"
+      am.maintenance.name === "Oil Change",
   );
   const tireRotationABC = assignedMaintenances.find(
     (am) =>
       am.vehicle.licensePlate === "ABC123" &&
-      am.maintenance.name === "Tire Rotation"
+      am.maintenance.name === "Tire Rotation",
   );
 
   const recordsData = [];
@@ -907,14 +907,14 @@ export async function loadSampleData(): Promise<SampleDataStats> {
   const assignments = await createAssignments(users, vehicles);
   const assignedMaintenances = await createAssignedMaintenances(
     vehicles,
-    maintenances
+    maintenances,
   );
   const reservations = await createSampleReservations(users, vehicles);
   const vehicleResponsibles = await createVehicleResponsibles(users, vehicles);
   const vehicleKilometers = await createVehicleKilometers(users, vehicles);
   const maintenanceRecords = await createMaintenanceRecords(
     users,
-    assignedMaintenances
+    assignedMaintenances,
   );
 
   const stats: SampleDataStats = {

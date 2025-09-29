@@ -14,7 +14,7 @@ const vehiclesController = createVehiclesController();
 const validateLicensePlateQuery = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const licensePlate = req.query.licensePlate as string;
   if (licensePlate && !licensePlateRegex.test(licensePlate)) {
@@ -22,7 +22,7 @@ const validateLicensePlateQuery = (
       "The provided license plate format is invalid. Expected format: ABC123 or AB123CD",
       400,
       "https://example.com/problems/invalid-license-plate",
-      "Invalid License Plate Format"
+      "Invalid License Plate Format",
     );
   }
   next();
@@ -47,7 +47,7 @@ router.put(
   "/:id",
   validateUUIDParam("id"),
   validateSchema(VehicleUpdateSchema),
-  vehiclesController.update
+  vehiclesController.update,
 );
 
 // PATCH /vehicles/:id - Partial update vehicle
@@ -55,7 +55,7 @@ router.patch(
   "/:id",
   validateUUIDParam("id"),
   validateSchema(VehicleUpdateSchema),
-  vehiclesController.patch
+  vehiclesController.patch,
 );
 
 // DELETE /vehicles/:id - Delete vehicle

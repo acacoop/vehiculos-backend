@@ -19,7 +19,7 @@ export const isValidUUID = (id: string): boolean => {
  */
 export const validateUUIDFormat = (
   id: string,
-  paramName: string = "id"
+  paramName: string = "id",
 ): void => {
   if (!id) {
     throw new Error(`${paramName} parameter is required`);

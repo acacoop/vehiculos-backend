@@ -9,7 +9,8 @@
     "dev:verbose": "ts-node-dev --respawn src/index.ts",
     "build": "tsc",
     "sync:users": "ts-node-dev --env-file=.env src/scripts/syncEntraUsers.ts",
-    "sample-data": "ts-node-dev --env-file=.env src/scripts/loadSampleData.ts"
+    "sample-data": "ts-node-dev --env-file=.env src/scripts/loadSampleData.ts",
+    "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json}\""
   },
   "engines": {
     "node": ">=22"

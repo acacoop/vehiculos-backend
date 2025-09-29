@@ -8,7 +8,7 @@ import type {
 
 export class VehicleModelService {
   constructor(
-    private readonly repo = new VehicleModelRepository(AppDataSource)
+    private readonly repo = new VehicleModelRepository(AppDataSource),
   ) {}
 
   async getAll(options?: {
@@ -61,7 +61,7 @@ export class VehicleModelService {
 
   async update(
     id: string,
-    data: Partial<VehicleModelInput>
+    data: Partial<VehicleModelInput>,
   ): Promise<VehicleModelType | null> {
     const existing = await this.repo.findOne(id);
     if (!existing) return null;

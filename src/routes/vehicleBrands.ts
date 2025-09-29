@@ -14,13 +14,13 @@ router.put(
   "/:id",
   validateUUIDParam("id"),
   validateSchema(VehicleBrandInputSchema.partial()),
-  controller.update
+  controller.update,
 );
 router.patch(
   "/:id",
   validateUUIDParam("id"),
   validateSchema(VehicleBrandInputSchema.partial()),
-  controller.patch
+  controller.patch,
 );
 router.delete("/:id", validateUUIDParam("id"), controller.delete);
 

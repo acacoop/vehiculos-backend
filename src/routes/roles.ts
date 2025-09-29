@@ -14,13 +14,13 @@ router.put(
   "/:id",
   validateUUIDParam("id"),
   validateSchema(RoleInputSchema.partial()),
-  controller.update
+  controller.update,
 );
 router.patch(
   "/:id",
   validateUUIDParam("id"),
   validateSchema(RoleInputSchema.partial()),
-  controller.patch
+  controller.patch,
 );
 router.delete("/:id", validateUUIDParam("id"), controller.delete);
 

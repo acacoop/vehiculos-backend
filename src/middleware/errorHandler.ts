@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { ZodError, ZodSchema } from 'zod';
+import { Request, Response, NextFunction } from "express";
+import { ZodError, ZodSchema } from "zod";
 
 // RFC 7807 Problem Details interface
 interface ProblemDetails {
@@ -20,10 +20,10 @@ export class AppError extends Error {
   public title?: string;
 
   constructor(
-    message: string, 
-    statusCode: number, 
-    type?: string, 
-    title?: string
+    message: string,
+    statusCode: number,
+    type?: string,
+    title?: string,
   ) {
     super(message);
     this.statusCode = statusCode;
@@ -43,7 +43,7 @@ const createProblemDetails = (
   type?: string,
   instance?: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  extensions?: Record<string, any>
+  extensions?: Record<string, any>,
 ): ProblemDetails => {
   const problem: ProblemDetails = {
     type: type || `https://httpstatuses.com/${status}`,
@@ -63,10 +63,10 @@ export const globalErrorHandler = (
   err: Error,
   req: Request,
   res: Response,
-  _next: NextFunction
+  _next: NextFunction,
 ): void => {
   // Set content type for RFC 7807
-  res.set('Content-Type', 'application/problem+json');
+  res.set("Content-Type", "application/problem+json");
 
   if (err instanceof AppError) {
     const problem = createProblemDetails(
@@ -74,7 +74,7 @@ export const globalErrorHandler = (
       err.title || getDefaultTitle(err.statusCode),
       err.message,
       err.type,
-      req.originalUrl
+      req.originalUrl,
     );
     res.status(err.statusCode).json(problem);
     return;
@@ -83,30 +83,30 @@ export const globalErrorHandler = (
   if (err instanceof ZodError) {
     const problem = createProblemDetails(
       400,
-      'Validation Failed',
-      'The request contains invalid data',
-      'https://example.com/problems/validation-error',
+      "Validation Failed",
+      "The request contains invalid data",
+      "https://example.com/problems/validation-error",
       req.originalUrl,
       {
-        errors: err.errors.map(e => ({
-          field: e.path.join('.'),
+        errors: err.errors.map((e) => ({
+          field: e.path.join("."),
           message: e.message,
           code: e.code,
         })),
-      }
+      },
     );
     res.status(400).json(problem);
     return;
   }
 
   // Generic server error
-  console.error('Unexpected error:', err);
+  console.error("Unexpected error:", err);
   const problem = createProblemDetails(
     500,
-    'Internal Server Error',
-    'An unexpected error occurred while processing your request',
-    'https://example.com/problems/internal-server-error',
-    req.originalUrl
+    "Internal Server Error",
+    "An unexpected error occurred while processing your request",
+    "https://example.com/problems/internal-server-error",
+    req.originalUrl,
   );
   res.status(500).json(problem);
 };
@@ -114,20 +114,24 @@ export const globalErrorHandler = (
 // Helper function to get default titles for status codes
 const getDefaultTitle = (statusCode: number): string => {
   const titles: Record<number, string> = {
-    400: 'Bad Request',
-    401: 'Unauthorized',
-    403: 'Forbidden',
-    404: 'Not Found',
-    409: 'Conflict',
-    422: 'Unprocessable Entity',
-    429: 'Too Many Requests',
-    500: 'Internal Server Error',
+    400: "Bad Request",
+    401: "Unauthorized",
+    403: "Forbidden",
+    404: "Not Found",
+    409: "Conflict",
+    422: "Unprocessable Entity",
+    429: "Too Many Requests",
+    500: "Internal Server Error",
   };
-  return titles[statusCode] || 'Error';
+  return titles[statusCode] || "Error";
 };
 
 // Async wrapper to catch errors
-type AsyncFunction = (req: Request, res: Response, next: NextFunction) => Promise<void>;
+type AsyncFunction = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => Promise<void>;
 
 export const asyncHandler = (fn: AsyncFunction) => {
   return (req: Request, res: Response, next: NextFunction) => {

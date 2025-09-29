@@ -12,7 +12,7 @@ import { VehicleRepository } from "../../repositories/VehicleRepository";
 export class VehiclesService {
   constructor(
     private readonly vehicleRepo = new VehicleRepository(AppDataSource),
-    private readonly responsiblesService = new VehicleResponsiblesService()
+    private readonly responsiblesService = new VehicleResponsiblesService(),
   ) {}
 
   async getAll(options?: {
@@ -25,7 +25,7 @@ export class VehiclesService {
   }
 
   async getById(
-    id: string
+    id: string,
   ): Promise<(Vehicle & { currentResponsible?: unknown }) | null> {
     const entity = await this.vehicleRepo.findOne(id);
     if (!entity) return null;

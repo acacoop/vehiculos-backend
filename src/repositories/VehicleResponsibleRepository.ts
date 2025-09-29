@@ -58,7 +58,7 @@ export class VehicleResponsibleRepository {
     if (searchParams?.date)
       qb.andWhere(
         "vr.startDate <= :d AND (vr.endDate IS NULL OR vr.endDate >= :d)",
-        { d: searchParams.date }
+        { d: searchParams.date },
       );
     return qb
       .orderBy("vr.startDate", "DESC")
@@ -86,7 +86,7 @@ export class VehicleResponsibleRepository {
       .where("user.id = :userId", { userId })
       .andWhere(
         "vr.startDate <= :d AND (vr.endDate IS NULL OR vr.endDate >= :d)",
-        { d: date }
+        { d: date },
       )
       .orderBy("vr.startDate", "DESC")
       .getMany();
@@ -95,13 +95,13 @@ export class VehicleResponsibleRepository {
     vehicleId: string,
     startDate: string,
     endDate: string | null,
-    excludeId?: string
+    excludeId?: string,
   ) {
     const qb = this.qb().where("vr.vehicle.id = :vehicleId", { vehicleId });
     if (excludeId) qb.andWhere("vr.id != :excludeId", { excludeId });
     qb.andWhere(
       "(:start < COALESCE(vr.endDate, :max)) AND (COALESCE(:end, :max) > vr.startDate)",
-      { start: startDate, end: endDate, max: "9999-12-31" }
+      { start: startDate, end: endDate, max: "9999-12-31" },
     );
     return qb.getOne();
   }
