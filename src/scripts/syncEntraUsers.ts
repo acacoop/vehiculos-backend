@@ -222,7 +222,7 @@ export async function runSync({
         stats.skippedCreate.push({
           kind: "cuit_conflict",
           entraId,
-          cuit: cuit,
+          cuit,
           existingUserId: byCuit.id,
         });
         continue;
