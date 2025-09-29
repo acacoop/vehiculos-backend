@@ -1,7 +1,5 @@
 import { DataSource, Repository } from "typeorm";
 import { Vehicle as VehicleEntity } from "../entities/Vehicle";
-import { VehicleModel } from "../entities/VehicleModel";
-import { VehicleBrand } from "../entities/VehicleBrand";
 
 export interface VehicleSearchParams {
   licensePlate?: string;
