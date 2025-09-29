@@ -232,7 +232,7 @@ export async function runSync({
         firstName: firstName || "User",
         lastName: lastName || "-",
         email,
-        cuit: cuit as number,
+        cuit,
         active,
         entraId,
       } as User);
