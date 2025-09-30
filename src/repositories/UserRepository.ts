@@ -49,7 +49,7 @@ export class UserRepository {
   findByEmail(email: string) {
     return this.repo.findOne({ where: { email } });
   }
-  findByCuit(cuit: number) {
+  findByCuit(cuit: string) {
     return this.repo.findOne({ where: { cuit } });
   }
   create(data: Partial<UserEntity>) {

@@ -9,7 +9,10 @@ const envSchema = z.object({
   DB_USER: z.string().default("sa"),
   DB_PASSWORD: z.string().default("Your_password123"),
   DB_NAME: z.string().default("vehicles_db"),
-  DB_LOGGING: z.coerce.boolean().default(false),
+  DB_LOGGING: z
+    .enum(["true", "false"])
+    .transform((v: string) => v === "true")
+    .default("false"),
   // Azure AAD connection string (for production)
   SQL_AAD_CONNECTION_STRING: z.string().optional(),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60 * 1000),
@@ -59,8 +62,3 @@ export const SERVER_PORT =
   Number(process.env.APP_PORT) ||
   Number(APP_PORT) || // el de tu schema zod
   3000;
-
-// print process env
-if (process.env.NODE_ENV !== "production") {
-  console.log("Process Environment Variables:", process.env);
-}

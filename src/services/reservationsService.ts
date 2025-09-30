@@ -15,7 +15,7 @@ export interface ReservationWithDetails {
     id: string;
     firstName: string;
     lastName: string;
-    cuit: number;
+    cuit: string;
     email: string;
     active: boolean;
     entraId: string;

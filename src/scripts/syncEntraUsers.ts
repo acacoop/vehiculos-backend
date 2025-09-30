@@ -1,9 +1,3 @@
-/*
-  Script to sync users from Microsoft Entra ID (Azure AD) into local DB.
-  - Creates missing users
-  - Updates names/emails
-  - Disables users not found (optional)
-*/
 import {
   ENTRA_CLIENT_ID,
   ENTRA_CLIENT_SECRET,
@@ -17,9 +11,32 @@ import { User as UserEntity } from "../entities/User";
 const VERBOSE =
   process.env.VERBOSE === "1" || process.argv.includes("--verbose");
 
+const DISABLE_MISSING = true;
+
+const GRAPH_REQUEST = "https://graph.microsoft.com/v1.0/users";
+const FIELDS = [
+  "id",
+  "givenName",
+  "surname",
+  "displayName",
+  "mail",
+  "userPrincipalName",
+  "accountEnabled",
+  "onPremisesExtensionAttributes",
+];
+
+type Created = { kind: "created"; entraId: string; userId: string };
+
+type Updated = {
+  kind: "updated";
+  entraId: string;
+  userId: string;
+  changes: string;
+};
+
 type SkipReason =
   | { kind: "missing_email"; entraId: string }
-  | { kind: "missing_cuit"; entraId: string; employeeId?: string }
+  | { kind: "missing_cuit"; entraId: string }
   | {
       kind: "email_conflict";
       entraId: string;
@@ -29,15 +46,29 @@ type SkipReason =
   | {
       kind: "cuit_conflict";
       entraId: string;
-      cuit: number;
+      cuit: string;
+      existingUserId: string;
+    };
+
+type CannotUpdateReason =
+  | {
+      kind: "email_conflict";
+      entraId: string;
+      email: string;
+      existingUserId: string;
+    }
+  | {
+      kind: "cuit_conflict";
+      entraId: string;
+      cuit: string;
       existingUserId: string;
     };
 
 type Stats = {
-  created: number;
-  updated: number;
+  created: Created[];
+  updated: Updated[];
   skippedCreate: SkipReason[];
-  cannotUpdateCount: number; // updates fully blocked by conflicts (no fields applied)
+  cannotUpdate: CannotUpdateReason[];
 };
 
 async function getAccessToken(): Promise<string> {
@@ -70,210 +101,257 @@ type GraphUser = {
   mail?: string;
   userPrincipalName?: string;
   accountEnabled?: boolean;
-  employeeId?: string;
+  onPremisesExtensionAttributes?: { extensionAttribute1?: string };
 };
 
 async function fetchAllUsers(token: string): Promise<GraphUser[]> {
   const users: GraphUser[] = [];
-  let url =
-    "https://graph.microsoft.com/v1.0/users?$select=id,givenName,surname,displayName,mail,userPrincipalName,accountEnabled,employeeId";
+  let url = `${GRAPH_REQUEST}?$select=${FIELDS.join(",")}`;
+
   while (url) {
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
     });
+
     if (!res.ok) throw new Error(`Graph request failed: ${res.status}`);
-    const json = (await res.json()) as {
+
+    const response = (await res.json()) as {
       value: GraphUser[];
       "@odata.nextLink"?: string;
     };
-    users.push(...json.value);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    url = (json as any)["@odata.nextLink"] || "";
+
+    users.push(...response.value);
+    url = response["@odata.nextLink"] || "";
   }
   return users;
 }
 
-export async function runSync({
-  disableMissing = true,
-}: { disableMissing?: boolean } = {}) {
-  const usersService = new UsersService();
-  const token = await getAccessToken();
-  const graphUsers = await fetchAllUsers(token);
+function parseCuit(input?: string): string | undefined {
+  if (!input) return undefined;
+  const digits = input.replace(/\D+/g, "");
+  if (digits.length === 11) return digits;
+  return undefined;
+}
 
-  const seenEntraIds = new Set<string>();
-  const stats: Stats = {
-    created: 0,
-    updated: 0,
-    skippedCreate: [],
-    cannotUpdateCount: 0,
-  };
+function parseGraphUser(input: GraphUser): User {
+  const entraCuit = input.onPremisesExtensionAttributes?.extensionAttribute1;
 
-  function parseCuit(input?: string): number | undefined {
-    if (!input) return undefined;
-    const digits = input.replace(/\D+/g, "");
-    if (digits.length === 11) return Number(digits);
-    return undefined;
+  return {
+    entraId: input.id,
+    firstName: input.givenName || "User",
+    lastName: input.surname || "-",
+    email: input.mail || input.userPrincipalName || undefined,
+    active: input.accountEnabled ?? true,
+    cuit: parseCuit(entraCuit),
+  } as User;
+}
+
+function hasDiff(
+  key: keyof UserEntity,
+  existing: UserEntity,
+  incoming: User,
+): boolean {
+  return incoming[key] !== undefined && incoming[key] !== existing[key];
+}
+
+function getDiff(existing: UserEntity, incoming: User): Partial<UserEntity> {
+  const diff: Partial<User> = {};
+
+  if (hasDiff("firstName", existing, incoming)) {
+    diff.firstName = incoming.firstName;
+  }
+  if (hasDiff("lastName", existing, incoming)) {
+    diff.lastName = incoming.lastName;
+  }
+  if (hasDiff("email", existing, incoming)) {
+    diff.email = incoming.email;
+  }
+  if (hasDiff("cuit", existing, incoming)) {
+    diff.cuit = incoming.cuit;
+  }
+  if (hasDiff("active", existing, incoming)) {
+    diff.active = incoming.active;
   }
 
+  return diff;
+}
+
+async function parseAndSyncUsers(
+  graphUsers: GraphUser[],
+  usersService: UsersService,
+): Promise<{ stats: Stats; seenEntraIds: Set<string> }> {
+  const seenEntraIds = new Set<string>();
+  const stats: Stats = {
+    created: [],
+    updated: [],
+    skippedCreate: [],
+    cannotUpdate: [],
+  };
+
   for (const gu of graphUsers) {
-    const entraId = gu.id;
-    seenEntraIds.add(entraId);
-    const email = gu.mail || gu.userPrincipalName || undefined;
-    const firstName =
-      gu.givenName || (gu.displayName ? gu.displayName.split(" ")[0] : "");
-    const lastName =
-      gu.surname ||
-      (gu.displayName ? gu.displayName.split(" ").slice(1).join(" ") : "");
-    const active = gu.accountEnabled ?? true;
-    const cuitFromEmployeeId = parseCuit(gu.employeeId);
+    const user = parseGraphUser(gu);
+    seenEntraIds.add(user.entraId);
 
-    const existing = await usersService.getByEntraId(entraId);
-    if (existing) {
-      // Build patch only with changed values
-      const patch: Partial<User> = {};
-      if (firstName !== undefined && firstName !== existing.firstName) {
-        patch.firstName = firstName;
-      }
-      if (lastName !== undefined && lastName !== existing.lastName) {
-        patch.lastName = lastName;
-      }
-      if (active !== undefined && active !== existing.active) {
-        patch.active = active;
-      }
-      let hadConflicts = false;
+    const [byEntraId, byEmail, byCuit] = await Promise.all([
+      usersService.getByEntraId(user.entraId),
+      usersService.getByEmail(user.email),
+      usersService.getByCuit(user.cuit),
+    ]);
 
-      // Email update with uniqueness check
-      if (email && email !== existing.email) {
-        const byEmail = await usersService.getByEmail(email);
-        if (byEmail && byEmail.id !== existing.id) {
-          hadConflicts = true;
-          if (VERBOSE) {
-            // concise, single-line verbose detail
-            console.log(
-              `conflict:update email entraId=${entraId} email=${email} usedBy=${byEmail.id}`,
-            );
-          }
-        } else {
-          patch.email = email;
+    if (byEntraId) {
+      const patch = getDiff(byEntraId, user);
+      if (patch.email) {
+        const byEmail = await usersService.getByEmail(patch.email);
+        if (byEmail && byEmail.id !== byEntraId.id) {
+          stats.cannotUpdate.push({
+            kind: "email_conflict",
+            entraId: user.entraId,
+            email: patch.email,
+            existingUserId: byEmail.id,
+          });
+          continue;
         }
       }
 
-      // CUIT update with uniqueness check
-      if (cuitFromEmployeeId && existing.cuit !== cuitFromEmployeeId) {
-        const byCuit = await usersService.getByCuit(cuitFromEmployeeId);
-        if (byCuit && byCuit.id !== existing.id) {
-          hadConflicts = true;
-          if (VERBOSE) {
-            console.log(
-              `conflict:update cuit entraId=${entraId} cuit=${cuitFromEmployeeId} usedBy=${byCuit.id}`,
-            );
-          }
-        } else {
-          patch.cuit = cuitFromEmployeeId;
+      if (patch.cuit) {
+        const byCuit = await usersService.getByCuit(patch.cuit);
+        if (byCuit && byCuit.id !== byEntraId.id) {
+          stats.cannotUpdate.push({
+            kind: "cuit_conflict",
+            entraId: user.entraId,
+            cuit: patch.cuit,
+            existingUserId: byCuit.id,
+          });
+          continue;
         }
       }
 
       const keys = Object.keys(patch);
       if (keys.length > 0) {
-        await usersService.update(existing.id as string, patch);
-        stats.updated += 1;
-        if (VERBOSE) {
-          console.log(
-            `ok:update entraId=${entraId} userId=${existing.id} fields=${keys.join("|")}`,
-          );
-        }
-      } else if (hadConflicts) {
-        // Update attempted but fully blocked by conflicts
-        stats.cannotUpdateCount += 1;
-      } else if (VERBOSE) {
-        // No changes needed
-        console.log(`ok:noop entraId=${entraId} userId=${existing.id}`);
+        await usersService.update(byEntraId.id, patch);
+
+        const changes = `old: ${JSON.stringify(byEntraId)} new: ${JSON.stringify({ ...byEntraId, ...patch })}`;
+
+        stats.updated.push({
+          kind: "updated",
+          entraId: user.entraId,
+          userId: byEntraId.id,
+          changes,
+          // do a key old-new diff
+        });
       }
     } else {
-      // Creation path: require both email and CUIT
-      if (!email) {
-        stats.skippedCreate.push({ kind: "missing_email", entraId });
+      if (!user.email) {
+        stats.skippedCreate.push({
+          kind: "missing_email",
+          entraId: user.entraId,
+        });
         continue;
       }
-      if (!cuitFromEmployeeId) {
+      if (!user.cuit) {
         stats.skippedCreate.push({
           kind: "missing_cuit",
-          entraId,
-          employeeId: gu.employeeId,
+          entraId: user.entraId,
         });
         continue;
       }
 
-      // Uniqueness checks prior to creation
-      const [byEmail, byCuit] = await Promise.all([
-        usersService.getByEmail(email),
-        usersService.getByCuit(cuitFromEmployeeId),
-      ]);
       if (byEmail && byEmail.id) {
         stats.skippedCreate.push({
           kind: "email_conflict",
-          entraId,
-          email,
+          entraId: user.entraId,
+          email: user.email,
           existingUserId: byEmail.id,
         });
         continue;
       }
+
       if (byCuit && byCuit.id) {
         stats.skippedCreate.push({
           kind: "cuit_conflict",
-          entraId,
-          cuit: cuitFromEmployeeId,
+          entraId: user.entraId,
+          cuit: user.cuit,
           existingUserId: byCuit.id,
         });
         continue;
       }
 
       const created = await usersService.create({
-        firstName: firstName || "User",
-        lastName: lastName || "-",
-        email,
-        cuit: cuitFromEmployeeId as number,
-        active,
-        entraId,
+        firstName: user.firstName || "User",
+        lastName: user.lastName || "-",
+        email: user.email,
+        cuit: user.cuit,
+        active: user.active,
+        entraId: user.entraId,
       } as User);
-      stats.created += 1;
-      if (VERBOSE) {
-        console.log(
-          `ok:create entraId=${entraId} userId=${created?.id ?? "unknown"}`,
-        );
-      }
+      stats.created.push({
+        kind: "created",
+        entraId: user.entraId,
+        userId: created?.id || "",
+      });
     }
   }
 
-  if (disableMissing) {
-    const ids = Array.from(seenEntraIds);
-    // Deactivate users whose entra_id is not in the current set
-    // Deactivate users whose entra_id not in list (raw query via queryRunner for efficiency)
-    const queryRunner = AppDataSource.createQueryRunner();
-    await queryRunner.connect();
-    // For MSSQL we'll use a temporary table logic; simpler approach: fetch and iterate
-    const userRepo = AppDataSource.getRepository(UserEntity);
-    const activeUsers = await userRepo.find({ where: { active: true } });
-    for (const u of activeUsers) {
-      if (u.entraId && !ids.includes(u.entraId)) {
-        u.active = false;
-        await userRepo.save(u);
+  return { stats, seenEntraIds };
+}
+
+async function disableMissingUsers(seenEntraIds: Set<string>) {
+  const userRepo = AppDataSource.getRepository(UserEntity);
+
+  const activeUsers = await userRepo.find({ where: { active: true } });
+  const toDisableIds: string[] = activeUsers
+    .filter((u) => !!u.entraId && !seenEntraIds.has(u.entraId))
+    .map((u) => u.id)
+    .filter(Boolean) as string[];
+
+  if (toDisableIds.length === 0) return;
+
+  const CHUNK_SIZE = 1000;
+  for (let i = 0; i < toDisableIds.length; i += CHUNK_SIZE) {
+    const chunk = toDisableIds.slice(i, i + CHUNK_SIZE);
+    await userRepo
+      .createQueryBuilder()
+      .update(UserEntity)
+      .set({ active: false })
+      .whereInIds(chunk)
+      .execute();
+  }
+}
+
+function printResult(stats: Stats) {
+  if (VERBOSE) {
+    for (const c of stats.created) {
+      console.log(`ok:create entraId=${c.entraId} userId=${c.userId}`);
+    }
+
+    for (const u of stats.updated) {
+      console.log(
+        `ok:update entraId=${u.entraId} userId=${u.userId} changes=${u.changes}`,
+      );
+    }
+
+    for (const c of stats.cannotUpdate) {
+      switch (c.kind) {
+        case "email_conflict":
+          console.log(
+            `skip:update email_conflict entraId=${c.entraId} email=${c.email} usedBy=${c.existingUserId}`,
+          );
+          break;
+        case "cuit_conflict":
+          console.log(
+            `skip:update cuit_conflict entraId=${c.entraId} cuit=${c.cuit} usedBy=${c.existingUserId}`,
+          );
+          break;
       }
     }
-    await queryRunner.release();
-  }
 
-  // Output section
-  if (VERBOSE && stats.skippedCreate.length > 0) {
     for (const s of stats.skippedCreate) {
       switch (s.kind) {
         case "missing_email":
           console.log(`skip:create missing_email entraId=${s.entraId}`);
           break;
         case "missing_cuit":
-          console.log(
-            `skip:create missing_cuit entraId=${s.entraId} employeeId=${s.employeeId ?? ""}`,
-          );
+          console.log(`skip:create missing_cuit entraId=${s.entraId}`);
           break;
         case "email_conflict":
           console.log(
@@ -290,8 +368,25 @@ export async function runSync({
   }
 
   console.log(
-    `summary created=${stats.created} updated=${stats.updated} cannot_update=${stats.cannotUpdateCount} skipped_create=${stats.skippedCreate.length}`,
+    `summary created=${stats.created.length} updated=${stats.updated.length} cannot_update=${stats.cannotUpdate.length} skipped_create=${stats.skippedCreate.length}`,
   );
+}
+
+async function runSync() {
+  const usersService = new UsersService();
+  const token = await getAccessToken();
+  const graphUsers = await fetchAllUsers(token);
+
+  const { stats, seenEntraIds } = await parseAndSyncUsers(
+    graphUsers,
+    usersService,
+  );
+
+  if (DISABLE_MISSING) {
+    await disableMissingUsers(seenEntraIds);
+  }
+
+  printResult(stats);
 }
 
 if (require.main === module) {
