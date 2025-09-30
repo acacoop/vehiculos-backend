@@ -58,7 +58,7 @@ async function clearSampleData(): Promise<void> {
     .execute();
 
   console.log(
-    `✅ Sample data cleared (${result.affected || 0} sample users removed, real users preserved)`
+    `✅ Sample data cleared (${result.affected || 0} sample users removed, real users preserved)`,
   );
 }
 
@@ -70,7 +70,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Carlos",
       lastName: "Rodríguez",
-      cuit: 12345678901,
+      cuit: "12345678901",
       email: "carlos.rodriguez@sample.test",
       active: true,
       entraId: "SAMPLE_USER_001",
@@ -78,7 +78,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "María",
       lastName: "González",
-      cuit: 23456789012,
+      cuit: "23456789012",
       email: "maria.gonzalez@sample.test",
       active: true,
       entraId: "SAMPLE_USER_002",
@@ -86,7 +86,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Ana",
       lastName: "Martínez",
-      cuit: 34567890123,
+      cuit: "34567890123",
       email: "ana.martinez@sample.test",
       active: true,
       entraId: "SAMPLE_USER_003",
@@ -95,7 +95,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Juan",
       lastName: "Pérez",
-      cuit: 45678901234,
+      cuit: "45678901234",
       email: "juan.perez@sample.test",
       active: true,
       entraId: "SAMPLE_USER_004",
@@ -103,7 +103,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Luis",
       lastName: "López",
-      cuit: 56789012345,
+      cuit: "56789012345",
       email: "luis.lopez@sample.test",
       active: false,
       entraId: "SAMPLE_USER_005",
@@ -111,7 +111,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Sofia",
       lastName: "Hernández",
-      cuit: 67890123456,
+      cuit: "67890123456",
       email: "sofia.hernandez@sample.test",
       active: true,
       entraId: "SAMPLE_USER_006",
@@ -119,7 +119,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Diego",
       lastName: "García",
-      cuit: 78901234567,
+      cuit: "78901234567",
       email: "diego.garcia@sample.test",
       active: true,
       entraId: "SAMPLE_USER_007",
@@ -127,7 +127,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Valentina",
       lastName: "Silva",
-      cuit: 89012345678,
+      cuit: "89012345678",
       email: "valentina.silva@sample.test",
       active: true,
       entraId: "SAMPLE_USER_008",
@@ -136,7 +136,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Andrés",
       lastName: "Morales",
-      cuit: 90123456789,
+      cuit: "90123456789",
       email: "andres.morales@sample.test",
       active: true,
       entraId: "SAMPLE_USER_009",
@@ -144,7 +144,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Camila",
       lastName: "Torres",
-      cuit: 12987654321,
+      cuit: "12987654321",
       email: "camila.torres@sample.test",
       active: false,
       entraId: "SAMPLE_USER_010",
@@ -152,7 +152,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Miguel",
       lastName: "Vargas",
-      cuit: 23876543210,
+      cuit: "23876543210",
       email: "miguel.vargas@sample.test",
       active: true,
       entraId: "SAMPLE_USER_011",
@@ -160,7 +160,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Isabella",
       lastName: "Ruiz",
-      cuit: 34765432109,
+      cuit: "34765432109",
       email: "isabella.ruiz@sample.test",
       active: true,
       entraId: "SAMPLE_USER_012",
@@ -169,7 +169,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Roberto",
       lastName: "Jiménez",
-      cuit: 45654321098,
+      cuit: "45654321098",
       email: "roberto.jimenez@sample.test",
       active: true,
       entraId: "SAMPLE_USER_013",
@@ -177,7 +177,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Lucía",
       lastName: "Castro",
-      cuit: 56543210987,
+      cuit: "56543210987",
       email: "lucia.castro@sample.test",
       active: true,
       entraId: "SAMPLE_USER_014",
@@ -185,7 +185,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Fernando",
       lastName: "Romero",
-      cuit: 67432109876,
+      cuit: "67432109876",
       email: "fernando.romero@sample.test",
       active: true,
       entraId: "SAMPLE_USER_015",
@@ -226,7 +226,7 @@ async function createBrandsAndModels(): Promise<{
     "Citroën",
   ];
   const brands = await brandRepo.save(
-    brandRepo.create(brandNames.map((name) => ({ name })))
+    brandRepo.create(brandNames.map((name) => ({ name }))),
   );
 
   const findBrand = (name: string) => brands.find((b) => b.name === name)!;
@@ -273,7 +273,7 @@ async function createBrandsAndModels(): Promise<{
 }
 
 async function createSampleVehicles(
-  models: VehicleModel[]
+  models: VehicleModel[],
 ): Promise<Vehicle[]> {
   const vehicleRepo = AppDataSource.getRepository(Vehicle);
   const findModel = (name: string) => models.find((m) => m.name === name)!;
@@ -452,7 +452,7 @@ async function createMaintenanceData(): Promise<{
 
 async function createAssignments(
   users: User[],
-  vehicles: Vehicle[]
+  vehicles: Vehicle[],
 ): Promise<Assignment[]> {
   const assignmentRepo = AppDataSource.getRepository(Assignment);
 
@@ -551,7 +551,7 @@ async function createAssignments(
 
 async function createAssignedMaintenances(
   vehicles: Vehicle[],
-  maintenances: Maintenance[]
+  maintenances: Maintenance[],
 ): Promise<AssignedMaintenance[]> {
   const assignedMaintenanceRepo =
     AppDataSource.getRepository(AssignedMaintenance);
@@ -661,7 +661,7 @@ async function createAssignedMaintenances(
   ];
 
   const assignedMaintenances = assignedMaintenanceRepo.create(
-    assignedMaintenancesData
+    assignedMaintenancesData,
   );
   const savedAssignedMaintenances =
     await assignedMaintenanceRepo.save(assignedMaintenances);
@@ -672,7 +672,7 @@ async function createAssignedMaintenances(
 
 async function createSampleReservations(
   users: User[],
-  vehicles: Vehicle[]
+  vehicles: Vehicle[],
 ): Promise<Reservation[]> {
   const reservationRepo = AppDataSource.getRepository(Reservation);
 
@@ -710,7 +710,7 @@ async function createSampleReservations(
 
 async function createVehicleResponsibles(
   users: User[],
-  vehicles: Vehicle[]
+  vehicles: Vehicle[],
 ): Promise<VehicleResponsible[]> {
   const responsibleRepo = AppDataSource.getRepository(VehicleResponsible);
 
@@ -761,7 +761,7 @@ async function createVehicleResponsibles(
 
 async function createVehicleKilometers(
   users: User[],
-  vehicles: Vehicle[]
+  vehicles: Vehicle[],
 ): Promise<VehicleKilometers[]> {
   const kilometerRepo = AppDataSource.getRepository(VehicleKilometers);
 
@@ -822,7 +822,7 @@ async function createVehicleKilometers(
 
 async function createMaintenanceRecords(
   users: User[],
-  assignedMaintenances: AssignedMaintenance[]
+  assignedMaintenances: AssignedMaintenance[],
 ): Promise<MaintenanceRecord[]> {
   const recordRepo = AppDataSource.getRepository(MaintenanceRecord);
 
@@ -833,17 +833,17 @@ async function createMaintenanceRecords(
   const oilChangeABC = assignedMaintenances.find(
     (am) =>
       am.vehicle.licensePlate === "ABC123" &&
-      am.maintenance.name === "Oil Change"
+      am.maintenance.name === "Oil Change",
   );
   const oilChangeDEF = assignedMaintenances.find(
     (am) =>
       am.vehicle.licensePlate === "DEF456" &&
-      am.maintenance.name === "Oil Change"
+      am.maintenance.name === "Oil Change",
   );
   const tireRotationABC = assignedMaintenances.find(
     (am) =>
       am.vehicle.licensePlate === "ABC123" &&
-      am.maintenance.name === "Tire Rotation"
+      am.maintenance.name === "Tire Rotation",
   );
 
   const recordsData = [];
@@ -907,14 +907,14 @@ export async function loadSampleData(): Promise<SampleDataStats> {
   const assignments = await createAssignments(users, vehicles);
   const assignedMaintenances = await createAssignedMaintenances(
     vehicles,
-    maintenances
+    maintenances,
   );
   const reservations = await createSampleReservations(users, vehicles);
   const vehicleResponsibles = await createVehicleResponsibles(users, vehicles);
   const vehicleKilometers = await createVehicleKilometers(users, vehicles);
   const maintenanceRecords = await createMaintenanceRecords(
     users,
-    assignedMaintenances
+    assignedMaintenances,
   );
 
   const stats: SampleDataStats = {

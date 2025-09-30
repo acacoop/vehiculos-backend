@@ -17,7 +17,7 @@ export interface VehicleResponsibleWithDetails {
     id: string;
     firstName: string;
     lastName: string;
-    cuit: number;
+    cuit: string;
     email: string;
     active: boolean;
     entraId: string;
@@ -91,26 +91,26 @@ export class VehicleResponsiblesService {
     vehicleId: string,
     startDate: string,
     endDate: string | null,
-    excludeId?: string
+    excludeId?: string,
   ) {
     const overlap = await this.repo.getOverlap(
       vehicleId,
       startDate,
       endDate,
-      excludeId
+      excludeId,
     );
     if (overlap) {
       throw new AppError(
         `Vehicle already has a responsible overlapping (${overlap.startDate} to ${overlap.endDate || "present"})`,
         400,
         "https://example.com/problems/overlap-error",
-        "Vehicle Responsibility Overlap"
+        "Vehicle Responsibility Overlap",
       );
     }
   }
 
   async create(
-    data: VehicleResponsibleInput
+    data: VehicleResponsibleInput,
     //): Promise<VehicleResponsible | null> {
   ): Promise<VehicleResponsibleWithDetails | null> {
     const { vehicleId, userId, startDate, endDate = null } = data;
@@ -125,7 +125,7 @@ export class VehicleResponsiblesService {
       await this.assertNoOverlap(vehicleId, startDate, endDate);
     if (endDate === null) {
       const previousEnd = new Date(
-        new Date(startDate).getTime() - 24 * 60 * 60 * 1000
+        new Date(startDate).getTime() - 24 * 60 * 60 * 1000,
       )
         .toISOString()
         .split("T")[0];
@@ -147,7 +147,7 @@ export class VehicleResponsiblesService {
 
   async update(
     id: string,
-    data: Partial<VehicleResponsibleInput>
+    data: Partial<VehicleResponsibleInput>,
     //): Promise<VehicleResponsible | null> {
   ): Promise<VehicleResponsibleWithDetails | null> {
     const ent = await this.vehicleRepo.manager
@@ -163,7 +163,7 @@ export class VehicleResponsiblesService {
     if (data.endDate !== undefined) ent.endDate = data.endDate ?? null;
     if (ent.endDate === null) {
       const previousEnd = new Date(
-        new Date(ent.startDate).getTime() - 24 * 60 * 60 * 1000
+        new Date(ent.startDate).getTime() - 24 * 60 * 60 * 1000,
       )
         .toISOString()
         .split("T")[0];
@@ -182,7 +182,7 @@ export class VehicleResponsiblesService {
         ent.vehicle.id,
         ent.startDate,
         ent.endDate,
-        ent.id
+        ent.id,
       );
     }
     ent.updatedAt = new Date();

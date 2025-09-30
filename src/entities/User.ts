@@ -11,8 +11,8 @@ export class User {
   @Column({ name: "last_name" })
   lastName!: string;
 
-  @Column({ name: "cuit", unique: true, type: "bigint" })
-  cuit!: number;
+  @Column({ name: "cuit", unique: true })
+  cuit!: string;
 
   @Column({ unique: true })
   email!: string;

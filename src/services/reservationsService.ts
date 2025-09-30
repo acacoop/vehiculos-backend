@@ -15,7 +15,7 @@ export interface ReservationWithDetails {
     id: string;
     firstName: string;
     lastName: string;
-    cuit: number;
+    cuit: string;
     email: string;
     active: boolean;
     entraId: string;
@@ -77,7 +77,7 @@ export class ReservationsService {
   }
 
   async getAll(
-    options?: GetAllReservationsOptions
+    options?: GetAllReservationsOptions,
   ): Promise<{ items: ReservationWithDetails[]; total: number }> {
     const { limit, offset, searchParams } = options || {};
     const [rows, total] = await this.repo.findAndCount({
@@ -120,7 +120,7 @@ export class ReservationsService {
     return rows.map(mapEntity);
   }
   async create(
-    reservation: Reservation
+    reservation: Reservation,
   ): Promise<ReservationWithDetails | null> {
     const { userId, vehicleId, startDate, endDate } = reservation;
     await validateUserExists(userId);
