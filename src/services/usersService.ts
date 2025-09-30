@@ -10,32 +10,28 @@ export class UsersService {
     limit?: number;
     offset?: number;
     searchParams?: Record<string, string>;
-  }): Promise<{ items: User[]; total: number }> {
+  }): Promise<{ items: UserEntity[]; total: number }> {
     const [entities, total] = await this.userRepo.findAndCount(options);
-    return { items: entities.map(mapEntity), total };
+    return { items: entities, total };
   }
 
-  async getById(id: string): Promise<User | null> {
-    const ent = await this.userRepo.findOne(id);
-    return ent ? mapEntity(ent) : null;
+  async getById(id: string): Promise<UserEntity | null> {
+    return await this.userRepo.findOne(id);
   }
 
-  async getByEntraId(entraId: string): Promise<User | null> {
-    const ent = await this.userRepo.findByEntraId(entraId);
-    return ent ? mapEntity(ent) : null;
+  async getByEntraId(entraId: string): Promise<UserEntity | null> {
+    return await this.userRepo.findByEntraId(entraId);
   }
 
-  async getByEmail(email: string): Promise<User | null> {
-    const ent = await this.userRepo.findByEmail(email);
-    return ent ? mapEntity(ent) : null;
+  async getByEmail(email: string): Promise<UserEntity | null> {
+    return await this.userRepo.findByEmail(email);
   }
 
-  async getByCuit(cuit: number): Promise<User | null> {
-    const ent = await this.userRepo.findByCuit(cuit);
-    return ent ? mapEntity(ent) : null;
+  async getByCuit(cuit: string): Promise<UserEntity | null> {
+    return await this.userRepo.findByCuit(cuit);
   }
 
-  async create(user: User): Promise<User | null> {
+  async create(user: User): Promise<UserEntity | null> {
     const created = this.userRepo.create({
       firstName: user.firstName,
       lastName: user.lastName,
@@ -44,11 +40,10 @@ export class UsersService {
       active: user.active ?? true,
       entraId: user.entraId || "",
     });
-    const saved = await this.userRepo.save(created);
-    return mapEntity(saved);
+    return await this.userRepo.save(created);
   }
 
-  async update(id: string, user: Partial<User>): Promise<User | null> {
+  async update(id: string, user: Partial<User>): Promise<UserEntity | null> {
     const existing = await this.userRepo.findOne(id);
     if (!existing) return null;
     Object.assign(existing, {
@@ -59,8 +54,7 @@ export class UsersService {
       active: user.active ?? existing.active,
     });
     if (user.entraId !== undefined) existing.entraId = user.entraId || "";
-    const saved = await this.userRepo.save(existing);
-    return mapEntity(saved);
+    return await this.userRepo.save(existing);
   }
 
   async delete(id: string): Promise<boolean> {
@@ -68,35 +62,21 @@ export class UsersService {
     return res.affected === 1;
   }
 
-  async activate(id: string): Promise<User | null> {
+  async activate(id: string): Promise<UserEntity | null> {
     const existing = await this.userRepo.findOne(id);
     if (!existing) return null;
     if (existing.active) throw new Error("ALREADY_ACTIVE");
     existing.active = true;
-    const saved = await this.userRepo.save(existing);
-    return mapEntity(saved);
+    return await this.userRepo.save(existing);
   }
 
-  async deactivate(id: string): Promise<User | null> {
+  async deactivate(id: string): Promise<UserEntity | null> {
     const existing = await this.userRepo.findOne(id);
     if (!existing) return null;
     if (!existing.active) throw new Error("ALREADY_INACTIVE");
     existing.active = false;
-    const saved = await this.userRepo.save(existing);
-    return mapEntity(saved);
+    return await this.userRepo.save(existing);
   }
-}
-
-function mapEntity(e: UserEntity): User {
-  return {
-    id: e.id,
-    firstName: e.firstName,
-    lastName: e.lastName,
-    cuit: e.cuit,
-    email: e.email,
-    active: e.active,
-    entraId: e.entraId || "",
-  };
 }
 
 export default UsersService;
