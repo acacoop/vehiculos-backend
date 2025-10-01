@@ -9,7 +9,7 @@ export const VehicleModelInputSchema = z.object({
 export const VehicleModelSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
-  vehicleType: z.string().optional().nullable(),
+  vehicleType: z.string().optional(),
   brand: z.object({ id: z.string().uuid(), name: z.string() }),
 });
 
