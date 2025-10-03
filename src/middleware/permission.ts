@@ -9,7 +9,6 @@ import { ACLType, VehicleACL } from "../entities/authorization/VehicleACL";
 import { DataSource } from "typeorm";
 import { VehicleACLRepository } from "../repositories/VehicleACLRepository";
 import { UserGroupMembershipRepository } from "../repositories/UserGroupMembershipRepository";
-import { UserGroupPermissionRepository } from "../repositories/UserGroupPermissionRepository";
 import { UserGroupNestingRepository } from "../repositories/UserGroupNestingRepository";
 import { VehicleSelection } from "../entities/authorization/VehicleSelection";
 import { VehicleResponsibleRepository } from "../repositories/VehicleResponsibleRepository";
@@ -40,7 +39,6 @@ export interface PermissionRequest extends AuthenticatedRequest {
 class PermissionChecker {
   private vehicleACLRepo: VehicleACLRepository;
   private userGroupMembershipRepo: UserGroupMembershipRepository;
-  private userGroupPermissionRepo: UserGroupPermissionRepository;
   private userGroupNestingRepo: UserGroupNestingRepository;
   private vehicleResponsiblesRepo: VehicleResponsibleRepository;
   private cecoRangesRepo: CecoRangeRepository;
@@ -49,9 +47,6 @@ class PermissionChecker {
   constructor(dataSource: DataSource) {
     this.vehicleACLRepo = new VehicleACLRepository(dataSource);
     this.userGroupMembershipRepo = new UserGroupMembershipRepository(
-      dataSource,
-    );
-    this.userGroupPermissionRepo = new UserGroupPermissionRepository(
       dataSource,
     );
     this.userGroupNestingRepo = new UserGroupNestingRepository(dataSource);
@@ -141,13 +136,9 @@ class PermissionChecker {
     vehicleId: string,
     requiredPermission: PermissionType,
   ): Promise<boolean> {
-    // find user role if ADMIN, return true
-
-    const [userRoles, _] = await this.userRoleRepo.findAndCount({
-      searchParams: { userId, role: UserRoleEnum.ADMIN },
-    });
-
-    if (userRoles.length > 0) return true;
+    if (await this.checkUserRolePermission(userId, UserRoleEnum.ADMIN)) {
+      return true;
+    }
 
     const requiredWeight = PERMISSION_WEIGHT[requiredPermission];
     const vehicleCeco = await this.getVehicleCeco(vehicleId);
@@ -193,57 +184,31 @@ class PermissionChecker {
     );
   }
 
-  async checkUserGeneralPermission(
+  async checkUserRolePermission(
     userId: string,
-    permission: PermissionType | UserRoleEnum,
+    role: UserRoleEnum,
   ): Promise<boolean> {
-    if (
-      typeof permission === "string" &&
-      Object.values(UserRoleEnum).includes(permission as UserRoleEnum)
-    ) {
-      // Check if user has the role
-      const [userRoles, _] = await this.userRoleRepo.findAndCount({
-        searchParams: { userId, role: permission as UserRoleEnum },
-      });
-      return userRoles.length > 0;
-    } else {
-      // For PermissionType, perhaps check some general permissions, but for now return false
-      return false;
-    }
-  }
-
-  async checkVehiclePermission(
-    userId: string,
-    options: VehiclePermissionCheckOptions,
-  ): Promise<boolean> {
-    // Check if user is admin
     const [userRoles, _] = await this.userRoleRepo.findAndCount({
-      searchParams: { userId, role: UserRoleEnum.ADMIN },
+      searchParams: { userId, role: role as UserRoleEnum },
     });
-    if (userRoles.length > 0) return true;
-
-    return this.checkUserVehiclePermission(
-      userId,
-      options.vehicleId,
-      options.permission,
-    );
-  }
-
-  async checkGeneralPermission(
-    userId: string,
-    options: RoleCheckOptions,
-  ): Promise<boolean> {
-    return this.checkUserGeneralPermission(userId, options.role);
+    return userRoles.length > 0;
   }
 
   async checkUserPermission(
     userId: string,
     options: PermissionCheckOptions,
   ): Promise<boolean> {
-    if ("vehicleId" in options) {
-      return this.checkVehiclePermission(userId, options);
-    } else {
-      return this.checkGeneralPermission(userId, options);
+    switch (options.type) {
+      case "vehicle":
+        return this.checkUserVehiclePermission(
+          userId,
+          options.vehicleId,
+          options.permission,
+        );
+      case "role":
+        return this.checkUserRolePermission(userId, options.role);
+      default:
+        return false;
     }
   }
 }
@@ -310,8 +275,8 @@ export const requireVehiclePermission = (
     vehicleId,
   });
 
-export const requireGeneralAdminPermission = () =>
+export const requireRole = (role: UserRoleEnum) =>
   requirePermission({
     type: "role",
-    role: UserRoleEnum.ADMIN,
+    role,
   });
