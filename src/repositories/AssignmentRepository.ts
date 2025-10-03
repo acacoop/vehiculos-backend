@@ -1,9 +1,17 @@
-import { DataSource, Repository } from "typeorm";
+import {
+  DataSource,
+  Repository,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  IsNull,
+  Or,
+} from "typeorm";
 import { Assignment } from "../entities/Assignment";
 
 export interface AssignmentSearchParams {
   userId?: string;
   vehicleId?: string;
+  date?: string; // YYYY-MM-DD format for active assignment filtering
 }
 
 export class AssignmentRepository {
@@ -38,5 +46,44 @@ export class AssignmentRepository {
   }
   count(where: Record<string, unknown>) {
     return this.repo.count({ where });
+  }
+
+  /**
+   * Find active assignments for today
+   * Active means: startDate <= date AND (endDate IS NULL OR endDate >= date)
+   */
+  async findActiveAssignments(searchParams?: AssignmentSearchParams) {
+    const targetDate =
+      searchParams?.date || new Date().toISOString().split("T")[0];
+
+    const where: Record<string, unknown> = {
+      startDate: LessThanOrEqual(targetDate),
+      endDate: Or(IsNull(), MoreThanOrEqual(targetDate)),
+    };
+
+    if (searchParams?.userId) {
+      where.user = { id: searchParams.userId };
+    }
+    if (searchParams?.vehicleId) {
+      where.vehicle = { id: searchParams.vehicleId };
+    }
+
+    return this.repo.find({ where });
+  }
+
+  /**
+   * Check if user has active assignment for vehicle today
+   */
+  async hasActiveAssignment(
+    userId: string,
+    vehicleId: string,
+    date?: string,
+  ): Promise<boolean> {
+    const assignments = await this.findActiveAssignments({
+      userId,
+      vehicleId,
+      date,
+    });
+    return assignments.length > 0;
   }
 }

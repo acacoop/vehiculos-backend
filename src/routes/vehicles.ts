@@ -5,6 +5,12 @@ import { validateSchema, AppError } from "../middleware/errorHandler";
 import { validateUUIDParam } from "../middleware/validation";
 import { VehicleInputSchema, VehicleUpdateSchema } from "../schemas/vehicle";
 import { licensePlateRegex } from "../schemas/validations";
+import {
+  requireRole,
+  requireVehiclePermissionFromParam,
+} from "../middleware/permission";
+import { UserRoleEnum } from "../entities/authorization/UserRole";
+import { PermissionType } from "../entities/authorization/PermissionType";
 
 const router = Router();
 // Each router instance gets its own controller (and underlying service/repository instances)
@@ -37,29 +43,46 @@ const validateLicensePlateQuery = (
 router.get("/", validateLicensePlateQuery, vehiclesController.getAll);
 
 // GET /vehicles/:id - Get vehicle by ID
-router.get("/:id", validateUUIDParam("id"), vehiclesController.getById);
+router.get(
+  "/:id",
+  validateUUIDParam("id"),
+  requireVehiclePermissionFromParam(PermissionType.READ, "id"),
+  vehiclesController.getById,
+);
 
 // POST /vehicles - Create new vehicle (validate input schema)
-router.post("/", validateSchema(VehicleInputSchema), vehiclesController.create);
+router.post(
+  "/",
+  requireRole(UserRoleEnum.ADMIN),
+  validateSchema(VehicleInputSchema),
+  vehiclesController.create,
+);
 
-// PUT /vehicles/:id - Update vehicle (replace)
+// PUT /vehicles/:id - Update vehicle (replace) - requires FULL permission on specific vehicle
 router.put(
   "/:id",
   validateUUIDParam("id"),
+  requireVehiclePermissionFromParam(PermissionType.FULL, "id"),
   validateSchema(VehicleUpdateSchema),
   vehiclesController.update,
 );
 
-// PATCH /vehicles/:id - Partial update vehicle
+// PATCH /vehicles/:id - Partial update vehicle - requires FULL permission on specific vehicle
 router.patch(
   "/:id",
   validateUUIDParam("id"),
+  requireVehiclePermissionFromParam(PermissionType.FULL, "id"),
   validateSchema(VehicleUpdateSchema),
   vehiclesController.patch,
 );
 
-// DELETE /vehicles/:id - Delete vehicle
-router.delete("/:id", validateUUIDParam("id"), vehiclesController.delete);
+// DELETE /vehicles/:id - Delete vehicle - requires FULL permission on specific vehicle
+router.delete(
+  "/:id",
+  requireRole(UserRoleEnum.ADMIN),
+  validateUUIDParam("id"),
+  vehiclesController.delete,
+);
 
 // Nested kilometers routes for a vehicle
 router.use("/:id/kilometers", vehicleKilometersRoutes);

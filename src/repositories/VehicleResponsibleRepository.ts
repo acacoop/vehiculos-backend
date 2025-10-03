@@ -1,4 +1,4 @@
-import { DataSource, IsNull, Repository } from "typeorm";
+import { DataSource, Repository } from "typeorm";
 import { VehicleResponsible as VehicleResponsibleEntity } from "../entities/VehicleResponsible";
 
 export interface VehicleResponsibleSearchParams {
@@ -104,5 +104,40 @@ export class VehicleResponsibleRepository {
       { start: startDate, end: endDate, max: "9999-12-31" },
     );
     return qb.getOne();
+  }
+
+  /**
+   * Find active responsible assignments for a specific date (defaults to today)
+   * Active means: startDate <= date AND (endDate IS NULL OR endDate >= date)
+   */
+  async findActiveResponsibles(searchParams?: VehicleResponsibleSearchParams) {
+    const targetDate =
+      searchParams?.date || new Date().toISOString().split("T")[0];
+
+    const [responsibles] = await this.find({
+      searchParams: {
+        userId: searchParams?.userId,
+        vehicleId: searchParams?.vehicleId,
+        date: targetDate,
+      },
+    });
+
+    return responsibles;
+  }
+
+  /**
+   * Check if user is responsible for vehicle on specific date (defaults to today)
+   */
+  async isUserResponsible(
+    userId: string,
+    vehicleId: string,
+    date?: string,
+  ): Promise<boolean> {
+    const responsibles = await this.findActiveResponsibles({
+      userId,
+      vehicleId,
+      date,
+    });
+    return responsibles.length > 0;
   }
 }

@@ -15,6 +15,8 @@ import { VehicleResponsibleRepository } from "../repositories/VehicleResponsible
 import { CecoRangeRepository } from "../repositories/CecoRangeRepository";
 import { UserRoleRepository } from "../repositories/UserRoleRepository";
 import { UserRoleEnum } from "../entities/authorization/UserRole";
+import { AppDataSource } from "../db";
+import { AssignmentRepository } from "../repositories/AssignmentRepository";
 
 interface VehiclePermissionCheckOptions {
   type: "vehicle";
@@ -43,6 +45,7 @@ class PermissionChecker {
   private vehicleResponsiblesRepo: VehicleResponsibleRepository;
   private cecoRangesRepo: CecoRangeRepository;
   private userRoleRepo: UserRoleRepository;
+  private assignmentRepo: AssignmentRepository;
 
   constructor(dataSource: DataSource) {
     this.vehicleACLRepo = new VehicleACLRepository(dataSource);
@@ -53,6 +56,7 @@ class PermissionChecker {
     this.vehicleResponsiblesRepo = new VehicleResponsibleRepository(dataSource);
     this.cecoRangesRepo = new CecoRangeRepository(dataSource);
     this.userRoleRepo = new UserRoleRepository(dataSource);
+    this.assignmentRepo = new AssignmentRepository(dataSource);
   }
 
   async getParentsGroupIds(groupId: string): Promise<Set<string>> {
@@ -100,18 +104,29 @@ class PermissionChecker {
   }
 
   async getVehicleCeco(vehicleId: string): Promise<string | null> {
-    const responsible = await this.vehicleResponsiblesRepo.find({
+    const [responsible, count] = await this.vehicleResponsiblesRepo.find({
       searchParams: {
         vehicleId,
         date: new Date().toISOString(),
       },
     });
 
-    if (responsible[1] === 0) {
+    if (count === 0) {
       return null;
     }
 
-    return responsible[0][0].ceco || null;
+    return responsible[0].ceco || null;
+  }
+
+  async checkUserIsResponsible(
+    userId: string,
+    vehicleId: string,
+  ): Promise<boolean> {
+    return this.vehicleResponsiblesRepo.isUserResponsible(userId, vehicleId);
+  }
+
+  async checkUserIsDriver(userId: string, vehicleId: string): Promise<boolean> {
+    return this.assignmentRepo.hasActiveAssignment(userId, vehicleId);
   }
 
   async checkACLPermission(
@@ -136,11 +151,30 @@ class PermissionChecker {
     vehicleId: string,
     requiredPermission: PermissionType,
   ): Promise<boolean> {
+    // First check if user is ADMIN (bypasses all checks)
     if (await this.checkUserRolePermission(userId, UserRoleEnum.ADMIN)) {
       return true;
     }
 
     const requiredWeight = PERMISSION_WEIGHT[requiredPermission];
+
+    // Check if user is the vehicle responsible (grants FULL permission)
+    if (await this.checkUserIsResponsible(userId, vehicleId)) {
+      const responsibleWeight = PERMISSION_WEIGHT[PermissionType.FULL];
+      if (responsibleWeight >= requiredWeight) {
+        return true;
+      }
+    }
+
+    // Check if user is assigned as driver (grants DRIVER permission)
+    if (await this.checkUserIsDriver(userId, vehicleId)) {
+      const driverWeight = PERMISSION_WEIGHT[PermissionType.DRIVER];
+      if (driverWeight >= requiredWeight) {
+        return true;
+      }
+    }
+
+    // If not responsible or driver, check ACLs (groups and direct permissions)
     const vehicleCeco = await this.getVehicleCeco(vehicleId);
 
     // Get the ACLs directly assigned to the user
@@ -213,27 +247,31 @@ class PermissionChecker {
   }
 }
 
-// Global permission checker instance (in real app, inject via DI)
+// Singleton instance - created once when first needed
 let permissionChecker: PermissionChecker | null = null;
 
-export const initializePermissionChecker = (dataSource: DataSource) => {
-  permissionChecker = new PermissionChecker(dataSource);
+const getPermissionChecker = (): PermissionChecker => {
+  if (!permissionChecker) {
+    if (!AppDataSource.isInitialized) {
+      throw new AppError(
+        "Database not initialized",
+        500,
+        "https://example.com/problems/internal-error",
+        "Internal Server Error",
+      );
+    }
+    permissionChecker = new PermissionChecker(AppDataSource);
+  }
+  return permissionChecker;
 };
 
-// Middleware factory for permission checks
+// Simple permission middleware that uses singleton PermissionChecker
 export const requirePermission = (options: PermissionCheckOptions) => {
   return async (req: PermissionRequest, _res: Response, next: NextFunction) => {
     try {
-      if (!permissionChecker) {
-        throw new AppError(
-          "Permission checker not initialized",
-          500,
-          "https://example.com/problems/internal-error",
-          "Internal Server Error",
-        );
-      }
-
+      const checker = getPermissionChecker();
       const user = req.user;
+
       if (!user) {
         throw new AppError(
           "Authentication required",
@@ -243,10 +281,7 @@ export const requirePermission = (options: PermissionCheckOptions) => {
         );
       }
 
-      const hasPermission = await permissionChecker.checkUserPermission(
-        user.id,
-        options,
-      );
+      const hasPermission = await checker.checkUserPermission(user.id, options);
 
       if (!hasPermission) {
         throw new AppError(
@@ -264,7 +299,13 @@ export const requirePermission = (options: PermissionCheckOptions) => {
   };
 };
 
-// Convenience middleware for common permissions
+// Simple helper functions
+export const requireRole = (role: UserRoleEnum) =>
+  requirePermission({
+    type: "role",
+    role,
+  });
+
 export const requireVehiclePermission = (
   vehicleId: string,
   permission: PermissionType,
@@ -275,8 +316,23 @@ export const requireVehiclePermission = (
     vehicleId,
   });
 
-export const requireRole = (role: UserRoleEnum) =>
-  requirePermission({
-    type: "role",
-    role,
-  });
+export const requireVehiclePermissionFromParam = (
+  permission: PermissionType,
+  paramName: string = "id",
+) => {
+  return async (req: PermissionRequest, res: Response, next: NextFunction) => {
+    const vehicleId = req.params[paramName];
+    if (!vehicleId) {
+      return next(
+        new AppError(
+          `Vehicle ID parameter '${paramName}' is required`,
+          400,
+          "https://example.com/problems/bad-request",
+          "Bad Request",
+        ),
+      );
+    }
+
+    return requireVehiclePermission(vehicleId, permission)(req, res, next);
+  };
+};
