@@ -58,7 +58,7 @@ async function clearSampleData(): Promise<void> {
     .execute();
 
   console.log(
-    `✅ Sample data cleared (${result.affected || 0} sample users removed, real users preserved)`,
+    `✅ Sample data cleared (${result.affected || 0} sample users removed, real users preserved)`
   );
 }
 
@@ -226,7 +226,7 @@ async function createBrandsAndModels(): Promise<{
     "Citroën",
   ];
   const brands = await brandRepo.save(
-    brandRepo.create(brandNames.map((name) => ({ name }))),
+    brandRepo.create(brandNames.map((name) => ({ name })))
   );
 
   const findBrand = (name: string) => brands.find((b) => b.name === name)!;
@@ -285,7 +285,7 @@ async function createBrandsAndModels(): Promise<{
 }
 
 async function createSampleVehicles(
-  models: VehicleModel[],
+  models: VehicleModel[]
 ): Promise<Vehicle[]> {
   const vehicleRepo = AppDataSource.getRepository(Vehicle);
   const findModel = (name: string) => models.find((m) => m.name === name)!;
@@ -296,204 +296,340 @@ async function createSampleVehicles(
       model: findModel("Corolla"),
       year: 2023,
       vehicleType: findModel("Corolla").vehicleType,
+      chassisNumber: "8ADZY23T0PM012345",
+      engineNumber: "2ZR-FE-230001",
+      transmission: "CVT",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "DEF456",
       model: findModel("Civic"),
       year: 2022,
       vehicleType: findModel("Civic").vehicleType,
+      chassisNumber: "19XFC2F59NE012456",
+      engineNumber: "L15B7-220002",
+      transmission: "CVT",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "GHI789",
       model: findModel("Sentra"),
       year: 2023,
       vehicleType: findModel("Sentra").vehicleType,
+      chassisNumber: "3N1AB8CV8PY012789",
+      engineNumber: "HR16DE-230003",
+      transmission: "CVT",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "JKL012",
       model: findModel("Elantra"),
       year: 2022,
       vehicleType: findModel("Elantra").vehicleType,
+      chassisNumber: "KMHL14JA7NA012012",
+      engineNumber: "G4FJ-220004",
+      transmission: "Manual",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "MNO345",
       model: findModel("RAV4"),
       year: 2023,
       vehicleType: findModel("RAV4").vehicleType,
+      chassisNumber: "JTMW1RFV6PD012345",
+      engineNumber: "2AR-FE-230005",
+      transmission: "Automática",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "PQR678",
       model: findModel("CR-V"),
       year: 2022,
       vehicleType: findModel("CR-V").vehicleType,
+      chassisNumber: "7FARW2H82NE012678",
+      engineNumber: "L15B7-220006",
+      transmission: "CVT",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "STU901",
       model: findModel("CX-5"),
       year: 2023,
       vehicleType: findModel("CX-5").vehicleType,
+      chassisNumber: "JM3KFBCM1P0012901",
+      engineNumber: "PY-VPS-230007",
+      transmission: "Automática",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "VWX234",
       model: findModel("Outback"),
       year: 2022,
       vehicleType: findModel("Outback").vehicleType,
+      chassisNumber: "4S4BTANC6N3012234",
+      engineNumber: "FB25-220008",
+      transmission: "CVT",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "YZA567",
       model: findModel("Ranger"),
       year: 2023,
       vehicleType: findModel("Ranger").vehicleType,
+      chassisNumber: "1FTER4FH9PLA12567",
+      engineNumber: "PUMA-230009",
+      transmission: "Manual",
+      fuelType: "Diésel",
     },
     {
       licensePlate: "BCD890",
       model: findModel("Colorado"),
       year: 2022,
       vehicleType: findModel("Colorado").vehicleType,
+      chassisNumber: "1GCGTCE39N1012890",
+      engineNumber: "LWN-220010",
+      transmission: "Automática",
+      fuelType: "Diésel",
     },
     {
       licensePlate: "EFG123",
       model: findModel("Transit"),
       year: 2023,
       vehicleType: findModel("Transit").vehicleType,
+      chassisNumber: "1FTBW3XMXPKA13123",
+      engineNumber: "PUMA-230011",
+      transmission: "Manual",
+      fuelType: "Diésel",
     },
     {
       licensePlate: "HIJ456",
       model: findModel("Sprinter"),
       year: 2022,
       vehicleType: findModel("Sprinter").vehicleType,
+      chassisNumber: "WDYPF4CC3N1013456",
+      engineNumber: "OM651-220012",
+      transmission: "Automática",
+      fuelType: "Diésel",
     },
     {
       licensePlate: "KLM789",
       model: findModel("Yaris"),
       year: 2023,
       vehicleType: findModel("Yaris").vehicleType,
+      chassisNumber: "VNKKJ3BX1PA013789",
+      engineNumber: "1NZ-FE-230013",
+      transmission: "Manual",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "NOP012",
       model: findModel("Versa"),
       year: 2022,
       vehicleType: findModel("Versa").vehicleType,
+      chassisNumber: "3N1CN8EV1NL014012",
+      engineNumber: "HR12DE-220014",
+      transmission: "CVT",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "QRS345",
       model: findModel("Model 3"),
       year: 2023,
       vehicleType: findModel("Model 3").vehicleType,
+      chassisNumber: "5YJ3E1EA1PF014345",
+      engineNumber: "7G-230015",
+      transmission: "Automática",
+      fuelType: "Eléctrico",
     },
     {
       licensePlate: "TUV678",
       model: findModel("Leaf"),
       year: 2022,
       vehicleType: findModel("Leaf").vehicleType,
+      chassisNumber: "1N4AZ1CPXNC014678",
+      engineNumber: "EM57-220016",
+      transmission: "Automática",
+      fuelType: "Eléctrico",
     },
     {
       licensePlate: "AAA111",
       model: findModel("Golf"),
       year: 2023,
       vehicleType: findModel("Golf").vehicleType,
+      chassisNumber: "WVWZZZ1KZPW015111",
+      engineNumber: "EA211-230017",
+      transmission: "Manual",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "BBB222",
       model: findModel("Amarok"),
       year: 2024,
       vehicleType: findModel("Amarok").vehicleType,
+      chassisNumber: "WVW2ZZZSRPR015222",
+      engineNumber: "EA288-240018",
+      transmission: "Automática",
+      fuelType: "Diésel",
     },
     {
       licensePlate: "CCC333",
       model: findModel("208"),
       year: 2023,
       vehicleType: findModel("208").vehicleType,
+      chassisNumber: "VF3C9HXK8PS015333",
+      engineNumber: "EB2DT-230019",
+      transmission: "Manual",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "DDD444",
       model: findModel("2008"),
       year: 2024,
       vehicleType: findModel("2008").vehicleType,
+      chassisNumber: "VF3C9BHXKPS015444",
+      engineNumber: "EB2DT-240020",
+      transmission: "Automática",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "EEE555",
       model: findModel("Clio"),
       year: 2022,
       vehicleType: findModel("Clio").vehicleType,
+      chassisNumber: "VF1BRA00264015555",
+      engineNumber: "SCe70-220021",
+      transmission: "Manual",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "FFF666",
       model: findModel("Kwid"),
       year: 2023,
       vehicleType: findModel("Kwid").vehicleType,
+      chassisNumber: "93YBRA0FH4J015666",
+      engineNumber: "SCe70-230022",
+      transmission: "Manual",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "GGG777",
       model: findModel("Cronos"),
       year: 2024,
       vehicleType: findModel("Cronos").vehicleType,
+      chassisNumber: "9BD178000P0015777",
+      engineNumber: "FIRE-240023",
+      transmission: "Manual",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "HHH888",
       model: findModel("Argo"),
       year: 2023,
       vehicleType: findModel("Argo").vehicleType,
+      chassisNumber: "9BD35800XP0015888",
+      engineNumber: "FIRE-230024",
+      transmission: "CVT",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "III999",
       model: findModel("Sportage"),
       year: 2023,
       vehicleType: findModel("Sportage").vehicleType,
+      chassisNumber: "KNDJ23AU1P7015999",
+      engineNumber: "G4NA-230025",
+      transmission: "Automática",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "JJJ000",
       model: findModel("Seltos"),
       year: 2024,
       vehicleType: findModel("Seltos").vehicleType,
+      chassisNumber: "KNDJP3A53P7016000",
+      engineNumber: "G4FJ-240026",
+      transmission: "CVT",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "KKK111",
       model: findModel("Renegade"),
       year: 2023,
       vehicleType: findModel("Renegade").vehicleType,
+      chassisNumber: "ZACCPBBT0PPZ16111",
+      engineNumber: "T270-230027",
+      transmission: "Automática",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "LLL222",
       model: findModel("Compass"),
       year: 2024,
       vehicleType: findModel("Compass").vehicleType,
+      chassisNumber: "1C4NJDEB8QD016222",
+      engineNumber: "T270-240028",
+      transmission: "Automática",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "MMM333",
       model: findModel("X1"),
       year: 2023,
       vehicleType: findModel("X1").vehicleType,
+      chassisNumber: "WBXHT9C06P5B16333",
+      engineNumber: "B48A20A-230029",
+      transmission: "Automática",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "NNN444",
       model: findModel("320i"),
       year: 2024,
       vehicleType: findModel("320i").vehicleType,
+      chassisNumber: "WBA8E1G06QNB16444",
+      engineNumber: "B48A20A-240030",
+      transmission: "Automática",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "OOO555",
       model: findModel("A3"),
       year: 2023,
       vehicleType: findModel("A3").vehicleType,
+      chassisNumber: "WAUZ8Z4F9P1016555",
+      engineNumber: "TFSI-230031",
+      transmission: "Automática",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "PPP666",
       model: findModel("Q5"),
       year: 2024,
       vehicleType: findModel("Q5").vehicleType,
+      chassisNumber: "WA1ENAFY8Q2016666",
+      engineNumber: "TFSI-240032",
+      transmission: "Automática",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "QQQ777",
       model: findModel("C3"),
       year: 2023,
       vehicleType: findModel("C3").vehicleType,
+      chassisNumber: "VF7A1BHX1PS016777",
+      engineNumber: "EB2DT-230033",
+      transmission: "Manual",
+      fuelType: "Nafta",
     },
     {
       licensePlate: "RRR888",
       model: findModel("C4 Cactus"),
       year: 2024,
       vehicleType: findModel("C4 Cactus").vehicleType,
+      chassisNumber: "VF7EHW0H8QS016888",
+      engineNumber: "EB2DT-240034",
+      transmission: "Automática",
+      fuelType: "Nafta",
     },
   ];
 
@@ -634,7 +770,7 @@ async function createMaintenanceData(): Promise<{
 
 async function createAssignments(
   users: User[],
-  vehicles: Vehicle[],
+  vehicles: Vehicle[]
 ): Promise<Assignment[]> {
   const assignmentRepo = AppDataSource.getRepository(Assignment);
 
@@ -733,7 +869,7 @@ async function createAssignments(
 
 async function createAssignedMaintenances(
   vehicles: Vehicle[],
-  maintenances: Maintenance[],
+  maintenances: Maintenance[]
 ): Promise<AssignedMaintenance[]> {
   const assignedMaintenanceRepo =
     AppDataSource.getRepository(AssignedMaintenance);
@@ -843,7 +979,7 @@ async function createAssignedMaintenances(
   ];
 
   const assignedMaintenances = assignedMaintenanceRepo.create(
-    assignedMaintenancesData,
+    assignedMaintenancesData
   );
   const savedAssignedMaintenances =
     await assignedMaintenanceRepo.save(assignedMaintenances);
@@ -854,7 +990,7 @@ async function createAssignedMaintenances(
 
 async function createSampleReservations(
   users: User[],
-  vehicles: Vehicle[],
+  vehicles: Vehicle[]
 ): Promise<Reservation[]> {
   const reservationRepo = AppDataSource.getRepository(Reservation);
 
@@ -892,7 +1028,7 @@ async function createSampleReservations(
 
 async function createVehicleResponsibles(
   users: User[],
-  vehicles: Vehicle[],
+  vehicles: Vehicle[]
 ): Promise<VehicleResponsible[]> {
   const responsibleRepo = AppDataSource.getRepository(VehicleResponsible);
 
@@ -943,7 +1079,7 @@ async function createVehicleResponsibles(
 
 async function createVehicleKilometers(
   users: User[],
-  vehicles: Vehicle[],
+  vehicles: Vehicle[]
 ): Promise<VehicleKilometers[]> {
   const kilometerRepo = AppDataSource.getRepository(VehicleKilometers);
 
@@ -1004,7 +1140,7 @@ async function createVehicleKilometers(
 
 async function createMaintenanceRecords(
   users: User[],
-  assignedMaintenances: AssignedMaintenance[],
+  assignedMaintenances: AssignedMaintenance[]
 ): Promise<MaintenanceRecord[]> {
   const recordRepo = AppDataSource.getRepository(MaintenanceRecord);
 
@@ -1015,17 +1151,17 @@ async function createMaintenanceRecords(
   const oilChangeABC = assignedMaintenances.find(
     (am) =>
       am.vehicle.licensePlate === "ABC123" &&
-      am.maintenance.name === "Oil Change",
+      am.maintenance.name === "Oil Change"
   );
   const oilChangeDEF = assignedMaintenances.find(
     (am) =>
       am.vehicle.licensePlate === "DEF456" &&
-      am.maintenance.name === "Oil Change",
+      am.maintenance.name === "Oil Change"
   );
   const tireRotationABC = assignedMaintenances.find(
     (am) =>
       am.vehicle.licensePlate === "ABC123" &&
-      am.maintenance.name === "Tire Rotation",
+      am.maintenance.name === "Tire Rotation"
   );
 
   const recordsData = [];
@@ -1089,14 +1225,14 @@ export async function loadSampleData(): Promise<SampleDataStats> {
   const assignments = await createAssignments(users, vehicles);
   const assignedMaintenances = await createAssignedMaintenances(
     vehicles,
-    maintenances,
+    maintenances
   );
   const reservations = await createSampleReservations(users, vehicles);
   const vehicleResponsibles = await createVehicleResponsibles(users, vehicles);
   const vehicleKilometers = await createVehicleKilometers(users, vehicles);
   const maintenanceRecords = await createMaintenanceRecords(
     users,
-    assignedMaintenances,
+    assignedMaintenances
   );
 
   const stats: SampleDataStats = {
