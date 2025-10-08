@@ -1,72 +1,113 @@
-import { DataSource, Repository } from "typeorm";
-import { UserRole as UserRoleEntity } from "../entities/authorization/UserRole";
-import { UserRoleEnum } from "../entities/authorization/UserRole";
+import { Repository, DataSource } from "typeorm";
+import { UserRole } from "../entities/authorization/UserRole";
 
 export interface UserRoleSearchParams {
   userId?: string;
-  role?: UserRoleEnum;
+  role?: "user" | "admin";
+  activeOnly?: boolean;
 }
 
 export class UserRoleRepository {
-  private readonly repo: Repository<UserRoleEntity>;
+  private readonly repo: Repository<UserRole>;
 
   constructor(dataSource: DataSource) {
-    this.repo = dataSource.getRepository(UserRoleEntity);
+    this.repo = dataSource.getRepository(UserRole);
   }
 
   async findAndCount(options?: {
     limit?: number;
     offset?: number;
     searchParams?: UserRoleSearchParams;
-  }): Promise<[UserRoleEntity[], number]> {
-    const { searchParams, limit, offset } = options || {};
+  }): Promise<[UserRole[], number]> {
     const qb = this.repo
       .createQueryBuilder("ur")
-      .leftJoinAndSelect("ur.user", "u")
-      .orderBy("ur.startTime", "DESC");
+      .leftJoinAndSelect("ur.user", "user");
 
-    if (searchParams) {
-      if (searchParams.userId) {
-        qb.andWhere({ "u.id": searchParams.userId });
+    if (options?.searchParams) {
+      const { userId, role, activeOnly } = options.searchParams;
+
+      if (userId) {
+        qb.andWhere("ur.userId = :userId", { userId });
       }
-      if (searchParams.role) {
-        qb.andWhere({ "ur.role": searchParams.role });
+
+      if (role) {
+        qb.andWhere("ur.role = :role", { role });
+      }
+
+      if (activeOnly) {
+        qb.andWhere("ur.startTime <= :now", { now: new Date() }).andWhere(
+          "(ur.endTime IS NULL OR ur.endTime > :now)",
+          { now: new Date() },
+        );
       }
     }
 
-    if (typeof limit === "number") qb.take(limit);
-    if (typeof offset === "number") qb.skip(offset);
-    return qb.getManyAndCount();
+    if (options?.limit) {
+      qb.take(options.limit);
+    }
+
+    if (options?.offset) {
+      qb.skip(options.offset);
+    }
+
+    qb.orderBy("ur.startTime", "DESC");
+
+    return await qb.getManyAndCount();
   }
 
-  findOne(id: string) {
-    return this.repo.findOne({
+  async findOne(id: string): Promise<UserRole | null> {
+    return await this.repo.findOne({
       where: { id },
-      relations: { user: true },
+      relations: ["user"],
     });
   }
 
-  findCurrentRoleForUser(userId: string): Promise<UserRoleEntity | null> {
-    const now = new Date();
-    return this.repo
-      .createQueryBuilder("ur")
-      .leftJoinAndSelect("ur.user", "u")
-      .where("u.id = :userId", { userId })
-      .andWhere("ur.startTime <= :now", { now })
-      .andWhere("(ur.endTime IS NULL OR ur.endTime > :now)", { now })
-      .orderBy("ur.startTime", "DESC")
-      .getOne();
+  async findByUserId(userId: string): Promise<UserRole[]> {
+    return await this.repo.find({
+      where: { userId },
+      relations: ["user"],
+      order: { startTime: "DESC" },
+    });
   }
 
-  create(data: Partial<UserRoleEntity>) {
+  async findActiveByUserId(userId: string): Promise<UserRole | null> {
+    const now = new Date();
+    const roles = await this.repo.find({
+      where: { userId },
+      relations: ["user"],
+      order: { startTime: "DESC" },
+    });
+
+    return (
+      roles.find(
+        (role) =>
+          role.startTime <= now && (!role.endTime || role.endTime > now),
+      ) || null
+    );
+  }
+
+  create(data: Partial<UserRole>): UserRole {
     return this.repo.create(data);
   }
 
-  save(entity: UserRoleEntity) {
-    return this.repo.save(entity);
+  async save(role: UserRole): Promise<UserRole> {
+    return await this.repo.save(role);
   }
 
-  delete(id: string) {
-    return this.repo.delete(id);
+  async saveMany(roles: UserRole[]): Promise<UserRole[]> {
+    return await this.repo.save(roles);
+  }
+
+  async delete(id: string): Promise<{ affected?: number }> {
+    const result = await this.repo.delete(id);
+    return { affected: result.affected || 0 };
+  }
+
+  async endRole(id: string, endTime?: Date): Promise<UserRole | null> {
+    const role = await this.findOne(id);
+    if (!role) return null;
+
+    role.endTime = endTime || new Date();
+    return await this.save(role);
   }
 }

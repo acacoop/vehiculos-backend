@@ -19,8 +19,8 @@ export class VehicleACL {
   id!: string;
 
   @Column({
-    enum: ACLType,
-    type: "enum",
+    type: "varchar",
+    length: 20,
     name: "acl_type",
   })
   aclType!: ACLType;
@@ -29,8 +29,8 @@ export class VehicleACL {
   entityId!: string;
 
   @Column({
-    enum: PermissionType,
-    type: "enum",
+    type: "varchar",
+    length: 20,
     name: "permission",
     default: PermissionType.READ,
   })

@@ -1,4 +1,4 @@
-import { Entity, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Entity, ManyToMany, PrimaryGeneratedColumn, JoinTable } from "typeorm";
 import { Vehicle } from "../Vehicle";
 
 @Entity({ name: "vehicle_selections" })
@@ -7,5 +7,10 @@ export class VehicleSelection {
   id!: string;
 
   @ManyToMany(() => Vehicle)
+  @JoinTable({
+    name: "vehicle_selections_vehicles",
+    joinColumn: { name: "vehicle_selection_id", referencedColumnName: "id" },
+    inverseJoinColumn: { name: "vehicle_id", referencedColumnName: "id" },
+  })
   vehicles!: Vehicle[];
 }

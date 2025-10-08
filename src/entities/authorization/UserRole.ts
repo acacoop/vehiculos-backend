@@ -6,16 +6,7 @@ import {
   JoinColumn,
 } from "typeorm";
 import { User } from "../User";
-
-export enum UserRoleEnum {
-  USER = "user",
-  ADMIN = "admin",
-}
-
-export const USER_ROLES_WEIGHT: Record<UserRoleEnum, number> = {
-  [UserRoleEnum.USER]: 1,
-  [UserRoleEnum.ADMIN]: 2,
-};
+import { UserRoleEnum } from "./UserRoleEnum";
 
 @Entity({ name: "user_roles" })
 export class UserRole {
@@ -26,7 +17,7 @@ export class UserRole {
   @JoinColumn({ name: "user_id" })
   user!: User;
 
-  @Column({ type: "enum", enum: UserRoleEnum, default: UserRoleEnum.USER })
+  @Column({ type: "varchar", length: 20, default: UserRoleEnum.USER })
   role!: UserRoleEnum;
 
   @Column({ name: "start_time", type: "datetime" })

@@ -54,8 +54,21 @@ paths:
   /me:
     get:
       summary: Get current authenticated user
-      description: Returns the local user mapped to the bearer token.
+      description: |
+        Returns the local user mapped to the bearer token.
+
+        Dev testing:
+        When `AUTH_BYPASS=true` on the server, you can impersonate a user without a Bearer token by sending the optional headers below.
+        - `x-dev-impersonate`: email or entraId of a user (seeded by sample data)
+        - `x-dev-roles`: comma-separated roles to attach to the session (e.g., `Admin,User`)
       tags: [Users]
+      security:
+        - BearerAuth: []
+        - DevImpersonateKey: []
+        - DevRolesKey: []
+      parameters:
+        - $ref: '#/components/parameters/DevImpersonateHeader'
+        - $ref: '#/components/parameters/DevRolesHeader'
       responses:
         "200":
           description: Current user
@@ -302,6 +315,8 @@ paths:
       description: |
         Get vehicles with optional search filters and pagination.
 
+        Dev testing: When `AUTH_BYPASS=true`, you may add `x-dev-impersonate` and `x-dev-roles` headers (see components parameters) to simulate users/roles.
+
         **Search Parameters:**
         - `licensePlate`: Exact match by license plate
         - `brandId`: Exact match by brand UUID
@@ -320,7 +335,13 @@ paths:
         - `/vehicles?year=2020&page=1&limit=5`
         - `/vehicles?brand=Honda&year=2021`
       tags: [Vehicles]
+      security:
+        - BearerAuth: []
+        - DevImpersonateKey: []
+        - DevRolesKey: []
       parameters:
+        - $ref: '#/components/parameters/DevImpersonateHeader'
+        - $ref: '#/components/parameters/DevRolesHeader'
         - name: page
           in: query
           schema:
@@ -2990,6 +3011,16 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    DevImpersonateKey:
+      type: apiKey
+      in: header
+      name: x-dev-impersonate
+      description: Dev-only. Email or entraId to impersonate. Requires server AUTH_BYPASS=true.
+    DevRolesKey:
+      type: apiKey
+      in: header
+      name: x-dev-roles
+      description: Dev-only. Comma-separated roles. Requires server AUTH_BYPASS=true.
   parameters:
     SwaggerBypassHeader:
       name: x-swagger-bypass
@@ -3000,6 +3031,22 @@ components:
         type: string
         enum: ["true"]
         default: "true"
+    DevImpersonateHeader:
+      name: x-dev-impersonate
+      in: header
+      required: false
+      description: Dev-only. Email or entraId of the user to impersonate (requires server AUTH_BYPASS=true).
+      schema:
+        type: string
+        example: user@example.com
+    DevRolesHeader:
+      name: x-dev-roles
+      in: header
+      required: false
+      description: Dev-only. Comma-separated roles to attach to the session (requires server AUTH_BYPASS=true).
+      schema:
+        type: string
+        example: Admin,User
 
 # Global security: require Bearer JWT for all endpoints unless a path/operation overrides with security: []
 security:

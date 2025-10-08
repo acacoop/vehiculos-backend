@@ -50,7 +50,7 @@ dev:
 sample-data:
 	@read -p "Load sample data (destructive)? (y/N): " c; \
 	[ "$$c" = "y" -o "$$c" = "Y" ] || { echo "Cancelled"; exit 0; }; \
-	npm ci; \
+# 	npm ci; \
 	$(MAKE) wait-db; \
 	DB_HOST=$(HOST_DB_HOST) npm run sample-data && echo "Sample data loaded"
 

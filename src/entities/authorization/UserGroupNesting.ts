@@ -16,10 +16,6 @@ export class UserGroupNesting {
   @JoinColumn({ name: "parent_group_id" })
   parentGroup!: UserGroup;
 
-  @ManyToOne(() => UserGroup, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "child_group_id" })
-  childGroup!: UserGroup;
-
   @Column({ name: "start_time", type: "datetime" })
   startTime!: Date;
 

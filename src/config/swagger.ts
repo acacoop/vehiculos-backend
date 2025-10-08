@@ -18,6 +18,7 @@ const swaggerUiOptions = {
     docExpansion: "list",
     filter: false,
     tryItOutEnabled: true,
+    persistAuthorization: true,
   },
 };
 

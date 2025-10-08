@@ -16,9 +16,9 @@ export class CecoRange {
   @JoinColumn({ name: "vehicle_selection_id" })
   vehicleSelection!: VehicleSelection;
 
-  @Column({ name: "start_ceco", length: 8 })
+  @Column({ name: "start_ceco", type: "int" })
   startCeco!: number;
 
-  @Column({ name: "end_ceco", length: 8 })
+  @Column({ name: "end_ceco", type: "int" })
   endCeco!: number;
 }

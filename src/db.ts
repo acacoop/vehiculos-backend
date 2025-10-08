@@ -24,6 +24,14 @@ import { MaintenanceRecord } from "./entities/MaintenanceRecord";
 import { VehicleResponsible } from "./entities/VehicleResponsible";
 import { VehicleBrand } from "./entities/VehicleBrand";
 import { VehicleModel } from "./entities/VehicleModel";
+// Authorization entities
+import { UserGroup } from "./entities/authorization/UserGroup";
+import { UserGroupMembership } from "./entities/authorization/UserGroupMembership";
+import { UserGroupNesting } from "./entities/authorization/UserGroupNesting";
+import { VehicleSelection } from "./entities/authorization/VehicleSelection";
+import { CecoRange } from "./entities/authorization/CecoRange";
+import { VehicleACL } from "./entities/authorization/VehicleACL";
+import { UserRole } from "./entities/authorization/UserRole";
 
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
 
@@ -59,6 +67,14 @@ const createDataSourceConfig = () => {
     AssignedMaintenance,
     MaintenanceRecord,
     VehicleResponsible,
+    // Authorization entities
+    UserGroup,
+    UserGroupMembership,
+    UserGroupNesting,
+    VehicleSelection,
+    CecoRange,
+    VehicleACL,
+    UserRole,
   ];
 
   const baseConfig = {

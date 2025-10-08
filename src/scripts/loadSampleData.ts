@@ -1,7 +1,7 @@
 /*
   Script to load sample data using TypeORM entities instead of raw SQL.
   This ensures compatibility with entity validation and avoids conflicts with sync scripts.
-  
+
   Usage: npm run sample-data
   Or: ts-node-dev --env-file=.env src/scripts/loadSampleData.ts
 */
@@ -19,6 +19,16 @@ import { MaintenanceRecord } from "../entities/MaintenanceRecord";
 import { Reservation } from "../entities/Reservation";
 import { VehicleResponsible } from "../entities/VehicleResponsible";
 import { VehicleKilometers } from "../entities/VehicleKilometers";
+// Authorization entities
+import { UserGroup } from "../entities/authorization/UserGroup";
+import { UserGroupMembership } from "../entities/authorization/UserGroupMembership";
+import { UserGroupNesting } from "../entities/authorization/UserGroupNesting";
+import { VehicleSelection } from "../entities/authorization/VehicleSelection";
+import { CecoRange } from "../entities/authorization/CecoRange";
+import { VehicleACL, ACLType } from "../entities/authorization/VehicleACL";
+import { PermissionType } from "../entities/authorization/PermissionType";
+import { UserRole } from "../entities/authorization/UserRole";
+import { UserRoleEnum } from "../entities/authorization/UserRoleEnum";
 
 type SampleDataStats = {
   users: number;
@@ -31,10 +41,17 @@ type SampleDataStats = {
   reservations: number;
   vehicleResponsibles: number;
   vehicleKilometers: number;
+  // Authorization sample stats
+  userGroups: number;
+  userGroupMemberships: number;
+  userGroupNestings: number;
+  vehicleSelections: number;
+  cecoRanges: number;
+  vehicleACLs: number;
+  userRoles: number;
 };
 
 async function clearSampleData(): Promise<void> {
-  // Clear in reverse dependency order to avoid foreign key constraints
   // Use DELETE with 1=1 condition to delete all records but respect foreign keys
   await AppDataSource.query("DELETE FROM maintenance_records WHERE 1=1");
   await AppDataSource.query("DELETE FROM vehicle_kilometers WHERE 1=1");
@@ -47,6 +64,15 @@ async function clearSampleData(): Promise<void> {
   await AppDataSource.query("DELETE FROM vehicles WHERE 1=1");
   await AppDataSource.query("DELETE FROM vehicle_models WHERE 1=1");
   await AppDataSource.query("DELETE FROM vehicle_brands WHERE 1=1");
+
+  // Authorization data (order matters for FKs)
+  await AppDataSource.query("DELETE FROM vehicle_acl WHERE 1=1");
+  await AppDataSource.query("DELETE FROM user_group_nestings WHERE 1=1");
+  await AppDataSource.query("DELETE FROM user_group_memberships WHERE 1=1");
+  await AppDataSource.query("DELETE FROM user_roles WHERE 1=1");
+  await AppDataSource.query("DELETE FROM ceco_ranges WHERE 1=1");
+  await AppDataSource.query("DELETE FROM vehicle_selections WHERE 1=1");
+  await AppDataSource.query("DELETE FROM user_groups WHERE 1=1");
 
   // Only delete sample users (those with SAMPLE_ prefix in entraId or @sample.test domain)
   // This preserves all real users from Entra sync
@@ -724,30 +750,35 @@ async function createVehicleResponsibles(
     {
       vehicle: findVehicle("ABC123"),
       user: findUser("carlos.rodriguez@sample.test"),
+      ceco: "12003456",
       startDate: "2024-01-01",
       endDate: null,
     },
     {
       vehicle: findVehicle("MNO345"),
       user: findUser("maria.gonzalez@sample.test"),
+      ceco: "17001234",
       startDate: "2024-02-01",
       endDate: null,
     },
     {
       vehicle: findVehicle("DEF456"),
       user: findUser("juan.perez@sample.test"),
+      ceco: "23000000",
       startDate: "2024-03-01",
       endDate: null,
     },
     {
       vehicle: findVehicle("YZA567"),
       user: findUser("andres.morales@sample.test"),
+      ceco: "18000123",
       startDate: "2024-06-01",
       endDate: null,
     },
     {
       vehicle: findVehicle("EFG123"),
       user: findUser("miguel.vargas@sample.test"),
+      ceco: "15000000",
       startDate: "2024-07-01",
       endDate: null,
     },
@@ -757,6 +788,122 @@ async function createVehicleResponsibles(
   const savedResponsibles = await responsibleRepo.save(responsibles);
 
   return savedResponsibles;
+}
+
+// --- Authorization sample data ---
+async function createAuthorizationData(users: User[], vehicles: Vehicle[]) {
+  const userGroupRepo = AppDataSource.getRepository(UserGroup);
+  const membershipRepo = AppDataSource.getRepository(UserGroupMembership);
+  const nestingRepo = AppDataSource.getRepository(UserGroupNesting);
+  const selectionRepo = AppDataSource.getRepository(VehicleSelection);
+  const cecoRangeRepo = AppDataSource.getRepository(CecoRange);
+  const vehicleACLRepo = AppDataSource.getRepository(VehicleACL);
+  const userRoleRepo = AppDataSource.getRepository(UserRole);
+
+  // Helper finders
+  const findUser = (email: string) => users.find((u) => u.email === email)!;
+  const findVehicle = (lp: string) =>
+    vehicles.find((v) => v.licensePlate === lp)!;
+
+  // Create groups
+  const [opsGroup, northGroup, maintGroup] = await userGroupRepo.save(
+    userGroupRepo.create([{}, {}, {}]),
+  );
+
+  // Group memberships
+  const savedMemberships = await membershipRepo.save(
+    membershipRepo.create([
+      {
+        user: findUser("diego.garcia@sample.test"),
+        userGroup: opsGroup,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+      },
+      {
+        user: findUser("valentina.silva@sample.test"),
+        userGroup: northGroup,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+      },
+      {
+        user: findUser("lucia.castro@sample.test"),
+        userGroup: maintGroup,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+      },
+    ]),
+  );
+
+  // Nestings (north is child of ops)
+  const savedNestings = await nestingRepo.save(
+    nestingRepo.create([
+      {
+        parentGroup: opsGroup,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+      },
+    ]),
+  );
+
+  // Vehicle selections
+  const selectionDirect = selectionRepo.create({
+    vehicles: [findVehicle("ABC123"), findVehicle("DEF456")],
+  });
+  const selectionCeco = selectionRepo.create({ vehicles: [] });
+  const [savedSelectionDirect, savedSelectionCeco] = await selectionRepo.save([
+    selectionDirect,
+    selectionCeco,
+  ]);
+
+  // CECO ranges for selectionCeco (10,000,000 - 19,999,999)
+  const savedCecoRanges = await cecoRangeRepo.save(
+    cecoRangeRepo.create([
+      {
+        vehicleSelection: savedSelectionCeco,
+        startCeco: 10000000,
+        endCeco: 19999999,
+      },
+    ]),
+  );
+
+  // User roles (make Carlos admin)
+  const savedRoles = await userRoleRepo.save(
+    userRoleRepo.create([
+      {
+        user: findUser("carlos.rodriguez@sample.test"),
+        role: UserRoleEnum.ADMIN,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+      },
+    ]),
+  );
+
+  // Vehicle ACLs
+  const savedACLs = await vehicleACLRepo.save(
+    vehicleACLRepo.create([
+      // Direct user ACL: Miguel DRIVER on selectionDirect
+      {
+        aclType: ACLType.USER,
+        entityId: findUser("miguel.vargas@sample.test").id,
+        permission: PermissionType.DRIVER,
+        vehicleSelection: savedSelectionDirect,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+      },
+      // Group ACL: Ops MAINTAINER on CECO selection
+      {
+        aclType: ACLType.USER_GROUP,
+        entityId: opsGroup.id,
+        permission: PermissionType.MAINTAINER,
+        vehicleSelection: savedSelectionCeco,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+      },
+    ]),
+  );
+
+  return {
+    userGroups: 3,
+    userGroupMemberships: savedMemberships.length,
+    userGroupNestings: savedNestings.length,
+    vehicleSelections: 2,
+    cecoRanges: savedCecoRanges.length,
+    vehicleACLs: savedACLs.length,
+    userRoles: savedRoles.length,
+  };
 }
 
 async function createVehicleKilometers(
@@ -912,6 +1059,7 @@ export async function loadSampleData(): Promise<SampleDataStats> {
   const reservations = await createSampleReservations(users, vehicles);
   const vehicleResponsibles = await createVehicleResponsibles(users, vehicles);
   const vehicleKilometers = await createVehicleKilometers(users, vehicles);
+  const authStats = await createAuthorizationData(users, vehicles);
   const maintenanceRecords = await createMaintenanceRecords(
     users,
     assignedMaintenances,
@@ -928,6 +1076,13 @@ export async function loadSampleData(): Promise<SampleDataStats> {
     reservations: reservations.length,
     vehicleResponsibles: vehicleResponsibles.length,
     vehicleKilometers: vehicleKilometers.length,
+    userGroups: authStats.userGroups,
+    userGroupMemberships: authStats.userGroupMemberships,
+    userGroupNestings: authStats.userGroupNestings,
+    vehicleSelections: authStats.vehicleSelections,
+    cecoRanges: authStats.cecoRanges,
+    vehicleACLs: authStats.vehicleACLs,
+    userRoles: authStats.userRoles,
   };
 
   console.log(`   Brands: ${brands.length}`);
@@ -944,6 +1099,13 @@ export async function loadSampleData(): Promise<SampleDataStats> {
   console.log(`   Reservations: ${stats.reservations}`);
   console.log(`   Vehicle Responsibles: ${stats.vehicleResponsibles}`);
   console.log(`   Vehicle Kilometers: ${stats.vehicleKilometers}`);
+  console.log(`   User Groups: ${stats.userGroups}`);
+  console.log(`   Group Memberships: ${stats.userGroupMemberships}`);
+  console.log(`   Group Nestings: ${stats.userGroupNestings}`);
+  console.log(`   Vehicle Selections: ${stats.vehicleSelections}`);
+  console.log(`   CECO Ranges: ${stats.cecoRanges}`);
+  console.log(`   Vehicle ACLs: ${stats.vehicleACLs}`);
+  console.log(`   User Roles: ${stats.userRoles}`);
 
   return stats;
 }
