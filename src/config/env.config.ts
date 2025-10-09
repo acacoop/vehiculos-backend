@@ -19,7 +19,6 @@ const envSchema = z.object({
     .transform((v: string) => v === "true")
     .default("false"),
   AUTH_BYPASS_EMAIL: z.string().optional(), // default impersonated user email
-  AUTH_BYPASS_ROLES: z.string().optional(), // comma-separated roles claim for requireRole
   // Azure AAD connection string (for production)
   SQL_AAD_CONNECTION_STRING: z.string().optional(),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60 * 1000),
@@ -53,7 +52,6 @@ export const {
   DB_LOGGING,
   AUTH_BYPASS,
   AUTH_BYPASS_EMAIL,
-  AUTH_BYPASS_ROLES,
   SQL_AAD_CONNECTION_STRING,
   RATE_LIMIT_WINDOW_MS,
   RATE_LIMIT_MAX,

@@ -58,17 +58,11 @@ paths:
         Returns the local user mapped to the bearer token.
 
         Dev testing:
-        When `AUTH_BYPASS=true` on the server, you can impersonate a user without a Bearer token by sending the optional headers below.
+        When `AUTH_BYPASS=true` on the server, you can impersonate a user without a Bearer token by sending the optional header below.
         - `x-dev-impersonate`: email or entraId of a user (seeded by sample data)
-        - `x-dev-roles`: comma-separated roles to attach to the session (e.g., `Admin,User`)
       tags: [Users]
-      security:
-        - BearerAuth: []
-        - DevImpersonateKey: []
-        - DevRolesKey: []
       parameters:
-        - $ref: '#/components/parameters/DevImpersonateHeader'
-        - $ref: '#/components/parameters/DevRolesHeader'
+        - $ref: "#/components/parameters/DevImpersonateHeader"
       responses:
         "200":
           description: Current user
@@ -315,7 +309,7 @@ paths:
       description: |
         Get vehicles with optional search filters and pagination.
 
-        Dev testing: When `AUTH_BYPASS=true`, you may add `x-dev-impersonate` and `x-dev-roles` headers (see components parameters) to simulate users/roles.
+        Dev testing: When `AUTH_BYPASS=true`, you may add `x-dev-impersonate` header (see components parameters) to simulate users.
 
         **Search Parameters:**
         - `licensePlate`: Exact match by license plate
@@ -335,13 +329,7 @@ paths:
         - `/vehicles?year=2020&page=1&limit=5`
         - `/vehicles?brand=Honda&year=2021`
       tags: [Vehicles]
-      security:
-        - BearerAuth: []
-        - DevImpersonateKey: []
-        - DevRolesKey: []
       parameters:
-        - $ref: '#/components/parameters/DevImpersonateHeader'
-        - $ref: '#/components/parameters/DevRolesHeader'
         - name: page
           in: query
           schema:
@@ -361,33 +349,28 @@ paths:
           schema:
             type: string
             pattern: '^[A-Z]{2,3}-?\d{3,4}[A-Z]{0,2}$'
-            example: "AAA-123"
         - name: brandId
           in: query
           description: Filter by exact brand UUID
           schema:
             type: string
             format: uuid
-            example: "11111111-2222-3333-4444-555555555555"
         - name: modelId
           in: query
           description: Filter by exact model UUID
           schema:
             type: string
             format: uuid
-            example: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
         - name: brand
           in: query
           description: Filter by brand name (partial match, case-insensitive)
           schema:
             type: string
-            example: "Toyota"
         - name: model
           in: query
           description: Filter by model name (partial match, case-insensitive)
           schema:
             type: string
-            example: "Corolla"
         - name: year
           in: query
           description: Filter by exact year
@@ -395,7 +378,6 @@ paths:
             type: integer
             minimum: 1900
             maximum: 2030
-            example: 2020
       responses:
         "200":
           description: List of vehicles
@@ -3016,11 +2998,6 @@ components:
       in: header
       name: x-dev-impersonate
       description: Dev-only. Email or entraId to impersonate. Requires server AUTH_BYPASS=true.
-    DevRolesKey:
-      type: apiKey
-      in: header
-      name: x-dev-roles
-      description: Dev-only. Comma-separated roles. Requires server AUTH_BYPASS=true.
   parameters:
     SwaggerBypassHeader:
       name: x-swagger-bypass
@@ -3039,15 +3016,8 @@ components:
       schema:
         type: string
         example: user@example.com
-    DevRolesHeader:
-      name: x-dev-roles
-      in: header
-      required: false
-      description: Dev-only. Comma-separated roles to attach to the session (requires server AUTH_BYPASS=true).
-      schema:
-        type: string
-        example: Admin,User
 
 # Global security: require Bearer JWT for all endpoints unless a path/operation overrides with security: []
 security:
   - BearerAuth: []
+  - DevImpersonateKey: []

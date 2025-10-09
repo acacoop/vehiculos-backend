@@ -27,7 +27,7 @@ export class UserRoleRepository {
       const { userId, role, activeOnly } = options.searchParams;
 
       if (userId) {
-        qb.andWhere("ur.userId = :userId", { userId });
+        qb.andWhere("user.id = :userId", { userId });
       }
 
       if (role) {
@@ -64,7 +64,7 @@ export class UserRoleRepository {
 
   async findByUserId(userId: string): Promise<UserRole[]> {
     return await this.repo.find({
-      where: { userId },
+      where: { user: { id: userId } },
       relations: ["user"],
       order: { startTime: "DESC" },
     });
@@ -73,7 +73,7 @@ export class UserRoleRepository {
   async findActiveByUserId(userId: string): Promise<UserRole | null> {
     const now = new Date();
     const roles = await this.repo.find({
-      where: { userId },
+      where: { user: { id: userId } },
       relations: ["user"],
       order: { startTime: "DESC" },
     });
@@ -84,6 +84,21 @@ export class UserRoleRepository {
           role.startTime <= now && (!role.endTime || role.endTime > now),
       ) || null
     );
+  }
+
+  async hasActiveRole(
+    userId: string,
+    role: "user" | "admin",
+  ): Promise<boolean> {
+    const now = new Date();
+    const count = await this.repo
+      .createQueryBuilder("ur")
+      .where("ur.user_id = :userId", { userId })
+      .andWhere("ur.role = :role", { role })
+      .andWhere("ur.start_time <= :now", { now })
+      .andWhere("(ur.end_time IS NULL OR ur.end_time >= :now)", { now })
+      .getCount();
+    return count > 0;
   }
 
   create(data: Partial<UserRole>): UserRole {

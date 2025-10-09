@@ -22,7 +22,6 @@ export class UserGroupNestingRepository {
     const qb = this.repo
       .createQueryBuilder("ugn")
       .leftJoinAndSelect("ugn.parentGroup", "pg")
-      .leftJoinAndSelect("ugn.childGroup", "cg")
       .orderBy("ugn.startTime", "DESC");
 
     if (searchParams) {
@@ -30,7 +29,7 @@ export class UserGroupNestingRepository {
         qb.andWhere({ "pg.id": searchParams.parentGroupId });
       }
       if (searchParams.childGroupId) {
-        qb.andWhere({ "cg.id": searchParams.childGroupId });
+        qb.andWhere({ "ugn.id": searchParams.childGroupId }); // assuming childGroupId is the nesting id
       }
     }
 
@@ -42,7 +41,7 @@ export class UserGroupNestingRepository {
   findOne(id: string) {
     return this.repo.findOne({
       where: { id },
-      relations: { parentGroup: true, childGroup: true },
+      relations: { parentGroup: true },
     });
   }
 

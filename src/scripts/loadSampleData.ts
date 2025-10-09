@@ -22,7 +22,7 @@ import { VehicleKilometers } from "../entities/VehicleKilometers";
 // Authorization entities
 import { UserGroup } from "../entities/authorization/UserGroup";
 import { UserGroupMembership } from "../entities/authorization/UserGroupMembership";
-import { UserGroupNesting } from "../entities/authorization/UserGroupNesting";
+// import { UserGroupNesting } from "../entities/authorization/UserGroupNesting";
 import { VehicleSelection } from "../entities/authorization/VehicleSelection";
 import { CecoRange } from "../entities/authorization/CecoRange";
 import { VehicleACL, ACLType } from "../entities/authorization/VehicleACL";
@@ -41,7 +41,6 @@ type SampleDataStats = {
   reservations: number;
   vehicleResponsibles: number;
   vehicleKilometers: number;
-  // Authorization sample stats
   userGroups: number;
   userGroupMemberships: number;
   userGroupNestings: number;
@@ -488,52 +487,58 @@ async function createAssignments(
     vehicles.find((v) => v.licensePlate === licensePlate)!;
 
   const assignmentsData = [
-    // Management gets newer vehicles (long-term assignments)
+    // Current assignments (drivers)
     {
-      user: findUser("carlos.rodriguez@sample.test"),
+      user: findUser("ana.martinez@sample.test"),
       vehicle: findVehicle("ABC123"),
       startDate: "2024-01-01",
       endDate: null,
     },
     {
-      user: findUser("maria.gonzalez@sample.test"),
+      user: findUser("diego.garcia@sample.test"),
+      vehicle: findVehicle("DEF456"),
+      startDate: "2024-03-01",
+      endDate: null,
+    },
+    {
+      user: findUser("valentina.silva@sample.test"),
       vehicle: findVehicle("MNO345"),
       startDate: "2024-02-01",
       endDate: null,
     },
-    {
-      user: findUser("ana.martinez@sample.test"),
-      vehicle: findVehicle("QRS345"),
-      startDate: "2024-01-15",
-      endDate: null,
-    },
 
-    // Operations team gets versatile vehicles
+    // Old assignments (should not grant permission now)
     {
       user: findUser("juan.perez@sample.test"),
-      vehicle: findVehicle("DEF456"),
-      startDate: "2024-03-01",
-      endDate: "2025-06-30",
+      vehicle: findVehicle("ABC123"),
+      startDate: "2023-01-01",
+      endDate: "2023-12-31", // ended
     },
     {
       user: findUser("sofia.hernandez@sample.test"),
-      vehicle: findVehicle("STU901"),
-      startDate: "2024-04-01",
-      endDate: "2025-08-31",
-    },
-    {
-      user: findUser("diego.garcia@sample.test"),
-      vehicle: findVehicle("VWX234"),
-      startDate: "2024-05-01",
-      endDate: "2025-05-31",
+      vehicle: findVehicle("MNO345"),
+      startDate: "2023-06-01",
+      endDate: "2024-05-31", // ended
     },
 
-    // Field staff gets pickup trucks and vans
+    // Other assignments
+    {
+      user: findUser("carlos.rodriguez@sample.test"),
+      vehicle: findVehicle("QRS345"),
+      startDate: "2024-01-01",
+      endDate: null,
+    },
+    {
+      user: findUser("maria.gonzalez@sample.test"),
+      vehicle: findVehicle("STU901"),
+      startDate: "2024-02-01",
+      endDate: null,
+    },
     {
       user: findUser("andres.morales@sample.test"),
       vehicle: findVehicle("YZA567"),
       startDate: "2024-06-01",
-      endDate: "2025-03-31",
+      endDate: null,
     },
     {
       user: findUser("miguel.vargas@sample.test"),
@@ -545,21 +550,19 @@ async function createAssignments(
       user: findUser("isabella.ruiz@sample.test"),
       vehicle: findVehicle("HIJ456"),
       startDate: "2024-08-01",
-      endDate: "2025-07-31",
+      endDate: null,
     },
-
-    // Maintenance team gets compact vehicles
     {
       user: findUser("roberto.jimenez@sample.test"),
       vehicle: findVehicle("KLM789"),
       startDate: "2024-09-01",
-      endDate: "2025-02-28",
+      endDate: null,
     },
     {
       user: findUser("lucia.castro@sample.test"),
       vehicle: findVehicle("NOP012"),
       startDate: "2024-10-01",
-      endDate: "2025-04-30",
+      endDate: null,
     },
     {
       user: findUser("fernando.romero@sample.test"),
@@ -746,28 +749,39 @@ async function createVehicleResponsibles(
     vehicles.find((v) => v.licensePlate === licensePlate)!;
 
   const responsiblesData = [
-    // Current responsibles
+    // Current responsibles (positive cases)
     {
-      vehicle: findVehicle("ABC123"),
-      user: findUser("carlos.rodriguez@sample.test"),
-      ceco: "12003456",
+      vehicle: findVehicle("DEF456"), // V2
+      user: findUser("maria.gonzalez@sample.test"),
+      ceco: "23000000", // in range 23000000-23999999
       startDate: "2024-01-01",
       endDate: null,
     },
     {
-      vehicle: findVehicle("MNO345"),
-      user: findUser("maria.gonzalez@sample.test"),
-      ceco: "17001234",
+      vehicle: findVehicle("MNO345"), // V3
+      user: findUser("valentina.silva@sample.test"),
+      ceco: "17001234", // in range 17000000-17999999
       startDate: "2024-02-01",
       endDate: null,
     },
+
+    // Old responsibles (should not grant permission now)
     {
-      vehicle: findVehicle("DEF456"),
+      vehicle: findVehicle("ABC123"), // V1
       user: findUser("juan.perez@sample.test"),
-      ceco: "23000000",
-      startDate: "2024-03-01",
-      endDate: null,
+      ceco: "12003456", // in range 12000000-12999999
+      startDate: "2023-01-01",
+      endDate: "2023-12-31", // ended
     },
+    {
+      vehicle: findVehicle("DEF456"), // V2
+      user: findUser("diego.garcia@sample.test"),
+      ceco: "23000000",
+      startDate: "2023-06-01",
+      endDate: "2024-05-31", // ended
+    },
+
+    // Other responsibles
     {
       vehicle: findVehicle("YZA567"),
       user: findUser("andres.morales@sample.test"),
@@ -782,6 +796,13 @@ async function createVehicleResponsibles(
       startDate: "2024-07-01",
       endDate: null,
     },
+    {
+      vehicle: findVehicle("HIJ456"),
+      user: findUser("isabella.ruiz@sample.test"),
+      ceco: "30000000", // outside ranges
+      startDate: "2024-08-01",
+      endDate: null,
+    },
   ];
 
   const responsibles = responsibleRepo.create(responsiblesData);
@@ -794,7 +815,6 @@ async function createVehicleResponsibles(
 async function createAuthorizationData(users: User[], vehicles: Vehicle[]) {
   const userGroupRepo = AppDataSource.getRepository(UserGroup);
   const membershipRepo = AppDataSource.getRepository(UserGroupMembership);
-  const nestingRepo = AppDataSource.getRepository(UserGroupNesting);
   const selectionRepo = AppDataSource.getRepository(VehicleSelection);
   const cecoRangeRepo = AppDataSource.getRepository(CecoRange);
   const vehicleACLRepo = AppDataSource.getRepository(VehicleACL);
@@ -806,68 +826,66 @@ async function createAuthorizationData(users: User[], vehicles: Vehicle[]) {
     vehicles.find((v) => v.licensePlate === lp)!;
 
   // Create groups
-  const [opsGroup, northGroup, maintGroup] = await userGroupRepo.save(
-    userGroupRepo.create([{}, {}, {}]),
+  const [directGroup, cecoGroup] = await userGroupRepo.save(
+    userGroupRepo.create([{}, {}]),
   );
 
   // Group memberships
   const savedMemberships = await membershipRepo.save(
     membershipRepo.create([
+      // Direct group members
       {
-        user: findUser("diego.garcia@sample.test"),
-        userGroup: opsGroup,
+        user: findUser("juan.perez@sample.test"),
+        userGroup: directGroup,
         startTime: new Date("2024-01-01T00:00:00Z"),
       },
+      // CECO group members
       {
-        user: findUser("valentina.silva@sample.test"),
-        userGroup: northGroup,
-        startTime: new Date("2024-01-01T00:00:00Z"),
-      },
-      {
-        user: findUser("lucia.castro@sample.test"),
-        userGroup: maintGroup,
+        user: findUser("maria.gonzalez@sample.test"),
+        userGroup: cecoGroup,
         startTime: new Date("2024-01-01T00:00:00Z"),
       },
     ]),
   );
 
-  // Nestings (north is child of ops)
-  const savedNestings = await nestingRepo.save(
-    nestingRepo.create([
-      {
-        parentGroup: opsGroup,
-        startTime: new Date("2024-01-01T00:00:00Z"),
-      },
-    ]),
-  );
-
-  // Vehicle selections
-  const selectionDirect = selectionRepo.create({
-    vehicles: [findVehicle("ABC123"), findVehicle("DEF456")],
+  // Vehicle selections (each ACL needs its own selection due to OneToOne relationship)
+  const selectionMiguelDirect = selectionRepo.create({
+    vehicles: [findVehicle("ABC123"), findVehicle("DEF456")], // V1, V2
   });
-  const selectionCeco = selectionRepo.create({ vehicles: [] });
-  const [savedSelectionDirect, savedSelectionCeco] = await selectionRepo.save([
-    selectionDirect,
-    selectionCeco,
-  ]);
+  const selectionGroupDirect = selectionRepo.create({
+    vehicles: [findVehicle("ABC123"), findVehicle("DEF456")], // V1, V2
+  });
+  const selectionCeco = selectionRepo.create({ vehicles: [] }); // CECO range 23000000-23999999 (V2)
+  const [savedSelectionMiguel, savedSelectionGroup, savedSelectionCeco] =
+    await selectionRepo.save([
+      selectionMiguelDirect,
+      selectionGroupDirect,
+      selectionCeco,
+    ]);
 
-  // CECO ranges for selectionCeco (10,000,000 - 19,999,999)
+  // CECO ranges
   const savedCecoRanges = await cecoRangeRepo.save(
     cecoRangeRepo.create([
       {
         vehicleSelection: savedSelectionCeco,
-        startCeco: 10000000,
-        endCeco: 19999999,
+        startCeco: 23000000,
+        endCeco: 23999999,
       },
     ]),
   );
 
-  // User roles (make Carlos admin)
+  // User roles (Carlos admin, others user)
   const savedRoles = await userRoleRepo.save(
     userRoleRepo.create([
       {
         user: findUser("carlos.rodriguez@sample.test"),
         role: UserRoleEnum.ADMIN,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+        endTime: undefined, // indefinite
+      },
+      {
+        user: findUser("ana.martinez@sample.test"),
+        role: UserRoleEnum.USER,
         startTime: new Date("2024-01-01T00:00:00Z"),
       },
     ]),
@@ -876,19 +894,27 @@ async function createAuthorizationData(users: User[], vehicles: Vehicle[]) {
   // Vehicle ACLs
   const savedACLs = await vehicleACLRepo.save(
     vehicleACLRepo.create([
-      // Direct user ACL: Miguel DRIVER on selectionDirect
+      // Direct user ACL: Miguel DRIVER on V1,V2
       {
         aclType: ACLType.USER,
         entityId: findUser("miguel.vargas@sample.test").id,
         permission: PermissionType.DRIVER,
-        vehicleSelection: savedSelectionDirect,
+        vehicleSelection: savedSelectionMiguel,
         startTime: new Date("2024-01-01T00:00:00Z"),
       },
-      // Group ACL: Ops MAINTAINER on CECO selection
+      // Direct group ACL: directGroup DRIVER on V1,V2
       {
         aclType: ACLType.USER_GROUP,
-        entityId: opsGroup.id,
-        permission: PermissionType.MAINTAINER,
+        entityId: directGroup.id,
+        permission: PermissionType.DRIVER,
+        vehicleSelection: savedSelectionGroup,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+      },
+      // CECO group ACL: cecoGroup DRIVER on CECO 23000000-23999999 (includes V2)
+      {
+        aclType: ACLType.USER_GROUP,
+        entityId: cecoGroup.id,
+        permission: PermissionType.DRIVER,
         vehicleSelection: savedSelectionCeco,
         startTime: new Date("2024-01-01T00:00:00Z"),
       },
@@ -896,10 +922,10 @@ async function createAuthorizationData(users: User[], vehicles: Vehicle[]) {
   );
 
   return {
-    userGroups: 3,
+    userGroups: 2,
     userGroupMemberships: savedMemberships.length,
-    userGroupNestings: savedNestings.length,
-    vehicleSelections: 2,
+    userGroupNestings: 0,
+    vehicleSelections: 3, // Now 3 selections instead of 2
     cecoRanges: savedCecoRanges.length,
     vehicleACLs: savedACLs.length,
     userRoles: savedRoles.length,

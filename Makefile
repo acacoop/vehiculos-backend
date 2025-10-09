@@ -44,7 +44,7 @@ down:
 dev:
 	@docker compose up -d db
 	@$(MAKE) wait-db
-	@npm ci
+# 	@npm ci
 	@DB_HOST=$(HOST_DB_HOST) npm run dev
 
 sample-data:

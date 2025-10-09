@@ -32,6 +32,7 @@ import { VehicleSelection } from "./entities/authorization/VehicleSelection";
 import { CecoRange } from "./entities/authorization/CecoRange";
 import { VehicleACL } from "./entities/authorization/VehicleACL";
 import { UserRole } from "./entities/authorization/UserRole";
+import { initializePermissionChecker } from "./middleware/permissions";
 
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
 
@@ -185,7 +186,10 @@ async function ensureDatabase(retries = 3, delayMs = 2000) {
   await ensureDatabase();
 
   AppDataSource.initialize()
-    .then(() => console.log("✅ SQL Server connection established (TypeORM)"))
+    .then(() => {
+      console.log("✅ SQL Server connection established (TypeORM)");
+      initializePermissionChecker(AppDataSource);
+    })
     .catch((err: unknown) =>
       console.error("❌ SQL Server connection failed:", err),
     );
