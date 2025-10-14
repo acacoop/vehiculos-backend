@@ -1,11 +1,17 @@
 import { Router } from "express";
-import { createUsersController } from "../controllers/usersController";
+import { UsersController } from "../controllers/usersController";
 import { validateSchema } from "../middleware/errorHandler";
 import { validateUUIDParam } from "../middleware/validation";
 import { UserSchema } from "../schemas/user";
+import { AppDataSource } from "../db";
+import { ServiceFactory } from "../factories/serviceFactory";
 
 const router = Router();
-const usersController = createUsersController();
+
+// Create service factory and controller with proper dependency injection
+const serviceFactory = new ServiceFactory(AppDataSource);
+const usersService = serviceFactory.createUsersService();
+const usersController = new UsersController(usersService);
 
 // GET /users - Get all users with pagination and search
 // Supports query parameters: page, limit, email, cuit, firstName, lastName

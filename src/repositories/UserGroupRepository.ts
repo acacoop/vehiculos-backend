@@ -1,5 +1,5 @@
 import { DataSource, Repository } from "typeorm";
-import { UserGroup as UserGroupEntity } from "../entities/authorization/UserGroup";
+import { UserGroup as UserGroupEntity } from "../entities/UserGroup";
 
 export class UserGroupRepository {
   private readonly repo: Repository<UserGroupEntity>;

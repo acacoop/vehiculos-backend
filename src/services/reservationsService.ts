@@ -1,10 +1,10 @@
-import { AppDataSource } from "../db";
 import { Reservation as ReservationEntity } from "../entities/Reservation";
 import { User } from "../entities/User";
 import { Vehicle } from "../entities/Vehicle";
 import type { Reservation } from "../schemas/reservation";
 import { validateUserExists, validateVehicleExists } from "../utils/validators";
-import { ReservationRepository } from "../repositories/ReservationRepository";
+import { IReservationRepository } from "../repositories/interfaces/IReservationRepository";
+import { Repository } from "typeorm";
 
 // Composite return type (was previously in ../types)
 export interface ReservationWithDetails {
@@ -69,12 +69,11 @@ export interface GetAllReservationsOptions {
 }
 
 export class ReservationsService {
-  private readonly repo: ReservationRepository;
-  private readonly userRepo = () => AppDataSource.getRepository(User);
-  private readonly vehicleRepo = () => AppDataSource.getRepository(Vehicle);
-  constructor(repo?: ReservationRepository) {
-    this.repo = repo ?? new ReservationRepository(AppDataSource);
-  }
+  constructor(
+    private readonly repo: IReservationRepository,
+    private readonly userRepo: Repository<User>,
+    private readonly vehicleRepo: Repository<Vehicle>,
+  ) {}
 
   async getAll(
     options?: GetAllReservationsOptions,
@@ -125,8 +124,8 @@ export class ReservationsService {
     const { userId, vehicleId, startDate, endDate } = reservation;
     await validateUserExists(userId);
     await validateVehicleExists(vehicleId);
-    const user = await this.userRepo().findOne({ where: { id: userId } });
-    const vehicle = await this.vehicleRepo().findOne({
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const vehicle = await this.vehicleRepo.findOne({
       where: { id: vehicleId },
     });
     if (!user || !vehicle) return null;
@@ -139,8 +138,4 @@ export class ReservationsService {
     const saved = await this.repo.save(entity);
     return mapEntity(saved);
   }
-}
-
-export function createReservationsService() {
-  return new ReservationsService();
 }

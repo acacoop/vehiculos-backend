@@ -1,6 +1,6 @@
 import express from "express";
-import { createAssignmentsController } from "../../controllers/assignmentsController";
-import { validateUUIDParam } from "../../middleware/validation";
+import { createAssignmentsController } from "../controllers/assignmentsController";
+import { validateUUIDParam } from "../middleware/validation";
 
 const router = express.Router();
 const controller = createAssignmentsController();

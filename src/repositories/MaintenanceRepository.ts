@@ -1,8 +1,10 @@
 import { DataSource, Repository } from "typeorm";
 import { Maintenance } from "../entities/Maintenance";
 import { AssignedMaintenance } from "../entities/AssignedMaintenance";
+import { IMaintenanceRepository } from "./interfaces/IMaintenanceRepository";
+import { IAssignedMaintenanceRepository } from "./interfaces/IAssignedMaintenanceRepository";
 
-export class MaintenanceRepository {
+export class MaintenanceRepository implements IMaintenanceRepository {
   private readonly repo: Repository<Maintenance>;
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(Maintenance);
@@ -24,7 +26,9 @@ export class MaintenanceRepository {
   }
 }
 
-export class AssignedMaintenanceRepository {
+export class AssignedMaintenanceRepository
+  implements IAssignedMaintenanceRepository
+{
   private readonly repo: Repository<AssignedMaintenance>;
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(AssignedMaintenance);

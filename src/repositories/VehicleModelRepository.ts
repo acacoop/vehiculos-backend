@@ -1,22 +1,23 @@
-import { DataSource, ILike, Repository } from "typeorm";
+import { DataSource, Repository } from "typeorm";
 import { VehicleModel } from "../entities/VehicleModel";
+import {
+  IVehicleModelRepository,
+  VehicleModelSearchParams,
+  VehicleModelFindOptions,
+} from "./interfaces/IVehicleModelRepository";
 
-export interface VehicleModelSearchParams {
-  name?: string;
-  brandId?: string;
-}
+// Re-export types for convenience
+export type { VehicleModelSearchParams, VehicleModelFindOptions };
 
-export class VehicleModelRepository {
+export class VehicleModelRepository implements IVehicleModelRepository {
   private readonly repo: Repository<VehicleModel>;
   constructor(dataSource: DataSource) {
     this.repo = dataSource.getRepository(VehicleModel);
   }
 
-  async findAndCount(options?: {
-    limit?: number;
-    offset?: number;
-    searchParams?: VehicleModelSearchParams;
-  }): Promise<[VehicleModel[], number]> {
+  async findAndCount(
+    options?: VehicleModelFindOptions,
+  ): Promise<[VehicleModel[], number]> {
     const qb = this.repo
       .createQueryBuilder("m")
       .leftJoinAndSelect("m.brand", "b")

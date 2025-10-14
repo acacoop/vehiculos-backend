@@ -1,18 +1,15 @@
-import { AppDataSource } from "../../db";
-import { Vehicle as VehicleEntity } from "../../entities/Vehicle";
-import { VehicleModel } from "../../entities/VehicleModel";
-import type {
-  Vehicle,
-  VehicleInput,
-  VehicleUpdate,
-} from "../../schemas/vehicle";
-import VehicleResponsiblesService from "../vehicleResponsiblesService";
-import { VehicleRepository } from "../../repositories/VehicleRepository";
+import { Vehicle as VehicleEntity } from "../entities/Vehicle";
+import { VehicleModel } from "../entities/VehicleModel";
+import type { Vehicle, VehicleInput, VehicleUpdate } from "../schemas/vehicle";
+import { VehicleResponsiblesService } from "./vehicleResponsiblesService";
+import { IVehicleRepository } from "../repositories/interfaces/IVehicleRepository";
+import { Repository } from "typeorm";
 
 export class VehiclesService {
   constructor(
-    private readonly vehicleRepo = new VehicleRepository(AppDataSource),
-    private readonly responsiblesService = new VehicleResponsiblesService(),
+    private readonly vehicleRepo: IVehicleRepository,
+    private readonly responsiblesService: VehicleResponsiblesService,
+    private readonly vehicleModelRepo: Repository<VehicleModel>,
   ) {}
 
   async getAll(options?: {
@@ -38,8 +35,7 @@ export class VehiclesService {
   }
 
   async create(input: VehicleInput): Promise<Vehicle | null> {
-    const modelRepo = AppDataSource.getRepository(VehicleModel);
-    const model = await modelRepo.findOne({
+    const model = await this.vehicleModelRepo.findOne({
       where: { id: input.modelId },
       relations: { brand: true },
     });
@@ -63,7 +59,7 @@ export class VehiclesService {
     const existing = await this.vehicleRepo.findOne(id);
     if (!existing) return null;
     if (data.modelId) {
-      const model = await AppDataSource.getRepository(VehicleModel).findOne({
+      const model = await this.vehicleModelRepo.findOne({
         where: { id: data.modelId },
         relations: { brand: true },
       });

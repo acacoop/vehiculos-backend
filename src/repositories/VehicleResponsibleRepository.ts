@@ -1,14 +1,17 @@
 import { DataSource, Repository } from "typeorm";
 import { VehicleResponsible as VehicleResponsibleEntity } from "../entities/VehicleResponsible";
+import { IVehicleResponsibleRepository } from "./interfaces/IVehicleResponsibleRepository";
 
 export interface VehicleResponsibleSearchParams {
   vehicleId?: string;
   userId?: string;
-  active?: string; // 'true' | 'false'
-  date?: string; // ISO date
+  active?: string;
+  date?: string;
 }
 
-export class VehicleResponsibleRepository {
+export class VehicleResponsibleRepository
+  implements IVehicleResponsibleRepository
+{
   private readonly repo: Repository<VehicleResponsibleEntity>;
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(VehicleResponsibleEntity);

@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
 import { asyncHandler, AppError } from "../middleware/errorHandler";
-import { MaintenanceRecordSchema } from "../schemas/maintenance/maintanceRecord";
+import { MaintenanceRecordSchema } from "../schemas/maintenanceRecord";
 import { MaintenanceRecordsService } from "../services/maintenancesService";
-import type { MaintenanceRecord } from "../schemas/maintenance/maintanceRecord";
+import type { MaintenanceRecord } from "../schemas/maintenanceRecord";
 import { ApiResponse } from "./baseController";
+import { ServiceFactory } from "../factories/serviceFactory";
+import { AppDataSource } from "../db";
 
 export class MaintenanceRecordsController {
   constructor(private readonly service: MaintenanceRecordsService) {}
@@ -102,7 +104,8 @@ export class MaintenanceRecordsController {
   });
 }
 export function createMaintenanceRecordsController() {
-  const service = new MaintenanceRecordsService();
+  const serviceFactory = new ServiceFactory(AppDataSource);
+  const service = serviceFactory.createMaintenanceRecordsService();
   return new MaintenanceRecordsController(service);
 }
 

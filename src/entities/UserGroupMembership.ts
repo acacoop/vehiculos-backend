@@ -6,7 +6,7 @@ import {
   Column,
 } from "typeorm";
 import { UserGroup } from "./UserGroup";
-import { User } from "../User";
+import { User } from "./User";
 
 @Entity({ name: "user_group_memberships" })
 export class UserGroupMembership {

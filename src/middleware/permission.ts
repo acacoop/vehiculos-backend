@@ -4,17 +4,17 @@ import { AuthenticatedRequest } from "./auth";
 import {
   PermissionType,
   PERMISSION_WEIGHT,
-} from "../entities/authorization/PermissionType";
-import { ACLType, VehicleACL } from "../entities/authorization/VehicleACL";
+} from "../entities/PermissionType";
+import { ACLType, VehicleACL } from "../entities/VehicleACL";
 import { DataSource } from "typeorm";
 import { VehicleACLRepository } from "../repositories/VehicleACLRepository";
 import { UserGroupMembershipRepository } from "../repositories/UserGroupMembershipRepository";
 import { UserGroupNestingRepository } from "../repositories/UserGroupNestingRepository";
-import { VehicleSelection } from "../entities/authorization/VehicleSelection";
+import { VehicleSelection } from "../entities/VehicleSelection";
 import { VehicleResponsibleRepository } from "../repositories/VehicleResponsibleRepository";
 import { CecoRangeRepository } from "../repositories/CecoRangeRepository";
 import { UserRoleRepository } from "../repositories/UserRoleRepository";
-import { UserRoleEnum } from "../entities/authorization/UserRole";
+import { UserRoleEnum } from "../entities/UserRoleEnum";
 import { AppDataSource } from "../db";
 import { AssignmentRepository } from "../repositories/AssignmentRepository";
 

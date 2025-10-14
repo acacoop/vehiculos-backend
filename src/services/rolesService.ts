@@ -1,13 +1,13 @@
-import { AppDataSource } from "../db";
-import { RolesRepository } from "../repositories/RolesRepository";
+import { IRolesRepository } from "../repositories/interfaces/IRolesRepository";
 import type { RoleInput, Role } from "../schemas/role";
 import { CecoRange } from "../entities/Roles";
 
+/**
+ * RolesService - Business logic for Role operations
+ * Uses Dependency Injection for better testability
+ */
 export class RolesService {
-  private readonly repo: RolesRepository;
-  constructor(repo?: RolesRepository) {
-    this.repo = repo ?? new RolesRepository(AppDataSource);
-  }
+  constructor(private readonly repo: IRolesRepository) {}
 
   async getAll(options?: {
     limit?: number;

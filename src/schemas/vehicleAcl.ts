@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PermissionType } from "../../entities/authorization/PermissionType";
+import { PermissionType } from "../entities/PermissionType";
 
 export const VehicleSelectionSchema = z.object({
   vehicleIds: z.array(z.string().uuid()).default([]),

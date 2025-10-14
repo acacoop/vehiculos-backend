@@ -16,15 +16,15 @@ import meRoutes from "./routes/me";
 // Import routes
 import usersRoutes from "./routes/users";
 import vehiclesRoutes from "./routes/vehicles";
-import assignmentsRoutes from "./routes/vehicles/assignments";
+import assignmentsRoutes from "./routes/vehicleAssignments";
 import reservationsRoutes from "./routes/reservations";
 import vehicleResponsiblesRoutes from "./routes/vehicleResponsibles";
 import rolesRoutes from "./routes/roles";
-import maintenanceCategoriesRoutes from "./routes/vehicles/maintenance/categories";
-import maintenanceRoutes from "./routes/vehicles/maintenance/posibles";
-import assignedMaintenanceRoutes from "./routes/vehicles/maintenance/assignments";
-import maintenanceRecordsRoutes from "./routes/vehicles/maintenance/records";
-import vehicleKilometersRoutes from "./routes/vehicles/kilometers";
+import maintenanceCategoriesRoutes from "./routes/maintenanceCategories";
+import maintenanceRoutes from "./routes/maintenancePosibles";
+import assignedMaintenanceRoutes from "./routes/maintenanceAssignments";
+import maintenanceRecordsRoutes from "./routes/maintenanceRecords";
+import vehicleKilometersRoutes from "./routes/vehicleKilometers";
 import vehicleBrandsRoutes from "./routes/vehicleBrands";
 import vehicleModelsRoutes from "./routes/vehicleModels";
 

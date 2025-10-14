@@ -1,6 +1,6 @@
 import express from "express";
-import { validateUUIDParam } from "../../../middleware/validation";
-import { maintenanceRecordsController } from "../../../controllers/maintenanceRecordsController";
+import { validateUUIDParam } from "../middleware/validation";
+import { maintenanceRecordsController } from "../controllers/maintenanceRecordsController";
 
 const router = express.Router();
 

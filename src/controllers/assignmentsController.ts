@@ -8,8 +8,10 @@ import {
 } from "../schemas/assignment";
 import {
   AssignmentsService,
-  createAssignmentsService,
+  type GetAllAssignmentsOptions,
 } from "../services/assignmentsService";
+import { ServiceFactory } from "../factories/serviceFactory";
+import { AppDataSource } from "../db";
 
 export class AssignmentsController extends BaseController {
   constructor(private readonly service: AssignmentsService) {
@@ -140,6 +142,10 @@ export class AssignmentsController extends BaseController {
   }
 }
 
-export function createAssignmentsController() {
-  return new AssignmentsController(createAssignmentsService());
+export function createAssignmentsController(
+  service?: AssignmentsService,
+): AssignmentsController {
+  const svc =
+    service ?? new ServiceFactory(AppDataSource).createAssignmentsService();
+  return new AssignmentsController(svc);
 }

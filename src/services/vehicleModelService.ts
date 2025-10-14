@@ -1,14 +1,18 @@
-import { AppDataSource } from "../db";
-import { VehicleModelRepository } from "../repositories/VehicleModelRepository";
-import { VehicleBrand } from "../entities/VehicleBrand";
+import { IVehicleModelRepository } from "../repositories/interfaces/IVehicleModelRepository";
+import { IVehicleBrandRepository } from "../repositories/interfaces/IVehicleBrandRepository";
 import type {
   VehicleModelInput,
   VehicleModelType,
 } from "../schemas/vehicleModel";
 
+/**
+ * VehicleModelService - Business logic for VehicleModel operations
+ * Now uses Dependency Injection for better testability
+ */
 export class VehicleModelService {
   constructor(
-    private readonly repo = new VehicleModelRepository(AppDataSource),
+    private readonly repo: IVehicleModelRepository,
+    private readonly brandRepo: IVehicleBrandRepository,
   ) {}
 
   async getAll(options?: {
@@ -47,8 +51,7 @@ export class VehicleModelService {
   }
 
   async create(data: VehicleModelInput): Promise<VehicleModelType | null> {
-    const brandRepo = AppDataSource.getRepository(VehicleBrand);
-    const brand = await brandRepo.findOne({ where: { id: data.brandId } });
+    const brand = await this.brandRepo.findOneByWhere({ id: data.brandId });
     if (!brand) return null;
     const created = this.repo.create({ name: data.name, brand });
     const saved = await this.repo.save(created);
@@ -67,9 +70,7 @@ export class VehicleModelService {
     if (!existing) return null;
     if (data.name) existing.name = data.name;
     if (data.brandId) {
-      const brand = await AppDataSource.getRepository(VehicleBrand).findOne({
-        where: { id: data.brandId },
-      });
+      const brand = await this.brandRepo.findOneByWhere({ id: data.brandId });
       if (!brand) return null;
       existing.brand = brand;
     }

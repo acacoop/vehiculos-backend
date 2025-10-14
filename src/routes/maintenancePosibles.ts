@@ -1,13 +1,13 @@
 import express from "express";
-import { createMaintenancePosiblesController } from "../../../controllers/maintenancePosiblesController";
+import { createMaintenancePosiblesController } from "../controllers/maintenancePosiblesController";
 import {
   validateUUIDParam,
   validateBody,
-} from "../../../middleware/validation";
+} from "../middleware/validation";
 import {
   MaintenanceCreateSchema,
   MaintenanceUpdateSchema,
-} from "../../../schemas/maintenance/maintenance";
+} from "../schemas/maintenance";
 
 const router = express.Router();
 const controller = createMaintenancePosiblesController();

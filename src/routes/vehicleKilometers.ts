@@ -1,6 +1,6 @@
 import express from "express";
-import { validateUUIDParam } from "../../middleware/validation";
-import { createVehicleKilometersController } from "../../controllers/vehicleKilometersController";
+import { validateUUIDParam } from "../middleware/validation";
+import { createVehicleKilometersController } from "../controllers/vehicleKilometersController";
 
 // This router is mounted at /vehicles/:id/kilometers (see index.ts)
 // We merge params so we can access :id inside the handlers

@@ -1,12 +1,11 @@
-import { AppDataSource } from "../db";
 import { Vehicle } from "../entities/Vehicle";
 import { User } from "../entities/User";
 import { VehicleResponsible as VehicleResponsibleEntity } from "../entities/VehicleResponsible";
-import { VehicleResponsibleRepository } from "../repositories/VehicleResponsibleRepository";
+import { IVehicleResponsibleRepository } from "../repositories/interfaces/IVehicleResponsibleRepository";
 import type { VehicleResponsibleInput } from "../schemas/vehicleResponsible";
 import { AppError } from "../middleware/errorHandler";
 import { validateUserExists, validateVehicleExists } from "../utils/validators";
-import { IsNull } from "typeorm";
+import { IsNull, Repository } from "typeorm";
 
 // Composite detail view (was in ../types)
 export interface VehicleResponsibleWithDetails {
@@ -61,9 +60,12 @@ function mapEntity(e: VehicleResponsibleEntity): VehicleResponsibleWithDetails {
 }
 
 export class VehicleResponsiblesService {
-  private readonly repo = new VehicleResponsibleRepository(AppDataSource);
-  private readonly vehicleRepo = AppDataSource.getRepository(Vehicle);
-  private readonly userRepo = AppDataSource.getRepository(User);
+  constructor(
+    private readonly repo: IVehicleResponsibleRepository,
+    private readonly vehicleRepo: Repository<Vehicle>,
+    private readonly userRepo: Repository<User>,
+    private readonly vehicleResponsibleRepo: Repository<VehicleResponsibleEntity>,
+  ) {}
 
   async getAll(options?: {
     limit?: number;
@@ -129,9 +131,9 @@ export class VehicleResponsiblesService {
       )
         .toISOString()
         .split("T")[0];
-      const active = await this.vehicleRepo.manager
-        .getRepository(VehicleResponsibleEntity)
-        .find({ where: { vehicle: { id: vehicleId }, endDate: IsNull() } });
+      const active = await this.vehicleResponsibleRepo.find({
+        where: { vehicle: { id: vehicleId }, endDate: IsNull() },
+      });
       for (const a of active) {
         a.endDate = previousEnd;
         a.updatedAt = new Date();
@@ -150,9 +152,10 @@ export class VehicleResponsiblesService {
     data: Partial<VehicleResponsibleInput>,
     //): Promise<VehicleResponsible | null> {
   ): Promise<VehicleResponsibleWithDetails | null> {
-    const ent = await this.vehicleRepo.manager
-      .getRepository(VehicleResponsibleEntity)
-      .findOne({ where: { id }, relations: ["vehicle", "user"] });
+    const ent = await this.vehicleResponsibleRepo.findOne({
+      where: { id },
+      relations: ["vehicle", "user"],
+    });
     if (!ent) return null;
     if (data.userId) {
       await validateUserExists(data.userId);
@@ -167,11 +170,9 @@ export class VehicleResponsiblesService {
       )
         .toISOString()
         .split("T")[0];
-      const others = await this.vehicleRepo.manager
-        .getRepository(VehicleResponsibleEntity)
-        .find({
-          where: { vehicle: { id: ent.vehicle.id }, endDate: IsNull() },
-        });
+      const others = await this.vehicleResponsibleRepo.find({
+        where: { vehicle: { id: ent.vehicle.id }, endDate: IsNull() },
+      });
       for (const o of others.filter((o) => o.id !== ent.id)) {
         o.endDate = previousEnd;
         o.updatedAt = new Date();
@@ -196,5 +197,3 @@ export class VehicleResponsiblesService {
     return res.affected === 1;
   }
 }
-
-export default VehicleResponsiblesService;

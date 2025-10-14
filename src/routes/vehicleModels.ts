@@ -1,11 +1,17 @@
 import { Router } from "express";
-import { createVehicleModelsController } from "../controllers/vehicleModelsController";
+import { VehicleModelsController } from "../controllers/vehicleModelsController";
 import { validateSchema } from "../middleware/errorHandler";
 import { VehicleModelInputSchema } from "../schemas/vehicleModel";
 import { validateUUIDParam } from "../middleware/validation";
+import { AppDataSource } from "../db";
+import { ServiceFactory } from "../factories/serviceFactory";
 
 const router = Router();
-const controller = createVehicleModelsController();
+
+// Create service factory and controller with proper dependency injection
+const serviceFactory = new ServiceFactory(AppDataSource);
+const vehicleModelService = serviceFactory.createVehicleModelService();
+const controller = new VehicleModelsController(vehicleModelService);
 
 router.get("/", controller.getAll);
 router.get("/:id", validateUUIDParam("id"), controller.getById);

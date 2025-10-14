@@ -1,21 +1,19 @@
 import { DataSource, In, Repository } from "typeorm";
 import { Reservation } from "../entities/Reservation";
+import {
+  IReservationRepository,
+  ReservationSearchParams,
+  ReservationFindOptions,
+} from "./interfaces/IReservationRepository";
 
-export interface ReservationSearchParams {
-  userId?: string;
-  vehicleId?: string;
-}
+export type { ReservationSearchParams, ReservationFindOptions };
 
-export class ReservationRepository {
+export class ReservationRepository implements IReservationRepository {
   private readonly repo: Repository<Reservation>;
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(Reservation);
   }
-  findAndCount(opts?: {
-    limit?: number;
-    offset?: number;
-    searchParams?: ReservationSearchParams;
-  }) {
+  findAndCount(opts?: ReservationFindOptions) {
     const { searchParams } = opts || {};
     const where: Record<string, unknown> = {};
     if (searchParams?.userId) where.user = { id: searchParams.userId };
@@ -38,6 +36,9 @@ export class ReservationRepository {
   }
   save(entity: Reservation) {
     return this.repo.save(entity);
+  }
+  delete(id: string) {
+    return this.repo.delete(id);
   }
   distinctVehicleIdsByAssignedUser(userId: string) {
     return this.repo

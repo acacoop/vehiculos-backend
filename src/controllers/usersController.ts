@@ -2,7 +2,7 @@ import { BaseController } from "./baseController";
 import type { User } from "../schemas/user";
 import { Request, Response } from "express";
 import { asyncHandler, AppError } from "../middleware/errorHandler";
-import UsersService from "../services/usersService";
+import { UsersService } from "../services/usersService";
 
 export class UsersController extends BaseController {
   constructor(private readonly service: UsersService) {
@@ -107,5 +107,5 @@ export class UsersController extends BaseController {
   });
 }
 
-export const createUsersController = () =>
-  new UsersController(new UsersService());
+// Factory function is no longer needed here - will be created in routes
+// Controllers should receive their dependencies

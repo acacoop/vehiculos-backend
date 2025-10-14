@@ -1,6 +1,6 @@
-import { PermissionType } from "../../entities/authorization/PermissionType";
-import { UserRoleEnum } from "../../entities/authorization/UserRoleEnum";
-import { VehicleACL } from "../../entities/authorization/VehicleACL";
+import { PermissionType } from "../../entities/PermissionType";
+import { UserRoleEnum } from "../../entities/UserRoleEnum";
+import { VehicleACL } from "../../entities/VehicleACL";
 import { AuthenticatedRequest } from "../auth";
 
 export interface VehiclePermissionCheckOptions {

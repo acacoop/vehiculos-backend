@@ -1,11 +1,12 @@
-import { AppDataSource } from "../db";
-import { VehicleBrandRepository } from "../repositories/VehicleBrandRepository";
+import { IVehicleBrandRepository } from "../repositories/interfaces/IVehicleBrandRepository";
 import type { VehicleBrandInput, VehicleBrand } from "../schemas/vehicleBrand";
 
+/**
+ * VehicleBrandService - Business logic for VehicleBrand operations
+ * Now uses Dependency Injection for better testability
+ */
 export class VehicleBrandService {
-  constructor(
-    private readonly repo = new VehicleBrandRepository(AppDataSource),
-  ) {}
+  constructor(private readonly repo: IVehicleBrandRepository) {}
 
   async getAll(options?: {
     limit?: number;

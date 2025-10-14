@@ -1,7 +1,7 @@
 import { DataSource, Repository } from "typeorm";
-import { VehicleACL as VehicleACLEntity } from "../entities/authorization/VehicleACL";
-import { PermissionType } from "../entities/authorization/PermissionType";
-import { ACLType } from "../entities/authorization/VehicleACL";
+import { VehicleACL as VehicleACLEntity } from "../entities/VehicleACL";
+import { PermissionType } from "../entities/PermissionType";
+import { ACLType } from "../entities/VehicleACL";
 
 export interface VehicleACLSearchParams {
   aclType?: ACLType;

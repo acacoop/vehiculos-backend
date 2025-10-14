@@ -1,9 +1,6 @@
 import { BaseController } from "./baseController";
-import type { MaintenanceCategory } from "../schemas/maintenance/category";
-import {
-  MaintenanceCategoriesService,
-  createMaintenanceCategoriesService,
-} from "../services/maintenanceCategoriesService";
+import { MaintenanceCategorySchema, type MaintenanceCategory } from "../schemas/maintenanceCategory";
+import { MaintenanceCategoriesService } from "../services/maintenanceCategoriesService";
 
 export class MaintenanceCategoriesController extends BaseController {
   constructor(private readonly service: MaintenanceCategoriesService) {
@@ -44,9 +41,4 @@ export class MaintenanceCategoriesController extends BaseController {
   protected async deleteService(id: string) {
     return await this.service.delete(id);
   }
-}
-export function createMaintenanceCategoriesController() {
-  return new MaintenanceCategoriesController(
-    createMaintenanceCategoriesService(),
-  );
 }

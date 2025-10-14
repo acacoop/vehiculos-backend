@@ -1,11 +1,11 @@
 import express from "express";
-import { validateUUIDParam } from "../../../middleware/validation";
-import { maintenanceAssignmentsController } from "../../../controllers/maintenanceAssignmentsController";
-import { validateBody } from "../../../middleware/validation";
+import { validateUUIDParam } from "../middleware/validation";
+import { maintenanceAssignmentsController } from "../controllers/maintenanceAssignmentsController";
+import { validateBody } from "../middleware/validation";
 import {
   AssignedMaintenanceSchema,
   UpdateAssignedMaintenanceSchema,
-} from "../../../schemas/maintenance/assignMaintance";
+} from "../schemas/assignMaintance";
 
 const router = express.Router();
 

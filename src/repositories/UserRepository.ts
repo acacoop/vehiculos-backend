@@ -1,25 +1,22 @@
 import { DataSource, ILike, Repository } from "typeorm";
 import { User as UserEntity } from "../entities/User";
+import {
+  IUserRepository,
+  FindOptions,
+  UserSearchParams,
+} from "./interfaces/IUserRepository";
 
-export interface UserSearchParams {
-  email?: string;
-  cuit?: string;
-  firstName?: string;
-  lastName?: string;
-  active?: string; // 'true' | 'false'
-}
+// Re-export types for convenience
+export type { UserSearchParams, FindOptions };
 
-export class UserRepository {
+export class UserRepository implements IUserRepository {
   private readonly repo: Repository<UserEntity>;
+
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(UserEntity);
   }
 
-  async findAndCount(opts?: {
-    limit?: number;
-    offset?: number;
-    searchParams?: UserSearchParams;
-  }): Promise<[UserEntity[], number]> {
+  async findAndCount(opts?: FindOptions): Promise<[UserEntity[], number]> {
     const { searchParams } = opts || {};
     const where: Record<string, unknown> = {};
     if (searchParams) {

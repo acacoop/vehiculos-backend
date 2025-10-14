@@ -36,5 +36,5 @@ export class RolesController extends BaseController {
   }
 }
 
-export const createRolesController = () =>
-  new RolesController(new RolesService());
+// Factory function is no longer needed here - will be created in routes
+// Controllers should receive their dependencies

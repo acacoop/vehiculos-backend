@@ -1,5 +1,6 @@
 import { DataSource, Repository } from "typeorm";
 import { MaintenanceRecord } from "../entities/MaintenanceRecord";
+import { IMaintenanceRecordRepository } from "./interfaces/IMaintenanceRecordRepository";
 
 export interface MaintenanceRecordSearchParams {
   userId?: string;
@@ -8,7 +9,9 @@ export interface MaintenanceRecordSearchParams {
   assignedMaintenanceId?: string;
 }
 
-export class MaintenanceRecordRepository {
+export class MaintenanceRecordRepository
+  implements IMaintenanceRecordRepository
+{
   private readonly repo: Repository<MaintenanceRecord>;
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(MaintenanceRecord);

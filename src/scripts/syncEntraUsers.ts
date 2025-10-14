@@ -3,10 +3,11 @@ import {
   ENTRA_CLIENT_SECRET,
   ENTRA_TENANT_ID,
 } from "../config/env.config";
-import UsersService from "../services/usersService";
 import { AppDataSource } from "../db";
 import type { User } from "../schemas/user";
 import { User as UserEntity } from "../entities/User";
+import { ServiceFactory } from "../factories/serviceFactory";
+import { UsersService } from "../services/usersService";
 
 const VERBOSE =
   process.env.VERBOSE === "1" || process.argv.includes("--verbose");
@@ -373,7 +374,8 @@ function printResult(stats: Stats) {
 }
 
 async function runSync() {
-  const usersService = new UsersService();
+  const serviceFactory = new ServiceFactory(AppDataSource);
+  const usersService = serviceFactory.createUsersService();
   const token = await getAccessToken();
   const graphUsers = await fetchAllUsers(token);
 

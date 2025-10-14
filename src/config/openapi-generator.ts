@@ -11,13 +11,16 @@ import {
   VehicleKilometersLogSchema,
   VehicleKilometersLogCreateSchema,
 } from "../schemas/vehicleKilometers";
-import { MaintenanceCategorySchema } from "../schemas/maintenance/category";
-import { MaintenanceSchema } from "../schemas/maintenance/maintenance";
+import { MaintenanceCategorySchema } from "../schemas/maintenanceCategory";
+import { MaintenanceSchema } from "../schemas/maintenance";
+import { VehicleBrandSchema } from "../schemas/vehicleBrand";
+import { VehicleModelSchema } from "../schemas/vehicleModel";
+import { RoleSchema } from "../schemas/role";
 import {
   AssignedMaintenanceSchema,
   UpdateAssignedMaintenanceSchema,
-} from "../schemas/maintenance/assignMaintance";
-import { MaintenanceRecordSchema } from "../schemas/maintenance/maintanceRecord";
+} from "../schemas/assignMaintance";
+import { MaintenanceRecordSchema } from "../schemas/maintenanceRecord";
 
 // Basic schema converter (subset)
 // Simple converter (internal use) – returns loosely typed JSON schema fragments

@@ -3,7 +3,9 @@ import type { VehicleResponsibleInput } from "../schemas/vehicleResponsible";
 import { AppError } from "../middleware/errorHandler";
 import { Request, Response } from "express";
 import { asyncHandler } from "../middleware/errorHandler";
-import VehicleResponsiblesService from "../services/vehicleResponsiblesService";
+import { VehicleResponsiblesService } from "../services/vehicleResponsiblesService";
+import { ServiceFactory } from "../factories/serviceFactory";
+import { AppDataSource } from "../db";
 
 export class VehicleResponsiblesController extends BaseController {
   constructor(private readonly service: VehicleResponsiblesService) {
@@ -91,5 +93,11 @@ export class VehicleResponsiblesController extends BaseController {
   );
 }
 
-export const createVehicleResponsiblesController = () =>
-  new VehicleResponsiblesController(new VehicleResponsiblesService());
+export const createVehicleResponsiblesController = (
+  service?: VehicleResponsiblesService,
+) => {
+  const svc =
+    service ??
+    new ServiceFactory(AppDataSource).createVehicleResponsiblesService();
+  return new VehicleResponsiblesController(svc);
+};

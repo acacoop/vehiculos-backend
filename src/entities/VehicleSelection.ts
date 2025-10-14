@@ -1,5 +1,5 @@
 import { Entity, ManyToMany, PrimaryGeneratedColumn, JoinTable } from "typeorm";
-import { Vehicle } from "../Vehicle";
+import { Vehicle } from "./Vehicle";
 
 @Entity({ name: "vehicle_selections" })
 export class VehicleSelection {

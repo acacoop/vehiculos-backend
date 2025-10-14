@@ -3,10 +3,12 @@ import { asyncHandler, AppError } from "../middleware/errorHandler";
 import {
   AssignedMaintenanceSchema,
   UpdateAssignedMaintenanceSchema,
-} from "../schemas/maintenance/assignMaintance";
-import type { AssignedMaintenance } from "../schemas/maintenance/assignMaintance";
+} from "../schemas/assignMaintance";
+import type { AssignedMaintenance } from "../schemas/assignMaintance";
 import { AssignedMaintenancesService } from "../services/maintenancesService";
 import { ApiResponse } from "./baseController";
+import { ServiceFactory } from "../factories/serviceFactory";
+import { AppDataSource } from "../db";
 
 export class MaintenanceAssignmentsController {
   constructor(private readonly service: AssignedMaintenancesService) {}
@@ -120,10 +122,14 @@ export class MaintenanceAssignmentsController {
   });
 }
 
-export function createMaintenanceAssignmentsController() {
-  const service = new AssignedMaintenancesService();
-  return new MaintenanceAssignmentsController(service);
-}
+export const createMaintenanceAssignmentsController = (
+  service?: AssignedMaintenancesService,
+) => {
+  const svc =
+    service ??
+    new ServiceFactory(AppDataSource).createAssignedMaintenancesService();
+  return new MaintenanceAssignmentsController(svc);
+};
 
 export const maintenanceAssignmentsController =
   createMaintenanceAssignmentsController();

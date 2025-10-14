@@ -1,5 +1,5 @@
 import { DataSource, Repository } from "typeorm";
-import { CecoRange as CecoRangeEntity } from "../entities/authorization/CecoRange";
+import { CecoRange as CecoRangeEntity } from "../entities/CecoRange";
 
 export interface CecoRangeSearchParams {
   vehicleSelectionId?: string;

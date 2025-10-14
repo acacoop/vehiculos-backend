@@ -7,23 +7,20 @@ import {
   Or,
 } from "typeorm";
 import { Assignment } from "../entities/Assignment";
+import {
+  IAssignmentRepository,
+  AssignmentSearchParams,
+  AssignmentFindOptions,
+} from "./interfaces/IAssignmentRepository";
 
-export interface AssignmentSearchParams {
-  userId?: string;
-  vehicleId?: string;
-  date?: string; // YYYY-MM-DD format for active assignment filtering
-}
+export type { AssignmentSearchParams, AssignmentFindOptions };
 
-export class AssignmentRepository {
+export class AssignmentRepository implements IAssignmentRepository {
   private readonly repo: Repository<Assignment>;
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(Assignment);
   }
-  findAndCount(opts?: {
-    limit?: number;
-    offset?: number;
-    searchParams?: AssignmentSearchParams;
-  }) {
+  findAndCount(opts?: AssignmentFindOptions) {
     const { searchParams } = opts || {};
     const where: Record<string, unknown> = {};
     if (searchParams?.userId) where.user = { id: searchParams.userId };
@@ -44,6 +41,11 @@ export class AssignmentRepository {
   save(entity: Assignment) {
     return this.repo.save(entity);
   }
+
+  delete(id: string) {
+    return this.repo.delete(id);
+  }
+
   count(where: Record<string, unknown>) {
     return this.repo.count({ where });
   }

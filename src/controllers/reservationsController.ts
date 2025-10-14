@@ -1,12 +1,11 @@
 import { BaseController } from "./baseController";
 import { AppError, asyncHandler } from "../middleware/errorHandler";
 import type { Reservation } from "../schemas/reservation";
-import {
-  ReservationsService,
-  createReservationsService,
-} from "../services/reservationsService";
+import { ReservationsService } from "../services/reservationsService";
 import { Request, Response } from "express";
 import { ReservationSchema } from "../schemas/reservation";
+import { ServiceFactory } from "../factories/serviceFactory";
+import { AppDataSource } from "../db";
 
 export class ReservationsController extends BaseController {
   constructor(private readonly service: ReservationsService) {
@@ -75,6 +74,10 @@ export class ReservationsController extends BaseController {
   });
 }
 
-export function createReservationsController() {
-  return new ReservationsController(createReservationsService());
+export function createReservationsController(
+  service?: ReservationsService,
+): ReservationsController {
+  const svc =
+    service ?? new ServiceFactory(AppDataSource).createReservationsService();
+  return new ReservationsController(svc);
 }

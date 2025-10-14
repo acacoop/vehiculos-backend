@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { createVehiclesController } from "../controllers/vehiclesController";
-import vehicleKilometersRoutes from "./vehicles/kilometers";
+import vehicleKilometersRoutes from "./vehicleKilometers";
 import { validateSchema, AppError } from "../middleware/errorHandler";
 import { validateUUIDParam } from "../middleware/validation";
 import { VehicleInputSchema, VehicleUpdateSchema } from "../schemas/vehicle";
@@ -9,8 +9,8 @@ import {
   requireRole,
   requireVehiclePermissionFromParam,
 } from "../middleware/permission";
-import { UserRoleEnum } from "../entities/authorization/UserRole";
-import { PermissionType } from "../entities/authorization/PermissionType";
+import { UserRoleEnum } from "../entities/UserRoleEnum";
+import { PermissionType } from "../entities/PermissionType";
 
 const router = Router();
 // Each router instance gets its own controller (and underlying service/repository instances)

@@ -1,6 +1,6 @@
 /**
  * Permission System Integration Tests
- * 
+ *
  * Tests all permission scenarios:
  * - Admin role
  * - Current drivers (DRIVER permission)
@@ -12,10 +12,10 @@
  * - Permission weight hierarchy
  */
 
-import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterAll } from "@jest/globals";
 import { AppDataSource } from "../db";
 import { PermissionChecker } from "../middleware/permissions/checker";
-import { PermissionType } from "../entities/authorization/PermissionType";
+import { PermissionType } from "../entities/PermissionType";
 import { User } from "../entities/User";
 import { Vehicle } from "../entities/Vehicle";
 

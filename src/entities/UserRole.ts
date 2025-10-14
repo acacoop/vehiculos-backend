@@ -5,7 +5,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from "typeorm";
-import { User } from "../User";
+import { User } from "./User";
 import { UserRoleEnum } from "./UserRoleEnum";
 
 @Entity({ name: "user_roles" })

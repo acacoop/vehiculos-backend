@@ -1,22 +1,22 @@
 import { DataSource, Repository } from "typeorm";
 import { Role } from "../entities/Roles";
+import {
+  IRolesRepository,
+  RolesSearchParams,
+  RolesFindOptions,
+} from "./interfaces/IRolesRepository";
 
-export interface RolesSearchParams {
-  permission?: string;
-}
+// Re-export types for convenience
+export type { RolesSearchParams, RolesFindOptions };
 
-export class RolesRepository {
+export class RolesRepository implements IRolesRepository {
   private readonly repo: Repository<Role>;
 
   constructor(dataSource: DataSource) {
     this.repo = dataSource.getRepository(Role);
   }
 
-  async findAndCount(options?: {
-    limit?: number;
-    offset?: number;
-    searchParams?: RolesSearchParams;
-  }): Promise<[Role[], number]> {
+  async findAndCount(options?: RolesFindOptions): Promise<[Role[], number]> {
     const where: Record<string, unknown> = {};
     if (options?.searchParams?.permission) {
       where.permission = options.searchParams.permission;

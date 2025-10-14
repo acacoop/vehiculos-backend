@@ -1,6 +1,8 @@
 import { BaseController } from "./baseController";
 import type { VehicleInput, VehicleUpdate } from "../schemas/vehicle";
-import VehiclesService from "../services/vehicles/vehiclesService";
+import { VehiclesService } from "../services/vehiclesService";
+import { ServiceFactory } from "../factories/serviceFactory";
+import { AppDataSource } from "../db";
 
 export class VehiclesController extends BaseController {
   constructor(private readonly service: VehiclesService) {
@@ -37,5 +39,8 @@ export class VehiclesController extends BaseController {
   }
 }
 // Factory helper so each route file can create its isolated instance if desired
-export const createVehiclesController = () =>
-  new VehiclesController(new VehiclesService());
+export const createVehiclesController = () => {
+  const serviceFactory = new ServiceFactory(AppDataSource);
+  const vehiclesService = serviceFactory.createVehiclesService();
+  return new VehiclesController(vehiclesService);
+};

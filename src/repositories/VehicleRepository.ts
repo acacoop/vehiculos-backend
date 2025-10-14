@@ -1,16 +1,17 @@
-import { DataSource, Repository } from "typeorm";
+import { DataSource, In, Repository } from "typeorm";
 import { Vehicle as VehicleEntity } from "../entities/Vehicle";
+import { IVehicleRepository } from "./interfaces/IVehicleRepository";
 
 export interface VehicleSearchParams {
   licensePlate?: string;
-  brand?: string; // partial brand name search
-  model?: string; // partial model name search
+  brand?: string;
+  model?: string;
   brandId?: string;
   modelId?: string;
-  year?: string; // still string from query params
+  year?: string;
 }
 
-export class VehicleRepository {
+export class VehicleRepository implements IVehicleRepository {
   private readonly repo: Repository<VehicleEntity>;
 
   constructor(dataSource: DataSource) {
@@ -80,5 +81,19 @@ export class VehicleRepository {
 
   delete(id: string) {
     return this.repo.delete(id);
+  }
+
+  findByIds(ids: string[]) {
+    return this.repo.find({
+      where: { id: In(ids) },
+      relations: { model: { brand: true } },
+    });
+  }
+
+  findWithDetails(id: string) {
+    return this.repo.findOne({
+      where: { id },
+      relations: { model: { brand: true } },
+    });
   }
 }

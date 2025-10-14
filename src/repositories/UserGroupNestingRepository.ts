@@ -1,5 +1,5 @@
 import { DataSource, Repository } from "typeorm";
-import { UserGroupNesting as UserGroupNestingEntity } from "../entities/authorization/UserGroupNesting";
+import { UserGroupNesting as UserGroupNestingEntity } from "../entities/UserGroupNesting";
 
 export interface UserGroupNestingSearchParams {
   parentGroupId?: string;

@@ -25,13 +25,13 @@ import { VehicleResponsible } from "./entities/VehicleResponsible";
 import { VehicleBrand } from "./entities/VehicleBrand";
 import { VehicleModel } from "./entities/VehicleModel";
 // Authorization entities
-import { UserGroup } from "./entities/authorization/UserGroup";
-import { UserGroupMembership } from "./entities/authorization/UserGroupMembership";
-import { UserGroupNesting } from "./entities/authorization/UserGroupNesting";
-import { VehicleSelection } from "./entities/authorization/VehicleSelection";
-import { CecoRange } from "./entities/authorization/CecoRange";
-import { VehicleACL } from "./entities/authorization/VehicleACL";
-import { UserRole } from "./entities/authorization/UserRole";
+import { UserGroup } from "./entities/UserGroup";
+import { UserGroupMembership } from "./entities/UserGroupMembership";
+import { UserGroupNesting } from "./entities/UserGroupNesting";
+import { VehicleSelection } from "./entities/VehicleSelection";
+import { CecoRange } from "./entities/CecoRange";
+import { VehicleACL } from "./entities/VehicleACL";
+import { UserRole } from "./entities/UserRole";
 import { initializePermissionChecker } from "./middleware/permissions";
 
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";

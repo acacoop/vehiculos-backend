@@ -1,13 +1,17 @@
 import express from "express";
-import { createMaintenanceCategoriesController } from "../../../controllers/maintenanceCategoriesController";
+import { MaintenanceCategoriesController } from "../controllers/maintenanceCategoriesController";
 import {
   validateUUIDParam,
   validateBody,
-} from "../../../middleware/validation";
-import { MaintenanceCategorySchema } from "../../../schemas/maintenance/category";
+} from "../middleware/validation";
+import { MaintenanceCategorySchema } from "../schemas/maintenanceCategory";
+import { AppDataSource } from "../db";
+import { ServiceFactory } from "../factories/serviceFactory";
 
 const router = express.Router();
-const controller = createMaintenanceCategoriesController();
+const serviceFactory = new ServiceFactory(AppDataSource);
+const service = serviceFactory.createMaintenanceCategoriesService();
+const controller = new MaintenanceCategoriesController(service);
 
 // GET: Fetch all maintenance categories
 router.get("/", controller.getAll);

@@ -1,10 +1,10 @@
 import { DataSource } from "typeorm";
-import { PermissionType } from "../../entities/authorization/PermissionType";
-import { UserRoleEnum } from "../../entities/authorization/UserRoleEnum";
-import { VehicleACL } from "../../entities/authorization/VehicleACL";
-import { ACLType } from "../../entities/authorization/VehicleACL";
-import { PERMISSION_WEIGHT } from "../../entities/authorization/PermissionType";
-import { VehicleSelection } from "../../entities/authorization/VehicleSelection";
+import { PermissionType } from "../../entities/PermissionType";
+import { UserRoleEnum } from "../../entities/UserRoleEnum";
+import { VehicleACL } from "../../entities/VehicleACL";
+import { ACLType } from "../../entities/VehicleACL";
+import { PERMISSION_WEIGHT } from "../../entities/PermissionType";
+import { VehicleSelection } from "../../entities/VehicleSelection";
 import { AssignmentRepository } from "../../repositories/AssignmentRepository";
 import { VehicleACLRepository } from "../../repositories/VehicleACLRepository";
 import { UserGroupMembershipRepository } from "../../repositories/UserGroupMembershipRepository";

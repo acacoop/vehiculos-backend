@@ -1,5 +1,5 @@
 import { DataSource, Repository } from "typeorm";
-import { UserGroupMembership as UserGroupMembershipEntity } from "../entities/authorization/UserGroupMembership";
+import { UserGroupMembership as UserGroupMembershipEntity } from "../entities/UserGroupMembership";
 
 export interface UserGroupMembershipSearchParams {
   userId?: string;

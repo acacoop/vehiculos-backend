@@ -1,0 +1,27 @@
+import { VehicleBrand } from "../../entities/VehicleBrand";
+import { DeleteResult } from "typeorm";
+
+export interface VehicleBrandSearchParams {
+  name?: string;
+}
+
+export interface VehicleBrandFindOptions {
+  limit?: number;
+  offset?: number;
+  searchParams?: VehicleBrandSearchParams;
+}
+
+/**
+ * Interface for VehicleBrand Repository
+ * This abstraction allows for easy mocking in tests
+ */
+export interface IVehicleBrandRepository {
+  findAndCount(
+    options?: VehicleBrandFindOptions,
+  ): Promise<[VehicleBrand[], number]>;
+  findOne(id: string): Promise<VehicleBrand | null>;
+  findOneByWhere(where: { id: string }): Promise<VehicleBrand | null>;
+  create(data: Partial<VehicleBrand>): VehicleBrand;
+  save(entity: VehicleBrand): Promise<VehicleBrand>;
+  delete(id: string): Promise<DeleteResult>;
+}

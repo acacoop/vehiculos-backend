@@ -1,5 +1,5 @@
 import { DataSource, Repository } from "typeorm";
-import { VehicleSelection as VehicleSelectionEntity } from "../entities/authorization/VehicleSelection";
+import { VehicleSelection as VehicleSelectionEntity } from "../entities/VehicleSelection";
 
 export class VehicleSelectionRepository {
   private readonly repo: Repository<VehicleSelectionEntity>;

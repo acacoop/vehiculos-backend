@@ -1,10 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "./errorHandler";
-import UsersService from "../services/usersService";
 import { AUTH_BYPASS, AUTH_BYPASS_EMAIL } from "../config/env.config";
 import { extractBearer, verifyEntraAccessToken } from "../utils/jwtAzure";
+import { ServiceFactory } from "../factories/serviceFactory";
+import { AppDataSource } from "../db";
 
-const usersService = new UsersService();
+const serviceFactory = new ServiceFactory(AppDataSource);
+const usersService = serviceFactory.createUsersService();
 
 export interface AuthenticatedRequest extends Request {
   user?: {

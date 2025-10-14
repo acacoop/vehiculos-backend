@@ -1,8 +1,8 @@
 import { Response, NextFunction } from "express";
 import { DataSource } from "typeorm";
 import { AppError } from "../errorHandler";
-import { PermissionType } from "../../entities/authorization/PermissionType";
-import { UserRoleEnum } from "../../entities/authorization/UserRoleEnum";
+import { PermissionType } from "../../entities/PermissionType";
+import { UserRoleEnum } from "../../entities/UserRoleEnum";
 import { PermissionChecker } from "./checker";
 import { PermissionCheckOptions, PermissionRequest } from "./types";
 

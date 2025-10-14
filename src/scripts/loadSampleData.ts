@@ -20,15 +20,15 @@ import { Reservation } from "../entities/Reservation";
 import { VehicleResponsible } from "../entities/VehicleResponsible";
 import { VehicleKilometers } from "../entities/VehicleKilometers";
 // Authorization entities
-import { UserGroup } from "../entities/authorization/UserGroup";
-import { UserGroupMembership } from "../entities/authorization/UserGroupMembership";
-// import { UserGroupNesting } from "../entities/authorization/UserGroupNesting";
-import { VehicleSelection } from "../entities/authorization/VehicleSelection";
-import { CecoRange } from "../entities/authorization/CecoRange";
-import { VehicleACL, ACLType } from "../entities/authorization/VehicleACL";
-import { PermissionType } from "../entities/authorization/PermissionType";
-import { UserRole } from "../entities/authorization/UserRole";
-import { UserRoleEnum } from "../entities/authorization/UserRoleEnum";
+import { UserGroup } from "../entities/UserGroup";
+import { UserGroupMembership } from "../entities/UserGroupMembership";
+// import { UserGroupNesting } from "../entities/UserGroupNesting";
+import { VehicleSelection } from "../entities/VehicleSelection";
+import { CecoRange } from "../entities/CecoRange";
+import { VehicleACL, ACLType } from "../entities/VehicleACL";
+import { PermissionType } from "../entities/PermissionType";
+import { UserRole } from "../entities/UserRole";
+import { UserRoleEnum } from "../entities/UserRoleEnum";
 
 type SampleDataStats = {
   users: number;
