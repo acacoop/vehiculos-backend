@@ -27,13 +27,13 @@ export class CecoRangeRepository {
 
     if (searchParams) {
       if (searchParams.vehicleSelectionId) {
-        qb.andWhere({ "vs.id": searchParams.vehicleSelectionId });
+        qb.andWhere("vs.id = :vehicleSelectionId", { vehicleSelectionId: searchParams.vehicleSelectionId });
       }
       if (searchParams.startCeco) {
-        qb.andWhere({ "cr.startCeco": Number(searchParams.startCeco) });
+        qb.andWhere("cr.start_ceco = :startCeco", { startCeco: Number(searchParams.startCeco) });
       }
       if (searchParams.endCeco) {
-        qb.andWhere({ "cr.endCeco": Number(searchParams.endCeco) });
+        qb.andWhere("cr.end_ceco = :endCeco", { endCeco: Number(searchParams.endCeco) });
       }
     }
 

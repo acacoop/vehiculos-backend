@@ -26,20 +26,21 @@ export class VehicleACLRepository {
     const qb = this.repo
       .createQueryBuilder("acl")
       .leftJoinAndSelect("acl.vehicleSelection", "vs")
+      .leftJoinAndSelect("vs.vehicles", "v") // Load vehicles in selection
       .orderBy("acl.startTime", "DESC");
 
     if (searchParams) {
       if (searchParams.aclType) {
-        qb.andWhere({ "acl.aclType": searchParams.aclType });
+        qb.andWhere("acl.acl_type = :aclType", { aclType: searchParams.aclType });
       }
       if (searchParams.entityId) {
-        qb.andWhere({ "acl.entityId": searchParams.entityId });
+        qb.andWhere("acl.entity_id = :entityId", { entityId: searchParams.entityId });
       }
       if (searchParams.permission) {
-        qb.andWhere({ "acl.permission": searchParams.permission });
+        qb.andWhere("acl.permission = :permission", { permission: searchParams.permission });
       }
       if (searchParams.vehicleSelectionId) {
-        qb.andWhere({ "vs.id": searchParams.vehicleSelectionId });
+        qb.andWhere("vs.id = :vehicleSelectionId", { vehicleSelectionId: searchParams.vehicleSelectionId });
       }
     }
 

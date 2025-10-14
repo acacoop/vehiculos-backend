@@ -27,10 +27,10 @@ export class UserGroupMembershipRepository {
 
     if (searchParams) {
       if (searchParams.userId) {
-        qb.andWhere({ "u.id": searchParams.userId });
+        qb.andWhere("u.id = :userId", { userId: searchParams.userId });
       }
       if (searchParams.userGroupId) {
-        qb.andWhere({ "ug.id": searchParams.userGroupId });
+        qb.andWhere("ug.id = :userGroupId", { userGroupId: searchParams.userGroupId });
       }
     }
 
