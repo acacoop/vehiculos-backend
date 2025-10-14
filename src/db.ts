@@ -182,15 +182,20 @@ async function ensureDatabase(retries = 3, delayMs = 2000) {
   }
 }
 
-(async () => {
-  await ensureDatabase();
+// Only auto-initialize if not running Jest tests
+// Jest sets JEST_WORKER_ID when running tests
+// Test environment deployments (for product owner) will still initialize
+if (!process.env.JEST_WORKER_ID) {
+  (async () => {
+    await ensureDatabase();
 
-  AppDataSource.initialize()
-    .then(() => {
-      console.log("✅ SQL Server connection established (TypeORM)");
-      initializePermissionChecker(AppDataSource);
-    })
-    .catch((err: unknown) =>
-      console.error("❌ SQL Server connection failed:", err),
-    );
-})();
+    AppDataSource.initialize()
+      .then(() => {
+        console.log("✅ SQL Server connection established (TypeORM)");
+        initializePermissionChecker(AppDataSource);
+      })
+      .catch((err: unknown) =>
+        console.error("❌ SQL Server connection failed:", err),
+      );
+  })();
+}

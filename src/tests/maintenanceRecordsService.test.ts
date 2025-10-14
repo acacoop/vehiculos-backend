@@ -59,6 +59,8 @@ describe("MaintenanceRecordsService", () => {
 
     mockMaintenanceRecordEntityRepo = {
       findOne: jest.fn(),
+      save: jest.fn(),
+      create: jest.fn(),
     } as unknown as jest.Mocked<Repository<MaintenanceRecordEntity>>;
 
     mockAssignedRepo = {

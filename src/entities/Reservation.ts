@@ -4,11 +4,13 @@ import {
   ManyToOne,
   Column,
   JoinColumn,
+  Check,
 } from "typeorm";
 import { User } from "./User";
 import { Vehicle } from "./Vehicle";
 
 @Entity({ name: "reservations" })
+@Check("end_date > start_date")
 export class Reservation {
   @PrimaryGeneratedColumn("uuid")
   id!: string;

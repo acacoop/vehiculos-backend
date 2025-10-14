@@ -1,6 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 import { MaintenancesService } from "../services/maintenancesService";
 import { IMaintenanceRepository } from "../repositories/interfaces/IMaintenanceRepository";
+import { IAssignedMaintenanceRepository } from "../repositories/interfaces/IAssignedMaintenanceRepository";
 import { Maintenance } from "../entities/Maintenance";
 import { MaintenanceCategory } from "../entities/MaintenanceCategory";
 import { Repository } from "typeorm";
@@ -12,6 +13,7 @@ describe("MaintenancesService", () => {
   let service: MaintenancesService;
   let mockRepo: jest.Mocked<IMaintenanceRepository>;
   let mockMaintenanceCategoryRepo: jest.Mocked<Repository<MaintenanceCategory>>;
+  let mockAssignedRepo: jest.Mocked<IAssignedMaintenanceRepository>;
 
   beforeEach(() => {
     mockRepo = {
@@ -26,9 +28,9 @@ describe("MaintenancesService", () => {
       findOne: jest.fn(),
     } as unknown as jest.Mocked<Repository<MaintenanceCategory>>;
 
-    const mockAssignedRepo: any = {
+    mockAssignedRepo = {
       findByMaintenance: jest.fn(),
-    };
+    } as unknown as jest.Mocked<IAssignedMaintenanceRepository>;
 
     service = new MaintenancesService(
       mockRepo,

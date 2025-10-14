@@ -1,5 +1,8 @@
 import { BaseController } from "./baseController";
-import { MaintenanceCategorySchema, type MaintenanceCategory } from "../schemas/maintenanceCategory";
+import {
+  MaintenanceCategorySchema,
+  type MaintenanceCategory,
+} from "../schemas/maintenanceCategory";
 import { MaintenanceCategoriesService } from "../services/maintenanceCategoriesService";
 
 export class MaintenanceCategoriesController extends BaseController {

@@ -4,6 +4,7 @@ import type {
   VehicleModelInput,
   VehicleModelType,
 } from "../schemas/vehicleModel";
+import { AppError } from "../middleware/errorHandler";
 
 /**
  * VehicleModelService - Business logic for VehicleModel operations
@@ -52,7 +53,14 @@ export class VehicleModelService {
 
   async create(data: VehicleModelInput): Promise<VehicleModelType | null> {
     const brand = await this.brandRepo.findOneByWhere({ id: data.brandId });
-    if (!brand) return null;
+    if (!brand) {
+      throw new AppError(
+        `Brand with ID ${data.brandId} not found`,
+        404,
+        "https://example.com/problems/vehicle-brand-not-found",
+        "Vehicle Brand Not Found",
+      );
+    }
     const created = this.repo.create({ name: data.name, brand });
     const saved = await this.repo.save(created);
     return {
@@ -71,7 +79,14 @@ export class VehicleModelService {
     if (data.name) existing.name = data.name;
     if (data.brandId) {
       const brand = await this.brandRepo.findOneByWhere({ id: data.brandId });
-      if (!brand) return null;
+      if (!brand) {
+        throw new AppError(
+          `Brand with ID ${data.brandId} not found`,
+          404,
+          "https://example.com/problems/vehicle-brand-not-found",
+          "Vehicle Brand Not Found",
+        );
+      }
       existing.brand = brand;
     }
     const saved = await this.repo.save(existing);

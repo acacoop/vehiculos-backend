@@ -8,8 +8,14 @@ interface ProblemDetails {
   status: number;
   detail?: string;
   instance?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any; // Additional extension members
+  // Additional extension members
+  [key: string]:
+    | string
+    | number
+    | boolean
+    | undefined
+    | Record<string, unknown>
+    | Array<unknown>;
 }
 
 // Custom error class with RFC 7807 support
@@ -42,8 +48,7 @@ const createProblemDetails = (
   detail?: string,
   type?: string,
   instance?: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  extensions?: Record<string, any>,
+  extensions?: Record<string, unknown>,
 ): ProblemDetails => {
   const problem: ProblemDetails = {
     type: type || `https://httpstatuses.com/${status}`,

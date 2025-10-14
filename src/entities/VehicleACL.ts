@@ -4,6 +4,8 @@ import {
   JoinColumn,
   Column,
   OneToOne,
+  Check,
+  Index,
 } from "typeorm";
 import { PermissionType } from "./PermissionType";
 import { VehicleSelection } from "./VehicleSelection";
@@ -14,6 +16,8 @@ export enum ACLType {
 }
 
 @Entity({ name: "vehicle_acl" })
+@Check("end_time IS NULL OR end_time > start_time")
+@Index(["entityId", "aclType"])
 export class VehicleACL {
   @PrimaryGeneratedColumn("uuid")
   id!: string;

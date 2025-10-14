@@ -13,32 +13,49 @@ import {
 } from "../schemas/vehicleKilometers";
 import { MaintenanceCategorySchema } from "../schemas/maintenanceCategory";
 import { MaintenanceSchema } from "../schemas/maintenance";
-import { VehicleBrandSchema } from "../schemas/vehicleBrand";
-import { VehicleModelSchema } from "../schemas/vehicleModel";
-import { RoleSchema } from "../schemas/role";
 import {
   AssignedMaintenanceSchema,
   UpdateAssignedMaintenanceSchema,
 } from "../schemas/assignMaintance";
 import { MaintenanceRecordSchema } from "../schemas/maintenanceRecord";
 
+// Type for Zod internal checks
+interface ZodStringCheck {
+  kind: string;
+  [key: string]: unknown;
+}
+
+// Type for Zod internal _def structure
+interface ZodInternalDef {
+  typeName: z.ZodFirstPartyTypeKind;
+  checks?: ZodStringCheck[];
+  shape?: () => Record<string, z.ZodTypeAny>;
+  type?: z.ZodTypeAny;
+  innerType?: z.ZodTypeAny;
+  schema?: z.ZodTypeAny;
+  [key: string]: unknown;
+}
+
 // Basic schema converter (subset)
 // Simple converter (internal use) – returns loosely typed JSON schema fragments
 const toSchema = (schema: z.ZodTypeAny): Record<string, unknown> => {
-  const d = schema._def;
+  const d = schema._def as ZodInternalDef;
   switch (d.typeName) {
     case z.ZodFirstPartyTypeKind.ZodObject: {
       const shape: Record<string, unknown> = {};
       const req: string[] = [];
-      const entries = Object.entries(d.shape()) as [string, z.ZodTypeAny][];
-      for (const [k, v] of entries) {
-        shape[k] = toSchema(v);
-        // Detect optional/nullable via _def
-        const isOptional =
-          (v as any)._def?.typeName === z.ZodFirstPartyTypeKind.ZodOptional; // eslint-disable-line @typescript-eslint/no-explicit-any
-        const isNullable =
-          (v as any)._def?.typeName === z.ZodFirstPartyTypeKind.ZodNullable; // eslint-disable-line @typescript-eslint/no-explicit-any
-        if (!isOptional && !isNullable) req.push(k);
+      if (d.shape) {
+        const entries = Object.entries(d.shape()) as [string, z.ZodTypeAny][];
+        for (const [k, v] of entries) {
+          shape[k] = toSchema(v);
+          // Detect optional/nullable via _def
+          const vDef = v._def as ZodInternalDef;
+          const isOptional =
+            vDef?.typeName === z.ZodFirstPartyTypeKind.ZodOptional;
+          const isNullable =
+            vDef?.typeName === z.ZodFirstPartyTypeKind.ZodNullable;
+          if (!isOptional && !isNullable) req.push(k);
+        }
       }
       return {
         type: "object",
@@ -47,11 +64,9 @@ const toSchema = (schema: z.ZodTypeAny): Record<string, unknown> => {
       };
     }
     case z.ZodFirstPartyTypeKind.ZodString:
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((d.checks || []).some((c: any) => c.kind === "uuid"))
+      if ((d.checks || []).some((c: ZodStringCheck) => c.kind === "uuid"))
         return { type: "string", format: "uuid" };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((d.checks || []).some((c: any) => c.kind === "email"))
+      if ((d.checks || []).some((c: ZodStringCheck) => c.kind === "email"))
         return { type: "string", format: "email" };
       return { type: "string" };
     case z.ZodFirstPartyTypeKind.ZodNumber:
@@ -61,13 +76,17 @@ const toSchema = (schema: z.ZodTypeAny): Record<string, unknown> => {
     case z.ZodFirstPartyTypeKind.ZodDate:
       return { type: "string", format: "date-time" };
     case z.ZodFirstPartyTypeKind.ZodArray:
-      return { type: "array", items: toSchema(d.type) };
+      return d.type
+        ? { type: "array", items: toSchema(d.type) }
+        : { type: "array" };
     case z.ZodFirstPartyTypeKind.ZodOptional:
-      return toSchema(d.innerType);
+      return d.innerType ? toSchema(d.innerType) : { type: "string" };
     case z.ZodFirstPartyTypeKind.ZodNullable:
-      return { anyOf: [toSchema(d.innerType), { type: "null" }] };
+      return d.innerType
+        ? { anyOf: [toSchema(d.innerType), { type: "null" }] }
+        : { type: "null" };
     case z.ZodFirstPartyTypeKind.ZodEffects:
-      return toSchema(d.schema);
+      return d.schema ? toSchema(d.schema) : { type: "string" };
     default:
       return { type: "string" };
   }
