@@ -12,10 +12,7 @@ import {
   IAssignmentRepository,
   AssignmentSearchParams,
 } from "./interfaces/IAssignmentRepository";
-import {
-  RepositoryFindOptions,
-  resolvePagination,
-} from "./interfaces/common";
+import { RepositoryFindOptions, resolvePagination } from "./interfaces/common";
 import { UserRoleEnum } from "../utils/common";
 import { getAllowedPermissions } from "../utils/permissions";
 

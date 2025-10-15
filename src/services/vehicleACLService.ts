@@ -49,7 +49,8 @@ export class VehicleACLService {
 
     // Validate time period if both are being updated
     const newStartTime = data.startTime || existing.startTime;
-    const newEndTime = data.endTime !== undefined ? data.endTime : existing.endTime;
+    const newEndTime =
+      data.endTime !== undefined ? data.endTime : existing.endTime;
 
     if (newEndTime && newStartTime >= newEndTime) {
       throw new AppError(
@@ -72,10 +73,7 @@ export class VehicleACLService {
     return result.affected === 1;
   }
 
-  async getActiveACLsForUser(
-    userId: string,
-    at?: Date,
-  ): Promise<VehicleACL[]> {
+  async getActiveACLsForUser(userId: string, at?: Date): Promise<VehicleACL[]> {
     return this.repository.getActiveACLsForUser(userId, at);
   }
 }

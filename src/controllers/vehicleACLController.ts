@@ -25,7 +25,8 @@ export class VehicleACLController extends BaseController {
     if (req.query.vehicleId)
       searchParams.vehicleId = req.query.vehicleId as string;
     if (req.query.permission)
-      searchParams.permission = req.query.permission as VehicleACLSearchParams["permission"];
+      searchParams.permission = req.query
+        .permission as VehicleACLSearchParams["permission"];
     if (req.query.activeAt)
       searchParams.activeAt = new Date(req.query.activeAt as string);
 

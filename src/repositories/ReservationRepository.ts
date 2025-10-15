@@ -4,10 +4,7 @@ import {
   IReservationRepository,
   ReservationSearchParams,
 } from "./interfaces/IReservationRepository";
-import {
-  RepositoryFindOptions,
-  resolvePagination,
-} from "./interfaces/common";
+import { RepositoryFindOptions, resolvePagination } from "./interfaces/common";
 import { UserRoleEnum } from "../utils/common";
 import { getAllowedPermissions } from "../utils/permissions";
 
@@ -46,7 +43,8 @@ export class ReservationRepository implements IReservationRepository {
     // Pagination defaults (limit and offset optional)
     const { limit, offset } = resolvePagination(pagination);
     qb.take(limit);
-    qb.skip(offset);    return qb.getManyAndCount();
+    qb.skip(offset);
+    return qb.getManyAndCount();
   }
 
   /**

@@ -13,7 +13,11 @@ class MockUserRoleRepository {
   async findAndCount(opts?: {
     limit?: number;
     offset?: number;
-    searchParams?: { userId?: string; role?: UserRoleEnum; activeOnly?: boolean };
+    searchParams?: {
+      userId?: string;
+      role?: UserRoleEnum;
+      activeOnly?: boolean;
+    };
   }): Promise<[UserRole[], number]> {
     const { limit = 10, offset = 0, searchParams } = opts || {};
     let filtered = [...this.userRoles];
@@ -28,8 +32,7 @@ class MockUserRoleRepository {
       if (searchParams.activeOnly) {
         const now = new Date();
         filtered = filtered.filter(
-          (ur) =>
-            ur.startTime <= now && (!ur.endTime || ur.endTime > now),
+          (ur) => ur.startTime <= now && (!ur.endTime || ur.endTime > now),
         );
       }
     }
@@ -136,7 +139,12 @@ describe("UserRolesService", () => {
     );
   });
 
-  function createTestUser(id: string, email: string, firstName: string, lastName: string): User {
+  function createTestUser(
+    id: string,
+    email: string,
+    firstName: string,
+    lastName: string,
+  ): User {
     const user = new User();
     user.id = id;
     user.email = email;
@@ -166,8 +174,18 @@ describe("UserRolesService", () => {
     it("should return all user roles", async () => {
       const user = createTestUser("1", "test@test.com", "John", "Doe");
       const userRoles = [
-        createTestUserRole("1", user, UserRoleEnum.USER, new Date("2024-01-01")),
-        createTestUserRole("2", user, UserRoleEnum.ADMIN, new Date("2024-06-01")),
+        createTestUserRole(
+          "1",
+          user,
+          UserRoleEnum.USER,
+          new Date("2024-01-01"),
+        ),
+        createTestUserRole(
+          "2",
+          user,
+          UserRoleEnum.ADMIN,
+          new Date("2024-06-01"),
+        ),
       ];
       mockUserRoleRepo.seedUserRoles(userRoles);
 
@@ -181,8 +199,18 @@ describe("UserRolesService", () => {
       const user1 = createTestUser("1", "user1@test.com", "John", "Doe");
       const user2 = createTestUser("2", "user2@test.com", "Jane", "Smith");
       const userRoles = [
-        createTestUserRole("1", user1, UserRoleEnum.USER, new Date("2024-01-01")),
-        createTestUserRole("2", user2, UserRoleEnum.ADMIN, new Date("2024-01-01")),
+        createTestUserRole(
+          "1",
+          user1,
+          UserRoleEnum.USER,
+          new Date("2024-01-01"),
+        ),
+        createTestUserRole(
+          "2",
+          user2,
+          UserRoleEnum.ADMIN,
+          new Date("2024-01-01"),
+        ),
       ];
       mockUserRoleRepo.seedUserRoles(userRoles);
 
@@ -197,7 +225,13 @@ describe("UserRolesService", () => {
       const past = new Date("2020-01-01");
       const future = new Date("2099-01-01");
       const userRoles = [
-        createTestUserRole("1", user, UserRoleEnum.USER, past, new Date("2020-12-31")),
+        createTestUserRole(
+          "1",
+          user,
+          UserRoleEnum.USER,
+          past,
+          new Date("2020-12-31"),
+        ),
         createTestUserRole("2", user, UserRoleEnum.ADMIN, past, future),
       ];
       mockUserRoleRepo.seedUserRoles(userRoles);
@@ -212,7 +246,12 @@ describe("UserRolesService", () => {
   describe("getById", () => {
     it("should return user role by id", async () => {
       const user = createTestUser("1", "test@test.com", "John", "Doe");
-      const userRole = createTestUserRole("1", user, UserRoleEnum.USER, new Date("2024-01-01"));
+      const userRole = createTestUserRole(
+        "1",
+        user,
+        UserRoleEnum.USER,
+        new Date("2024-01-01"),
+      );
       mockUserRoleRepo.seedUserRoles([userRole]);
 
       const result = await service.getById("1");
@@ -271,7 +310,12 @@ describe("UserRolesService", () => {
   describe("update", () => {
     it("should update user role", async () => {
       const user = createTestUser("1", "test@test.com", "John", "Doe");
-      const userRole = createTestUserRole("1", user, UserRoleEnum.USER, new Date("2024-01-01"));
+      const userRole = createTestUserRole(
+        "1",
+        user,
+        UserRoleEnum.USER,
+        new Date("2024-01-01"),
+      );
       mockUserRoleRepo.seedUserRoles([userRole]);
 
       const result = await service.update("1", { role: UserRoleEnum.ADMIN });
@@ -281,7 +325,9 @@ describe("UserRolesService", () => {
     });
 
     it("should return null if user role not found", async () => {
-      const result = await service.update("nonexistent", { role: UserRoleEnum.ADMIN });
+      const result = await service.update("nonexistent", {
+        role: UserRoleEnum.ADMIN,
+      });
       expect(result).toBeNull();
     });
   });
@@ -289,7 +335,12 @@ describe("UserRolesService", () => {
   describe("delete", () => {
     it("should delete user role", async () => {
       const user = createTestUser("1", "test@test.com", "John", "Doe");
-      const userRole = createTestUserRole("1", user, UserRoleEnum.USER, new Date("2024-01-01"));
+      const userRole = createTestUserRole(
+        "1",
+        user,
+        UserRoleEnum.USER,
+        new Date("2024-01-01"),
+      );
       mockUserRoleRepo.seedUserRoles([userRole]);
 
       const result = await service.delete("1");

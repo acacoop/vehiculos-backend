@@ -62,7 +62,9 @@ class MockVehicleACLRepository {
     );
   }
 
-  create(data: Partial<VehicleACL> & { userId?: string; vehicleId?: string }): VehicleACL {
+  create(
+    data: Partial<VehicleACL> & { userId?: string; vehicleId?: string },
+  ): VehicleACL {
     const acl = new VehicleACL();
     Object.assign(acl, data);
     // Map userId/vehicleId to user/vehicle relations
@@ -117,7 +119,9 @@ describe("VehicleACLService", () => {
 
   beforeEach(() => {
     mockRepo = new MockVehicleACLRepository();
-    service = new VehicleACLService(mockRepo as unknown as VehicleACLRepository);
+    service = new VehicleACLService(
+      mockRepo as unknown as VehicleACLRepository,
+    );
   });
 
   function createTestUser(id: string): User {
@@ -449,14 +453,7 @@ describe("VehicleACLService", () => {
           past,
           future,
         ),
-        createTestACL(
-          "3",
-          user2,
-          vehicle3,
-          PermissionType.READ,
-          past,
-          future,
-        ),
+        createTestACL("3", user2, vehicle3, PermissionType.READ, past, future),
       ];
       mockRepo.seedACLs(acls);
 
