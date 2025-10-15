@@ -68,14 +68,10 @@ export class VehiclesService {
     }
     if (data.licensePlate) existing.licensePlate = data.licensePlate;
     if (typeof data.year === "number") existing.year = data.year;
-    if ("chassisNumber" in data)
-      existing.chassisNumber = data.chassisNumber;
-    if ("engineNumber" in data)
-      existing.engineNumber = data.engineNumber;
-    if ("vehicleType" in data)
-      existing.vehicleType = data.vehicleType;
-    if ("transmission" in data)
-      existing.transmission = data.transmission;
+    if ("chassisNumber" in data) existing.chassisNumber = data.chassisNumber;
+    if ("engineNumber" in data) existing.engineNumber = data.engineNumber;
+    if ("vehicleType" in data) existing.vehicleType = data.vehicleType;
+    if ("transmission" in data) existing.transmission = data.transmission;
     if ("fuelType" in data) existing.fuelType = data.fuelType;
     const saved = await this.vehicleRepo.save(existing);
     return mapEntity(saved);
