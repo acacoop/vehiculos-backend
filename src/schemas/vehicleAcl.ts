@@ -1,15 +1,27 @@
 import { z } from "zod";
 import { PermissionType } from "../entities/PermissionType";
 
-export const VehicleSelectionSchema = z.object({
-  vehicleIds: z.array(z.string().uuid()).default([]),
-});
-export type VehicleSelectionInput = z.infer<typeof VehicleSelectionSchema>;
-
+/**
+ * Schema for creating a new VehicleACL entry
+ * Maps a user directly to a vehicle with a permission level and time period
+ */
 export const VehicleACLCreateSchema = z.object({
-  aclType: z.enum(["user", "user_group"]),
-  entityId: z.string().uuid(),
+  userId: z.string().uuid(),
+  vehicleId: z.string().uuid(),
   permission: z.nativeEnum(PermissionType),
-  vehicleSelectionId: z.string().uuid(),
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date().optional(),
 });
+
 export type VehicleACLCreateInput = z.infer<typeof VehicleACLCreateSchema>;
+
+/**
+ * Schema for updating a VehicleACL entry
+ */
+export const VehicleACLUpdateSchema = z.object({
+  permission: z.nativeEnum(PermissionType).optional(),
+  startTime: z.coerce.date().optional(),
+  endTime: z.coerce.date().optional().nullable(),
+});
+
+export type VehicleACLUpdateInput = z.infer<typeof VehicleACLUpdateSchema>;

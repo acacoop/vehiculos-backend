@@ -28,7 +28,7 @@ import {
   AssignedMaintenanceRepository,
 } from "../repositories/MaintenanceRepository";
 import { MaintenanceRecordRepository } from "../repositories/MaintenanceRecordRepository";
-import { MaintenanceRecord as MaintenanceRecordEntity } from "../entities/MaintenanceRecord";
+import { MaintenanceRecord } from "../entities/MaintenanceRecord";
 import { MaintenanceCategory } from "../entities/MaintenanceCategory";
 import { Maintenance } from "../entities/Maintenance";
 import { AssignedMaintenance } from "../entities/AssignedMaintenance";
@@ -127,15 +127,15 @@ export class ServiceFactory {
 
   createMaintenanceRecordsService(): MaintenanceRecordsService {
     const recordRepo = new MaintenanceRecordRepository(this.dataSource);
-    const maintenanceRecordEntityRepo = this.dataSource.getRepository(
-      MaintenanceRecordEntity,
-    );
-    const assignedRepo = this.dataSource.getRepository(AssignedMaintenance);
+    const maintenanceRecordRepo =
+      this.dataSource.getRepository(MaintenanceRecord);
+    const assignedMaintenanceRepo =
+      this.dataSource.getRepository(AssignedMaintenance);
     const userRepo = this.dataSource.getRepository(User);
     return new MaintenanceRecordsService(
       recordRepo,
-      maintenanceRecordEntityRepo,
-      assignedRepo,
+      maintenanceRecordRepo,
+      assignedMaintenanceRepo,
       userRepo,
     );
   }

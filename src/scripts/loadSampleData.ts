@@ -19,13 +19,8 @@ import { MaintenanceRecord } from "../entities/MaintenanceRecord";
 import { Reservation } from "../entities/Reservation";
 import { VehicleResponsible } from "../entities/VehicleResponsible";
 import { VehicleKilometers } from "../entities/VehicleKilometers";
-// Authorization entities
-import { UserGroup } from "../entities/UserGroup";
-import { UserGroupMembership } from "../entities/UserGroupMembership";
-// import { UserGroupNesting } from "../entities/UserGroupNesting";
-import { VehicleSelection } from "../entities/VehicleSelection";
-import { CecoRange } from "../entities/CecoRange";
-import { VehicleACL, ACLType } from "../entities/VehicleACL";
+// Authorization entities (simplified)
+import { VehicleACL } from "../entities/VehicleACL";
 import { PermissionType } from "../entities/PermissionType";
 import { UserRole } from "../entities/UserRole";
 import { UserRoleEnum } from "../entities/UserRoleEnum";
@@ -41,11 +36,6 @@ type SampleDataStats = {
   reservations: number;
   vehicleResponsibles: number;
   vehicleKilometers: number;
-  userGroups: number;
-  userGroupMemberships: number;
-  userGroupNestings: number;
-  vehicleSelections: number;
-  cecoRanges: number;
   vehicleACLs: number;
   userRoles: number;
 };
@@ -66,12 +56,7 @@ async function clearSampleData(): Promise<void> {
 
   // Authorization data (order matters for FKs)
   await AppDataSource.query("DELETE FROM vehicle_acl WHERE 1=1");
-  await AppDataSource.query("DELETE FROM user_group_nestings WHERE 1=1");
-  await AppDataSource.query("DELETE FROM user_group_memberships WHERE 1=1");
   await AppDataSource.query("DELETE FROM user_roles WHERE 1=1");
-  await AppDataSource.query("DELETE FROM ceco_ranges WHERE 1=1");
-  await AppDataSource.query("DELETE FROM vehicle_selections WHERE 1=1");
-  await AppDataSource.query("DELETE FROM user_groups WHERE 1=1");
 
   // Only delete sample users (those with SAMPLE_ prefix in entraId or @sample.test domain)
   // This preserves all real users from Entra sync
@@ -811,12 +796,8 @@ async function createVehicleResponsibles(
   return savedResponsibles;
 }
 
-// --- Authorization sample data ---
+// --- Authorization sample data (simplified) ---
 async function createAuthorizationData(users: User[], vehicles: Vehicle[]) {
-  const userGroupRepo = AppDataSource.getRepository(UserGroup);
-  const membershipRepo = AppDataSource.getRepository(UserGroupMembership);
-  const selectionRepo = AppDataSource.getRepository(VehicleSelection);
-  const cecoRangeRepo = AppDataSource.getRepository(CecoRange);
   const vehicleACLRepo = AppDataSource.getRepository(VehicleACL);
   const userRoleRepo = AppDataSource.getRepository(UserRole);
 
@@ -824,55 +805,6 @@ async function createAuthorizationData(users: User[], vehicles: Vehicle[]) {
   const findUser = (email: string) => users.find((u) => u.email === email)!;
   const findVehicle = (lp: string) =>
     vehicles.find((v) => v.licensePlate === lp)!;
-
-  // Create groups
-  const [directGroup, cecoGroup] = await userGroupRepo.save(
-    userGroupRepo.create([{}, {}]),
-  );
-
-  // Group memberships
-  const savedMemberships = await membershipRepo.save(
-    membershipRepo.create([
-      // Direct group members
-      {
-        user: findUser("juan.perez@sample.test"),
-        userGroup: directGroup,
-        startTime: new Date("2024-01-01T00:00:00Z"),
-      },
-      // CECO group members
-      {
-        user: findUser("maria.gonzalez@sample.test"),
-        userGroup: cecoGroup,
-        startTime: new Date("2024-01-01T00:00:00Z"),
-      },
-    ]),
-  );
-
-  // Vehicle selections (each ACL needs its own selection due to OneToOne relationship)
-  const selectionMiguelDirect = selectionRepo.create({
-    vehicles: [findVehicle("ABC123"), findVehicle("DEF456")], // V1, V2
-  });
-  const selectionGroupDirect = selectionRepo.create({
-    vehicles: [findVehicle("ABC123"), findVehicle("DEF456")], // V1, V2
-  });
-  const selectionCeco = selectionRepo.create({ vehicles: [] }); // CECO range 23000000-23999999 (V2)
-  const [savedSelectionMiguel, savedSelectionGroup, savedSelectionCeco] =
-    await selectionRepo.save([
-      selectionMiguelDirect,
-      selectionGroupDirect,
-      selectionCeco,
-    ]);
-
-  // CECO ranges
-  const savedCecoRanges = await cecoRangeRepo.save(
-    cecoRangeRepo.create([
-      {
-        vehicleSelection: savedSelectionCeco,
-        startCeco: 23000000,
-        endCeco: 23999999,
-      },
-    ]),
-  );
 
   // User roles (Carlos admin, others user)
   const savedRoles = await userRoleRepo.save(
@@ -891,42 +823,60 @@ async function createAuthorizationData(users: User[], vehicles: Vehicle[]) {
     ]),
   );
 
-  // Vehicle ACLs
+  // Simple Vehicle ACLs - direct user-vehicle-permission-period mappings
   const savedACLs = await vehicleACLRepo.save(
     vehicleACLRepo.create([
-      // Direct user ACL: Miguel DRIVER on V1,V2
+      // Miguel has DRIVER permission on ABC123 and DEF456
       {
-        aclType: ACLType.USER,
-        entityId: findUser("miguel.vargas@sample.test").id,
+        user: findUser("miguel.vargas@sample.test"),
+        vehicle: findVehicle("ABC123"),
         permission: PermissionType.DRIVER,
-        vehicleSelection: savedSelectionMiguel,
         startTime: new Date("2024-01-01T00:00:00Z"),
+        endTime: null,
       },
-      // Direct group ACL: directGroup DRIVER on V1,V2
       {
-        aclType: ACLType.USER_GROUP,
-        entityId: directGroup.id,
+        user: findUser("miguel.vargas@sample.test"),
+        vehicle: findVehicle("DEF456"),
         permission: PermissionType.DRIVER,
-        vehicleSelection: savedSelectionGroup,
         startTime: new Date("2024-01-01T00:00:00Z"),
+        endTime: null,
       },
-      // CECO group ACL: cecoGroup DRIVER on CECO 23000000-23999999 (includes V2)
+      // Juan (old driver) has READ permission on ABC123 via ACL
       {
-        aclType: ACLType.USER_GROUP,
-        entityId: cecoGroup.id,
-        permission: PermissionType.DRIVER,
-        vehicleSelection: savedSelectionCeco,
+        user: findUser("juan.perez@sample.test"),
+        vehicle: findVehicle("ABC123"),
+        permission: PermissionType.READ,
         startTime: new Date("2024-01-01T00:00:00Z"),
+        endTime: null,
+      },
+      // Lucia has MAINTAINER permission on GHI789
+      {
+        user: findUser("lucia.castro@sample.test"),
+        vehicle: findVehicle("GHI789"),
+        permission: PermissionType.MAINTAINER,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+        endTime: null,
+      },
+      // Roberto has FULL permission on STU901
+      {
+        user: findUser("roberto.jimenez@sample.test"),
+        vehicle: findVehicle("STU901"),
+        permission: PermissionType.FULL,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+        endTime: null,
+      },
+      // Expired ACL example: Sofia had DRIVER permission on MNO345 but it expired
+      {
+        user: findUser("sofia.hernandez@sample.test"),
+        vehicle: findVehicle("MNO345"),
+        permission: PermissionType.DRIVER,
+        startTime: new Date("2023-06-01T00:00:00Z"),
+        endTime: new Date("2024-05-31T23:59:59Z"), // expired
       },
     ]),
   );
 
   return {
-    userGroups: 2,
-    userGroupMemberships: savedMemberships.length,
-    userGroupNestings: 0,
-    vehicleSelections: 3, // Now 3 selections instead of 2
-    cecoRanges: savedCecoRanges.length,
     vehicleACLs: savedACLs.length,
     userRoles: savedRoles.length,
   };
@@ -1102,11 +1052,6 @@ export async function loadSampleData(): Promise<SampleDataStats> {
     reservations: reservations.length,
     vehicleResponsibles: vehicleResponsibles.length,
     vehicleKilometers: vehicleKilometers.length,
-    userGroups: authStats.userGroups,
-    userGroupMemberships: authStats.userGroupMemberships,
-    userGroupNestings: authStats.userGroupNestings,
-    vehicleSelections: authStats.vehicleSelections,
-    cecoRanges: authStats.cecoRanges,
     vehicleACLs: authStats.vehicleACLs,
     userRoles: authStats.userRoles,
   };
@@ -1125,11 +1070,6 @@ export async function loadSampleData(): Promise<SampleDataStats> {
   console.log(`   Reservations: ${stats.reservations}`);
   console.log(`   Vehicle Responsibles: ${stats.vehicleResponsibles}`);
   console.log(`   Vehicle Kilometers: ${stats.vehicleKilometers}`);
-  console.log(`   User Groups: ${stats.userGroups}`);
-  console.log(`   Group Memberships: ${stats.userGroupMemberships}`);
-  console.log(`   Group Nestings: ${stats.userGroupNestings}`);
-  console.log(`   Vehicle Selections: ${stats.vehicleSelections}`);
-  console.log(`   CECO Ranges: ${stats.cecoRanges}`);
   console.log(`   Vehicle ACLs: ${stats.vehicleACLs}`);
   console.log(`   User Roles: ${stats.userRoles}`);
 

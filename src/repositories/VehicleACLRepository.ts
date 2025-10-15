@@ -1,13 +1,12 @@
 import { DataSource, Repository } from "typeorm";
 import { VehicleACL as VehicleACLEntity } from "../entities/VehicleACL";
 import { PermissionType } from "../entities/PermissionType";
-import { ACLType } from "../entities/VehicleACL";
 
 export interface VehicleACLSearchParams {
-  aclType?: ACLType;
-  entityId?: string;
+  userId?: string;
+  vehicleId?: string;
   permission?: PermissionType;
-  vehicleSelectionId?: string;
+  activeAt?: Date; // Filter for ACLs active at a specific time
 }
 
 export class VehicleACLRepository {
@@ -25,22 +24,29 @@ export class VehicleACLRepository {
     const { searchParams, limit, offset } = options || {};
     const qb = this.repo
       .createQueryBuilder("acl")
-      .leftJoinAndSelect("acl.vehicleSelection", "vs")
-      .leftJoinAndSelect("vs.vehicles", "v") // Load vehicles in selection
+      .leftJoinAndSelect("acl.user", "u")
+      .leftJoinAndSelect("acl.vehicle", "v")
       .orderBy("acl.startTime", "DESC");
 
     if (searchParams) {
-      if (searchParams.aclType) {
-        qb.andWhere("acl.acl_type = :aclType", { aclType: searchParams.aclType });
+      if (searchParams.userId) {
+        qb.andWhere("u.id = :userId", { userId: searchParams.userId });
       }
-      if (searchParams.entityId) {
-        qb.andWhere("acl.entity_id = :entityId", { entityId: searchParams.entityId });
+      if (searchParams.vehicleId) {
+        qb.andWhere("v.id = :vehicleId", { vehicleId: searchParams.vehicleId });
       }
       if (searchParams.permission) {
-        qb.andWhere("acl.permission = :permission", { permission: searchParams.permission });
+        qb.andWhere("acl.permission = :permission", {
+          permission: searchParams.permission,
+        });
       }
-      if (searchParams.vehicleSelectionId) {
-        qb.andWhere("vs.id = :vehicleSelectionId", { vehicleSelectionId: searchParams.vehicleSelectionId });
+      if (searchParams.activeAt) {
+        qb.andWhere("acl.start_time <= :activeAt", {
+          activeAt: searchParams.activeAt,
+        });
+        qb.andWhere("(acl.end_time IS NULL OR acl.end_time > :activeAt)", {
+          activeAt: searchParams.activeAt,
+        });
       }
     }
 
@@ -52,8 +58,47 @@ export class VehicleACLRepository {
   findOne(id: string) {
     return this.repo.findOne({
       where: { id },
-      relations: { vehicleSelection: true },
+      relations: { user: true, vehicle: true },
     });
+  }
+
+  /**
+   * Get all active ACLs for a user at a specific point in time
+   */
+  async getActiveACLsForUser(
+    userId: string,
+    at: Date = new Date(),
+  ): Promise<VehicleACLEntity[]> {
+    const [acls] = await this.findAndCount({
+      searchParams: { userId, activeAt: at },
+    });
+    return acls;
+  }
+
+  /**
+   * Check if user has at least the required permission for a vehicle at a specific time
+   */
+  async hasPermission(
+    userId: string,
+    vehicleId: string,
+    requiredPermission: PermissionType,
+    at: Date = new Date(),
+  ): Promise<boolean> {
+    const [acls] = await this.findAndCount({
+      searchParams: { userId, vehicleId, activeAt: at },
+    });
+
+    const PERMISSION_WEIGHT: Record<PermissionType, number> = {
+      [PermissionType.READ]: 1,
+      [PermissionType.MAINTAINER]: 2,
+      [PermissionType.DRIVER]: 3,
+      [PermissionType.FULL]: 4,
+    };
+
+    const requiredWeight = PERMISSION_WEIGHT[requiredPermission];
+    return acls.some(
+      (acl) => PERMISSION_WEIGHT[acl.permission] >= requiredWeight,
+    );
   }
 
   create(data: Partial<VehicleACLEntity>) {

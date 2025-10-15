@@ -3,34 +3,28 @@ import {
   PrimaryGeneratedColumn,
   JoinColumn,
   Column,
-  OneToOne,
+  ManyToOne,
   Check,
   Index,
 } from "typeorm";
 import { PermissionType } from "./PermissionType";
-import { VehicleSelection } from "./VehicleSelection";
-
-export enum ACLType {
-  USER = "user",
-  USER_GROUP = "user_group",
-}
+import { User } from "./User";
+import { Vehicle } from "./Vehicle";
 
 @Entity({ name: "vehicle_acl" })
 @Check("end_time IS NULL OR end_time > start_time")
-@Index(["entityId", "aclType"])
+@Index(["user", "vehicle"])
 export class VehicleACL {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({
-    type: "varchar",
-    length: 20,
-    name: "acl_type",
-  })
-  aclType!: ACLType;
+  @ManyToOne(() => User, { eager: true, onDelete: "CASCADE" })
+  @JoinColumn({ name: "user_id" })
+  user!: User;
 
-  @Column({ name: "entity_id" })
-  entityId!: string;
+  @ManyToOne(() => Vehicle, { eager: true, onDelete: "CASCADE" })
+  @JoinColumn({ name: "vehicle_id" })
+  vehicle!: Vehicle;
 
   @Column({
     type: "varchar",
@@ -40,13 +34,9 @@ export class VehicleACL {
   })
   permission!: PermissionType;
 
-  @OneToOne(() => VehicleSelection, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "vehicle_selection_id" })
-  vehicleSelection!: VehicleSelection;
-
   @Column({ name: "start_time", type: "datetime" })
   startTime!: Date;
 
   @Column({ name: "end_time", type: "datetime", nullable: true })
-  endTime?: Date;
+  endTime?: Date | null;
 }

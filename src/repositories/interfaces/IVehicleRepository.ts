@@ -1,6 +1,10 @@
 import { Vehicle } from "../../entities/Vehicle";
 import { DeleteResult } from "typeorm";
+import { RepositoryFindOptions } from "./common";
 
+/**
+ * Vehicle-specific search parameters
+ */
 export interface VehicleSearchParams {
   licensePlate?: string;
   brand?: string;
@@ -10,14 +14,10 @@ export interface VehicleSearchParams {
   year?: string;
 }
 
-export interface VehicleFindOptions {
-  limit?: number;
-  offset?: number;
-  searchParams?: VehicleSearchParams;
-}
-
 export interface IVehicleRepository {
-  findAndCount(options?: VehicleFindOptions): Promise<[Vehicle[], number]>;
+  findAndCount(
+    options?: RepositoryFindOptions<VehicleSearchParams>,
+  ): Promise<[Vehicle[], number]>;
   findOne(id: string): Promise<Vehicle | null>;
   findByIds(ids: string[]): Promise<Vehicle[]>;
   create(data: Partial<Vehicle>): Vehicle;

@@ -4,6 +4,8 @@ import type { Vehicle, VehicleInput, VehicleUpdate } from "../schemas/vehicle";
 import { VehicleResponsiblesService } from "./vehicleResponsiblesService";
 import { IVehicleRepository } from "../repositories/interfaces/IVehicleRepository";
 import { Repository } from "typeorm";
+import { RepositoryFindOptions } from "../repositories/interfaces/common";
+import { VehicleSearchParams } from "../repositories/interfaces/IVehicleRepository";
 
 export class VehiclesService {
   constructor(
@@ -12,11 +14,9 @@ export class VehiclesService {
     private readonly vehicleModelRepo: Repository<VehicleModel>,
   ) {}
 
-  async getAll(options?: {
-    limit?: number;
-    offset?: number;
-    searchParams?: Record<string, string>;
-  }): Promise<{ items: Vehicle[]; total: number }> {
+  async getAll(
+    options?: RepositoryFindOptions<VehicleSearchParams>,
+  ): Promise<{ items: Vehicle[]; total: number }> {
     const [entities, total] = await this.vehicleRepo.findAndCount(options);
     return { items: entities.map(mapEntity), total };
   }

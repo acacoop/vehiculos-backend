@@ -1,9 +1,10 @@
 import { Repository, DataSource } from "typeorm";
 import { UserRole } from "../entities/UserRole";
+import { UserRoleEnum } from "../entities/UserRoleEnum";
 
 export interface UserRoleSearchParams {
   userId?: string;
-  role?: "user" | "admin";
+  role?: UserRoleEnum;
   activeOnly?: boolean;
 }
 
@@ -86,10 +87,7 @@ export class UserRoleRepository {
     );
   }
 
-  async hasActiveRole(
-    userId: string,
-    role: "user" | "admin",
-  ): Promise<boolean> {
+  async hasActiveRole(userId: string, role: UserRoleEnum): Promise<boolean> {
     const now = new Date();
     const count = await this.repo
       .createQueryBuilder("ur")

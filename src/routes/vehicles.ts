@@ -1,38 +1,20 @@
-import { Router, Request, Response, NextFunction } from "express";
+import { Router } from "express";
 import { createVehiclesController } from "../controllers/vehiclesController";
 import vehicleKilometersRoutes from "./vehicleKilometers";
-import { validateSchema, AppError } from "../middleware/errorHandler";
+import { validateSchema } from "../middleware/errorHandler";
 import { validateUUIDParam } from "../middleware/validation";
 import { VehicleInputSchema, VehicleUpdateSchema } from "../schemas/vehicle";
-import { licensePlateRegex } from "../schemas/validations";
 import {
   requireRole,
   requireVehiclePermissionFromParam,
 } from "../middleware/permission";
 import { UserRoleEnum } from "../entities/UserRoleEnum";
 import { PermissionType } from "../entities/PermissionType";
+import { addPermissionFilter } from "../middleware/permissionFilter";
 
 const router = Router();
 // Each router instance gets its own controller (and underlying service/repository instances)
 const vehiclesController = createVehiclesController();
-
-// Middleware to validate license plate in query parameters
-const validateLicensePlateQuery = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  const licensePlate = req.query.licensePlate as string;
-  if (licensePlate && !licensePlateRegex.test(licensePlate)) {
-    throw new AppError(
-      "The provided license plate format is invalid. Expected format: ABC123 or AB123CD",
-      400,
-      "https://example.com/problems/invalid-license-plate",
-      "Invalid License Plate Format",
-    );
-  }
-  next();
-};
 
 // GET /vehicles - Get all vehicles with pagination and search
 // Supports query parameters: page, limit, license-plate, brand, model, year
@@ -40,7 +22,14 @@ const validateLicensePlateQuery = (
 // - /vehicles?license-plate=AAA-123
 // - /vehicles?brand=Toyota&model=Corolla
 // - /vehicles?year=2020&page=1&limit=5
-router.get("/", validateLicensePlateQuery, vehiclesController.getAll);
+// If user is authenticated:
+//   - Admin users see all vehicles
+//   - Regular users see only vehicles they have permission to access (via ACLs, assignments, or responsibles)
+router.get(
+  "/",
+  addPermissionFilter(PermissionType.READ),
+  vehiclesController.getAll,
+);
 
 // GET /vehicles/:id - Get vehicle by ID
 router.get(

@@ -1,18 +1,11 @@
 import { Response, NextFunction } from "express";
 import { AppError } from "./errorHandler";
 import { AuthenticatedRequest } from "./auth";
-import {
-  PermissionType,
-  PERMISSION_WEIGHT,
-} from "../entities/PermissionType";
-import { ACLType, VehicleACL } from "../entities/VehicleACL";
+import { PermissionType, PERMISSION_WEIGHT } from "../entities/PermissionType";
+import { VehicleACL } from "../entities/VehicleACL";
 import { DataSource } from "typeorm";
 import { VehicleACLRepository } from "../repositories/VehicleACLRepository";
-import { UserGroupMembershipRepository } from "../repositories/UserGroupMembershipRepository";
-import { UserGroupNestingRepository } from "../repositories/UserGroupNestingRepository";
-import { VehicleSelection } from "../entities/VehicleSelection";
 import { VehicleResponsibleRepository } from "../repositories/VehicleResponsibleRepository";
-import { CecoRangeRepository } from "../repositories/CecoRangeRepository";
 import { UserRoleRepository } from "../repositories/UserRoleRepository";
 import { UserRoleEnum } from "../entities/UserRoleEnum";
 import { AppDataSource } from "../db";
@@ -37,85 +30,26 @@ export interface PermissionRequest extends AuthenticatedRequest {
   };
 }
 
-// Permission checking service (could be moved to a separate service file)
-class PermissionChecker {
+/**
+ * Simplified Permission Checker
+ *
+ * Permission hierarchy (from lowest to highest):
+ * 1. Direct ACLs (explicit user-vehicle permissions with time periods)
+ * 2. Assignments (current drivers get DRIVER permission)
+ * 3. Responsibles (current responsibles get FULL permission)
+ * 4. Admin role (bypasses all checks)
+ */
+export class PermissionChecker {
   private vehicleACLRepo: VehicleACLRepository;
-  private userGroupMembershipRepo: UserGroupMembershipRepository;
-  private userGroupNestingRepo: UserGroupNestingRepository;
   private vehicleResponsiblesRepo: VehicleResponsibleRepository;
-  private cecoRangesRepo: CecoRangeRepository;
   private userRoleRepo: UserRoleRepository;
   private assignmentRepo: AssignmentRepository;
 
   constructor(dataSource: DataSource) {
     this.vehicleACLRepo = new VehicleACLRepository(dataSource);
-    this.userGroupMembershipRepo = new UserGroupMembershipRepository(
-      dataSource,
-    );
-    this.userGroupNestingRepo = new UserGroupNestingRepository(dataSource);
     this.vehicleResponsiblesRepo = new VehicleResponsibleRepository(dataSource);
-    this.cecoRangesRepo = new CecoRangeRepository(dataSource);
     this.userRoleRepo = new UserRoleRepository(dataSource);
     this.assignmentRepo = new AssignmentRepository(dataSource);
-  }
-
-  async getParentsGroupIds(groupId: string): Promise<Set<string>> {
-    const groupIds = new Set<string>(groupId);
-
-    const nestedGroup = await this.userGroupNestingRepo.findOne(groupId);
-
-    if (!nestedGroup) {
-      return groupIds;
-    }
-
-    const parentGroupIds = await this.getParentsGroupIds(
-      nestedGroup.parentGroup.id,
-    );
-    parentGroupIds.forEach((id) => groupIds.add(id));
-
-    return groupIds;
-  }
-
-  async checkVehicleInSelection(
-    vehicleId: string,
-    ceco: string | null,
-    selection: VehicleSelection,
-  ): Promise<boolean> {
-    if (selection.vehicles.some((v) => v.id === vehicleId)) {
-      return true;
-    }
-
-    if (!ceco) return false;
-
-    const [cecoRanges, _] = await this.cecoRangesRepo.findAndCount({
-      searchParams: { vehicleSelectionId: selection.id },
-    });
-
-    for (const range of cecoRanges) {
-      const start = Number(range.startCeco);
-      const end = Number(range.endCeco);
-      const cecoNum = Number(ceco);
-      if (cecoNum >= start && cecoNum <= end) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  async getVehicleCeco(vehicleId: string): Promise<string | null> {
-    const [responsible, count] = await this.vehicleResponsiblesRepo.find({
-      searchParams: {
-        vehicleId,
-        date: new Date().toISOString(),
-      },
-    });
-
-    if (count === 0) {
-      return null;
-    }
-
-    return responsible[0].ceco || null;
   }
 
   async checkUserIsResponsible(
@@ -127,23 +61,6 @@ class PermissionChecker {
 
   async checkUserIsDriver(userId: string, vehicleId: string): Promise<boolean> {
     return this.assignmentRepo.hasActiveAssignment(userId, vehicleId);
-  }
-
-  async checkACLPermission(
-    acl: VehicleACL,
-    vehicleId: string,
-    vehicleCeco: string | null,
-    requeredWeight: number,
-  ): Promise<boolean> {
-    if (PERMISSION_WEIGHT[acl.permission] < requeredWeight) {
-      return false;
-    }
-
-    return this.checkVehicleInSelection(
-      vehicleId,
-      vehicleCeco,
-      acl.vehicleSelection,
-    );
   }
 
   async checkUserVehiclePermission(
@@ -174,48 +91,14 @@ class PermissionChecker {
       }
     }
 
-    // If not responsible or driver, check ACLs (groups and direct permissions)
-    const vehicleCeco = await this.getVehicleCeco(vehicleId);
-
-    // Get the ACLs directly assigned to the user
-    const [userACLs, __] = await this.vehicleACLRepo.findAndCount({
-      searchParams: {
-        aclType: ACLType.USER,
-        entityId: userId,
-      },
-    });
-
-    // Get user's groups
-    const userGroups = await this.userGroupMembershipRepo.findAndCount({
-      searchParams: { userId },
-    });
-    const groupIds = userGroups[0].map((ugm) => ugm.userGroup.id);
-    const allGroupIds = new Set<string>(groupIds);
-
-    for (const groupId of groupIds) {
-      const parentGroupIds = await this.getParentsGroupIds(groupId);
-      parentGroupIds.forEach((id) => allGroupIds.add(id));
-    }
-
-    if (allGroupIds.size === 0) return false;
-
-    const groupACLs = [];
-
-    for (const groupId of allGroupIds) {
-      const [groupACL, _] = await this.vehicleACLRepo.findAndCount({
-        searchParams: {
-          aclType: ACLType.USER_GROUP,
-          entityId: groupId,
-        },
-      });
-      groupACLs.push(...groupACL);
-    }
-
-    const allACLs = [...userACLs, ...groupACLs];
-
-    return allACLs.some((acl) =>
-      this.checkACLPermission(acl, vehicleId, vehicleCeco, requiredWeight),
+    // Check direct ACLs (simple user-vehicle-permission mappings with time periods)
+    const hasACLPermission = await this.vehicleACLRepo.hasPermission(
+      userId,
+      vehicleId,
+      requiredPermission,
     );
+
+    return hasACLPermission;
   }
 
   async checkUserRolePermission(
