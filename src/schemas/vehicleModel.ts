@@ -3,11 +3,13 @@ import { z } from "zod";
 export const VehicleModelInputSchema = z.object({
   name: z.string().min(1).max(100),
   brandId: z.string().uuid(),
+  vehicleType: z.string().min(1).optional(),
 });
 
 export const VehicleModelSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
+  vehicleType: z.string().optional(),
   brand: z.object({ id: z.string().uuid(), name: z.string() }),
 });
 

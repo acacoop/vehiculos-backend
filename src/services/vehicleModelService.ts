@@ -28,6 +28,7 @@ export class VehicleModelService {
       items: rows.map((r) => ({
         id: r.id,
         name: r.name,
+        vehicleType: r.vehicleType ?? undefined,
         brand: { id: r.brand.id, name: r.brand.name },
       })),
       total,
@@ -40,6 +41,7 @@ export class VehicleModelService {
       ? {
           id: ent.id,
           name: ent.name,
+          vehicleType: ent.vehicleType ?? undefined,
           brand: { id: ent.brand.id, name: ent.brand.name },
         }
       : null;
@@ -55,11 +57,16 @@ export class VehicleModelService {
         "Vehicle Brand Not Found",
       );
     }
-    const created = this.repo.create({ name: data.name, brand });
+    const created = this.repo.create({
+      name: data.name,
+      brand,
+      vehicleType: data.vehicleType ?? undefined,
+    });
     const saved = await this.repo.save(created);
     return {
       id: saved.id,
       name: saved.name,
+      vehicleType: saved.vehicleType ?? undefined,
       brand: { id: brand.id, name: brand.name },
     };
   }
@@ -83,10 +90,13 @@ export class VehicleModelService {
       }
       existing.brand = brand;
     }
+    if ("vehicleType" in data)
+      existing.vehicleType = data.vehicleType ?? undefined;
     const saved = await this.repo.save(existing);
     return {
       id: saved.id,
       name: saved.name,
+      vehicleType: saved.vehicleType ?? undefined,
       brand: { id: saved.brand.id, name: saved.brand.name },
     };
   }

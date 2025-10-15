@@ -18,4 +18,7 @@ export class VehicleModel {
 
   @Column({ name: "name", unique: true, length: 100 })
   name!: string;
+
+  @Column({ name: "vehicle_type", nullable: true })
+  vehicleType?: string;
 }

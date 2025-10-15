@@ -2514,6 +2514,11 @@ components:
         name:
           type: string
           example: "Corolla"
+        vehicleType:
+          type: string
+          nullable: true
+          description: Tipo de vehículo (auto, camioneta, SUV, etc.)
+          example: "SUV"
         brand:
           $ref: "#/components/schemas/VehicleBrand"
       required:
@@ -2531,6 +2536,9 @@ components:
         brandId:
           type: string
           format: uuid
+        vehicleType:
+          type: string
+          description: Tipo de vehículo (auto, camioneta, SUV, etc.)
       required:
         - name
         - brandId
