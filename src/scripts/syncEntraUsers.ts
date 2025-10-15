@@ -8,9 +8,16 @@ import type { User } from "../schemas/user";
 import { User as UserEntity } from "../entities/User";
 import { ServiceFactory } from "../factories/serviceFactory";
 import { UsersService } from "../services/usersService";
+import { UserRolesService } from "../services/userRolesService";
+import { UserRoleRepository } from "../repositories/UserRoleRepository";
+import { UserRoleEnum } from "../utils/common";
 
 const VERBOSE =
   process.env.VERBOSE === "1" || process.argv.includes("--verbose");
+
+// Parse admin email from command line argument
+// Usage: npm run sync -- admin@domain.com
+const ADMIN_EMAIL = process.argv.slice(2).find((arg) => arg.includes("@"));
 
 const DISABLE_MISSING = true;
 
@@ -373,6 +380,72 @@ function printResult(stats: Stats) {
   );
 }
 
+async function syncUserRoles(usersService: UsersService, adminEmail?: string) {
+  const userRoleRepo = new UserRoleRepository(AppDataSource);
+  const userRepo = AppDataSource.getRepository(UserEntity);
+  const userRolesService = new UserRolesService(userRoleRepo, userRepo);
+
+  // Get all active users with entraId
+  const { items: allUsers } = await usersService.getAll({
+    searchParams: { active: "true" },
+  });
+
+  const usersWithEntraId = allUsers.filter(
+    (u) => u.entraId && u.entraId !== "",
+  );
+
+  let rolesCreated = 0;
+  let rolesUpdated = 0;
+  let rolesSkipped = 0;
+
+  for (const user of usersWithEntraId) {
+    const existingRole = await userRolesService.getActiveByUserId(user.id!);
+    const isAdmin = adminEmail && user.email === adminEmail;
+    const targetRole = isAdmin ? UserRoleEnum.ADMIN : UserRoleEnum.USER;
+
+    if (!existingRole) {
+      // Create new role
+      await userRolesService.create({
+        userId: user.id!,
+        role: targetRole,
+        startTime: new Date(),
+        endTime: null,
+      });
+      rolesCreated++;
+      if (VERBOSE) {
+        console.log(
+          `ok:role_create userId=${user.id} email=${user.email} role=${targetRole}`,
+        );
+      }
+    } else if (existingRole.role !== targetRole) {
+      // Update role if it changed
+      await userRolesService.update(existingRole.id, {
+        role: targetRole,
+      });
+      rolesUpdated++;
+      if (VERBOSE) {
+        console.log(
+          `ok:role_update userId=${user.id} email=${user.email} old=${existingRole.role} new=${targetRole}`,
+        );
+      }
+    } else {
+      rolesSkipped++;
+      if (VERBOSE) {
+        console.log(
+          `skip:role userId=${user.id} email=${user.email} role=${targetRole} (already exists)`,
+        );
+      }
+    }
+  }
+
+  console.log(
+    `roles summary created=${rolesCreated} updated=${rolesUpdated} skipped=${rolesSkipped}`,
+  );
+  if (adminEmail) {
+    console.log(`admin email specified: ${adminEmail}`);
+  }
+}
+
 async function runSync() {
   const serviceFactory = new ServiceFactory(AppDataSource);
   const usersService = serviceFactory.createUsersService();
@@ -389,6 +462,9 @@ async function runSync() {
   }
 
   printResult(stats);
+
+  // Sync user roles (create default roles and assign admin)
+  await syncUserRoles(usersService, ADMIN_EMAIL);
 }
 
 if (require.main === module) {

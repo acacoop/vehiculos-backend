@@ -1,5 +1,5 @@
 ## Simplified Makefile (core workflows only)
-## Targets: up, down, dev, sample-data, sync, sync-verbose
+## Targets: up, down, dev, sample-data, sync, test
 ## Automatically loads .env into the environment and suppresses noisy recursive make messages.
 
 MAKEFLAGS += --no-print-directory
@@ -10,7 +10,7 @@ include .env
 export $(shell sed -nE 's/^([A-Za-z_][A-Za-z0-9_]*)=.*/\1/p' .env)
 endif
 
-.PHONY: up down dev sample-data sync sync-verbose test clean help
+.PHONY: up down dev sample-data sync test clean help
 
 WAIT_RETRIES?=5
 MSSQL_SA_PASSWORD?=Your_password123
@@ -57,12 +57,11 @@ sample-data:
 sync:
 	@$(MAKE) wait-db
 	@npm ci
-	@DB_HOST=$(HOST_DB_HOST) npm run --silent sync:users
-
-sync-verbose:
-	@$(MAKE) wait-db
-	@npm ci
-	@DB_HOST=$(HOST_DB_HOST) VERBOSE=1 npm run --silent sync:users
+	@if [ -n "$(ADMIN)" ]; then \
+		DB_HOST=$(HOST_DB_HOST) npm run sync:users -- $(ADMIN); \
+	else \
+		DB_HOST=$(HOST_DB_HOST) npm run sync:users; \
+	fi
 
 test:
 	@npm test
@@ -80,8 +79,7 @@ help:
 	echo "  down            Stop and remove containers"; \
 	echo "  dev             Start local dev (DB in docker, API on host)"; \
 	echo "  sample-data     Load sample data using TypeORM (destructive)"; \
-	echo "  sync            Run Entra users sync script"; \
-	echo "  sync-verbose    Run sync with VERBOSE=1"; \
+	echo "  sync            Run Entra users sync script (set admin: make sync ADMIN=admin@domain.com)"; \
 	echo "  test            Run automated tests"; \
 	echo "  clean           Remove build artifacts and prune dangling images"; \
 	echo "  help            Show this help message";
