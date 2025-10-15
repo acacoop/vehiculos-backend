@@ -1,8 +1,11 @@
 import { Request, Response } from "express";
 import { asyncHandler, AppError } from "../middleware/errorHandler";
 import { AuthenticatedRequest } from "../middleware/auth";
-import UsersService from "../services/usersService";
-const usersService = new UsersService();
+import { ServiceFactory } from "../factories/serviceFactory";
+import { AppDataSource } from "../db";
+
+const serviceFactory = new ServiceFactory(AppDataSource);
+const usersService = serviceFactory.createUsersService();
 
 export class MeController {
   public getCurrent = asyncHandler(async (req: Request, res: Response) => {

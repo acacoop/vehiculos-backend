@@ -1,37 +1,40 @@
-import { DataSource, ILike, Repository } from "typeorm";
+import { DataSource, Repository } from "typeorm";
 import { VehicleModel } from "../entities/VehicleModel";
+import {
+  IVehicleModelRepository,
+  VehicleModelSearchParams,
+} from "./interfaces/IVehicleModelRepository";
+import { RepositoryFindOptions, resolvePagination } from "./interfaces/common";
 
-export interface VehicleModelSearchParams {
-  name?: string;
-  brandId?: string;
-}
+// Re-export types for convenience
+export type { VehicleModelSearchParams };
 
-export class VehicleModelRepository {
+export class VehicleModelRepository implements IVehicleModelRepository {
   private readonly repo: Repository<VehicleModel>;
   constructor(dataSource: DataSource) {
     this.repo = dataSource.getRepository(VehicleModel);
   }
 
-  async findAndCount(options?: {
-    limit?: number;
-    offset?: number;
-    searchParams?: VehicleModelSearchParams;
-  }): Promise<[VehicleModel[], number]> {
+  async findAndCount(
+    options?: RepositoryFindOptions<VehicleModelSearchParams>,
+  ): Promise<[VehicleModel[], number]> {
+    const { searchParams, pagination } = options || {};
     const qb = this.repo
       .createQueryBuilder("m")
       .leftJoinAndSelect("m.brand", "b")
       .orderBy("b.name", "ASC")
       .addOrderBy("m.name", "ASC");
-    if (options?.searchParams?.name) {
+    if (searchParams?.name) {
       qb.andWhere("m.name ILIKE :name", {
-        name: `%${options.searchParams.name}%`,
+        name: `%${searchParams.name}%`,
       });
     }
-    if (options?.searchParams?.brandId) {
-      qb.andWhere("b.id = :brandId", { brandId: options.searchParams.brandId });
+    if (searchParams?.brandId) {
+      qb.andWhere("b.id = :brandId", { brandId: searchParams.brandId });
     }
-    if (typeof options?.limit === "number") qb.take(options.limit);
-    if (typeof options?.offset === "number") qb.skip(options.offset);
+    const { limit, offset } = resolvePagination(pagination);
+    qb.take(limit);
+    qb.skip(offset);
     return qb.getManyAndCount();
   }
 

@@ -5,6 +5,6 @@ export class VehicleBrand {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ name: "name", unique: true })
+  @Column({ name: "name", unique: true, length: 100 })
   name!: string;
 }

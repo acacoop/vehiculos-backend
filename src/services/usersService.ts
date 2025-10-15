@@ -1,10 +1,13 @@
-import { AppDataSource } from "../db";
 import { User as UserEntity } from "../entities/User";
 import type { User } from "../schemas/user";
-import { UserRepository } from "../repositories/UserRepository";
+import { IUserRepository } from "../repositories/interfaces/IUserRepository";
 
+/**
+ * UsersService - Business logic for User operations
+ * Now uses Dependency Injection for better testability
+ */
 export class UsersService {
-  constructor(private readonly userRepo = new UserRepository(AppDataSource)) {}
+  constructor(private readonly userRepo: IUserRepository) {}
 
   async getAll(options?: {
     limit?: number;

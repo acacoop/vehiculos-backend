@@ -16,16 +16,18 @@ import meRoutes from "./routes/me";
 // Import routes
 import usersRoutes from "./routes/users";
 import vehiclesRoutes from "./routes/vehicles";
-import assignmentsRoutes from "./routes/vehicles/assignments";
+import assignmentsRoutes from "./routes/vehicleAssignments";
 import reservationsRoutes from "./routes/reservations";
 import vehicleResponsiblesRoutes from "./routes/vehicleResponsibles";
-import maintenanceCategoriesRoutes from "./routes/vehicles/maintenance/categories";
-import maintenanceRoutes from "./routes/vehicles/maintenance/posibles";
-import assignedMaintenanceRoutes from "./routes/vehicles/maintenance/assignments";
-import maintenanceRecordsRoutes from "./routes/vehicles/maintenance/records";
-import vehicleKilometersRoutes from "./routes/vehicles/kilometers";
+import userRolesRoutes from "./routes/userRoles";
+import maintenanceCategoriesRoutes from "./routes/maintenanceCategories";
+import maintenanceRoutes from "./routes/maintenancePosibles";
+import assignedMaintenanceRoutes from "./routes/maintenanceAssignments";
+import maintenanceRecordsRoutes from "./routes/maintenanceRecords";
+import vehicleKilometersRoutes from "./routes/vehicleKilometers";
 import vehicleBrandsRoutes from "./routes/vehicleBrands";
 import vehicleModelsRoutes from "./routes/vehicleModels";
+import vehicleACLRoutes from "./routes/vehicleACL";
 
 import { SERVER_PORT } from "./config/env.config";
 
@@ -77,8 +79,10 @@ app.use("/vehicles", vehiclesRoutes);
 app.use("/assignments", assignmentsRoutes);
 app.use("/reservations", reservationsRoutes);
 app.use("/vehicle-responsibles", vehicleResponsiblesRoutes);
+app.use("/user-roles", userRolesRoutes);
 app.use("/vehicle-brands", vehicleBrandsRoutes);
 app.use("/vehicle-models", vehicleModelsRoutes);
+app.use("/vehicle-acl", vehicleACLRoutes);
 app.use("/maintenance/categories", maintenanceCategoriesRoutes);
 app.use("/maintenance/posibles", maintenanceRoutes);
 app.use("/maintenance/assignments", assignedMaintenanceRoutes);
@@ -101,16 +105,16 @@ app.use(globalErrorHandler);
 app.listen(SERVER_PORT, "0.0.0.0", () => {
   if (process.env.NODE_ENV !== "development") {
     console.log(
-      `🚗 Vehiculos API Server running on http://localhost:${SERVER_PORT}`
+      `🚗 Vehiculos API Server running on http://localhost:${SERVER_PORT}`,
     );
     console.log(`📖 API Documentation: http://localhost:${SERVER_PORT}/docs`);
     console.log(
-      `📊 Health check available at http://localhost:${SERVER_PORT}/health`
+      `📊 Health check available at http://localhost:${SERVER_PORT}/health`,
     );
     console.log(`🐛 Environment: ${process.env.NODE_ENV || "development"}`);
   } else {
     console.log(
-      `✅ Server ready → http://localhost:${SERVER_PORT} | Docs: /docs`
+      `✅ Server ready → http://localhost:${SERVER_PORT} | Docs: /docs`,
     );
   }
 });

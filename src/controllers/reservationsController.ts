@@ -1,23 +1,62 @@
 import { BaseController } from "./baseController";
 import { AppError, asyncHandler } from "../middleware/errorHandler";
 import type { Reservation } from "../schemas/reservation";
-import {
-  ReservationsService,
-  createReservationsService,
-} from "../services/reservationsService";
+import { ReservationsService } from "../services/reservationsService";
 import { Request, Response } from "express";
 import { ReservationSchema } from "../schemas/reservation";
+import { ServiceFactory } from "../factories/serviceFactory";
+import { AppDataSource } from "../db";
+import { PermissionFilterRequest } from "../middleware/permissionFilter";
+import { RepositoryFindOptions } from "../repositories/interfaces/common";
+import { ReservationSearchParams } from "../repositories/interfaces/IReservationRepository";
+import { parsePaginationQuery } from "../utils/common";
 
 export class ReservationsController extends BaseController {
   constructor(private readonly service: ReservationsService) {
     super("Reservation");
   }
+
+  // Override getAll to use permission filter from middleware
+  public getAll = asyncHandler(async (req: Request, res: Response) => {
+    const permReq = req as PermissionFilterRequest;
+    const { page, limit, offset } = parsePaginationQuery(req.query);
+
+    // Extract search parameters (excluding pagination params)
+    const searchParams: ReservationSearchParams = {};
+    for (const [key, value] of Object.entries(req.query)) {
+      if (key !== "page" && key !== "limit" && typeof value === "string") {
+        searchParams[key as keyof ReservationSearchParams] = value;
+      }
+    }
+
+    const options: RepositoryFindOptions<ReservationSearchParams> = {
+      pagination: { limit, offset },
+      searchParams,
+      permissions: permReq.permissionFilter, // Populated by middleware
+    };
+
+    const { items, total } = await this.service.getAll(options);
+
+    this.sendResponse(res, items, undefined, 200, {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit),
+    });
+  });
+
   protected async getAllService(options: {
     limit: number;
     offset: number;
     searchParams?: Record<string, string>;
   }) {
-    return this.service.getAll(options);
+    // This method is overridden by getAll() above
+    // Kept for BaseController compatibility
+    const { items, total } = await this.service.getAll({
+      pagination: { limit: options.limit, offset: options.offset },
+      searchParams: options.searchParams,
+    });
+    return { items, total };
   }
   protected async getByIdService(id: string) {
     return this.service.getById(id);
@@ -75,6 +114,10 @@ export class ReservationsController extends BaseController {
   });
 }
 
-export function createReservationsController() {
-  return new ReservationsController(createReservationsService());
+export function createReservationsController(
+  service?: ReservationsService,
+): ReservationsController {
+  const svc =
+    service ?? new ServiceFactory(AppDataSource).createReservationsService();
+  return new ReservationsController(svc);
 }

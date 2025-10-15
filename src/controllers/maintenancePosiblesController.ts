@@ -2,10 +2,12 @@ import { BaseController } from "./baseController";
 import {
   MaintenanceCreateSchema,
   MaintenanceUpdateSchema,
-} from "../schemas/maintenance/maintenance";
+} from "../schemas/maintenance";
 import { MaintenancesService } from "../services/maintenancesService";
 import { Request, Response } from "express";
 import { asyncHandler, AppError } from "../middleware/errorHandler";
+import { ServiceFactory } from "../factories/serviceFactory";
+import { AppDataSource } from "../db";
 
 export class MaintenancePosiblesController extends BaseController {
   constructor(private readonly service: MaintenancesService) {
@@ -133,10 +135,13 @@ export class MaintenancePosiblesController extends BaseController {
   );
 }
 
-export function createMaintenancePosiblesController() {
-  const service = new MaintenancesService();
-  return new MaintenancePosiblesController(service);
-}
+export const createMaintenancePosiblesController = (
+  service?: MaintenancesService,
+) => {
+  const svc =
+    service ?? new ServiceFactory(AppDataSource).createMaintenancesService();
+  return new MaintenancePosiblesController(svc);
+};
 
 export const maintenancePosiblesController =
   createMaintenancePosiblesController();

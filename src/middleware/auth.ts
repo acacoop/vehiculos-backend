@@ -1,15 +1,18 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "./errorHandler";
-import UsersService from "../services/usersService";
+import { AUTH_BYPASS, AUTH_BYPASS_EMAIL } from "../config/env.config";
 import { extractBearer, verifyEntraAccessToken } from "../utils/jwtAzure";
-const usersService = new UsersService();
+import { ServiceFactory } from "../factories/serviceFactory";
+import { AppDataSource } from "../db";
+
+const serviceFactory = new ServiceFactory(AppDataSource);
+const usersService = serviceFactory.createUsersService();
 
 export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     email: string;
     name?: string;
-    roles?: string[];
     entraId: string;
     raw?: unknown;
   };
@@ -22,6 +25,40 @@ export const requireAuth = async (
   next: NextFunction,
 ) => {
   try {
+    // Dev-only bypass: allow impersonation only when AUTH_BYPASS=true
+    // Optional header: x-dev-impersonate: email or entraId
+    if (AUTH_BYPASS) {
+      const impersonate =
+        (req.headers["x-dev-impersonate"] as string | undefined) ||
+        AUTH_BYPASS_EMAIL ||
+        "";
+
+      let user = null;
+      if (impersonate.includes("@"))
+        user = await usersService.getByEmail(impersonate);
+      if (!user && impersonate)
+        user = await usersService.getByEntraId(impersonate);
+      if (!user) {
+        throw new AppError(
+          "Impersonation failed: user not found",
+          401,
+          "https://example.com/problems/unauthorized",
+          "Unauthorized",
+        );
+      }
+      console.warn(
+        "[AUTH_BYPASS] Impersonating user",
+        `${user.firstName} ${user.lastName} <${user.email}>`,
+      );
+      req.user = {
+        id: user.id!,
+        email: user.email || "",
+        name: `${user.firstName} ${user.lastName}`.trim(),
+        entraId: user.entraId || "",
+        raw: { bypass: true },
+      };
+      return next();
+    }
     const token = extractBearer(req.headers.authorization);
     if (!token)
       throw new AppError(
@@ -50,7 +87,6 @@ export const requireAuth = async (
         "Unauthorized",
       );
 
-    const roles = (verified.payload.roles || []) as string[];
     const name = verified.payload.name;
     const email = (verified.payload.preferred_username || "") as string;
 
@@ -69,7 +105,6 @@ export const requireAuth = async (
       id: user.id as string,
       email: user.email || email || "",
       name: `${user.firstName} ${user.lastName}`.trim() || name || "",
-      roles,
       entraId,
       raw: verified.payload,
     };
@@ -77,23 +112,4 @@ export const requireAuth = async (
   } catch (err) {
     next(err);
   }
-};
-
-// Authorization middleware factory by role claim
-export const requireRole = (...required: string[]) => {
-  return (req: AuthenticatedRequest, _res: Response, next: NextFunction) => {
-    const roles = req.user?.roles || [];
-    const ok = required.every((r) => roles.includes(r));
-    if (!ok) {
-      return next(
-        new AppError(
-          "Forbidden",
-          403,
-          "https://example.com/problems/forbidden",
-          "Forbidden",
-        ),
-      );
-    }
-    next();
-  };
 };

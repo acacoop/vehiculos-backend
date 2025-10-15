@@ -8,8 +8,13 @@
     "dev": "ts-node-dev --env-file=.env --respawn --quiet src/index.ts",
     "dev:verbose": "ts-node-dev --respawn src/index.ts",
     "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:permissions": "jest permissions.test.ts",
     "sync:users": "ts-node-dev --env-file=.env src/scripts/syncEntraUsers.ts",
-    "sample-data": "ts-node-dev --env-file=.env src/scripts/loadSampleData.ts"
+    "sample-data": "ts-node-dev --env-file=.env src/scripts/loadSampleData.ts",
+    "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json}\""
   },
   "engines": {
     "node": ">=22"
@@ -32,8 +37,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.16.0",
+    "@jest/globals": "^30.2.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/jest": "^30.0.0",
     "@types/mssql": "^9.1.8",
     "@types/swagger-ui-express": "^4.1.6",
     "@types/yamljs": "^0.2.34",
@@ -43,7 +50,9 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "globals": "^15.13.0",
+    "jest": "^30.2.0",
     "prettier": "^3.4.2",
+    "ts-jest": "^29.4.4",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.18.0"

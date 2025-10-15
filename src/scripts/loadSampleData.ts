@@ -1,7 +1,7 @@
 /*
   Script to load sample data using TypeORM entities instead of raw SQL.
   This ensures compatibility with entity validation and avoids conflicts with sync scripts.
-  
+
   Usage: npm run sample-data
   Or: ts-node-dev --env-file=.env src/scripts/loadSampleData.ts
 */
@@ -19,6 +19,10 @@ import { MaintenanceRecord } from "../entities/MaintenanceRecord";
 import { Reservation } from "../entities/Reservation";
 import { VehicleResponsible } from "../entities/VehicleResponsible";
 import { VehicleKilometers } from "../entities/VehicleKilometers";
+import { VehicleACL } from "../entities/VehicleACL";
+import { PermissionType } from "../utils/common";
+import { UserRole } from "../entities/UserRole";
+import { UserRoleEnum } from "../utils/common";
 
 type SampleDataStats = {
   users: number;
@@ -31,10 +35,11 @@ type SampleDataStats = {
   reservations: number;
   vehicleResponsibles: number;
   vehicleKilometers: number;
+  vehicleACLs: number;
+  userRoles: number;
 };
 
 async function clearSampleData(): Promise<void> {
-  // Clear in reverse dependency order to avoid foreign key constraints
   // Use DELETE with 1=1 condition to delete all records but respect foreign keys
   await AppDataSource.query("DELETE FROM maintenance_records WHERE 1=1");
   await AppDataSource.query("DELETE FROM vehicle_kilometers WHERE 1=1");
@@ -47,6 +52,10 @@ async function clearSampleData(): Promise<void> {
   await AppDataSource.query("DELETE FROM vehicles WHERE 1=1");
   await AppDataSource.query("DELETE FROM vehicle_models WHERE 1=1");
   await AppDataSource.query("DELETE FROM vehicle_brands WHERE 1=1");
+
+  // Authorization data (order matters for FKs)
+  await AppDataSource.query("DELETE FROM vehicle_acl WHERE 1=1");
+  await AppDataSource.query("DELETE FROM user_roles WHERE 1=1");
 
   // Only delete sample users (those with SAMPLE_ prefix in entraId or @sample.test domain)
   // This preserves all real users from Entra sync
@@ -780,52 +789,58 @@ async function createAssignments(
     vehicles.find((v) => v.licensePlate === licensePlate)!;
 
   const assignmentsData = [
-    // Management gets newer vehicles (long-term assignments)
+    // Current assignments (drivers)
     {
-      user: findUser("carlos.rodriguez@sample.test"),
+      user: findUser("ana.martinez@sample.test"),
       vehicle: findVehicle("ABC123"),
       startDate: "2024-01-01",
       endDate: null,
     },
     {
-      user: findUser("maria.gonzalez@sample.test"),
+      user: findUser("diego.garcia@sample.test"),
+      vehicle: findVehicle("DEF456"),
+      startDate: "2024-03-01",
+      endDate: null,
+    },
+    {
+      user: findUser("valentina.silva@sample.test"),
       vehicle: findVehicle("MNO345"),
       startDate: "2024-02-01",
       endDate: null,
     },
-    {
-      user: findUser("ana.martinez@sample.test"),
-      vehicle: findVehicle("QRS345"),
-      startDate: "2024-01-15",
-      endDate: null,
-    },
 
-    // Operations team gets versatile vehicles
+    // Old assignments (should not grant permission now)
     {
       user: findUser("juan.perez@sample.test"),
-      vehicle: findVehicle("DEF456"),
-      startDate: "2024-03-01",
-      endDate: "2025-06-30",
+      vehicle: findVehicle("ABC123"),
+      startDate: "2023-01-01",
+      endDate: "2023-12-31", // ended
     },
     {
       user: findUser("sofia.hernandez@sample.test"),
-      vehicle: findVehicle("STU901"),
-      startDate: "2024-04-01",
-      endDate: "2025-08-31",
-    },
-    {
-      user: findUser("diego.garcia@sample.test"),
-      vehicle: findVehicle("VWX234"),
-      startDate: "2024-05-01",
-      endDate: "2025-05-31",
+      vehicle: findVehicle("MNO345"),
+      startDate: "2023-06-01",
+      endDate: "2024-05-31", // ended
     },
 
-    // Field staff gets pickup trucks and vans
+    // Other assignments
+    {
+      user: findUser("carlos.rodriguez@sample.test"),
+      vehicle: findVehicle("QRS345"),
+      startDate: "2024-01-01",
+      endDate: null,
+    },
+    {
+      user: findUser("maria.gonzalez@sample.test"),
+      vehicle: findVehicle("STU901"),
+      startDate: "2024-02-01",
+      endDate: null,
+    },
     {
       user: findUser("andres.morales@sample.test"),
       vehicle: findVehicle("YZA567"),
       startDate: "2024-06-01",
-      endDate: "2025-03-31",
+      endDate: null,
     },
     {
       user: findUser("miguel.vargas@sample.test"),
@@ -837,21 +852,19 @@ async function createAssignments(
       user: findUser("isabella.ruiz@sample.test"),
       vehicle: findVehicle("HIJ456"),
       startDate: "2024-08-01",
-      endDate: "2025-07-31",
+      endDate: null,
     },
-
-    // Maintenance team gets compact vehicles
     {
       user: findUser("roberto.jimenez@sample.test"),
       vehicle: findVehicle("KLM789"),
       startDate: "2024-09-01",
-      endDate: "2025-02-28",
+      endDate: null,
     },
     {
       user: findUser("lucia.castro@sample.test"),
       vehicle: findVehicle("NOP012"),
       startDate: "2024-10-01",
-      endDate: "2025-04-30",
+      endDate: null,
     },
     {
       user: findUser("fernando.romero@sample.test"),
@@ -1038,35 +1051,58 @@ async function createVehicleResponsibles(
     vehicles.find((v) => v.licensePlate === licensePlate)!;
 
   const responsiblesData = [
-    // Current responsibles
+    // Current responsibles (positive cases)
     {
-      vehicle: findVehicle("ABC123"),
-      user: findUser("carlos.rodriguez@sample.test"),
+      vehicle: findVehicle("DEF456"), // V2
+      user: findUser("maria.gonzalez@sample.test"),
+      ceco: "23000000", // in range 23000000-23999999
       startDate: "2024-01-01",
       endDate: null,
     },
     {
-      vehicle: findVehicle("MNO345"),
-      user: findUser("maria.gonzalez@sample.test"),
+      vehicle: findVehicle("MNO345"), // V3
+      user: findUser("valentina.silva@sample.test"),
+      ceco: "17001234", // in range 17000000-17999999
       startDate: "2024-02-01",
       endDate: null,
     },
+
+    // Old responsibles (should not grant permission now)
     {
-      vehicle: findVehicle("DEF456"),
+      vehicle: findVehicle("ABC123"), // V1
       user: findUser("juan.perez@sample.test"),
-      startDate: "2024-03-01",
-      endDate: null,
+      ceco: "12003456", // in range 12000000-12999999
+      startDate: "2023-01-01",
+      endDate: "2023-12-31", // ended
     },
+    {
+      vehicle: findVehicle("DEF456"), // V2
+      user: findUser("diego.garcia@sample.test"),
+      ceco: "23000000",
+      startDate: "2023-06-01",
+      endDate: "2024-05-31", // ended
+    },
+
+    // Other responsibles
     {
       vehicle: findVehicle("YZA567"),
       user: findUser("andres.morales@sample.test"),
+      ceco: "18000123",
       startDate: "2024-06-01",
       endDate: null,
     },
     {
       vehicle: findVehicle("EFG123"),
       user: findUser("miguel.vargas@sample.test"),
+      ceco: "15000000",
       startDate: "2024-07-01",
+      endDate: null,
+    },
+    {
+      vehicle: findVehicle("HIJ456"),
+      user: findUser("isabella.ruiz@sample.test"),
+      ceco: "30000000", // outside ranges
+      startDate: "2024-08-01",
       endDate: null,
     },
   ];
@@ -1075,6 +1111,92 @@ async function createVehicleResponsibles(
   const savedResponsibles = await responsibleRepo.save(responsibles);
 
   return savedResponsibles;
+}
+
+// --- Authorization sample data (simplified) ---
+async function createAuthorizationData(users: User[], vehicles: Vehicle[]) {
+  const vehicleACLRepo = AppDataSource.getRepository(VehicleACL);
+  const userRoleRepo = AppDataSource.getRepository(UserRole);
+
+  // Helper finders
+  const findUser = (email: string) => users.find((u) => u.email === email)!;
+  const findVehicle = (lp: string) =>
+    vehicles.find((v) => v.licensePlate === lp)!;
+
+  // User roles (Carlos admin, others user)
+  const savedRoles = await userRoleRepo.save(
+    userRoleRepo.create([
+      {
+        user: findUser("carlos.rodriguez@sample.test"),
+        role: UserRoleEnum.ADMIN,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+        endTime: undefined, // indefinite
+      },
+      {
+        user: findUser("ana.martinez@sample.test"),
+        role: UserRoleEnum.USER,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+      },
+    ]),
+  );
+
+  // Simple Vehicle ACLs - direct user-vehicle-permission-period mappings
+  const savedACLs = await vehicleACLRepo.save(
+    vehicleACLRepo.create([
+      // Miguel has DRIVER permission on ABC123 and DEF456
+      {
+        user: findUser("miguel.vargas@sample.test"),
+        vehicle: findVehicle("ABC123"),
+        permission: PermissionType.DRIVER,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+        endTime: null,
+      },
+      {
+        user: findUser("miguel.vargas@sample.test"),
+        vehicle: findVehicle("DEF456"),
+        permission: PermissionType.DRIVER,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+        endTime: null,
+      },
+      // Juan (old driver) has READ permission on ABC123 via ACL
+      {
+        user: findUser("juan.perez@sample.test"),
+        vehicle: findVehicle("ABC123"),
+        permission: PermissionType.READ,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+        endTime: null,
+      },
+      // Lucia has MAINTAINER permission on GHI789
+      {
+        user: findUser("lucia.castro@sample.test"),
+        vehicle: findVehicle("GHI789"),
+        permission: PermissionType.MAINTAINER,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+        endTime: null,
+      },
+      // Roberto has FULL permission on STU901
+      {
+        user: findUser("roberto.jimenez@sample.test"),
+        vehicle: findVehicle("STU901"),
+        permission: PermissionType.FULL,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+        endTime: null,
+      },
+      // Expired ACL example: Sofia had DRIVER permission on MNO345 but it expired
+      {
+        user: findUser("sofia.hernandez@sample.test"),
+        vehicle: findVehicle("MNO345"),
+        permission: PermissionType.DRIVER,
+        startTime: new Date("2023-06-01T00:00:00Z"),
+        endTime: new Date("2024-05-31T23:59:59Z"), // expired
+      },
+    ]),
+  );
+
+  return {
+    vehicleACLs: savedACLs.length,
+    userRoles: savedRoles.length,
+  };
 }
 
 async function createVehicleKilometers(
@@ -1230,6 +1352,7 @@ export async function loadSampleData(): Promise<SampleDataStats> {
   const reservations = await createSampleReservations(users, vehicles);
   const vehicleResponsibles = await createVehicleResponsibles(users, vehicles);
   const vehicleKilometers = await createVehicleKilometers(users, vehicles);
+  const authStats = await createAuthorizationData(users, vehicles);
   const maintenanceRecords = await createMaintenanceRecords(
     users,
     assignedMaintenances
@@ -1246,6 +1369,8 @@ export async function loadSampleData(): Promise<SampleDataStats> {
     reservations: reservations.length,
     vehicleResponsibles: vehicleResponsibles.length,
     vehicleKilometers: vehicleKilometers.length,
+    vehicleACLs: authStats.vehicleACLs,
+    userRoles: authStats.userRoles,
   };
 
   console.log(`   Brands: ${brands.length}`);
@@ -1262,6 +1387,8 @@ export async function loadSampleData(): Promise<SampleDataStats> {
   console.log(`   Reservations: ${stats.reservations}`);
   console.log(`   Vehicle Responsibles: ${stats.vehicleResponsibles}`);
   console.log(`   Vehicle Kilometers: ${stats.vehicleKilometers}`);
+  console.log(`   Vehicle ACLs: ${stats.vehicleACLs}`);
+  console.log(`   User Roles: ${stats.userRoles}`);
 
   return stats;
 }

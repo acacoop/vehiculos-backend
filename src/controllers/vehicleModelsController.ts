@@ -1,5 +1,5 @@
 import { BaseController } from "./baseController";
-import VehicleModelService from "../services/vehicleModelService";
+import { VehicleModelService } from "../services/vehicleModelService";
 import type { VehicleModelInput } from "../schemas/vehicleModel";
 
 export class VehicleModelsController extends BaseController {
@@ -30,5 +30,5 @@ export class VehicleModelsController extends BaseController {
   }
 }
 
-export const createVehicleModelsController = () =>
-  new VehicleModelsController(new VehicleModelService());
+// Factory function is no longer needed here - will be created in routes
+// Controllers should receive their dependencies

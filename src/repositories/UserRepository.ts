@@ -1,26 +1,25 @@
 import { DataSource, ILike, Repository } from "typeorm";
 import { User as UserEntity } from "../entities/User";
+import {
+  IUserRepository,
+  UserSearchParams,
+} from "./interfaces/IUserRepository";
+import { RepositoryFindOptions, resolvePagination } from "./interfaces/common";
 
-export interface UserSearchParams {
-  email?: string;
-  cuit?: string;
-  firstName?: string;
-  lastName?: string;
-  active?: string; // 'true' | 'false'
-}
+// Re-export types for convenience
+export type { UserSearchParams };
 
-export class UserRepository {
+export class UserRepository implements IUserRepository {
   private readonly repo: Repository<UserEntity>;
+
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(UserEntity);
   }
 
-  async findAndCount(opts?: {
-    limit?: number;
-    offset?: number;
-    searchParams?: UserSearchParams;
-  }): Promise<[UserEntity[], number]> {
-    const { searchParams } = opts || {};
+  async findAndCount(
+    opts?: RepositoryFindOptions<UserSearchParams>,
+  ): Promise<[UserEntity[], number]> {
+    const { searchParams, pagination } = opts || {};
     const where: Record<string, unknown> = {};
     if (searchParams) {
       if (searchParams.email) where.email = searchParams.email;
@@ -32,10 +31,11 @@ export class UserRepository {
       if (searchParams.active !== undefined)
         where.active = searchParams.active === "true";
     }
+    const { limit, offset } = resolvePagination(pagination);
     return this.repo.findAndCount({
       where,
-      take: opts?.limit,
-      skip: opts?.offset,
+      take: limit,
+      skip: offset,
       order: { lastName: "ASC" },
     });
   }

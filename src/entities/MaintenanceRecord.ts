@@ -4,11 +4,13 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  Check,
 } from "typeorm";
 import { AssignedMaintenance } from "./AssignedMaintenance";
 import { User } from "./User";
 
 @Entity({ name: "maintenance_records" })
+@Check("kilometers >= 0")
 export class MaintenanceRecord {
   @PrimaryGeneratedColumn("uuid")
   id!: string;

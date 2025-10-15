@@ -1,10 +1,14 @@
-import { AppDataSource } from "../db";
 import { Reservation as ReservationEntity } from "../entities/Reservation";
 import { User } from "../entities/User";
 import { Vehicle } from "../entities/Vehicle";
 import type { Reservation } from "../schemas/reservation";
 import { validateUserExists, validateVehicleExists } from "../utils/validators";
-import { ReservationRepository } from "../repositories/ReservationRepository";
+import {
+  IReservationRepository,
+  ReservationSearchParams,
+} from "../repositories/interfaces/IReservationRepository";
+import { Repository } from "typeorm";
+import { RepositoryFindOptions } from "../repositories/interfaces/common";
 
 // Composite return type (was previously in ../types)
 export interface ReservationWithDetails {
@@ -62,29 +66,17 @@ function mapEntity(e: ReservationEntity): ReservationWithDetails {
   };
 }
 
-export interface GetAllReservationsOptions {
-  limit?: number;
-  offset?: number;
-  searchParams?: Record<string, string>;
-}
-
 export class ReservationsService {
-  private readonly repo: ReservationRepository;
-  private readonly userRepo = () => AppDataSource.getRepository(User);
-  private readonly vehicleRepo = () => AppDataSource.getRepository(Vehicle);
-  constructor(repo?: ReservationRepository) {
-    this.repo = repo ?? new ReservationRepository(AppDataSource);
-  }
+  constructor(
+    private readonly repo: IReservationRepository,
+    private readonly userRepo: Repository<User>,
+    private readonly vehicleRepo: Repository<Vehicle>,
+  ) {}
 
   async getAll(
-    options?: GetAllReservationsOptions,
+    options?: RepositoryFindOptions<ReservationSearchParams>,
   ): Promise<{ items: ReservationWithDetails[]; total: number }> {
-    const { limit, offset, searchParams } = options || {};
-    const [rows, total] = await this.repo.findAndCount({
-      limit,
-      offset,
-      searchParams,
-    });
+    const [rows, total] = await this.repo.findAndCount(options);
     return { items: rows.map(mapEntity), total };
   }
   async getById(id: string): Promise<ReservationWithDetails | null> {
@@ -125,8 +117,8 @@ export class ReservationsService {
     const { userId, vehicleId, startDate, endDate } = reservation;
     await validateUserExists(userId);
     await validateVehicleExists(vehicleId);
-    const user = await this.userRepo().findOne({ where: { id: userId } });
-    const vehicle = await this.vehicleRepo().findOne({
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const vehicle = await this.vehicleRepo.findOne({
       where: { id: vehicleId },
     });
     if (!user || !vehicle) return null;
@@ -139,8 +131,4 @@ export class ReservationsService {
     const saved = await this.repo.save(entity);
     return mapEntity(saved);
   }
-}
-
-export function createReservationsService() {
-  return new ReservationsService();
 }

@@ -1,7 +1,10 @@
 import { DataSource, Repository } from "typeorm";
 import { VehicleKilometers } from "../entities/VehicleKilometers";
+import { IVehicleKilometersRepository } from "./interfaces/IVehicleKilometersRepository";
 
-export class VehicleKilometersRepository {
+export class VehicleKilometersRepository
+  implements IVehicleKilometersRepository
+{
   private readonly repo: Repository<VehicleKilometers>;
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(VehicleKilometers);

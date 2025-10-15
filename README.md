@@ -7,6 +7,7 @@ Vehicle fleet management API built with Node.js, Express, TypeScript, TypeORM an
 ```bash
 make up            # Start app + DB (no data)
 make sample-data   # (DEV ONLY) Load sample dataset (destructive)
+make test          # Run automated tests
 make docs          # Open API documentation
 make dev           # Run locally with hot reload (uses existing DB container)
 ```
