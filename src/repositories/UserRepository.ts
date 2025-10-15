@@ -2,12 +2,12 @@ import { DataSource, ILike, Repository } from "typeorm";
 import { User as UserEntity } from "../entities/User";
 import {
   IUserRepository,
-  FindOptions,
   UserSearchParams,
 } from "./interfaces/IUserRepository";
+import { RepositoryFindOptions, resolvePagination } from "./interfaces/common";
 
 // Re-export types for convenience
-export type { UserSearchParams, FindOptions };
+export type { UserSearchParams };
 
 export class UserRepository implements IUserRepository {
   private readonly repo: Repository<UserEntity>;
@@ -16,8 +16,10 @@ export class UserRepository implements IUserRepository {
     this.repo = ds.getRepository(UserEntity);
   }
 
-  async findAndCount(opts?: FindOptions): Promise<[UserEntity[], number]> {
-    const { searchParams } = opts || {};
+  async findAndCount(
+    opts?: RepositoryFindOptions<UserSearchParams>,
+  ): Promise<[UserEntity[], number]> {
+    const { searchParams, pagination } = opts || {};
     const where: Record<string, unknown> = {};
     if (searchParams) {
       if (searchParams.email) where.email = searchParams.email;
@@ -29,10 +31,11 @@ export class UserRepository implements IUserRepository {
       if (searchParams.active !== undefined)
         where.active = searchParams.active === "true";
     }
+    const { limit, offset } = resolvePagination(pagination);
     return this.repo.findAndCount({
       where,
-      take: opts?.limit,
-      skip: opts?.offset,
+      take: limit,
+      skip: offset,
       order: { lastName: "ASC" },
     });
   }

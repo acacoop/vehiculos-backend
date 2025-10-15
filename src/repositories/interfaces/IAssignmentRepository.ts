@@ -1,5 +1,6 @@
 import { Assignment } from "../../entities/Assignment";
 import { DeleteResult } from "typeorm";
+import { RepositoryFindOptions } from "./common";
 
 export interface AssignmentSearchParams {
   userId?: string;
@@ -7,15 +8,9 @@ export interface AssignmentSearchParams {
   date?: string;
 }
 
-export interface AssignmentFindOptions {
-  limit?: number;
-  offset?: number;
-  searchParams?: AssignmentSearchParams;
-}
-
 export interface IAssignmentRepository {
   findAndCount(
-    options?: AssignmentFindOptions,
+    options?: RepositoryFindOptions<AssignmentSearchParams>,
   ): Promise<[Assignment[], number]>;
   findOne(id: string): Promise<Assignment | null>;
   create(data: Partial<Assignment>): Assignment;

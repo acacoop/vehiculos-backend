@@ -1,4 +1,4 @@
-import { PermissionType, PERMISSION_WEIGHT } from "../entities/PermissionType";
+import { PermissionType, PERMISSION_WEIGHT } from "../utils/common";
 
 /**
  * Get all permission types that satisfy the required permission level

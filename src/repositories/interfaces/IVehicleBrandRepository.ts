@@ -1,14 +1,9 @@
 import { VehicleBrand } from "../../entities/VehicleBrand";
 import { DeleteResult } from "typeorm";
+import { RepositoryFindOptions } from "./common";
 
 export interface VehicleBrandSearchParams {
   name?: string;
-}
-
-export interface VehicleBrandFindOptions {
-  limit?: number;
-  offset?: number;
-  searchParams?: VehicleBrandSearchParams;
 }
 
 /**
@@ -17,7 +12,7 @@ export interface VehicleBrandFindOptions {
  */
 export interface IVehicleBrandRepository {
   findAndCount(
-    options?: VehicleBrandFindOptions,
+    options?: RepositoryFindOptions<VehicleBrandSearchParams>,
   ): Promise<[VehicleBrand[], number]>;
   findOne(id: string): Promise<VehicleBrand | null>;
   findOneByWhere(where: { id: string }): Promise<VehicleBrand | null>;

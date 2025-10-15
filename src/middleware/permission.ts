@@ -1,13 +1,13 @@
 import { Response, NextFunction } from "express";
 import { AppError } from "./errorHandler";
 import { AuthenticatedRequest } from "./auth";
-import { PermissionType, PERMISSION_WEIGHT } from "../entities/PermissionType";
+import { PermissionType, PERMISSION_WEIGHT } from "../utils/common";
 import { VehicleACL } from "../entities/VehicleACL";
 import { DataSource } from "typeorm";
 import { VehicleACLRepository } from "../repositories/VehicleACLRepository";
 import { VehicleResponsibleRepository } from "../repositories/VehicleResponsibleRepository";
 import { UserRoleRepository } from "../repositories/UserRoleRepository";
-import { UserRoleEnum } from "../entities/UserRoleEnum";
+import { UserRoleEnum } from "../utils/common";
 import { AppDataSource } from "../db";
 import { AssignmentRepository } from "../repositories/AssignmentRepository";
 
@@ -199,6 +199,60 @@ export const requireVehiclePermission = (
     vehicleId,
   });
 
+/**
+ * Requires user to be viewing their own data OR be an admin.
+ * Useful for endpoints like /user/:userId/something
+ */
+export const requireSelfOrAdmin = (userIdParam: string = "userId") => {
+  return async (req: PermissionRequest, _res: Response, next: NextFunction) => {
+    try {
+      const checker = getPermissionChecker();
+      const user = req.user;
+
+      if (!user) {
+        throw new AppError(
+          "Authentication required",
+          401,
+          "https://example.com/problems/unauthorized",
+          "Unauthorized",
+        );
+      }
+
+      const targetUserId = req.params[userIdParam];
+      if (!targetUserId) {
+        return next(
+          new AppError(
+            `User ID parameter '${userIdParam}' is required`,
+            400,
+            "https://example.com/problems/bad-request",
+            "Bad Request",
+          ),
+        );
+      }
+
+      // Check if user is admin OR accessing their own data
+      const isAdmin = await checker.checkUserRolePermission(
+        user.id,
+        UserRoleEnum.ADMIN,
+      );
+      const isSelf = user.id === targetUserId;
+
+      if (!isAdmin && !isSelf) {
+        throw new AppError(
+          "You can only access your own data",
+          403,
+          "https://example.com/problems/forbidden",
+          "Forbidden",
+        );
+      }
+
+      next();
+    } catch (err) {
+      next(err);
+    }
+  };
+};
+
 export const requireVehiclePermissionFromParam = (
   permission: PermissionType,
   paramName: string = "id",
@@ -217,5 +271,78 @@ export const requireVehiclePermissionFromParam = (
     }
 
     return requireVehiclePermission(vehicleId, permission)(req, res, next);
+  };
+};
+
+export const requireVehiclePermissionFromBody = (
+  permission: PermissionType,
+  bodyField: string = "vehicleId",
+) => {
+  return async (req: PermissionRequest, res: Response, next: NextFunction) => {
+    const vehicleId = req.body?.[bodyField];
+    if (!vehicleId) {
+      return next(
+        new AppError(
+          `Vehicle ID field '${bodyField}' is required in request body`,
+          400,
+          "https://example.com/problems/bad-request",
+          "Bad Request",
+        ),
+      );
+    }
+
+    return requireVehiclePermission(vehicleId, permission)(req, res, next);
+  };
+};
+
+/**
+ * Generic middleware that extracts vehicleId using a custom mapper function.
+ * The mapper receives the request and should return the vehicleId or null/undefined.
+ *
+ * @param permission - The required permission level
+ * @param vehicleIdMapper - Function that extracts vehicleId from the request
+ *
+ * @example
+ * // Extract from body
+ * requireVehiclePermissionWith(
+ *   PermissionType.MAINTAINER,
+ *   async (req) => {
+ *     const assignedMaintenance = await repo.findOne({ where: { id: req.body.assignedMaintenanceId }});
+ *     return assignedMaintenance?.vehicle.id;
+ *   }
+ * )
+ *
+ * @example
+ * // Extract from query params
+ * requireVehiclePermissionWith(
+ *   PermissionType.READ,
+ *   async (req) => req.query.vehicleId as string
+ * )
+ */
+export const requireVehiclePermissionWith = (
+  permission: PermissionType,
+  vehicleIdMapper: (
+    req: PermissionRequest,
+  ) => Promise<string | null | undefined> | string | null | undefined,
+) => {
+  return async (req: PermissionRequest, res: Response, next: NextFunction) => {
+    try {
+      const vehicleId = await vehicleIdMapper(req);
+
+      if (!vehicleId) {
+        return next(
+          new AppError(
+            "Could not determine vehicle ID from request",
+            400,
+            "https://example.com/problems/bad-request",
+            "Bad Request",
+          ),
+        );
+      }
+
+      return requireVehiclePermission(vehicleId, permission)(req, res, next);
+    } catch (err) {
+      next(err);
+    }
   };
 };

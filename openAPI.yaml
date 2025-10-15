@@ -1811,6 +1811,325 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  # VEHICLE ACL (Access Control List)
+  /vehicle-acl:
+    get:
+      summary: Get all vehicle ACLs
+      description: |
+        Get all vehicle access control entries with optional filtering.
+        Admin only. Supports pagination and filtering by userId, vehicleId, or activeAt.
+      tags: [Vehicle ACL]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - name: userId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by user ID
+        - name: vehicleId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by vehicle ID
+        - name: activeAt
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter ACLs active at specific time (defaults to now)
+      responses:
+        "200":
+          description: List of vehicle ACLs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleACLListResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      summary: Create a new vehicle ACL
+      description: Admin only. Grant a user permission to access a vehicle.
+      tags: [Vehicle ACL]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VehicleACLInput"
+      responses:
+        "201":
+          description: Vehicle ACL created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleACLResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /vehicle-acl/{id}:
+    get:
+      summary: Get vehicle ACL by ID
+      tags: [Vehicle ACL]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Vehicle ACL retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleACLResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      summary: Update vehicle ACL
+      description: Admin only.
+      tags: [Vehicle ACL]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VehicleACLUpdateInput"
+      responses:
+        "200":
+          description: Vehicle ACL updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleACLResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      summary: Delete vehicle ACL
+      description: Admin only.
+      tags: [Vehicle ACL]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Vehicle ACL deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /vehicle-acl/user/{userId}/active:
+    get:
+      summary: Get active vehicle ACLs for a user
+      description: Get all currently active vehicle permissions for a specific user.
+      tags: [Vehicle ACL]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of active vehicle ACLs for the user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleACLListResponse"
+
+  # USER ROLES
+  /user-roles:
+    get:
+      summary: Get all user roles
+      description: Admin only. Get all user role assignments with optional filtering.
+      tags: [User Roles]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - name: userId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by user ID
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [user, admin]
+          description: Filter by role
+        - name: activeOnly
+          in: query
+          schema:
+            type: boolean
+          description: Filter only active roles
+      responses:
+        "200":
+          description: List of user roles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRoleListResponse"
+    post:
+      summary: Create a new user role
+      description: Admin only. Assign a role to a user.
+      tags: [User Roles]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRoleInput"
+      responses:
+        "201":
+          description: User role created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRoleResponse"
+
+  /user-roles/{id}:
+    get:
+      summary: Get user role by ID
+      tags: [User Roles]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: User role retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRoleResponse"
+    put:
+      summary: Update user role
+      description: Admin only.
+      tags: [User Roles]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRoleUpdateInput"
+      responses:
+        "200":
+          description: User role updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRoleResponse"
+    delete:
+      summary: Delete user role
+      description: Admin only.
+      tags: [User Roles]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: User role deleted
+
+  /user-roles/user/{userId}:
+    get:
+      summary: Get all roles for a user
+      description: Get all role assignments for a specific user (active and inactive).
+      tags: [User Roles]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of user roles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRoleListResponse"
+
+  /user-roles/user/{userId}/active:
+    get:
+      summary: Get active role for a user
+      description: Get the currently active role for a specific user.
+      tags: [User Roles]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Active user role
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRoleResponse"
+        "404":
+          description: No active role found
+
 components:
   schemas:
     VehicleKilometersLog:
@@ -2605,6 +2924,177 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/MaintenanceCategory"
+
+    # VEHICLE ACL SCHEMAS
+    VehicleACL:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user:
+          $ref: "#/components/schemas/User"
+        vehicle:
+          $ref: "#/components/schemas/Vehicle"
+        permission:
+          type: string
+          enum: [Read, Maintainer, Driver, Full]
+          description: "Permission level (Read < Maintainer < Driver < Full)"
+        startTime:
+          type: string
+          format: date-time
+          description: "When the permission starts"
+        endTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: "When the permission ends (null = no end date)"
+      required:
+        - id
+        - user
+        - vehicle
+        - permission
+        - startTime
+
+    VehicleACLInput:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        vehicleId:
+          type: string
+          format: uuid
+        permission:
+          type: string
+          enum: [Read, Maintainer, Driver, Full]
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+          description: "Optional end date for the permission"
+      required:
+        - userId
+        - vehicleId
+        - permission
+        - startTime
+
+    VehicleACLUpdateInput:
+      type: object
+      properties:
+        permission:
+          type: string
+          enum: [Read, Maintainer, Driver, Full]
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+          nullable: true
+
+    VehicleACLResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/VehicleACL"
+
+    VehicleACLListResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/VehicleACL"
+
+    # USER ROLE SCHEMAS
+    UserRole:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user:
+          $ref: "#/components/schemas/User"
+        role:
+          type: string
+          enum: [user, admin]
+        startTime:
+          type: string
+          format: date-time
+          description: "When the role starts"
+        endTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: "When the role ends (null = no end date)"
+        isActive:
+          type: boolean
+          description: "Computed field: true if current time is within start/end range"
+      required:
+        - id
+        - user
+        - role
+        - startTime
+
+    UserRoleInput:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [user, admin]
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+          description: "Optional end date for the role"
+      required:
+        - userId
+        - role
+        - startTime
+
+    UserRoleUpdateInput:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [user, admin]
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+          nullable: true
+
+    UserRoleResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/UserRole"
+
+    UserRoleListResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/UserRole"
 
     # MAINTENANCE SCHEMAS
     Maintenance:

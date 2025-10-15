@@ -4,11 +4,12 @@ import {
   IVehicleRepository,
   VehicleSearchParams,
 } from "./interfaces/IVehicleRepository";
-import { PermissionType } from "../entities/PermissionType";
-import { UserRoleEnum } from "../entities/UserRoleEnum";
+import { PermissionType } from "../utils/common";
+import { UserRoleEnum } from "../utils/common";
 import {
   RepositoryFindOptions,
   PermissionFilterParams,
+  resolvePagination,
 } from "./interfaces/common";
 import { getAllowedPermissions } from "../utils/permissions";
 
@@ -66,8 +67,9 @@ export class VehicleRepository implements IVehicleRepository {
     }
 
     // Pagination
-    if (pagination?.limit) qb.take(pagination.limit);
-    if (pagination?.offset) qb.skip(pagination.offset);
+    const { limit, offset } = resolvePagination(pagination);
+    qb.take(limit);
+    qb.skip(offset);
 
     return qb.getManyAndCount();
   }

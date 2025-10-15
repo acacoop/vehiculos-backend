@@ -1,6 +1,6 @@
 import { Repository, DataSource } from "typeorm";
 import { UserRole } from "../entities/UserRole";
-import { UserRoleEnum } from "../entities/UserRoleEnum";
+import { UserRoleEnum } from "../utils/common";
 
 export interface UserRoleSearchParams {
   userId?: string;

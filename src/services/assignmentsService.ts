@@ -6,6 +6,8 @@ import type { Assignment } from "../schemas/assignment";
 import { validateUserExists, validateVehicleExists } from "../utils/validators";
 import { validateISODateFormat } from "../utils/dateValidators";
 import { Repository } from "typeorm";
+import { RepositoryFindOptions } from "../repositories/interfaces/common";
+import { AssignmentSearchParams } from "../repositories/interfaces/IAssignmentRepository";
 
 // Composite detail type (previously in ../types)
 export interface AssignmentWithDetails {
@@ -63,12 +65,6 @@ function mapEntityToDetails(a: AssignmentEntity): AssignmentWithDetails {
   };
 }
 
-export interface GetAllAssignmentsOptions {
-  limit?: number;
-  offset?: number;
-  searchParams?: Record<string, string>;
-}
-
 export class AssignmentsService {
   constructor(
     private readonly repo: IAssignmentRepository,
@@ -77,14 +73,9 @@ export class AssignmentsService {
   ) {}
 
   async getAll(
-    options?: GetAllAssignmentsOptions,
+    options?: RepositoryFindOptions<AssignmentSearchParams>,
   ): Promise<{ items: AssignmentWithDetails[]; total: number }> {
-    const { limit, offset, searchParams } = options || {};
-    const { 0: list, 1: total } = await this.repo.findAndCount({
-      limit,
-      offset,
-      searchParams,
-    });
+    const { 0: list, 1: total } = await this.repo.findAndCount(options);
     return { items: list.map(mapEntityToDetails), total };
   }
 

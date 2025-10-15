@@ -1,6 +1,7 @@
 import { DataSource, Repository } from "typeorm";
 import { VehicleACL as VehicleACLEntity } from "../entities/VehicleACL";
-import { PermissionType } from "../entities/PermissionType";
+import { PermissionType, PERMISSION_WEIGHT } from "../utils/common";
+import { resolvePagination } from "./interfaces/common";
 
 export interface VehicleACLSearchParams {
   userId?: string;
@@ -22,6 +23,11 @@ export class VehicleACLRepository {
     searchParams?: VehicleACLSearchParams;
   }): Promise<[VehicleACLEntity[], number]> {
     const { searchParams, limit, offset } = options || {};
+    const { limit: resolvedLimit, offset: resolvedOffset } = resolvePagination({
+      limit,
+      offset,
+    });
+
     const qb = this.repo
       .createQueryBuilder("acl")
       .leftJoinAndSelect("acl.user", "u")
@@ -50,8 +56,8 @@ export class VehicleACLRepository {
       }
     }
 
-    if (typeof limit === "number") qb.take(limit);
-    if (typeof offset === "number") qb.skip(offset);
+    qb.take(resolvedLimit);
+    qb.skip(resolvedOffset);
     return qb.getManyAndCount();
   }
 
@@ -87,13 +93,6 @@ export class VehicleACLRepository {
     const [acls] = await this.findAndCount({
       searchParams: { userId, vehicleId, activeAt: at },
     });
-
-    const PERMISSION_WEIGHT: Record<PermissionType, number> = {
-      [PermissionType.READ]: 1,
-      [PermissionType.MAINTAINER]: 2,
-      [PermissionType.DRIVER]: 3,
-      [PermissionType.FULL]: 4,
-    };
 
     const requiredWeight = PERMISSION_WEIGHT[requiredPermission];
     return acls.some(

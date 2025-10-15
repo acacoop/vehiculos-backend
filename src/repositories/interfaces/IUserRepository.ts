@@ -1,5 +1,6 @@
 import { User } from "../../entities/User";
 import { DeleteResult } from "typeorm";
+import { RepositoryFindOptions } from "./common";
 
 export interface UserSearchParams {
   email?: string;
@@ -9,18 +10,14 @@ export interface UserSearchParams {
   active?: string; // 'true' | 'false'
 }
 
-export interface FindOptions {
-  limit?: number;
-  offset?: number;
-  searchParams?: UserSearchParams;
-}
-
 /**
  * Interface for User Repository
  * This abstraction allows for easy mocking in tests
  */
 export interface IUserRepository {
-  findAndCount(opts?: FindOptions): Promise<[User[], number]>;
+  findAndCount(
+    opts?: RepositoryFindOptions<UserSearchParams>,
+  ): Promise<[User[], number]>;
   findOne(id: string): Promise<User | null>;
   findByEntraId(entraId: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;

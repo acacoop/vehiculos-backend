@@ -73,7 +73,9 @@ describe("AssignmentsService", () => {
       const mockAssignments = [createMockAssignment()];
       mockAssignmentRepo.findAndCount.mockResolvedValue([mockAssignments, 1]);
 
-      const result = await service.getAll({ limit: 10, offset: 0 });
+      const result = await service.getAll({
+        pagination: { limit: 10, offset: 0 },
+      });
 
       expect(result.total).toBe(1);
       expect(result.items).toHaveLength(1);

@@ -1,20 +1,15 @@
 import { Reservation } from "../../entities/Reservation";
 import { DeleteResult, SelectQueryBuilder } from "typeorm";
+import { RepositoryFindOptions } from "./common";
 
 export interface ReservationSearchParams {
   userId?: string;
   vehicleId?: string;
 }
 
-export interface ReservationFindOptions {
-  limit?: number;
-  offset?: number;
-  searchParams?: ReservationSearchParams;
-}
-
 export interface IReservationRepository {
   findAndCount(
-    options?: ReservationFindOptions,
+    options?: RepositoryFindOptions<ReservationSearchParams>,
   ): Promise<[Reservation[], number]>;
   find(where: Record<string, unknown>): Promise<Reservation[]>;
   findOne(id: string): Promise<Reservation | null>;

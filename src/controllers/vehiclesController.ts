@@ -8,6 +8,7 @@ import { asyncHandler } from "../middleware/errorHandler";
 import { PermissionFilterRequest } from "../middleware/permissionFilter";
 import { RepositoryFindOptions } from "../repositories/interfaces/common";
 import { VehicleSearchParams } from "../repositories/interfaces/IVehicleRepository";
+import { parsePaginationQuery } from "../utils/common";
 
 export class VehiclesController extends BaseController {
   constructor(private readonly service: VehiclesService) {
@@ -17,9 +18,7 @@ export class VehiclesController extends BaseController {
   // Override getAll to use permission filter from middleware
   public getAll = asyncHandler(async (req: Request, res: Response) => {
     const permReq = req as PermissionFilterRequest;
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const offset = (page - 1) * limit;
+    const { page, limit, offset } = parsePaginationQuery(req.query);
 
     // Extract search parameters (excluding pagination params)
     const searchParams: VehicleSearchParams = {};

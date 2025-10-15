@@ -3,7 +3,10 @@ import { MaintenanceCategory } from "../entities/MaintenanceCategory";
 import { AssignedMaintenance } from "../entities/AssignedMaintenance";
 import { IMaintenanceRepository } from "../repositories/interfaces/IMaintenanceRepository";
 import { IAssignedMaintenanceRepository } from "../repositories/interfaces/IAssignedMaintenanceRepository";
-import { IMaintenanceRecordRepository } from "../repositories/interfaces/IMaintenanceRecordRepository";
+import {
+  IMaintenanceRecordRepository,
+  MaintenanceRecordSearchParams,
+} from "../repositories/interfaces/IMaintenanceRecordRepository";
 import {
   validateMaintenanceCategoryExists,
   validateMaintenanceExists,
@@ -15,6 +18,7 @@ import { Vehicle } from "../entities/Vehicle";
 import { MaintenanceRecord as MaintenanceRecordEntity } from "../entities/MaintenanceRecord";
 import { Repository } from "typeorm";
 import { User } from "../entities/User";
+import { RepositoryFindOptions } from "../repositories/interfaces/common";
 
 // NOTE: The Maintenance zod schema currently only includes: id, categoryId, name.
 // Legacy API exposed additional optional fields (kilometersFrequency, daysFrequency, observations, instructions).
@@ -292,11 +296,7 @@ export class MaintenanceRecordsService {
       notes: mr.notes ?? undefined,
     };
   }
-  async getAll(options?: {
-    limit?: number;
-    offset?: number;
-    filters?: Record<string, string>;
-  }) {
+  async getAll(options?: RepositoryFindOptions<MaintenanceRecordSearchParams>) {
     const [rows, total] = await this.recordRepo.findAndCount(options);
     return {
       items: rows.map((r) => this.mapEntity(r as MaintenanceRecordEntity)),

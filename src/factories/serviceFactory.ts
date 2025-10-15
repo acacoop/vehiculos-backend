@@ -5,8 +5,6 @@ import { VehicleBrandService } from "../services/vehicleBrandService";
 import { VehicleBrandRepository } from "../repositories/VehicleBrandRepository";
 import { VehicleModelService } from "../services/vehicleModelService";
 import { VehicleModelRepository } from "../repositories/VehicleModelRepository";
-import { RolesService } from "../services/rolesService";
-import { RolesRepository } from "../repositories/RolesRepository";
 import { MaintenanceCategoriesService } from "../services/maintenanceCategoriesService";
 import { MaintenanceCategoryRepository } from "../repositories/MaintenanceCategoryRepository";
 import { ReservationsService } from "../services/reservationsService";
@@ -35,6 +33,8 @@ import { AssignedMaintenance } from "../entities/AssignedMaintenance";
 import { VehicleRepository } from "../repositories/VehicleRepository";
 import { VehicleModel } from "../entities/VehicleModel";
 import { VehiclesService } from "../services/vehiclesService";
+import { UserRolesService } from "../services/userRolesService";
+import { UserRoleRepository } from "../repositories/UserRoleRepository";
 
 /**
  * Service Factory - Centralizes creation of service instances
@@ -60,11 +60,6 @@ export class ServiceFactory {
       vehicleModelRepository,
       vehicleBrandRepository,
     );
-  }
-
-  createRolesService(): RolesService {
-    const rolesRepository = new RolesRepository(this.dataSource);
-    return new RolesService(rolesRepository);
   }
 
   createMaintenanceCategoriesService(): MaintenanceCategoriesService {
@@ -149,6 +144,12 @@ export class ServiceFactory {
       responsiblesService,
       vehicleModelRepo,
     );
+  }
+
+  createUserRolesService(): UserRolesService {
+    const userRoleRepo = new UserRoleRepository(this.dataSource);
+    const userRepo = this.dataSource.getRepository(User);
+    return new UserRolesService(userRoleRepo, userRepo);
   }
 
   // Add more service factory methods here as we refactor them

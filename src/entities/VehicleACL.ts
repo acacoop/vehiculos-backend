@@ -7,7 +7,7 @@ import {
   Check,
   Index,
 } from "typeorm";
-import { PermissionType } from "./PermissionType";
+import { PermissionType } from "../utils/common";
 import { User } from "./User";
 import { Vehicle } from "./Vehicle";
 

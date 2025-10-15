@@ -8,8 +8,8 @@ import {
   requireRole,
   requireVehiclePermissionFromParam,
 } from "../middleware/permission";
-import { UserRoleEnum } from "../entities/UserRoleEnum";
-import { PermissionType } from "../entities/PermissionType";
+import { UserRoleEnum } from "../utils/common";
+import { PermissionType } from "../utils/common";
 import { addPermissionFilter } from "../middleware/permissionFilter";
 
 const router = Router();

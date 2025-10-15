@@ -3,11 +3,11 @@ import { VehicleBrand } from "../entities/VehicleBrand";
 import {
   IVehicleBrandRepository,
   VehicleBrandSearchParams,
-  VehicleBrandFindOptions,
 } from "./interfaces/IVehicleBrandRepository";
+import { RepositoryFindOptions, resolvePagination } from "./interfaces/common";
 
 // Re-export types for convenience
-export type { VehicleBrandSearchParams, VehicleBrandFindOptions };
+export type { VehicleBrandSearchParams };
 
 export class VehicleBrandRepository implements IVehicleBrandRepository {
   private readonly repo: Repository<VehicleBrand>;
@@ -16,16 +16,18 @@ export class VehicleBrandRepository implements IVehicleBrandRepository {
   }
 
   async findAndCount(
-    options?: VehicleBrandFindOptions,
+    options?: RepositoryFindOptions<VehicleBrandSearchParams>,
   ): Promise<[VehicleBrand[], number]> {
+    const { searchParams, pagination } = options || {};
     const where: Record<string, unknown> = {};
-    if (options?.searchParams?.name) {
-      where.name = ILike(`%${options.searchParams.name}%`);
+    if (searchParams?.name) {
+      where.name = ILike(`%${searchParams.name}%`);
     }
+    const { limit, offset } = resolvePagination(pagination);
     return this.repo.findAndCount({
       where,
-      take: options?.limit,
-      skip: options?.offset,
+      take: limit,
+      skip: offset,
       order: { name: "ASC" },
     });
   }

@@ -1,13 +1,12 @@
 import express from "express";
 import { createMaintenancePosiblesController } from "../controllers/maintenancePosiblesController";
-import {
-  validateUUIDParam,
-  validateBody,
-} from "../middleware/validation";
+import { validateUUIDParam, validateBody } from "../middleware/validation";
 import {
   MaintenanceCreateSchema,
   MaintenanceUpdateSchema,
 } from "../schemas/maintenance";
+import { requireRole } from "../middleware/permission";
+import { UserRoleEnum } from "../utils/common";
 
 const router = express.Router();
 const controller = createMaintenancePosiblesController();
@@ -19,11 +18,17 @@ router.get("/", controller.getAll);
 router.get("/:id", validateUUIDParam("id"), controller.getById);
 
 // POST: Create a new maintenance (requires all required fields)
-router.post("/", validateBody(MaintenanceCreateSchema), controller.create);
+router.post(
+  "/",
+  requireRole(UserRoleEnum.ADMIN),
+  validateBody(MaintenanceCreateSchema),
+  controller.create,
+);
 
 // PUT: Update a maintenance (full replacement)
 router.put(
   "/:id",
+  requireRole(UserRoleEnum.ADMIN),
   validateUUIDParam("id"),
   validateBody(MaintenanceCreateSchema),
   controller.update,
@@ -32,13 +37,19 @@ router.put(
 // PATCH: Update a maintenance (partial update)
 router.patch(
   "/:id",
+  requireRole(UserRoleEnum.ADMIN),
   validateUUIDParam("id"),
   validateBody(MaintenanceUpdateSchema),
   controller.patch,
 );
 
 // DELETE: Delete a maintenance
-router.delete("/:id", validateUUIDParam("id"), controller.delete);
+router.delete(
+  "/:id",
+  requireRole(UserRoleEnum.ADMIN),
+  validateUUIDParam("id"),
+  controller.delete,
+);
 
 // GET: Get all vehicles assigned to a specific maintenance
 router.get(

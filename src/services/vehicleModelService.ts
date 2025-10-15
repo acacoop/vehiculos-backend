@@ -1,10 +1,14 @@
-import { IVehicleModelRepository } from "../repositories/interfaces/IVehicleModelRepository";
+import {
+  IVehicleModelRepository,
+  VehicleModelSearchParams,
+} from "../repositories/interfaces/IVehicleModelRepository";
 import { IVehicleBrandRepository } from "../repositories/interfaces/IVehicleBrandRepository";
 import type {
   VehicleModelInput,
   VehicleModelType,
 } from "../schemas/vehicleModel";
 import { AppError } from "../middleware/errorHandler";
+import { RepositoryFindOptions } from "../repositories/interfaces/common";
 
 /**
  * VehicleModelService - Business logic for VehicleModel operations
@@ -16,20 +20,10 @@ export class VehicleModelService {
     private readonly brandRepo: IVehicleBrandRepository,
   ) {}
 
-  async getAll(options?: {
-    limit?: number;
-    offset?: number;
-    searchParams?: Record<string, string>;
-  }): Promise<{ items: VehicleModelType[]; total: number }> {
-    const { limit, offset, searchParams } = options || {};
-    const [rows, total] = await this.repo.findAndCount({
-      limit,
-      offset,
-      searchParams: {
-        name: searchParams?.name,
-        brandId: searchParams?.brandId,
-      },
-    });
+  async getAll(
+    options?: RepositoryFindOptions<VehicleModelSearchParams>,
+  ): Promise<{ items: VehicleModelType[]; total: number }> {
+    const [rows, total] = await this.repo.findAndCount(options);
     return {
       items: rows.map((r) => ({
         id: r.id,

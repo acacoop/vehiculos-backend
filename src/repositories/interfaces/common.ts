@@ -1,5 +1,12 @@
-import { PermissionType } from "../../entities/PermissionType";
-import { UserRoleEnum } from "../../entities/UserRoleEnum";
+import { PermissionType, UserRoleEnum } from "../../utils/common";
+
+/**
+ * Default pagination values
+ */
+export const DEFAULT_PAGINATION = {
+  limit: 10,
+  offset: 0,
+} as const;
 
 /**
  * Pagination parameters for repository queries
@@ -7,6 +14,18 @@ import { UserRoleEnum } from "../../entities/UserRoleEnum";
 export interface PaginationParams {
   limit?: number;
   offset?: number;
+}
+
+/**
+ * Resolve pagination parameters with defaults
+ * @param pagination - Optional pagination parameters
+ * @returns Resolved pagination with defaults applied
+ */
+export function resolvePagination(pagination?: PaginationParams) {
+  return {
+    limit: pagination?.limit ?? DEFAULT_PAGINATION.limit,
+    offset: pagination?.offset ?? DEFAULT_PAGINATION.offset,
+  };
 }
 
 /**

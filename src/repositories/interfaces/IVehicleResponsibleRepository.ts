@@ -1,17 +1,12 @@
 import { VehicleResponsible } from "../../entities/VehicleResponsible";
 import { DeleteResult } from "typeorm";
+import { RepositoryFindOptions } from "./common";
 
 export interface VehicleResponsibleSearchParams {
   vehicleId?: string;
   userId?: string;
   active?: string; // 'true' | 'false'
   date?: string; // ISO date
-}
-
-export interface VehicleResponsibleFindOptions {
-  searchParams?: VehicleResponsibleSearchParams;
-  limit?: number;
-  offset?: number;
 }
 
 /**
@@ -25,7 +20,7 @@ export interface IVehicleResponsibleRepository {
   delete(id: string): Promise<DeleteResult>;
   create(data: Partial<VehicleResponsible>): VehicleResponsible;
   find(
-    options?: VehicleResponsibleFindOptions,
+    options?: RepositoryFindOptions<VehicleResponsibleSearchParams>,
   ): Promise<[VehicleResponsible[], number]>;
   findCurrentByVehicle(vehicleId: string): Promise<VehicleResponsible | null>;
   findCurrentForUser(userId: string): Promise<VehicleResponsible[]>;

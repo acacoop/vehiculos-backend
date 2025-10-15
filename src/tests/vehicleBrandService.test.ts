@@ -9,11 +9,12 @@ class MockVehicleBrandRepository implements IVehicleBrandRepository {
   private idCounter = 1;
 
   async findAndCount(opts?: {
-    limit?: number;
-    offset?: number;
+    pagination?: { limit?: number; offset?: number };
     searchParams?: { name?: string };
   }): Promise<[VehicleBrand[], number]> {
-    const { limit = 10, offset = 0, searchParams } = opts || {};
+    const { pagination, searchParams } = opts || {};
+    const limit = pagination?.limit ?? 10;
+    const offset = pagination?.offset ?? 0;
     let filtered = [...this.brands];
 
     if (searchParams?.name) {
@@ -100,7 +101,9 @@ describe("VehicleBrandService", () => {
       ];
       mockRepo.seedBrands(brands);
 
-      const result = await service.getAll({ limit: 2, offset: 0 });
+      const result = await service.getAll({
+        pagination: { limit: 2, offset: 0 },
+      });
 
       expect(result.items).toHaveLength(2);
       expect(result.total).toBe(3);
@@ -132,7 +135,9 @@ describe("VehicleBrandService", () => {
       ];
       mockRepo.seedBrands(brands);
 
-      const result = await service.getAll({ limit: 1, offset: 1 });
+      const result = await service.getAll({
+        pagination: { limit: 1, offset: 1 },
+      });
 
       expect(result.items).toHaveLength(1);
       expect(result.items[0].name).toBe("Ford");

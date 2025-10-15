@@ -3,8 +3,12 @@ import { User } from "../entities/User";
 import { Vehicle } from "../entities/Vehicle";
 import type { Reservation } from "../schemas/reservation";
 import { validateUserExists, validateVehicleExists } from "../utils/validators";
-import { IReservationRepository } from "../repositories/interfaces/IReservationRepository";
+import {
+  IReservationRepository,
+  ReservationSearchParams,
+} from "../repositories/interfaces/IReservationRepository";
 import { Repository } from "typeorm";
+import { RepositoryFindOptions } from "../repositories/interfaces/common";
 
 // Composite return type (was previously in ../types)
 export interface ReservationWithDetails {
@@ -62,12 +66,6 @@ function mapEntity(e: ReservationEntity): ReservationWithDetails {
   };
 }
 
-export interface GetAllReservationsOptions {
-  limit?: number;
-  offset?: number;
-  searchParams?: Record<string, string>;
-}
-
 export class ReservationsService {
   constructor(
     private readonly repo: IReservationRepository,
@@ -76,14 +74,9 @@ export class ReservationsService {
   ) {}
 
   async getAll(
-    options?: GetAllReservationsOptions,
+    options?: RepositoryFindOptions<ReservationSearchParams>,
   ): Promise<{ items: ReservationWithDetails[]; total: number }> {
-    const { limit, offset, searchParams } = options || {};
-    const [rows, total] = await this.repo.findAndCount({
-      limit,
-      offset,
-      searchParams,
-    });
+    const [rows, total] = await this.repo.findAndCount(options);
     return { items: rows.map(mapEntity), total };
   }
   async getById(id: string): Promise<ReservationWithDetails | null> {

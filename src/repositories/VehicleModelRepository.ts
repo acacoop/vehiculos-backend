@@ -3,11 +3,11 @@ import { VehicleModel } from "../entities/VehicleModel";
 import {
   IVehicleModelRepository,
   VehicleModelSearchParams,
-  VehicleModelFindOptions,
 } from "./interfaces/IVehicleModelRepository";
+import { RepositoryFindOptions, resolvePagination } from "./interfaces/common";
 
 // Re-export types for convenience
-export type { VehicleModelSearchParams, VehicleModelFindOptions };
+export type { VehicleModelSearchParams };
 
 export class VehicleModelRepository implements IVehicleModelRepository {
   private readonly repo: Repository<VehicleModel>;
@@ -16,23 +16,25 @@ export class VehicleModelRepository implements IVehicleModelRepository {
   }
 
   async findAndCount(
-    options?: VehicleModelFindOptions,
+    options?: RepositoryFindOptions<VehicleModelSearchParams>,
   ): Promise<[VehicleModel[], number]> {
+    const { searchParams, pagination } = options || {};
     const qb = this.repo
       .createQueryBuilder("m")
       .leftJoinAndSelect("m.brand", "b")
       .orderBy("b.name", "ASC")
       .addOrderBy("m.name", "ASC");
-    if (options?.searchParams?.name) {
+    if (searchParams?.name) {
       qb.andWhere("m.name ILIKE :name", {
-        name: `%${options.searchParams.name}%`,
+        name: `%${searchParams.name}%`,
       });
     }
-    if (options?.searchParams?.brandId) {
-      qb.andWhere("b.id = :brandId", { brandId: options.searchParams.brandId });
+    if (searchParams?.brandId) {
+      qb.andWhere("b.id = :brandId", { brandId: searchParams.brandId });
     }
-    if (typeof options?.limit === "number") qb.take(options.limit);
-    if (typeof options?.offset === "number") qb.skip(options.offset);
+    const { limit, offset } = resolvePagination(pagination);
+    qb.take(limit);
+    qb.skip(offset);
     return qb.getManyAndCount();
   }
 

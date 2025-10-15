@@ -19,11 +19,10 @@ import { MaintenanceRecord } from "../entities/MaintenanceRecord";
 import { Reservation } from "../entities/Reservation";
 import { VehicleResponsible } from "../entities/VehicleResponsible";
 import { VehicleKilometers } from "../entities/VehicleKilometers";
-// Authorization entities (simplified)
 import { VehicleACL } from "../entities/VehicleACL";
-import { PermissionType } from "../entities/PermissionType";
+import { PermissionType } from "../utils/common";
 import { UserRole } from "../entities/UserRole";
-import { UserRoleEnum } from "../entities/UserRoleEnum";
+import { UserRoleEnum } from "../utils/common";
 
 type SampleDataStats = {
   users: number;

@@ -83,15 +83,16 @@ describe("MaintenanceRecordsService", () => {
     it("should return all maintenance records with pagination", async () => {
       mockRecordRepo.findAndCount.mockResolvedValue([[mockRecord], 1]);
 
-      const result = await service.getAll({ limit: 10, offset: 0 });
+      const result = await service.getAll({
+        pagination: { limit: 10, offset: 0 },
+      });
 
       expect(result.total).toBe(1);
       expect(result.items).toHaveLength(1);
       expect(result.items[0].id).toBe("record-1");
       expect(result.items[0].kilometers).toBe(5000);
       expect(mockRecordRepo.findAndCount).toHaveBeenCalledWith({
-        limit: 10,
-        offset: 0,
+        pagination: { limit: 10, offset: 0 },
       });
     });
 
@@ -108,16 +109,14 @@ describe("MaintenanceRecordsService", () => {
       mockRecordRepo.findAndCount.mockResolvedValue([[mockRecord], 1]);
 
       const result = await service.getAll({
-        limit: 10,
-        offset: 0,
-        filters: { vehicleId: "vehicle-1" },
+        pagination: { limit: 10, offset: 0 },
+        searchParams: { vehicleId: "vehicle-1" },
       });
 
       expect(result.total).toBe(1);
       expect(mockRecordRepo.findAndCount).toHaveBeenCalledWith({
-        limit: 10,
-        offset: 0,
-        filters: { vehicleId: "vehicle-1" },
+        pagination: { limit: 10, offset: 0 },
+        searchParams: { vehicleId: "vehicle-1" },
       });
     });
   });
