@@ -18,8 +18,6 @@ const envSchema = z.object({
     .enum(["true", "false"]) // set to 'true' locally to bypass Entra
     .transform((v: string) => v === "true")
     .default("false"),
-  AUTH_BYPASS_EMAIL: z.string().optional(), // default impersonated user email
-  // Azure AAD connection string (for production)
   SQL_AAD_CONNECTION_STRING: z.string().optional(),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60 * 1000),
   RATE_LIMIT_MAX: z.coerce.number().default(1000),
@@ -51,7 +49,6 @@ export const {
   DB_NAME,
   DB_LOGGING,
   AUTH_BYPASS,
-  AUTH_BYPASS_EMAIL,
   SQL_AAD_CONNECTION_STRING,
   RATE_LIMIT_WINDOW_MS,
   RATE_LIMIT_MAX,

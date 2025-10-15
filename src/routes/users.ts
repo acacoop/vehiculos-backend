@@ -16,11 +16,6 @@ const usersService = serviceFactory.createUsersService();
 const usersController = new UsersController(usersService);
 
 // GET /users - Get all users with pagination and search
-// Supports query parameters: page, limit, email, cuit, firstName, lastName
-// Examples:
-// - /users?email=user@example.com
-// - /users?cuit=12345678
-// - /users?firstName=John&lastName=Doe
 router.get("/", usersController.getAll);
 
 // GET /users/:id - Get user by ID

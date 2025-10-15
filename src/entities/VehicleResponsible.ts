@@ -13,7 +13,6 @@ const DEFAULT_CECO = "99999999"; // For already existing records without ceco
 
 @Entity({ name: "vehicle_responsibles" })
 @Check("end_date IS NULL OR end_date > start_date")
-@Check("LENGTH(ceco) = 8")
 export class VehicleResponsible {
   @PrimaryGeneratedColumn("uuid")
   id!: string;

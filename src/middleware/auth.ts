@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "./errorHandler";
-import { AUTH_BYPASS, AUTH_BYPASS_EMAIL } from "../config/env.config";
+import { AUTH_BYPASS } from "../config/env.config";
 import { extractBearer, verifyEntraAccessToken } from "../utils/jwtAzure";
 import { ServiceFactory } from "../factories/serviceFactory";
 import { AppDataSource } from "../db";
@@ -27,11 +27,8 @@ export const requireAuth = async (
   try {
     // Dev-only bypass: allow impersonation only when AUTH_BYPASS=true
     // Optional header: x-dev-impersonate: email or entraId
-    if (AUTH_BYPASS) {
-      const impersonate =
-        (req.headers["x-dev-impersonate"] as string | undefined) ||
-        AUTH_BYPASS_EMAIL ||
-        "";
+    if (AUTH_BYPASS && req.headers["x-dev-impersonate"]) {
+      const impersonate = String(req.headers["x-dev-impersonate"]).trim();
 
       let user = null;
       if (impersonate.includes("@"))

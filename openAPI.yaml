@@ -97,19 +97,8 @@ paths:
         - `/users?firstName=Ana&page=1&limit=5`
       tags: [Users]
       parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 10
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
         - name: email
           in: query
           description: Filter by exact email address
@@ -122,7 +111,6 @@ paths:
           schema:
             type: string
             pattern: "^[0-9]{11}$"
-            example: "20345678901"
         - name: firstName
           in: query
           description: Filter by first name (partial match, case-insensitive)
@@ -227,7 +215,7 @@ paths:
         "200":
           description: User partially updated successfully
         "400":
-          $ref: "#/components/responses/ValidationError"
+          $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
     delete:
@@ -330,19 +318,8 @@ paths:
         - `/vehicles?brand=Honda&year=2021`
       tags: [Vehicles]
       parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 10
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
         - name: licensePlate
           in: query
           description: Filter by exact license plate
@@ -471,7 +448,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/VehicleResponse"
         "400":
-          $ref: "#/components/responses/ValidationError"
+          $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
     delete:
@@ -583,21 +560,8 @@ paths:
         - `/reservations?page=1&limit=5`
       tags: [Reservations]
       parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-          description: Page number for pagination
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 10
-          description: Number of items per page
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
         - name: userId
           in: query
           schema:
@@ -658,21 +622,8 @@ paths:
         - `/assignments?page=1&limit=5`
       tags: [Assignments]
       parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-          description: Page number for pagination
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 10
-          description: Number of items per page
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
         - name: userId
           in: query
           schema:
@@ -1201,21 +1152,8 @@ paths:
         - `/maintenance/records?page=1&limit=5`
       tags: [Maintenance]
       parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-          description: Page number for pagination
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 10
-          description: Number of items per page
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
         - name: userId
           in: query
           schema:
@@ -1327,21 +1265,8 @@ paths:
         - `/vehicle-responsibles?date=2025-01-15`
       tags: [Vehicle Responsibles]
       parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-          description: Page number for pagination
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 10
-          description: Number of items per page
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
         - name: userId
           in: query
           schema:
@@ -1464,7 +1389,7 @@ paths:
         "200":
           description: Vehicle responsible partially updated successfully
         "400":
-          $ref: "#/components/responses/ValidationError"
+          $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
         "409":
@@ -1541,19 +1466,8 @@ paths:
       summary: List vehicle brands
       tags: [Vehicle Brands]
       parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 10
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
         - name: name
           in: query
           description: Partial match by brand name (case-insensitive)
@@ -1676,19 +1590,8 @@ paths:
       summary: List vehicle models
       tags: [Vehicle Models]
       parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 10
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
         - name: name
           in: query
           description: Partial match by model name (case-insensitive)
@@ -3472,6 +3375,13 @@ components:
           schema:
             $ref: "#/components/schemas/ProblemDetails"
 
+    Forbidden:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+
     Conflict:
       description: Resource already exists
       content:
@@ -3497,6 +3407,23 @@ components:
       name: x-dev-impersonate
       description: Dev-only. Email or entraId to impersonate. Requires server AUTH_BYPASS=true.
   parameters:
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: Page number for pagination
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+      description: Number of items per page
     SwaggerBypassHeader:
       name: x-swagger-bypass
       in: header
