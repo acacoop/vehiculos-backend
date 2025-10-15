@@ -69,14 +69,14 @@ export class VehiclesService {
     if (data.licensePlate) existing.licensePlate = data.licensePlate;
     if (typeof data.year === "number") existing.year = data.year;
     if ("chassisNumber" in data)
-      existing.chassisNumber = data.chassisNumber ?? undefined;
+      existing.chassisNumber = data.chassisNumber;
     if ("engineNumber" in data)
-      existing.engineNumber = data.engineNumber ?? undefined;
+      existing.engineNumber = data.engineNumber;
     if ("vehicleType" in data)
-      existing.vehicleType = data.vehicleType ?? undefined;
+      existing.vehicleType = data.vehicleType;
     if ("transmission" in data)
-      existing.transmission = data.transmission ?? undefined;
-    if ("fuelType" in data) existing.fuelType = data.fuelType ?? undefined;
+      existing.transmission = data.transmission;
+    if ("fuelType" in data) existing.fuelType = data.fuelType;
     const saved = await this.vehicleRepo.save(existing);
     return mapEntity(saved);
   }
@@ -93,11 +93,11 @@ function mapEntity(e: VehicleEntity): Vehicle {
     id: e.id,
     licensePlate: e.licensePlate,
     year: e.year,
-    chassisNumber: e.chassisNumber ?? undefined,
-    engineNumber: e.engineNumber ?? undefined,
-    vehicleType: e.vehicleType ?? undefined,
-    transmission: e.transmission ?? undefined,
-    fuelType: e.fuelType ?? undefined,
+    chassisNumber: e.chassisNumber,
+    engineNumber: e.engineNumber,
+    vehicleType: e.vehicleType,
+    transmission: e.transmission,
+    fuelType: e.fuelType,
     model: {
       id: e.model.id,
       name: e.model.name,

@@ -22,7 +22,7 @@ export class Vehicle {
   @Column({ name: "engine_number", nullable: true, length: 50 })
   engineNumber?: string;
 
-  @Column({ name: "vehicle_type", nullable: true, length: 50 })
+  @Column({ name: "vehicle_type", type: "varchar", length: 50, nullable: true })
   vehicleType?: string;
 
   @Column({ nullable: true, length: 50 })
