@@ -67,14 +67,15 @@ describe("VehiclesService", () => {
     it("should return all vehicles with pagination", async () => {
       mockVehicleRepo.findAndCount.mockResolvedValue([[mockVehicle], 1]);
 
-      const result = await service.getAll({ limit: 10, offset: 0 });
+      const result = await service.getAll({
+        pagination: { limit: 10, offset: 0 },
+      });
 
       expect(result.total).toBe(1);
       expect(result.items).toHaveLength(1);
       expect(result.items[0].licensePlate).toBe("ABC123");
       expect(mockVehicleRepo.findAndCount).toHaveBeenCalledWith({
-        limit: 10,
-        offset: 0,
+        pagination: { limit: 10, offset: 0 },
       });
     });
 

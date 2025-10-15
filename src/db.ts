@@ -25,14 +25,8 @@ import { VehicleResponsible } from "./entities/VehicleResponsible";
 import { VehicleBrand } from "./entities/VehicleBrand";
 import { VehicleModel } from "./entities/VehicleModel";
 // Authorization entities
-import { UserGroup } from "./entities/UserGroup";
-import { UserGroupMembership } from "./entities/UserGroupMembership";
-import { UserGroupNesting } from "./entities/UserGroupNesting";
-import { VehicleSelection } from "./entities/VehicleSelection";
-import { CecoRange } from "./entities/CecoRange";
 import { VehicleACL } from "./entities/VehicleACL";
 import { UserRole } from "./entities/UserRole";
-import { initializePermissionChecker } from "./middleware/permissions";
 
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
 
@@ -68,12 +62,6 @@ const createDataSourceConfig = () => {
     AssignedMaintenance,
     MaintenanceRecord,
     VehicleResponsible,
-    // Authorization entities
-    UserGroup,
-    UserGroupMembership,
-    UserGroupNesting,
-    VehicleSelection,
-    CecoRange,
     VehicleACL,
     UserRole,
   ];
@@ -192,7 +180,6 @@ if (!process.env.JEST_WORKER_ID) {
     AppDataSource.initialize()
       .then(() => {
         console.log("✅ SQL Server connection established (TypeORM)");
-        initializePermissionChecker(AppDataSource);
       })
       .catch((err: unknown) =>
         console.error("❌ SQL Server connection failed:", err),
