@@ -7,7 +7,7 @@ export class Vehicle {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ name: "license_plate", unique: true })
+  @Column({ name: "license_plate", unique: true, length: 10 })
   licensePlate!: string;
 
   @ManyToOne(() => VehicleModel, { eager: true, onDelete: "SET NULL" })
@@ -16,18 +16,18 @@ export class Vehicle {
   @Column()
   year!: number;
 
-  @Column({ name: "chassis_number", nullable: true })
+  @Column({ name: "chassis_number", nullable: true, length: 50 })
   chassisNumber?: string;
 
-  @Column({ name: "engine_number", nullable: true })
+  @Column({ name: "engine_number", nullable: true, length: 50 })
   engineNumber?: string;
 
-  @Column({ name: "vehicle_type", nullable: true })
+  @Column({ name: "vehicle_type", type: "varchar", length: 50, nullable: true })
   vehicleType?: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, length: 50 })
   transmission?: string;
 
-  @Column({ name: "fuel_type", nullable: true })
+  @Column({ name: "fuel_type", nullable: true, length: 50 })
   fuelType?: string;
 }

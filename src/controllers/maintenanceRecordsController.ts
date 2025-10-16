@@ -1,21 +1,26 @@
 import { Request, Response } from "express";
 import { asyncHandler, AppError } from "../middleware/errorHandler";
-import { MaintenanceRecordSchema } from "../schemas/maintenance/maintanceRecord";
+import { MaintenanceRecordSchema } from "../schemas/maintenanceRecord";
 import { MaintenanceRecordsService } from "../services/maintenancesService";
-import type { MaintenanceRecord } from "../schemas/maintenance/maintanceRecord";
+import type { MaintenanceRecord } from "../schemas/maintenanceRecord";
 import { ApiResponse } from "./baseController";
+import { ServiceFactory } from "../factories/serviceFactory";
+import { AppDataSource } from "../db";
+import { PermissionFilterRequest } from "../middleware/permissionFilter";
+import { RepositoryFindOptions } from "../repositories/interfaces/common";
+import { MaintenanceRecordSearchParams } from "../repositories/interfaces/IMaintenanceRecordRepository";
+import { parsePaginationQuery } from "../utils/common";
 
 export class MaintenanceRecordsController {
   constructor(private readonly service: MaintenanceRecordsService) {}
   // GET: Fetch all maintenance records with pagination and filtering
   getAll = asyncHandler(async (req: Request, res: Response) => {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const offset = (page - 1) * limit;
+    const permReq = req as PermissionFilterRequest;
+    const { page, limit, offset } = parsePaginationQuery(req.query);
 
     // Extract filtering parameters
-    const filters: Record<string, string> = {};
-    const allowedFilters = [
+    const searchParams: MaintenanceRecordSearchParams = {};
+    const allowedFilters: Array<keyof MaintenanceRecordSearchParams> = [
       "vehicleId",
       "maintenanceId",
       "userId",
@@ -23,16 +28,21 @@ export class MaintenanceRecordsController {
     ];
 
     for (const [key, value] of Object.entries(req.query)) {
-      if (allowedFilters.includes(key) && typeof value === "string") {
-        filters[key] = value;
+      if (
+        allowedFilters.includes(key as keyof MaintenanceRecordSearchParams) &&
+        typeof value === "string"
+      ) {
+        searchParams[key as keyof MaintenanceRecordSearchParams] = value;
       }
     }
 
-    const { items, total } = await this.service.getAll({
-      limit,
-      offset,
-      filters,
-    });
+    const options: RepositoryFindOptions<MaintenanceRecordSearchParams> = {
+      pagination: { limit, offset },
+      searchParams,
+      permissions: permReq.permissionFilter, // Populated by middleware
+    };
+
+    const { items, total } = await this.service.getAll(options);
 
     const totalPages = Math.ceil(total / limit);
 
@@ -75,7 +85,7 @@ export class MaintenanceRecordsController {
   // POST: Create a new maintenance record
   create = asyncHandler(async (req: Request, res: Response) => {
     const maintenanceRecord: MaintenanceRecord = MaintenanceRecordSchema.parse(
-      req.body
+      req.body,
     );
 
     try {
@@ -94,7 +104,7 @@ export class MaintenanceRecordsController {
           error.message,
           400,
           "https://example.com/problems/validation-error",
-          "Validation Error"
+          "Validation Error",
         );
       }
       throw error;
@@ -102,7 +112,8 @@ export class MaintenanceRecordsController {
   });
 }
 export function createMaintenanceRecordsController() {
-  const service = new MaintenanceRecordsService();
+  const serviceFactory = new ServiceFactory(AppDataSource);
+  const service = serviceFactory.createMaintenanceRecordsService();
   return new MaintenanceRecordsController(service);
 }
 

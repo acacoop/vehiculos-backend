@@ -24,6 +24,9 @@ import { MaintenanceRecord } from "./entities/MaintenanceRecord";
 import { VehicleResponsible } from "./entities/VehicleResponsible";
 import { VehicleBrand } from "./entities/VehicleBrand";
 import { VehicleModel } from "./entities/VehicleModel";
+// Authorization entities
+import { VehicleACL } from "./entities/VehicleACL";
+import { UserRole } from "./entities/UserRole";
 
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
 
@@ -59,6 +62,8 @@ const createDataSourceConfig = () => {
     AssignedMaintenance,
     MaintenanceRecord,
     VehicleResponsible,
+    VehicleACL,
+    UserRole,
   ];
 
   const baseConfig = {
@@ -165,12 +170,19 @@ async function ensureDatabase(retries = 3, delayMs = 2000) {
   }
 }
 
-(async () => {
-  await ensureDatabase();
+// Only auto-initialize if not running Jest tests
+// Jest sets JEST_WORKER_ID when running tests
+// Test environment deployments (for product owner) will still initialize
+if (!process.env.JEST_WORKER_ID) {
+  (async () => {
+    await ensureDatabase();
 
-  AppDataSource.initialize()
-    .then(() => console.log("✅ SQL Server connection established (TypeORM)"))
-    .catch((err: unknown) =>
-      console.error("❌ SQL Server connection failed:", err),
-    );
-})();
+    AppDataSource.initialize()
+      .then(() => {
+        console.log("✅ SQL Server connection established (TypeORM)");
+      })
+      .catch((err: unknown) =>
+        console.error("❌ SQL Server connection failed:", err),
+      );
+  })();
+}

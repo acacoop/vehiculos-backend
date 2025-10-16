@@ -5,7 +5,7 @@ import type { VehicleKilometersLog } from "../schemas/vehicleKilometers";
 import {
   VehicleKilometersService,
   createVehicleKilometersService,
-} from "../services/vehicles/kilometers";
+} from "../services/vehicleKilometersService";
 
 export class VehicleKilometersController {
   constructor(private readonly service: VehicleKilometersService) {}

@@ -1,30 +1,29 @@
-import { AppDataSource } from "../db";
-import { VehicleModelRepository } from "../repositories/VehicleModelRepository";
-import { VehicleBrand } from "../entities/VehicleBrand";
+import {
+  IVehicleModelRepository,
+  VehicleModelSearchParams,
+} from "../repositories/interfaces/IVehicleModelRepository";
+import { IVehicleBrandRepository } from "../repositories/interfaces/IVehicleBrandRepository";
 import type {
   VehicleModelInput,
   VehicleModelType,
 } from "../schemas/vehicleModel";
+import { AppError } from "../middleware/errorHandler";
+import { RepositoryFindOptions } from "../repositories/interfaces/common";
 
+/**
+ * VehicleModelService - Business logic for VehicleModel operations
+ * Now uses Dependency Injection for better testability
+ */
 export class VehicleModelService {
   constructor(
-    private readonly repo = new VehicleModelRepository(AppDataSource)
+    private readonly repo: IVehicleModelRepository,
+    private readonly brandRepo: IVehicleBrandRepository,
   ) {}
 
-  async getAll(options?: {
-    limit?: number;
-    offset?: number;
-    searchParams?: Record<string, string>;
-  }): Promise<{ items: VehicleModelType[]; total: number }> {
-    const { limit, offset, searchParams } = options || {};
-    const [rows, total] = await this.repo.findAndCount({
-      limit,
-      offset,
-      searchParams: {
-        name: searchParams?.name,
-        brandId: searchParams?.brandId,
-      },
-    });
+  async getAll(
+    options?: RepositoryFindOptions<VehicleModelSearchParams>,
+  ): Promise<{ items: VehicleModelType[]; total: number }> {
+    const [rows, total] = await this.repo.findAndCount(options);
     return {
       items: rows.map((r) => ({
         id: r.id,
@@ -49,9 +48,15 @@ export class VehicleModelService {
   }
 
   async create(data: VehicleModelInput): Promise<VehicleModelType | null> {
-    const brandRepo = AppDataSource.getRepository(VehicleBrand);
-    const brand = await brandRepo.findOne({ where: { id: data.brandId } });
-    if (!brand) return null;
+    const brand = await this.brandRepo.findOneByWhere({ id: data.brandId });
+    if (!brand) {
+      throw new AppError(
+        `Brand with ID ${data.brandId} not found`,
+        404,
+        "https://example.com/problems/vehicle-brand-not-found",
+        "Vehicle Brand Not Found",
+      );
+    }
     const created = this.repo.create({
       name: data.name,
       brand,
@@ -68,16 +73,21 @@ export class VehicleModelService {
 
   async update(
     id: string,
-    data: Partial<VehicleModelInput>
+    data: Partial<VehicleModelInput>,
   ): Promise<VehicleModelType | null> {
     const existing = await this.repo.findOne(id);
     if (!existing) return null;
     if (data.name) existing.name = data.name;
     if (data.brandId) {
-      const brand = await AppDataSource.getRepository(VehicleBrand).findOne({
-        where: { id: data.brandId },
-      });
-      if (!brand) return null;
+      const brand = await this.brandRepo.findOneByWhere({ id: data.brandId });
+      if (!brand) {
+        throw new AppError(
+          `Brand with ID ${data.brandId} not found`,
+          404,
+          "https://example.com/problems/vehicle-brand-not-found",
+          "Vehicle Brand Not Found",
+        );
+      }
       existing.brand = brand;
     }
     if ("vehicleType" in data)

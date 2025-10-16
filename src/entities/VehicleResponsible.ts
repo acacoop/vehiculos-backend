@@ -4,6 +4,7 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  Check,
 } from "typeorm";
 import { Vehicle } from "./Vehicle";
 import { User } from "./User";
@@ -11,6 +12,7 @@ import { User } from "./User";
 const DEFAULT_CECO = "99999999"; // For already existing records without ceco
 
 @Entity({ name: "vehicle_responsibles" })
+@Check("end_date IS NULL OR end_date > start_date")
 export class VehicleResponsible {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
