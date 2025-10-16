@@ -33,6 +33,8 @@ export class MaintenanceRecordRepository
     const qb = this.qb()
       .leftJoinAndSelect("mr.assignedMaintenance", "am")
       .leftJoinAndSelect("am.vehicle", "v")
+      .leftJoinAndSelect("v.model", "model")
+      .leftJoinAndSelect("model.brand", "brand")
       .leftJoinAndSelect("am.maintenance", "m")
       .leftJoinAndSelect("mr.user", "u")
       .orderBy("mr.date", "DESC");
@@ -138,6 +140,8 @@ export class MaintenanceRecordRepository
     return this.qb()
       .leftJoinAndSelect("mr.assignedMaintenance", "am")
       .leftJoinAndSelect("am.vehicle", "v")
+      .leftJoinAndSelect("v.model", "model")
+      .leftJoinAndSelect("model.brand", "brand")
       .leftJoinAndSelect("am.maintenance", "m")
       .leftJoinAndSelect("mr.user", "u")
       .where("v.id = :vehicleId", { vehicleId })

@@ -35,6 +35,8 @@ export class ReservationRepository implements IReservationRepository {
       .createQueryBuilder("r")
       .leftJoinAndSelect("r.user", "u")
       .leftJoinAndSelect("r.vehicle", "v")
+      .leftJoinAndSelect("v.model", "m")
+      .leftJoinAndSelect("m.brand", "b")
       .orderBy("r.startDate", "DESC");
 
     // Apply search filters
