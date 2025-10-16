@@ -385,10 +385,22 @@ async function syncUserRoles(usersService: UsersService, adminEmail?: string) {
   const userRepo = AppDataSource.getRepository(UserEntity);
   const userRolesService = new UserRolesService(userRoleRepo, userRepo);
 
-  // Get all active users with entraId
-  const { items: allUsers } = await usersService.getAll({
-    searchParams: { active: "true" },
-  });
+  // Get all active users with entraId, paginating to handle large datasets
+  const limit = 1000;
+  let offset = 0;
+  let total = 1; // Initialize to 1 to enter the loop
+  const allUsers: User[] = [];
+
+  while (offset < total) {
+    const { items, total: t } = await usersService.getAll({
+      searchParams: { active: "true" },
+      limit,
+      offset,
+    });
+    total = t;
+    offset += items.length;
+    allUsers.push(...items);
+  }
 
   const usersWithEntraId = allUsers.filter(
     (u) => u.entraId && u.entraId !== "",
@@ -463,7 +475,6 @@ async function runSync() {
 
   printResult(stats);
 
-  // Sync user roles (create default roles and assign admin)
   await syncUserRoles(usersService, ADMIN_EMAIL);
 }
 
