@@ -15,7 +15,10 @@ export class UsersController extends BaseController {
     offset: number;
     searchParams?: Record<string, string>;
   }) {
-    return await this.service.getAll(options);
+    return await this.service.getAll({
+      pagination: { limit: options.limit, offset: options.offset },
+      searchParams: options.searchParams,
+    });
   }
 
   protected async getByIdService(id: string) {

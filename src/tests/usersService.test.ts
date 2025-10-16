@@ -126,7 +126,9 @@ describe("UsersService", () => {
       ];
       mockRepo.seedUsers(users);
 
-      const result = await service.getAll({ limit: 2, offset: 0 });
+      const result = await service.getAll({
+        pagination: { limit: 2, offset: 0 },
+      });
 
       expect(result.items).toHaveLength(2);
       expect(result.total).toBe(3);

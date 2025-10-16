@@ -393,9 +393,8 @@ async function syncUserRoles(usersService: UsersService, adminEmail?: string) {
 
   while (offset < total) {
     const { items, total: t } = await usersService.getAll({
+      pagination: { limit, offset },
       searchParams: { active: "true" },
-      limit,
-      offset,
     });
     total = t;
     offset += items.length;
