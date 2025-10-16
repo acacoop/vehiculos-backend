@@ -1722,8 +1722,6 @@ paths:
         Get all vehicle access control entries with optional filtering.
         Admin only. Supports pagination and filtering by userId, vehicleId, or activeAt.
       tags: [Vehicle ACL]
-      security:
-        - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/PageParam"
         - $ref: "#/components/parameters/LimitParam"
@@ -1758,8 +1756,6 @@ paths:
       summary: Create a new vehicle ACL
       description: Admin only. Grant a user permission to access a vehicle.
       tags: [Vehicle ACL]
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -1782,8 +1778,6 @@ paths:
     get:
       summary: Get vehicle ACL by ID
       tags: [Vehicle ACL]
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -1804,8 +1798,6 @@ paths:
       summary: Update vehicle ACL
       description: Admin only.
       tags: [Vehicle ACL]
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -1832,8 +1824,6 @@ paths:
       summary: Delete vehicle ACL
       description: Admin only.
       tags: [Vehicle ACL]
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -1852,8 +1842,6 @@ paths:
       summary: Get active vehicle ACLs for a user
       description: Get all currently active vehicle permissions for a specific user.
       tags: [Vehicle ACL]
-      security:
-        - bearerAuth: []
       parameters:
         - name: userId
           in: path
@@ -1875,8 +1863,6 @@ paths:
       summary: Get all user roles
       description: Admin only. Get all user role assignments with optional filtering.
       tags: [User Roles]
-      security:
-        - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/PageParam"
         - $ref: "#/components/parameters/LimitParam"
@@ -1908,8 +1894,6 @@ paths:
       summary: Create a new user role
       description: Admin only. Assign a role to a user.
       tags: [User Roles]
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -1928,8 +1912,6 @@ paths:
     get:
       summary: Get user role by ID
       tags: [User Roles]
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -1948,8 +1930,6 @@ paths:
       summary: Update user role
       description: Admin only.
       tags: [User Roles]
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -1974,8 +1954,6 @@ paths:
       summary: Delete user role
       description: Admin only.
       tags: [User Roles]
-      security:
-        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -1992,8 +1970,6 @@ paths:
       summary: Get all roles for a user
       description: Get all role assignments for a specific user (active and inactive).
       tags: [User Roles]
-      security:
-        - bearerAuth: []
       parameters:
         - name: userId
           in: path
@@ -2014,8 +1990,6 @@ paths:
       summary: Get active role for a user
       description: Get the currently active role for a specific user.
       tags: [User Roles]
-      security:
-        - bearerAuth: []
       parameters:
         - name: userId
           in: path
