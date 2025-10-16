@@ -1,10 +1,16 @@
-import { DataSource, In, Repository, SelectQueryBuilder } from "typeorm";
+import {
+  Brackets,
+  DataSource,
+  In,
+  Repository,
+  SelectQueryBuilder,
+} from "typeorm";
 import { Vehicle as VehicleEntity } from "../entities/Vehicle";
 import {
   IVehicleRepository,
   VehicleSearchParams,
 } from "./interfaces/IVehicleRepository";
-import { PermissionType } from "../utils/common";
+import { PERMISSION_WEIGHT, PermissionType } from "../utils/common";
 import { UserRoleEnum } from "../utils/common";
 import {
   RepositoryFindOptions,
@@ -60,9 +66,8 @@ export class VehicleRepository implements IVehicleRepository {
       }
     }
 
-    // Permission-based filtering
-    // If userId is provided and user is not ADMIN, filter by permissions
-    if (permissions?.userId && permissions.userRole !== UserRoleEnum.ADMIN) {
+    // If permissions are required and user is not ADMIN, apply filters
+    if (permissions && permissions.userRole !== UserRoleEnum.ADMIN) {
       this.applyPermissionFilter(qb, permissions);
     }
 
@@ -83,51 +88,68 @@ export class VehicleRepository implements IVehicleRepository {
     permissions: PermissionFilterParams,
   ): void {
     const now = new Date();
+    const { userId, requiredPermission } = permissions;
 
     // Build a complex WHERE clause that checks:
     // 1. User has an active ACL for the vehicle with sufficient permission
     // 2. User is the current responsible (grants FULL permission)
     // 3. User is the current driver (grants DRIVER permission)
     qb.andWhere(
-      `(
-        EXISTS (
-          SELECT 1 FROM vehicle_acl acl
-          WHERE acl.vehicle_id = v.id
-          AND acl.user_id = :userId
+      new Brackets((qb) => {
+        qb.orWhere(
+          `(
+            EXISTS (
+              SELECT 1 FROM vehicle_acl acl
+              WHERE acl.vehicle_id = v.id
+              AND acl.user_id = :userId
           AND acl.start_time <= :now
           AND (acl.end_time IS NULL OR acl.end_time > :now)
-          ${permissions.requiredPermission ? "AND acl.permission IN (:...allowedPermissions)" : ""}
-        )
-        OR EXISTS (
+          AND acl.permission IN (:...allowedPermissions)
+          )`,
+          {
+            userId: permissions.userId,
+            now: now.toISOString(),
+            allowedPermissions: getAllowedPermissions(requiredPermission),
+          },
+        );
+
+        qb.orWhere(
+          `(
+        EXISTS (
           SELECT 1 FROM vehicle_responsibles vr
           WHERE vr.vehicle_id = v.id
           AND vr.user_id = :userId
           AND vr.start_date <= :now
           AND (vr.end_date IS NULL OR vr.end_date > :now)
         )
-        OR EXISTS (
-          SELECT 1 FROM assignments a
-          WHERE a.vehicle_id = v.id
-          AND a.user_id = :userId
-          AND a.start_date <= :now
-          AND (a.end_date IS NULL OR a.end_date > :now)
-          ${permissions.requiredPermission === PermissionType.FULL ? "AND 1=0" : ""}
+      )`,
+          {
+            userId: userId,
+            now: now.toISOString(),
+          },
+        );
+
+        if (
+          PERMISSION_WEIGHT[permissions.requiredPermission] <=
+          PERMISSION_WEIGHT[PermissionType.DRIVER]
+        ) {
+          qb.andWhere(
+            `(EXISTS (
+          SELECT 1 FROM vehicle_drivers vd
+          WHERE vd.vehicle_id = v.id
+          AND vd.user_id = :userId
+          AND vd.start_date <= :now
+          AND (vd.end_date IS NULL OR vd.end_date > :now)
         )
       )`,
-      {
-        userId: permissions.userId,
-        now: now.toISOString(),
-      },
+            {
+              userId: userId,
+              now: now.toISOString(),
+            },
+          );
+        }
+      }),
     );
-
-    // If a specific permission is required, calculate allowed permissions
-    // based on permission hierarchy
-    if (permissions.requiredPermission) {
-      const allowedPermissions = getAllowedPermissions(
-        permissions.requiredPermission,
-      );
-      qb.setParameter("allowedPermissions", allowedPermissions);
-    }
   }
 
   findOne(id: string) {

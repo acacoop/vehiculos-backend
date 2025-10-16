@@ -20,7 +20,7 @@ export interface PermissionFilterRequest extends AuthenticatedRequest {
  * This middleware should be used after `requireAuth` to extract user context and
  * determine the appropriate permission filter.
  *
- * @param requiredPermission - The minimum permission level required for the operation (optional)
+ * @param requiredPermission - The minimum permission level required for the operation
  * @returns Express middleware function
  *
  * @example
@@ -30,22 +30,8 @@ export interface PermissionFilterRequest extends AuthenticatedRequest {
  *   addPermissionFilter(PermissionType.READ),
  *   vehiclesController.getAll
  * );
- *
- * // Without specific permission level (just add user context)
- * router.get('/my-vehicles',
- *   requireAuth,
- *   addPermissionFilter(),
- *   controller.getAll
- * );
- *
- * // In the controller:
- * const { items, total } = await this.service.getAll({
- *   pagination: { limit, offset },
- *   searchParams,
- *   permissions: (req as PermissionFilterRequest).permissionFilter
- * });
  */
-export const addPermissionFilter = (requiredPermission?: PermissionType) => {
+export const addPermissionFilter = (requiredPermission: PermissionType) => {
   const userRoleRepository = new UserRoleRepository(AppDataSource);
 
   return async (

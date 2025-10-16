@@ -56,7 +56,7 @@ sample-data:
 
 sync:
 	@$(MAKE) wait-db
-	@npm ci
+# 	@npm ci
 	@if [ -n "$(ADMIN)" ]; then \
 		DB_HOST=$(HOST_DB_HOST) npm run sync:users -- $(ADMIN); \
 	else \

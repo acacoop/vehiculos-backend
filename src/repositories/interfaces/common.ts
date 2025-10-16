@@ -33,9 +33,9 @@ export function resolvePagination(pagination?: PaginationParams) {
  * When userId is provided with role USER, filters results based on user permissions
  */
 export interface PermissionFilterParams {
-  userId?: string;
-  userRole?: UserRoleEnum;
-  requiredPermission?: PermissionType;
+  userId: string;
+  userRole: UserRoleEnum;
+  requiredPermission: PermissionType;
 }
 
 /**
