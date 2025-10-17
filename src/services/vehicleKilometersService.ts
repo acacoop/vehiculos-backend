@@ -6,7 +6,6 @@ import type { VehicleKilometersLog } from "../schemas/vehicleKilometers";
 import { AppError } from "../middleware/errorHandler";
 import { VehicleKilometersRepository } from "../repositories/VehicleKilometersRepository";
 
-// NOTE: createdAt removed for now (not present in VehicleKilometersLog schema). If needed, extend schema later.
 function mapEntity(e: VehicleKilometersEntity): VehicleKilometersLog {
   return {
     id: e.id,

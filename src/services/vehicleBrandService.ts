@@ -1,6 +1,6 @@
 import {
   IVehicleBrandRepository,
-  VehicleBrandSearchParams,
+  VehicleBrandFilters,
 } from "../repositories/interfaces/IVehicleBrandRepository";
 import type { VehicleBrandInput, VehicleBrand } from "../schemas/vehicleBrand";
 import { RepositoryFindOptions } from "../repositories/interfaces/common";
@@ -13,7 +13,7 @@ export class VehicleBrandService {
   constructor(private readonly repo: IVehicleBrandRepository) {}
 
   async getAll(
-    options?: RepositoryFindOptions<VehicleBrandSearchParams>,
+    options?: RepositoryFindOptions<VehicleBrandFilters>,
   ): Promise<{ items: VehicleBrand[]; total: number }> {
     const [rows, total] = await this.repo.findAndCount(options);
     return { items: rows.map((r) => ({ id: r.id, name: r.name })), total };

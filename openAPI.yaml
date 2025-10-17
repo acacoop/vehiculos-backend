@@ -80,50 +80,46 @@ paths:
     get:
       summary: Get all users with pagination and search
       description: |
-        Get users with optional search filters and pagination.
+        Get users with optional search and filters.
 
-        **Search Parameters:**
-        - `email`: Exact match by email address
-        - `cuit`: Exact match by CUIT (11 digits)
-        - `firstName`: Partial match by first name (case-insensitive)
-        - `lastName`: Partial match by last name (case-insensitive)
-        - `active`: Filter by active status (true/false)
+        **Search:** `search` - Search across firstName, lastName, email, and cuit
 
-        **Examples:**
-        - `/users?email=user@example.com`
-        - `/users?cuit=20345678901`
-        - `/users?firstName=John&lastName=Doe`
-        - `/users?active=false`
-        - `/users?firstName=Ana&page=1&limit=5`
+        **Filters:**
+        - `email` - Exact match by email
+        - `cuit` - Exact match by CUIT
+        - `firstName` - Partial match by first name
+        - `lastName` - Partial match by last name
+        - `active` - Filter by active status (true/false)
       tags: [Users]
       parameters:
         - $ref: "#/components/parameters/PageParam"
         - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
         - name: email
           in: query
-          description: Filter by exact email address
+          description: Exact match by email
           schema:
             type: string
             format: email
         - name: cuit
           in: query
-          description: Filter by exact CUIT (11 digits)
+          description: Exact match by CUIT
           schema:
             type: string
             pattern: "^[0-9]{11}$"
         - name: firstName
           in: query
-          description: Filter by first name (partial match, case-insensitive)
+          description: Partial match by first name
           schema:
             type: string
         - name: lastName
           in: query
-          description: Filter by last name (partial match, case-insensitive)
+          description: Partial match by last name
           schema:
             type: string
         - name: active
           in: query
-          description: Filter by active status (true for active users, false for inactive users)
+          description: Filter by active status
           schema:
             type: boolean
       responses:
@@ -174,8 +170,8 @@ paths:
                 $ref: "#/components/schemas/UserResponse"
         "404":
           $ref: "#/components/responses/NotFound"
-    put:
-      summary: Update user (full replacement)
+    patch:
+      summary: Update user
       tags: [Users]
       parameters:
         - name: id
@@ -193,27 +189,6 @@ paths:
       responses:
         "200":
           description: User updated successfully
-        "404":
-          $ref: "#/components/responses/NotFound"
-    patch:
-      summary: Partially update user
-      tags: [Users]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UserUpdateInput"
-      responses:
-        "200":
-          description: User partially updated successfully
         "400":
           $ref: "#/components/responses/BadRequest"
         "404":
@@ -295,62 +270,53 @@ paths:
     get:
       summary: Get all vehicles with pagination and search
       description: |
-        Get vehicles with optional search filters and pagination.
+        Get vehicles with optional search and filters.
 
-        Dev testing: When `AUTH_BYPASS=true`, you may add `x-dev-impersonate` header (see components parameters) to simulate users.
+        **Search:** `search` - Search across licensePlate, chassisNumber, brand name, and model name
 
-        **Search Parameters:**
-        - `licensePlate`: Exact match by license plate
-        - `brandId`: Exact match by brand UUID
-        - `modelId`: Exact match by model UUID
-        - `brand`: Partial match by brand name (case-insensitive)
-        - `model`: Partial match by model name (case-insensitive)
-        - `year`: Exact match by year
-
-        Use `brandId` / `modelId` for precise filtering, or `brand` / `model` for partial searches.
-
-        **Examples:**
-        - `/vehicles?licensePlate=AAA-123`
-        - `/vehicles?brandId=11111111-2222-3333-4444-555555555555`
-        - `/vehicles?modelId=aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee`
-        - `/vehicles?brand=Toyota&model=Corolla`
-        - `/vehicles?year=2020&page=1&limit=5`
-        - `/vehicles?brand=Honda&year=2021`
+        **Filters:**
+        - `licensePlate` - Exact match by license plate
+        - `brandId` - Exact match by brand UUID
+        - `modelId` - Exact match by model UUID
+        - `brand` - Partial match by brand name
+        - `model` - Partial match by model name
+        - `year` - Exact match by year
       tags: [Vehicles]
       parameters:
         - $ref: "#/components/parameters/PageParam"
         - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
         - name: licensePlate
           in: query
-          description: Filter by exact license plate
+          description: Exact match by license plate
           schema:
             type: string
             pattern: '^[A-Z]{2,3}-?\d{3,4}[A-Z]{0,2}$'
         - name: brandId
           in: query
-          description: Filter by exact brand UUID
+          description: Exact match by brand UUID
           schema:
             type: string
             format: uuid
         - name: modelId
           in: query
-          description: Filter by exact model UUID
+          description: Exact match by model UUID
           schema:
             type: string
             format: uuid
         - name: brand
           in: query
-          description: Filter by brand name (partial match, case-insensitive)
+          description: Partial match by brand name
           schema:
             type: string
         - name: model
           in: query
-          description: Filter by model name (partial match, case-insensitive)
+          description: Partial match by model name
           schema:
             type: string
         - name: year
           in: query
-          description: Filter by exact year
+          description: Exact match by year
           schema:
             type: integer
             minimum: 1900
@@ -399,8 +365,8 @@ paths:
                 $ref: "#/components/schemas/VehicleResponse"
         "404":
           description: Vehicle not found
-    put:
-      summary: Update vehicle (full replacement)
+    patch:
+      summary: Update vehicle
       tags: [Vehicles]
       parameters:
         - name: id
@@ -418,31 +384,6 @@ paths:
       responses:
         "200":
           description: Vehicle updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/VehicleResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-    patch:
-      summary: Partially update vehicle
-      tags: [Vehicles]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/VehicleUpdateInput"
-      responses:
-        "200":
-          description: Vehicle partially updated successfully
           content:
             application/json:
               schema:
@@ -547,33 +488,30 @@ paths:
     get:
       summary: Get all reservations with optional filters
       description: |
-        Get all reservations with optional filtering by user or vehicle.
+        Get all reservations with optional search and filters.
 
-        **Filter Parameters:**
-        - `userId`: Filter reservations by specific user ID
-        - `vehicleId`: Filter reservations by specific vehicle ID
-        - Pagination is supported with `page` and `limit` parameters
+        **Search:** `search` - Search across user firstName, lastName, email, cuit, and vehicle licensePlate, chassisNumber, brand name, model name
 
-        **Examples:**
-        - `/reservations?userId=550e8400-e29b-41d4-a716-446655440000`
-        - `/reservations?vehicleId=650e8400-e29b-41d4-a716-446655440001`
-        - `/reservations?page=1&limit=5`
+        **Filters:**
+        - `userId` - Filter by specific user ID
+        - `vehicleId` - Filter by specific vehicle ID
       tags: [Reservations]
       parameters:
         - $ref: "#/components/parameters/PageParam"
         - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
         - name: userId
           in: query
           schema:
             type: string
             format: uuid
-          description: "Filter reservations by user ID"
+          description: Filter by user ID
         - name: vehicleId
           in: query
           schema:
             type: string
             format: uuid
-          description: "Filter reservations by vehicle ID"
+          description: Filter by vehicle ID
       responses:
         "200":
           description: List of reservations retrieved successfully
@@ -609,33 +547,37 @@ paths:
     get:
       summary: Get all vehicle assignments with optional filters
       description: |
-        Get all vehicle assignments with optional filtering by user or vehicle.
+        Get all vehicle assignments with optional search and filters.
 
-        **Filter Parameters:**
-        - `userId`: Filter assignments by specific user ID
-        - `vehicleId`: Filter assignments by specific vehicle ID
-        - Pagination is supported with `page` and `limit` parameters
+        **Search:** `search` - Search across user firstName, lastName, email, and vehicle licensePlate, chassisNumber
 
-        **Examples:**
-        - `/assignments?userId=550e8400-e29b-41d4-a716-446655440000`
-        - `/assignments?vehicleId=650e8400-e29b-41d4-a716-446655440001`
-        - `/assignments?page=1&limit=5`
+        **Filters:**
+        - `userId` - Filter by specific user ID
+        - `vehicleId` - Filter by specific vehicle ID
+        - `date` - Filter assignments active on specific date (YYYY-MM-DD)
       tags: [Assignments]
       parameters:
         - $ref: "#/components/parameters/PageParam"
         - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
         - name: userId
           in: query
           schema:
             type: string
             format: uuid
-          description: "Filter assignments by user ID"
+          description: Filter by user ID
         - name: vehicleId
           in: query
           schema:
             type: string
             format: uuid
-          description: "Filter assignments by vehicle ID"
+          description: Filter by vehicle ID
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter assignments active on date (YYYY-MM-DD)
       responses:
         "200":
           description: List of assignments retrieved successfully
@@ -725,37 +667,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "500":
           $ref: "#/components/responses/InternalServerError"
-    put:
-      summary: Update maintenance category (full replacement)
-      tags: [Maintenance]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/MaintenanceCategoryInput"
-      responses:
-        "200":
-          description: Maintenance category updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MaintenanceCategoryResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
     patch:
-      summary: Update maintenance category (partial update)
+      summary: Update maintenance category
       tags: [Maintenance]
       parameters:
         - name: id
@@ -866,37 +779,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "500":
           $ref: "#/components/responses/InternalServerError"
-    put:
-      summary: Update maintenance type (full replacement)
-      tags: [Maintenance]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/MaintenanceInput"
-      responses:
-        "200":
-          description: Maintenance type updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MaintenanceResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
     patch:
-      summary: Update maintenance type (partial update)
+      summary: Update maintenance type
       tags: [Maintenance]
       parameters:
         - name: id
@@ -1047,7 +931,7 @@ paths:
           $ref: "#/components/responses/InternalServerError"
 
   /maintenance/assignments/{id}:
-    put:
+    patch:
       summary: Update maintenance assignment
       description: Update frequency settings for an existing maintenance assignment
       tags: [Maintenance]
@@ -1139,33 +1023,44 @@ paths:
     get:
       summary: Get all maintenance records with optional filters
       description: |
-        Get all maintenance records with optional filtering by user or vehicle.
+        Get all maintenance records with optional search and filters.
 
-        **Filter Parameters:**
-        - `userId`: Filter maintenance records by specific user ID
-        - `vehicleId`: Filter maintenance records by specific vehicle ID
-        - Pagination is supported with `page` and `limit` parameters
+        **Search:** `search` - Search across maintenance name, notes, user firstName, lastName, email, and vehicle licensePlate
 
-        **Examples:**
-        - `/maintenance/records?userId=550e8400-e29b-41d4-a716-446655440000`
-        - `/maintenance/records?vehicleId=650e8400-e29b-41d4-a716-446655440001`
-        - `/maintenance/records?page=1&limit=5`
+        **Filters:**
+        - `userId` - Filter by specific user ID
+        - `vehicleId` - Filter by specific vehicle ID
+        - `maintenanceId` - Filter by maintenance type ID
+        - `assignedMaintenanceId` - Filter by assigned maintenance ID
       tags: [Maintenance]
       parameters:
         - $ref: "#/components/parameters/PageParam"
         - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
         - name: userId
           in: query
           schema:
             type: string
             format: uuid
-          description: "Filter maintenance records by user ID"
+          description: Filter by user ID
         - name: vehicleId
           in: query
           schema:
             type: string
             format: uuid
-          description: "Filter maintenance records by vehicle ID"
+          description: Filter by vehicle ID
+        - name: maintenanceId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by maintenance type ID
+        - name: assignedMaintenanceId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by assigned maintenance ID
       responses:
         "200":
           description: List of maintenance records retrieved successfully
@@ -1249,47 +1144,43 @@ paths:
     get:
       summary: Get all vehicle responsibles with optional filters
       description: |
-        Get all vehicle responsibility assignments with optional filtering by user, vehicle, or active status.
+        Get all vehicle responsibility assignments with optional search and filters.
 
-        **Filter Parameters:**
-        - `userId`: Filter by specific user ID
-        - `vehicleId`: Filter by specific vehicle ID
-        - `active`: Filter by active status (true for current, false for ended)
-        - `date`: Filter by specific date (YYYY-MM-DD format)
-        - Pagination is supported with `page` and `limit` parameters
+        **Search:** `search` - Search across user firstName, lastName, email, and vehicle licensePlate, chassisNumber
 
-        **Examples:**
-        - `/vehicle-responsibles?userId=550e8400-e29b-41d4-a716-446655440000`
-        - `/vehicle-responsibles?vehicleId=650e8400-e29b-41d4-a716-446655440001`
-        - `/vehicle-responsibles?active=true`
-        - `/vehicle-responsibles?date=2025-01-15`
+        **Filters:**
+        - `userId` - Filter by specific user ID
+        - `vehicleId` - Filter by specific vehicle ID
+        - `active` - Filter by active status (true/false)
+        - `date` - Filter by specific date (YYYY-MM-DD)
       tags: [Vehicle Responsibles]
       parameters:
         - $ref: "#/components/parameters/PageParam"
         - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
         - name: userId
           in: query
           schema:
             type: string
             format: uuid
-          description: "Filter by user ID"
+          description: Filter by user ID
         - name: vehicleId
           in: query
           schema:
             type: string
             format: uuid
-          description: "Filter by vehicle ID"
+          description: Filter by vehicle ID
         - name: active
           in: query
           schema:
             type: boolean
-          description: Filter by active status (true for current, false for ended)
+          description: Filter by active status
         - name: date
           in: query
           schema:
             type: string
             format: date
-          description: Filter by specific date (YYYY-MM-DD format)
+          description: Filter by specific date (YYYY-MM-DD)
       responses:
         "200":
           description: List of vehicle responsibles retrieved successfully
@@ -1346,8 +1237,8 @@ paths:
                 $ref: "#/components/schemas/VehicleResponsibleResponse"
         "404":
           $ref: "#/components/responses/NotFound"
-    put:
-      summary: Update vehicle responsible (full replacement)
+    patch:
+      summary: Update vehicle responsible
       tags: [Vehicle Responsibles]
       parameters:
         - name: id
@@ -1365,29 +1256,6 @@ paths:
       responses:
         "200":
           description: Vehicle responsible updated successfully
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          description: Conflicting responsibility periods
-    patch:
-      summary: Partially update vehicle responsible
-      tags: [Vehicle Responsibles]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/VehicleResponsibleInput"
-      responses:
-        "200":
-          description: Vehicle responsible partially updated successfully
         "400":
           $ref: "#/components/responses/BadRequest"
         "404":
@@ -1464,16 +1332,23 @@ paths:
   /vehicle-brands:
     get:
       summary: List vehicle brands
+      description: |
+        Get vehicle brands with optional search and filters.
+
+        **Search:** `search` - Search by brand name
+
+        **Filters:**
+        - `name` - Partial match by brand name
       tags: [Vehicle Brands]
       parameters:
         - $ref: "#/components/parameters/PageParam"
         - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
         - name: name
           in: query
-          description: Partial match by brand name (case-insensitive)
+          description: Partial match by brand name
           schema:
             type: string
-            example: "Toy"
       responses:
         "200":
           description: List of brands
@@ -1518,33 +1393,8 @@ paths:
                 $ref: "#/components/schemas/VehicleBrandResponse"
         "404":
           $ref: "#/components/responses/NotFound"
-    put:
-      summary: Update vehicle brand (full)
-      tags: [Vehicle Brands]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/VehicleBrandInput"
-      responses:
-        "200":
-          description: Brand updated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/VehicleBrandResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
     patch:
-      summary: Update vehicle brand (partial)
+      summary: Update vehicle brand
       tags: [Vehicle Brands]
       parameters:
         - name: id
@@ -1588,16 +1438,24 @@ paths:
   /vehicle-models:
     get:
       summary: List vehicle models
+      description: |
+        Get vehicle models with optional search and filters.
+
+        **Search:** `search` - Search across model name and brand name
+
+        **Filters:**
+        - `name` - Partial match by model name
+        - `brandId` - Exact match by brand UUID
       tags: [Vehicle Models]
       parameters:
         - $ref: "#/components/parameters/PageParam"
         - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
         - name: name
           in: query
-          description: Partial match by model name (case-insensitive)
+          description: Partial match by model name
           schema:
             type: string
-            example: "Coro"
         - name: brandId
           in: query
           description: Filter by brand UUID
@@ -1648,33 +1506,8 @@ paths:
                 $ref: "#/components/schemas/VehicleModelResponse"
         "404":
           $ref: "#/components/responses/NotFound"
-    put:
-      summary: Update vehicle model (full)
-      tags: [Vehicle Models]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/VehicleModelInput"
-      responses:
-        "200":
-          description: Model updated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/VehicleModelResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
     patch:
-      summary: Update vehicle model (partial)
+      summary: Update vehicle model
       tags: [Vehicle Models]
       parameters:
         - name: id
@@ -1719,12 +1552,20 @@ paths:
     get:
       summary: Get all vehicle ACLs
       description: |
-        Get all vehicle access control entries with optional filtering.
-        Admin only. Supports pagination and filtering by userId, vehicleId, or activeAt.
+        Get all vehicle access control entries with optional search and filters. Admin only.
+
+        **Search:** `search` - Search across user firstName, lastName, email, and vehicle licensePlate, chassisNumber
+
+        **Filters:**
+        - `userId` - Filter by user ID
+        - `vehicleId` - Filter by vehicle ID
+        - `permission` - Filter by permission level
+        - `activeAt` - Filter ACLs active at specific time
       tags: [Vehicle ACL]
       parameters:
         - $ref: "#/components/parameters/PageParam"
         - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
         - name: userId
           in: query
           schema:
@@ -1737,12 +1578,18 @@ paths:
             type: string
             format: uuid
           description: Filter by vehicle ID
+        - name: permission
+          in: query
+          schema:
+            type: string
+            enum: [Read, Maintainer, Driver, Full]
+          description: Filter by permission level
         - name: activeAt
           in: query
           schema:
             type: string
             format: date-time
-          description: Filter ACLs active at specific time (defaults to now)
+          description: Filter ACLs active at specific time
       responses:
         "200":
           description: List of vehicle ACLs
@@ -1794,7 +1641,7 @@ paths:
                 $ref: "#/components/schemas/VehicleACLResponse"
         "404":
           $ref: "#/components/responses/NotFound"
-    put:
+    patch:
       summary: Update vehicle ACL
       description: Admin only.
       tags: [Vehicle ACL]
@@ -1861,11 +1708,20 @@ paths:
   /user-roles:
     get:
       summary: Get all user roles
-      description: Admin only. Get all user role assignments with optional filtering.
+      description: |
+        Get all user role assignments with optional search and filters. Admin only.
+
+        **Search:** `search` - Search across user firstName, lastName, and email
+
+        **Filters:**
+        - `userId` - Filter by user ID
+        - `role` - Filter by role (user/admin)
+        - `activeOnly` - Filter only active roles
       tags: [User Roles]
       parameters:
         - $ref: "#/components/parameters/PageParam"
         - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
         - name: userId
           in: query
           schema:
@@ -1926,7 +1782,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UserRoleResponse"
-    put:
+    patch:
       summary: Update user role
       description: Admin only.
       tags: [User Roles]
@@ -3398,6 +3254,12 @@ components:
         maximum: 100
         default: 10
       description: Number of items per page
+    SearchParam:
+      name: search
+      in: query
+      schema:
+        type: string
+      description: Search term applied across multiple fields (case-insensitive)
     SwaggerBypassHeader:
       name: x-swagger-bypass
       in: header

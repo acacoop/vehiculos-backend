@@ -1,13 +1,13 @@
 import { Response, NextFunction } from "express";
 import { AppError } from "./errorHandler";
 import { AuthenticatedRequest } from "./auth";
-import { PermissionType, PERMISSION_WEIGHT } from "../utils/common";
+import { PermissionType, PERMISSION_WEIGHT } from "../utils";
 import { VehicleACL } from "../entities/VehicleACL";
 import { DataSource } from "typeorm";
 import { VehicleACLRepository } from "../repositories/VehicleACLRepository";
 import { VehicleResponsibleRepository } from "../repositories/VehicleResponsibleRepository";
 import { UserRoleRepository } from "../repositories/UserRoleRepository";
-import { UserRoleEnum } from "../utils/common";
+import { UserRoleEnum } from "../utils";
 import { AppDataSource } from "../db";
 import { AssignmentRepository } from "../repositories/AssignmentRepository";
 
@@ -106,7 +106,7 @@ export class PermissionChecker {
     role: UserRoleEnum,
   ): Promise<boolean> {
     const [userRoles, _] = await this.userRoleRepo.findAndCount({
-      searchParams: { userId, role: role as UserRoleEnum },
+      filters: { userId, role: role as UserRoleEnum },
     });
     return userRoles.length > 0;
   }

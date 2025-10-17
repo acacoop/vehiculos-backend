@@ -3,22 +3,22 @@ import type { User } from "../schemas/user";
 import { Request, Response } from "express";
 import { asyncHandler, AppError } from "../middleware/errorHandler";
 import { UsersService } from "../services/usersService";
+import { RepositoryFindOptions } from "../repositories/interfaces/common";
+import { UserFilters } from "../repositories/interfaces/IUserRepository";
 
-export class UsersController extends BaseController {
+export class UsersController extends BaseController<UserFilters> {
   constructor(private readonly service: UsersService) {
-    super("User");
+    super({
+      resourceName: "User",
+      allowedFilters: ["email", "cuit", "firstName", "lastName", "active"],
+      usePermissionFilter: false,
+    });
   }
 
-  // Implement abstract methods from BaseController
-  protected async getAllService(options: {
-    limit: number;
-    offset: number;
-    searchParams?: Record<string, string>;
-  }) {
-    return await this.service.getAll({
-      pagination: { limit: options.limit, offset: options.offset },
-      searchParams: options.searchParams,
-    });
+  protected async getAllService(
+    options: RepositoryFindOptions<Partial<UserFilters>>,
+  ) {
+    return this.service.getAll(options);
   }
 
   protected async getByIdService(id: string) {
@@ -30,11 +30,6 @@ export class UsersController extends BaseController {
   }
 
   protected async updateService(id: string, data: Partial<User>) {
-    return await this.service.update(id, data);
-  }
-
-  protected async patchService(id: string, data: Partial<User>) {
-    // Para PATCH, usamos la misma lógica que update ya que ambos aceptan datos parciales
     return await this.service.update(id, data);
   }
 

@@ -1,4 +1,4 @@
-import { PermissionType, UserRoleEnum } from "../../utils/common";
+import { PermissionType, UserRoleEnum } from "../../utils";
 
 /**
  * Default pagination values
@@ -40,19 +40,18 @@ export interface PermissionFilterParams {
 
 /**
  * Combined parameters for repository findAndCount operations
- * @template TSearchParams - Entity-specific search parameters (defaults to Record<string, unknown>)
+ * @template TFilters - Entity-specific filter parameters (defaults to Record<string, unknown>)
  *
  * @example
  * // Vehicle repository
- * RepositoryFindOptions<VehicleSearchParams>
+ * RepositoryFindOptions<VehicleFilters>
  *
  * // User repository
- * RepositoryFindOptions<UserSearchParams>
+ * RepositoryFindOptions<UserFilters>
  */
-export interface RepositoryFindOptions<
-  TSearchParams = Record<string, unknown>,
-> {
+export interface RepositoryFindOptions<TFilters = Record<string, string>> {
   pagination?: PaginationParams;
   permissions?: PermissionFilterParams;
-  searchParams?: TSearchParams;
+  filters?: TFilters;
+  search?: string;
 }

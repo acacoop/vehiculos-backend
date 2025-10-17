@@ -10,16 +10,25 @@ class MockVehicleBrandRepository implements IVehicleBrandRepository {
 
   async findAndCount(opts?: {
     pagination?: { limit?: number; offset?: number };
-    searchParams?: { name?: string };
+    filters?: { name?: string };
+    search?: string;
   }): Promise<[VehicleBrand[], number]> {
-    const { pagination, searchParams } = opts || {};
-    const limit = pagination?.limit ?? 10;
-    const offset = pagination?.offset ?? 0;
+    const { pagination, filters, search } = opts || {};
+    const limit = pagination?.limit || 10;
+    const offset = pagination?.offset || 0;
     let filtered = [...this.brands];
 
-    if (searchParams?.name) {
+    // Apply search
+    if (search) {
       filtered = filtered.filter((b) =>
-        b.name.toLowerCase().includes(searchParams.name!.toLowerCase()),
+        b.name.toLowerCase().includes(search.toLowerCase()),
+      );
+    }
+
+    // Apply filters
+    if (filters?.name) {
+      filtered = filtered.filter((b) =>
+        b.name.toLowerCase().includes(filters.name!.toLowerCase()),
       );
     }
 
@@ -120,7 +129,7 @@ describe("VehicleBrandService", () => {
       mockRepo.seedBrands(brands);
 
       const result = await service.getAll({
-        searchParams: { name: "toy" },
+        filters: { name: "toy" },
       });
 
       expect(result.items).toHaveLength(1);

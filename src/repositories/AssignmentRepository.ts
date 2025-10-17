@@ -11,17 +11,18 @@ import {
 import { Assignment } from "../entities/Assignment";
 import {
   IAssignmentRepository,
-  AssignmentSearchParams,
+  AssignmentFilters,
 } from "./interfaces/IAssignmentRepository";
 import {
   PermissionFilterParams,
   RepositoryFindOptions,
   resolvePagination,
 } from "./interfaces/common";
-import { UserRoleEnum } from "../utils/common";
-import { getAllowedPermissions } from "../utils/permissions";
+import { UserRoleEnum } from "../utils";
+import { getAllowedPermissions } from "../utils";
+import { applySearchFilter, applyFilters } from "../utils";
 
-export type { AssignmentSearchParams };
+export type { AssignmentFilters };
 
 export class AssignmentRepository implements IAssignmentRepository {
   private readonly repo: Repository<Assignment>;
@@ -30,9 +31,9 @@ export class AssignmentRepository implements IAssignmentRepository {
   }
 
   async findAndCount(
-    options?: RepositoryFindOptions<AssignmentSearchParams>,
+    options?: RepositoryFindOptions<AssignmentFilters>,
   ): Promise<[Assignment[], number]> {
-    const { searchParams, pagination, permissions } = options || {};
+    const { filters, search, pagination, permissions } = options || {};
 
     const qb = this.repo
       .createQueryBuilder("a")
@@ -42,13 +43,25 @@ export class AssignmentRepository implements IAssignmentRepository {
       .leftJoinAndSelect("model.brand", "brand")
       .orderBy("a.startDate", "DESC");
 
-    // Apply search filters
-    if (searchParams?.userId) {
-      qb.andWhere("u.id = :userId", { userId: searchParams.userId });
+    // Apply search filter across user and vehicle information
+    if (search) {
+      applySearchFilter(qb, search, [
+        "u.firstName",
+        "u.lastName",
+        "u.email",
+        "v.licensePlate",
+        "v.chassisNumber",
+        "brand.name",
+        "model.name",
+      ]);
     }
-    if (searchParams?.vehicleId) {
-      qb.andWhere("v.id = :vehicleId", { vehicleId: searchParams.vehicleId });
-    }
+
+    // Apply filters
+    applyFilters(qb, filters, {
+      userId: { field: "u.id" },
+      vehicleId: { field: "v.id" },
+      date: { field: "a.startDate", operator: "<=" }, // Filter for assignments active on date
+    });
 
     // Apply permission-based filtering
     if (permissions && permissions.userRole !== UserRoleEnum.ADMIN) {
@@ -147,20 +160,19 @@ export class AssignmentRepository implements IAssignmentRepository {
    * Find active assignments for today
    * Active means: startDate <= date AND (endDate IS NULL OR endDate >= date)
    */
-  async findActiveAssignments(searchParams?: AssignmentSearchParams) {
-    const targetDate =
-      searchParams?.date || new Date().toISOString().split("T")[0];
+  async findActiveAssignments(filters?: AssignmentFilters) {
+    const targetDate = filters?.date || new Date().toISOString().split("T")[0];
 
     const where: Record<string, unknown> = {
       startDate: LessThanOrEqual(targetDate),
       endDate: Or(IsNull(), MoreThanOrEqual(targetDate)),
     };
 
-    if (searchParams?.userId) {
-      where.user = { id: searchParams.userId };
+    if (filters?.userId) {
+      where.user = { id: filters.userId };
     }
-    if (searchParams?.vehicleId) {
-      where.vehicle = { id: searchParams.vehicleId };
+    if (filters?.vehicleId) {
+      where.vehicle = { id: filters.vehicleId };
     }
 
     return this.repo.find({ where });

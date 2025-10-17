@@ -1,6 +1,6 @@
 import {
   IVehicleModelRepository,
-  VehicleModelSearchParams,
+  VehicleModelFilters,
 } from "../repositories/interfaces/IVehicleModelRepository";
 import { IVehicleBrandRepository } from "../repositories/interfaces/IVehicleBrandRepository";
 import type {
@@ -21,7 +21,7 @@ export class VehicleModelService {
   ) {}
 
   async getAll(
-    options?: RepositoryFindOptions<VehicleModelSearchParams>,
+    options?: RepositoryFindOptions<VehicleModelFilters>,
   ): Promise<{ items: VehicleModelType[]; total: number }> {
     const [rows, total] = await this.repo.findAndCount(options);
     return {

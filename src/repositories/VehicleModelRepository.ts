@@ -2,12 +2,13 @@ import { DataSource, Repository } from "typeorm";
 import { VehicleModel } from "../entities/VehicleModel";
 import {
   IVehicleModelRepository,
-  VehicleModelSearchParams,
+  VehicleModelFilters,
 } from "./interfaces/IVehicleModelRepository";
 import { RepositoryFindOptions, resolvePagination } from "./interfaces/common";
+import { applySearchFilter, applyFilters } from "../utils";
 
 // Re-export types for convenience
-export type { VehicleModelSearchParams };
+export type { VehicleModelFilters };
 
 export class VehicleModelRepository implements IVehicleModelRepository {
   private readonly repo: Repository<VehicleModel>;
@@ -16,25 +17,28 @@ export class VehicleModelRepository implements IVehicleModelRepository {
   }
 
   async findAndCount(
-    options?: RepositoryFindOptions<VehicleModelSearchParams>,
+    options?: RepositoryFindOptions<VehicleModelFilters>,
   ): Promise<[VehicleModel[], number]> {
-    const { searchParams, pagination } = options || {};
+    const { filters, search, pagination } = options || {};
     const qb = this.repo
       .createQueryBuilder("m")
       .leftJoinAndSelect("m.brand", "b")
       .orderBy("b.name", "ASC")
       .addOrderBy("m.name", "ASC");
-    if (searchParams?.name) {
-      qb.andWhere("m.name ILIKE :name", {
-        name: `%${searchParams.name}%`,
-      });
+
+    // Apply search filter
+    if (search) {
+      applySearchFilter(qb, search, ["m.name", "b.name"]);
     }
-    if (searchParams?.brandId) {
-      qb.andWhere("b.id = :brandId", { brandId: searchParams.brandId });
-    }
+
+    // Apply filters
+    applyFilters(qb, filters, {
+      name: { field: "m.name", operator: "LIKE" },
+      brandId: { field: "b.id" },
+    });
+
     const { limit, offset } = resolvePagination(pagination);
-    qb.take(limit);
-    qb.skip(offset);
+    qb.take(limit).skip(offset);
     return qb.getManyAndCount();
   }
 

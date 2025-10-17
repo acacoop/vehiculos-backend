@@ -2,17 +2,18 @@ import { Brackets, DataSource, Repository, SelectQueryBuilder } from "typeorm";
 import { MaintenanceRecord } from "../entities/MaintenanceRecord";
 import {
   IMaintenanceRecordRepository,
-  MaintenanceRecordSearchParams,
+  MaintenanceRecordFilters,
 } from "./interfaces/IMaintenanceRecordRepository";
 import {
   PermissionFilterParams,
   RepositoryFindOptions,
   resolvePagination,
 } from "./interfaces/common";
-import { UserRoleEnum } from "../utils/common";
-import { getAllowedPermissions } from "../utils/permissions";
+import { UserRoleEnum } from "../utils";
+import { getAllowedPermissions } from "../utils";
+import { applySearchFilter, applyFilters } from "../utils";
 
-export type { MaintenanceRecordSearchParams };
+export type { MaintenanceRecordFilters };
 
 export class MaintenanceRecordRepository
   implements IMaintenanceRecordRepository
@@ -26,9 +27,9 @@ export class MaintenanceRecordRepository
   }
 
   async findAndCount(
-    options?: RepositoryFindOptions<MaintenanceRecordSearchParams>,
+    options?: RepositoryFindOptions<MaintenanceRecordFilters>,
   ): Promise<[MaintenanceRecord[], number]> {
-    const { searchParams, pagination, permissions } = options || {};
+    const { filters, search, pagination, permissions } = options || {};
 
     const qb = this.qb()
       .leftJoinAndSelect("mr.assignedMaintenance", "am")
@@ -39,23 +40,27 @@ export class MaintenanceRecordRepository
       .leftJoinAndSelect("mr.user", "u")
       .orderBy("mr.date", "DESC");
 
-    // Apply search filters
-    if (searchParams?.userId) {
-      qb.andWhere("u.id = :userId", { userId: searchParams.userId });
+    // Apply search filter across maintenance details, user, and vehicle
+    if (search) {
+      applySearchFilter(qb, search, [
+        "m.name",
+        "mr.notes",
+        "u.firstName",
+        "u.lastName",
+        "u.email",
+        "v.licensePlate",
+        "brand.name",
+        "model.name",
+      ]);
     }
-    if (searchParams?.vehicleId) {
-      qb.andWhere("v.id = :vehicleId", { vehicleId: searchParams.vehicleId });
-    }
-    if (searchParams?.maintenanceId) {
-      qb.andWhere("m.id = :maintenanceId", {
-        maintenanceId: searchParams.maintenanceId,
-      });
-    }
-    if (searchParams?.assignedMaintenanceId) {
-      qb.andWhere("am.id = :assignedMaintenanceId", {
-        assignedMaintenanceId: searchParams.assignedMaintenanceId,
-      });
-    }
+
+    // Apply filters
+    applyFilters(qb, filters, {
+      userId: { field: "u.id" },
+      vehicleId: { field: "v.id" },
+      maintenanceId: { field: "m.id" },
+      assignedMaintenanceId: { field: "am.id" },
+    });
 
     // Apply permission-based filtering
     if (permissions && permissions.userRole !== UserRoleEnum.ADMIN) {

@@ -2,7 +2,7 @@ import { User as UserEntity } from "../entities/User";
 import type { User } from "../schemas/user";
 import {
   IUserRepository,
-  UserSearchParams,
+  UserFilters,
 } from "../repositories/interfaces/IUserRepository";
 import { RepositoryFindOptions } from "../repositories/interfaces/common";
 
@@ -14,8 +14,8 @@ export class UsersService {
   constructor(private readonly userRepo: IUserRepository) {}
 
   async getAll(
-    options?: RepositoryFindOptions<UserSearchParams>,
-  ): Promise<{ items: UserEntity[]; total: number }> {
+    options?: RepositoryFindOptions<UserFilters>,
+  ): Promise<{ items: User[]; total: number }> {
     const [entities, total] = await this.userRepo.findAndCount(options);
     return { items: entities, total };
   }

@@ -1,9 +1,7 @@
 import { z } from "zod";
 
-// Environment variable schema & export. Keep this in sync with .env.example documentation.
 const envSchema = z.object({
   APP_PORT: z.coerce.number().default(3000),
-  // Individual DB parameters (for local development)
   DB_HOST: z.string().default("localhost"),
   DB_PORT: z.coerce.number().default(1433),
   DB_USER: z.string().default("sa"),
@@ -13,9 +11,8 @@ const envSchema = z.object({
     .enum(["true", "false"])
     .transform((v: string) => v === "true")
     .default("false"),
-  // Dev-only auth bypass
   AUTH_BYPASS: z
-    .enum(["true", "false"]) // set to 'true' locally to bypass Entra
+    .enum(["true", "false"])
     .transform((v: string) => v === "true")
     .default("false"),
   SQL_AAD_CONNECTION_STRING: z.string().optional(),
@@ -63,7 +60,7 @@ export const {
 } = parsed.data;
 
 export const SERVER_PORT =
-  Number(process.env.PORT) || // inyectado por Azure (8080)
+  Number(process.env.PORT) ||
   Number(process.env.APP_PORT) ||
-  Number(APP_PORT) || // el de tu schema zod
+  Number(APP_PORT) ||
   3000;

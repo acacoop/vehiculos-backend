@@ -110,13 +110,13 @@ describe("MaintenanceRecordsService", () => {
 
       const result = await service.getAll({
         pagination: { limit: 10, offset: 0 },
-        searchParams: { vehicleId: "vehicle-1" },
+        filters: { vehicleId: "vehicle-1" },
       });
 
       expect(result.total).toBe(1);
       expect(mockRecordRepo.findAndCount).toHaveBeenCalledWith({
         pagination: { limit: 10, offset: 0 },
-        searchParams: { vehicleId: "vehicle-1" },
+        filters: { vehicleId: "vehicle-1" },
       });
     });
   });

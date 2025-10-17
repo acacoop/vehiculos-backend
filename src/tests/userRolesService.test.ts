@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "@jest/globals";
 import { UserRolesService } from "../services/userRolesService";
 import { UserRole } from "../entities/UserRole";
 import { User } from "../entities/User";
-import { UserRoleEnum } from "../utils/common";
+import { UserRoleEnum } from "../utils";
 import { DeleteResult, Repository } from "typeorm";
 
 // Mock UserRoleRepository
@@ -11,25 +11,39 @@ class MockUserRoleRepository {
   private idCounter = 1;
 
   async findAndCount(opts?: {
-    limit?: number;
-    offset?: number;
-    searchParams?: {
+    pagination?: { limit?: number; offset?: number };
+    filters?: {
       userId?: string;
       role?: UserRoleEnum;
       activeOnly?: boolean;
     };
+    search?: string;
   }): Promise<[UserRole[], number]> {
-    const { limit = 10, offset = 0, searchParams } = opts || {};
+    const { pagination, filters, search } = opts || {};
+    const limit = pagination?.limit || 10;
+    const offset = pagination?.offset || 0;
     let filtered = [...this.userRoles];
 
-    if (searchParams) {
-      if (searchParams.userId) {
-        filtered = filtered.filter((ur) => ur.user.id === searchParams.userId);
+    // Apply search
+    if (search) {
+      filtered = filtered.filter(
+        (ur) =>
+          ur.user.firstName.toLowerCase().includes(search.toLowerCase()) ||
+          ur.user.lastName.toLowerCase().includes(search.toLowerCase()) ||
+          ur.user.email.toLowerCase().includes(search.toLowerCase()) ||
+          ur.role.toLowerCase().includes(search.toLowerCase()),
+      );
+    }
+
+    // Apply filters
+    if (filters) {
+      if (filters.userId) {
+        filtered = filtered.filter((ur) => ur.user.id === filters.userId);
       }
-      if (searchParams.role) {
-        filtered = filtered.filter((ur) => ur.role === searchParams.role);
+      if (filters.role) {
+        filtered = filtered.filter((ur) => ur.role === filters.role);
       }
-      if (searchParams.activeOnly) {
+      if (filters.activeOnly) {
         const now = new Date();
         filtered = filtered.filter(
           (ur) => ur.startTime <= now && (!ur.endTime || ur.endTime > now),
@@ -214,7 +228,7 @@ describe("UserRolesService", () => {
       ];
       mockUserRoleRepo.seedUserRoles(userRoles);
 
-      const result = await service.getAll({ userId: "1" });
+      const result = await service.getAll({ filters: { userId: "1" } });
 
       expect(result.items).toHaveLength(1);
       expect(result.items[0].userId).toBe("1");
@@ -236,7 +250,7 @@ describe("UserRolesService", () => {
       ];
       mockUserRoleRepo.seedUserRoles(userRoles);
 
-      const result = await service.getAll({ activeOnly: true });
+      const result = await service.getAll({ filters: { activeOnly: true } });
 
       expect(result.items).toHaveLength(1);
       expect(result.items[0].role).toBe(UserRoleEnum.ADMIN);

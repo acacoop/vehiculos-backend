@@ -7,17 +7,15 @@ import {
   requireVehiclePermissionFromParam,
   requireVehiclePermissionFromBody,
 } from "../middleware/permission";
-import { UserRoleEnum } from "../utils/common";
-import { PermissionType } from "../utils/common";
+import { UserRoleEnum } from "../utils";
+import { PermissionType } from "../utils";
 import { addPermissionFilter } from "../middleware/permissionFilter";
 
 const router = express.Router();
 const controller = createReservationsController();
 
-// GET: Fetch all reservations with pagination and search
 router.get("/", addPermissionFilter(PermissionType.READ), controller.getAll);
 
-// GET: Fetch reservations for a specific user
 router.get(
   "/user/:id",
   requireRole(UserRoleEnum.ADMIN),
@@ -25,7 +23,6 @@ router.get(
   controller.getByUser,
 );
 
-// GET: Fetch reservations for a specific vehicle
 router.get(
   "/vehicle/:id",
   validateUUIDParam("id"),
@@ -33,7 +30,6 @@ router.get(
   controller.getByVehicle,
 );
 
-// GET: Fetch reservations for all vehicles assigned to a specific user
 router.get(
   "/user/:id/assigned",
   requireRole(UserRoleEnum.ADMIN),
@@ -41,7 +37,6 @@ router.get(
   controller.getAssignedVehicles,
 );
 
-// GET: Fetch reservations for a specific user that are scheduled for today
 router.get(
   "/user/:id/today",
   requireRole(UserRoleEnum.ADMIN),
@@ -49,8 +44,6 @@ router.get(
   controller.getTodayByUser,
 );
 
-// POST: Create a new reservation - requires DRIVER permission or admin
-// User must have DRIVER permission on the vehicle being reserved
 router.post(
   "/",
   requireVehiclePermissionFromBody(PermissionType.DRIVER, "vehicleId"),

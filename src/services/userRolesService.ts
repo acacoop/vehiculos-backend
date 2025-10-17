@@ -3,7 +3,7 @@ import { UserRole } from "../entities/UserRole";
 import { User } from "../entities/User";
 import { Repository } from "typeorm";
 import { AppError } from "../middleware/errorHandler";
-import { UserRoleEnum } from "../utils/common";
+import { UserRoleEnum } from "../utils";
 
 export interface UserRoleDTO {
   id: string;
@@ -43,18 +43,18 @@ export class UserRolesService {
   async getAll(options?: {
     limit?: number;
     offset?: number;
-    userId?: string;
-    role?: UserRoleEnum;
-    activeOnly?: boolean;
+    filters?: {
+      userId?: string;
+      role?: UserRoleEnum;
+      activeOnly?: boolean;
+    };
+    search?: string;
   }): Promise<{ items: UserRoleDTO[]; total: number }> {
     const [userRoles, total] = await this.userRoleRepo.findAndCount({
       limit: options?.limit,
       offset: options?.offset,
-      searchParams: {
-        userId: options?.userId,
-        role: options?.role,
-        activeOnly: options?.activeOnly,
-      },
+      filters: options?.filters,
+      search: options?.search,
     });
 
     return {

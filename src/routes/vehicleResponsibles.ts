@@ -6,8 +6,8 @@ import {
   requireVehiclePermissionFromParam,
   requireSelfOrAdmin,
 } from "../middleware/permission";
-import { UserRoleEnum } from "../utils/common";
-import { PermissionType } from "../utils/common";
+import { UserRoleEnum } from "../utils";
+import { PermissionType } from "../utils";
 import { addPermissionFilter } from "../middleware/permissionFilter";
 
 const router = express.Router();
@@ -32,16 +32,10 @@ router.post(
   vehicleResponsiblesController.create,
 );
 
-router.put(
-  "/:id",
-  requireRole(UserRoleEnum.ADMIN),
-  vehicleResponsiblesController.update,
-);
-
 router.patch(
   "/:id",
   requireRole(UserRoleEnum.ADMIN),
-  vehicleResponsiblesController.patch,
+  vehicleResponsiblesController.update,
 );
 
 router.delete(
@@ -58,8 +52,6 @@ router.get(
   vehicleResponsiblesController.getCurrentForVehicle,
 );
 
-// GET: Fetch current vehicles for a user
-// Users can view their own data, or admins can view any user's data
 router.get(
   "/user/:userId/current",
   validateUUIDParam("userId"),

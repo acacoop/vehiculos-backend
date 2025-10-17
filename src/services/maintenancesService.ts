@@ -5,13 +5,13 @@ import { IMaintenanceRepository } from "../repositories/interfaces/IMaintenanceR
 import { IAssignedMaintenanceRepository } from "../repositories/interfaces/IAssignedMaintenanceRepository";
 import {
   IMaintenanceRecordRepository,
-  MaintenanceRecordSearchParams,
+  MaintenanceRecordFilters,
 } from "../repositories/interfaces/IMaintenanceRecordRepository";
 import {
   validateMaintenanceCategoryExists,
   validateMaintenanceExists,
   validateVehicleExists,
-} from "../utils/validators";
+} from "../utils/validation/entity";
 import type { Maintenance as MaintenanceSchemaType } from "../schemas/maintenance";
 import type { MaintenanceRecord } from "../schemas/maintenanceRecord";
 import { Vehicle } from "../entities/Vehicle";
@@ -20,11 +20,6 @@ import { Repository } from "typeorm";
 import { User } from "../entities/User";
 import { RepositoryFindOptions } from "../repositories/interfaces/common";
 
-// NOTE: The Maintenance zod schema currently only includes: id, categoryId, name.
-// Legacy API exposed additional optional fields (kilometersFrequency, daysFrequency, observations, instructions).
-// We keep them as optional extensions in the DTO mapping below (not enforced by current schema) to avoid breaking consumers.
-// Consider: extend MaintenanceSchema to include these fields in a follow-up.
-// Local DTO types (previously from ../types)
 export type MaintenanceDTO = MaintenanceSchemaType & {
   kilometersFrequency?: number;
   daysFrequency?: number;
@@ -32,6 +27,7 @@ export type MaintenanceDTO = MaintenanceSchemaType & {
   instructions?: string;
   categoryName?: string;
 };
+
 export interface MaintenanceVehicleAssignment {
   id: string;
   vehicleId: string;
@@ -296,7 +292,7 @@ export class MaintenanceRecordsService {
       notes: mr.notes ?? undefined,
     };
   }
-  async getAll(options?: RepositoryFindOptions<MaintenanceRecordSearchParams>) {
+  async getAll(options?: RepositoryFindOptions<MaintenanceRecordFilters>) {
     const [rows, total] = await this.recordRepo.findAndCount(options);
     return {
       items: rows.map((r) => this.mapEntity(r as MaintenanceRecordEntity)),

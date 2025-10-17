@@ -1,8 +1,14 @@
 import { Request, Response } from "express";
 import { asyncHandler, AppError } from "../middleware/errorHandler";
-import { isValidUUID } from "../utils/uuidValidators";
+import {
+  isValidUUID,
+  extractFilters,
+  extractSearch,
+  parsePaginationQuery,
+} from "../utils";
+import { RepositoryFindOptions } from "../repositories/interfaces/common";
+import { PermissionFilterRequest } from "../middleware/permissionFilter";
 
-// Standard response format
 export interface ApiResponse<T = unknown> {
   status: "success" | "error";
   data?: T;
@@ -15,19 +21,23 @@ export interface ApiResponse<T = unknown> {
   };
 }
 
-// Base controller class with common CRUD operations
-export abstract class BaseController {
+export interface BaseControllerConfig<TFilters = Record<string, string>> {
+  resourceName: string;
+  allowedFilters?: (keyof TFilters)[];
+  usePermissionFilter?: boolean;
+}
+
+export abstract class BaseController<TFilters = Record<string, string>> {
   protected readonly resourceName: string;
+  protected readonly allowedFilters?: (keyof TFilters)[];
+  protected readonly usePermissionFilter: boolean;
 
-  constructor(resourceName: string) {
-    this.resourceName = resourceName;
+  constructor(config: BaseControllerConfig<TFilters>) {
+    this.resourceName = config.resourceName;
+    this.allowedFilters = config.allowedFilters;
+    this.usePermissionFilter = config.usePermissionFilter ?? false;
   }
 
-  // UUID validation helper
-  protected isValidUUID(uuid: string): boolean {
-    return isValidUUID(uuid);
-  }
-  // Standard success response with optional pagination
   protected sendResponse<T>(
     res: Response,
     data: T,
@@ -44,7 +54,6 @@ export abstract class BaseController {
     res.status(statusCode).json(response);
   }
 
-  // Standard error response
   protected sendError(res: Response, message: string, statusCode = 400) {
     const response: ApiResponse = {
       status: "error",
@@ -53,25 +62,27 @@ export abstract class BaseController {
     res.status(statusCode).json(response);
   }
 
-  // GET all resources with pagination and search
   public getAll = asyncHandler(async (req: Request, res: Response) => {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const offset = (page - 1) * limit;
+    const { page, limit, offset } = parsePaginationQuery(req.query);
 
-    // Extract search parameters (excluding pagination params)
-    const searchParams: Record<string, string> = {};
-    for (const [key, value] of Object.entries(req.query)) {
-      if (key !== "page" && key !== "limit" && typeof value === "string") {
-        searchParams[key] = value;
-      }
+    const search = extractSearch(req.query);
+
+    const filters = this.allowedFilters
+      ? extractFilters<TFilters>(req.query, this.allowedFilters)
+      : extractFilters<TFilters>(req.query);
+
+    const options: RepositoryFindOptions<Partial<TFilters>> = {
+      pagination: { limit, offset },
+      filters,
+      search,
+    };
+
+    if (this.usePermissionFilter) {
+      const permReq = req as PermissionFilterRequest;
+      options.permissions = permReq.permissionFilter;
     }
 
-    const { items, total } = await this.getAllService({
-      limit,
-      offset,
-      searchParams,
-    });
+    const { items, total } = await this.getAllService(options);
 
     this.sendResponse(res, items, undefined, 200, {
       page,
@@ -81,12 +92,10 @@ export abstract class BaseController {
     });
   });
 
-  // GET by ID
   public getById = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
 
-    // Validate UUID format
-    if (!this.isValidUUID(id)) {
+    if (!isValidUUID(id)) {
       throw new AppError(
         `Invalid UUID format provided: ${id}`,
         400,
@@ -109,18 +118,15 @@ export abstract class BaseController {
     this.sendResponse(res, item);
   });
 
-  // POST create
   public create = asyncHandler(async (req: Request, res: Response) => {
     const item = await this.createService(req.body);
     this.sendResponse(res, item, "Resource created successfully", 201);
   });
 
-  // PUT update (full replacement)
   public update = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
 
-    // Validate UUID format
-    if (!this.isValidUUID(id)) {
+    if (!isValidUUID(id)) {
       throw new AppError(
         `Invalid UUID format provided: ${id}`,
         400,
@@ -143,40 +149,10 @@ export abstract class BaseController {
     this.sendResponse(res, item, "Resource updated successfully");
   });
 
-  // PATCH update (partial update)
-  public patch = asyncHandler(async (req: Request, res: Response) => {
-    const id = req.params.id;
-
-    // Validate UUID format
-    if (!this.isValidUUID(id)) {
-      throw new AppError(
-        `Invalid UUID format provided: ${id}`,
-        400,
-        "https://example.com/problems/invalid-uuid",
-        "Invalid UUID Format",
-      );
-    }
-
-    const item = await this.patchService(id, req.body);
-
-    if (!item) {
-      throw new AppError(
-        `${this.resourceName} with ID ${id} was not found`,
-        404,
-        "https://example.com/problems/resource-not-found",
-        "Resource Not Found",
-      );
-    }
-
-    this.sendResponse(res, item, "Resource partially updated successfully");
-  });
-
-  // DELETE
   public delete = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
 
-    // Validate UUID format
-    if (!this.isValidUUID(id)) {
+    if (!isValidUUID(id)) {
       throw new AppError(
         `Invalid UUID format provided: ${id}`,
         400,
@@ -199,21 +175,16 @@ export abstract class BaseController {
     this.sendResponse(res, null, "Resource deleted successfully", 204);
   });
 
-  // Abstract methods to be implemented by child classes
-  protected abstract getAllService(options: {
-    limit: number;
-    offset: number;
-    searchParams?: Record<string, string>;
-  }): Promise<{ items: unknown[]; total: number }>;
+  protected abstract getAllService(
+    options: RepositoryFindOptions<Partial<TFilters>>,
+  ): Promise<{ items: unknown[]; total: number }>;
+
   protected abstract getByIdService(id: string): Promise<unknown | null>;
   protected abstract createService(data: unknown): Promise<unknown>;
   protected abstract updateService(
     id: string,
     data: unknown,
   ): Promise<unknown | null>;
-  protected abstract patchService(
-    id: string,
-    data: unknown,
-  ): Promise<unknown | null>;
+
   protected abstract deleteService(id: string): Promise<boolean>;
 }

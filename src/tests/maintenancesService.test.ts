@@ -5,9 +5,9 @@ import { IAssignedMaintenanceRepository } from "../repositories/interfaces/IAssi
 import { Maintenance } from "../entities/Maintenance";
 import { MaintenanceCategory } from "../entities/MaintenanceCategory";
 import { Repository } from "typeorm";
-import * as validators from "../utils/validators";
+import * as validators from "../utils/validation/entity";
 
-jest.mock("../utils/validators");
+jest.mock("../utils/validation/entity");
 
 describe("MaintenancesService", () => {
   let service: MaintenancesService;

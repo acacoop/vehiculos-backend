@@ -4,18 +4,17 @@ import helmet from "helmet";
 import { AppError } from "./errorHandler";
 import { RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX } from "../config/env.config";
 
-// Rate limiting using express-rate-limit
 export const rateLimiter = rateLimit({
-  windowMs: RATE_LIMIT_WINDOW_MS, // Configurable window (default: 15 minutes)
-  max: RATE_LIMIT_MAX, // Configurable max requests per window (default: 1000)
+  windowMs: RATE_LIMIT_WINDOW_MS,
+  max: RATE_LIMIT_MAX,
   message: {
     type: "https://example.com/problems/rate-limit-exceeded",
     title: "Too Many Requests",
     status: 429,
     detail: "Rate limit exceeded. Please try again later.",
   },
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  standardHeaders: true,
+  legacyHeaders: false,
   handler: (_req: Request, _res: Response) => {
     throw new AppError(
       "Rate limit exceeded. Please try again later.",
@@ -26,7 +25,6 @@ export const rateLimiter = rateLimit({
   },
 });
 
-// Security headers using helmet
 export const securityHeaders = helmet({
   contentSecurityPolicy: {
     directives: {
@@ -43,13 +41,11 @@ export const securityHeaders = helmet({
   },
 });
 
-// Input sanitization
 export const sanitizeInput = (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  // Remove potential XSS characters from strings
   const sanitizeObject = (obj: unknown): unknown => {
     if (typeof obj === "string") {
       return obj

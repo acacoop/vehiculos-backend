@@ -1,15 +1,10 @@
-import { AppDataSource } from "../db";
-import { AppError } from "../middleware/errorHandler";
-import { Vehicle } from "../entities/Vehicle";
-import { User } from "../entities/User";
-import { MaintenanceCategory } from "../entities/MaintenanceCategory";
-import { Maintenance } from "../entities/Maintenance";
+import { AppDataSource } from "../../db";
+import { AppError } from "../../middleware/errorHandler";
+import { Vehicle } from "../../entities/Vehicle";
+import { User } from "../../entities/User";
+import { MaintenanceCategory } from "../../entities/MaintenanceCategory";
+import { Maintenance } from "../../entities/Maintenance";
 
-/**
- * Validates that a vehicle exists in the database
- * @param vehicleId - The ID of the vehicle to validate
- * @throws AppError if the vehicle doesn't exist
- */
 export const validateVehicleExists = async (
   vehicleId: string,
 ): Promise<void> => {
@@ -28,11 +23,6 @@ export const validateVehicleExists = async (
   }
 };
 
-/**
- * Validates that a user exists in the database
- * @param userId - The ID of the user to validate
- * @throws AppError if the user doesn't exist
- */
 export const validateUserExists = async (userId: string): Promise<void> => {
   const userExists = await AppDataSource.getRepository(User).findOne({
     where: { id: userId },
@@ -49,11 +39,6 @@ export const validateUserExists = async (userId: string): Promise<void> => {
   }
 };
 
-/**
- * Validates that a maintenance category exists in the database
- * @param categoryId - The ID of the maintenance category to validate
- * @throws AppError if the maintenance category doesn't exist
- */
 export const validateMaintenanceCategoryExists = async (
   categoryId: string,
 ): Promise<void> => {
@@ -71,11 +56,6 @@ export const validateMaintenanceCategoryExists = async (
   }
 };
 
-/**
- * Validates that a maintenance exists in the database
- * @param maintenanceId - The ID of the maintenance to validate
- * @throws AppError if the maintenance doesn't exist
- */
 export const validateMaintenanceExists = async (
   maintenanceId: string,
 ): Promise<void> => {

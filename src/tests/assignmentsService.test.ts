@@ -5,9 +5,9 @@ import { Assignment } from "../entities/Assignment";
 import { User } from "../entities/User";
 import { Vehicle } from "../entities/Vehicle";
 import { Repository } from "typeorm";
-import * as validators from "../utils/validators";
+import * as validators from "../utils/validation/entity";
 
-jest.mock("../utils/validators");
+jest.mock("../utils/validation/entity");
 
 describe("AssignmentsService", () => {
   let service: AssignmentsService;

@@ -8,9 +8,9 @@ import { MaintenanceCategory } from "../entities/MaintenanceCategory";
 import { VehicleModel } from "../entities/VehicleModel";
 import { VehicleBrand } from "../entities/VehicleBrand";
 import { Repository, DeleteResult } from "typeorm";
-import * as validators from "../utils/validators";
+import * as validators from "../utils/validation/entity";
 
-jest.mock("../utils/validators");
+jest.mock("../utils/validation/entity");
 
 class MockAssignedMaintenanceRepository
   implements IAssignedMaintenanceRepository

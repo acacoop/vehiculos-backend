@@ -10,13 +10,11 @@ import {
   requireRole,
   requireVehiclePermissionFromParam,
 } from "../middleware/permission";
-import { UserRoleEnum } from "../utils/common";
-import { PermissionType } from "../utils/common";
+import { UserRoleEnum } from "../utils";
+import { PermissionType } from "../utils";
 
 const router = express.Router();
 
-// GET: Fetch all maintenance for a specific vehicle
-// Users with READ permission can view maintenance assignments for vehicles they have access to
 router.get(
   "/:vehicleId",
   validateUUIDParam("vehicleId"),
@@ -24,8 +22,6 @@ router.get(
   maintenanceAssignmentsController.getByVehicle,
 );
 
-// POST: Associate a maintenance with a vehicle
-// Only admins can assign maintenance to vehicles
 router.post(
   "/",
   requireRole(UserRoleEnum.ADMIN),
@@ -33,9 +29,7 @@ router.post(
   maintenanceAssignmentsController.create,
 );
 
-// PUT: Update a maintenance assignment
-// Only admins can update maintenance assignments
-router.put(
+router.patch(
   "/:id",
   requireRole(UserRoleEnum.ADMIN),
   validateUUIDParam("id"),
@@ -43,8 +37,6 @@ router.put(
   maintenanceAssignmentsController.update,
 );
 
-// DELETE: Remove a maintenance assignment
-// Only admins can remove maintenance assignments
 router.delete(
   "/:id",
   requireRole(UserRoleEnum.ADMIN),

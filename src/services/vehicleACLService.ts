@@ -1,4 +1,7 @@
-import { VehicleACLRepository } from "../repositories/VehicleACLRepository";
+import {
+  VehicleACLRepository,
+  VehicleACLFilters,
+} from "../repositories/VehicleACLRepository";
 import { VehicleACL } from "../entities/VehicleACL";
 import {
   VehicleACLCreateInput,
@@ -6,18 +9,14 @@ import {
 } from "../schemas/vehicleAcl";
 import { AppError } from "../middleware/errorHandler";
 import { RepositoryFindOptions } from "../repositories/interfaces/common";
-import { VehicleACLSearchParams } from "../repositories/VehicleACLRepository";
 
 export class VehicleACLService {
   constructor(private readonly repository: VehicleACLRepository) {}
 
   async getAll(
-    options?: RepositoryFindOptions<VehicleACLSearchParams>,
+    options?: RepositoryFindOptions<VehicleACLFilters>,
   ): Promise<{ items: VehicleACL[]; total: number }> {
-    const [items, total] = await this.repository.findAndCount({
-      ...options?.pagination,
-      searchParams: options?.searchParams,
-    });
+    const [items, total] = await this.repository.findAndCount(options);
     return { items, total };
   }
 

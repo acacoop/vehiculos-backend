@@ -8,16 +8,17 @@ import {
 import { Vehicle as VehicleEntity } from "../entities/Vehicle";
 import {
   IVehicleRepository,
-  VehicleSearchParams,
+  VehicleFilters,
 } from "./interfaces/IVehicleRepository";
-import { PERMISSION_WEIGHT, PermissionType } from "../utils/common";
-import { UserRoleEnum } from "../utils/common";
+import { PERMISSION_WEIGHT, PermissionType } from "../utils";
+import { UserRoleEnum } from "../utils";
 import {
   RepositoryFindOptions,
   PermissionFilterParams,
   resolvePagination,
 } from "./interfaces/common";
-import { getAllowedPermissions } from "../utils/permissions";
+import { getAllowedPermissions } from "../utils";
+import { applySearchFilter, applyFilters } from "../utils";
 
 export class VehicleRepository implements IVehicleRepository {
   private readonly repo: Repository<VehicleEntity>;
@@ -27,9 +28,9 @@ export class VehicleRepository implements IVehicleRepository {
   }
 
   async findAndCount(
-    options?: RepositoryFindOptions<VehicleSearchParams>,
+    options?: RepositoryFindOptions<VehicleFilters>,
   ): Promise<[VehicleEntity[], number]> {
-    const { searchParams, pagination, permissions } = options || {};
+    const { filters, search, pagination, permissions } = options || {};
     const qb = this.repo
       .createQueryBuilder("v")
       .leftJoinAndSelect("v.model", "m")
@@ -38,33 +39,25 @@ export class VehicleRepository implements IVehicleRepository {
       .addOrderBy("m.name", "ASC")
       .addOrderBy("v.licensePlate", "ASC");
 
-    if (searchParams) {
-      // Standard search filters
-      if (searchParams.licensePlate) {
-        qb.andWhere("v.licensePlate = :lp", {
-          lp: searchParams.licensePlate,
-        });
-      }
-      if (searchParams.year) {
-        qb.andWhere("v.year = :year", { year: Number(searchParams.year) });
-      }
-      if (searchParams.brandId) {
-        qb.andWhere("b.id = :brandId", { brandId: searchParams.brandId });
-      }
-      if (searchParams.modelId) {
-        qb.andWhere("m.id = :modelId", { modelId: searchParams.modelId });
-      }
-      if (searchParams.brand) {
-        qb.andWhere("b.name LIKE :brandName", {
-          brandName: `%${searchParams.brand}%`,
-        });
-      }
-      if (searchParams.model) {
-        qb.andWhere("m.name LIKE :modelName", {
-          modelName: `%${searchParams.model}%`,
-        });
-      }
+    // Apply search filter across multiple fields
+    if (search) {
+      applySearchFilter(qb, search, [
+        "v.licensePlate",
+        "v.chassisNumber",
+        "b.name",
+        "m.name",
+      ]);
     }
+
+    // Apply individual filters
+    applyFilters(qb, filters, {
+      licensePlate: { field: "v.licensePlate" },
+      year: { field: "v.year", transform: (v) => Number(v) },
+      brandId: { field: "b.id" },
+      modelId: { field: "m.id" },
+      brand: { field: "b.name", operator: "LIKE" },
+      model: { field: "m.name", operator: "LIKE" },
+    });
 
     // If permissions are required and user is not ADMIN, apply filters
     if (permissions && permissions.userRole !== UserRoleEnum.ADMIN) {

@@ -20,9 +20,9 @@ import { Reservation } from "../entities/Reservation";
 import { VehicleResponsible } from "../entities/VehicleResponsible";
 import { VehicleKilometers } from "../entities/VehicleKilometers";
 import { VehicleACL } from "../entities/VehicleACL";
-import { PermissionType } from "../utils/common";
+import { PermissionType } from "../utils";
 import { UserRole } from "../entities/UserRole";
-import { UserRoleEnum } from "../utils/common";
+import { UserRoleEnum } from "../utils";
 
 type SampleDataStats = {
   users: number;

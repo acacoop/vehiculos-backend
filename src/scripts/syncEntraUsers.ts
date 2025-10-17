@@ -10,7 +10,7 @@ import { ServiceFactory } from "../factories/serviceFactory";
 import { UsersService } from "../services/usersService";
 import { UserRolesService } from "../services/userRolesService";
 import { UserRoleRepository } from "../repositories/UserRoleRepository";
-import { UserRoleEnum } from "../utils/common";
+import { UserRoleEnum } from "../utils";
 
 const VERBOSE =
   process.env.VERBOSE === "1" || process.argv.includes("--verbose");
@@ -388,13 +388,13 @@ async function syncUserRoles(usersService: UsersService, adminEmail?: string) {
   // Get all active users with entraId, paginating to handle large datasets
   const limit = 1000;
   let offset = 0;
-  let total = 1; // Initialize to 1 to enter the loop
+  let total = 1;
   const allUsers: User[] = [];
 
   while (offset < total) {
     const { items, total: t } = await usersService.getAll({
       pagination: { limit, offset },
-      searchParams: { active: "true" },
+      filters: { active: "true" },
     });
     total = t;
     offset += items.length;

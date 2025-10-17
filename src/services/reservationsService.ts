@@ -2,10 +2,13 @@ import { Reservation as ReservationEntity } from "../entities/Reservation";
 import { User } from "../entities/User";
 import { Vehicle } from "../entities/Vehicle";
 import type { Reservation } from "../schemas/reservation";
-import { validateUserExists, validateVehicleExists } from "../utils/validators";
+import {
+  validateUserExists,
+  validateVehicleExists,
+} from "../utils/validation/entity";
 import {
   IReservationRepository,
-  ReservationSearchParams,
+  ReservationFilters,
 } from "../repositories/interfaces/IReservationRepository";
 import { Repository } from "typeorm";
 import { RepositoryFindOptions } from "../repositories/interfaces/common";
@@ -74,7 +77,7 @@ export class ReservationsService {
   ) {}
 
   async getAll(
-    options?: RepositoryFindOptions<ReservationSearchParams>,
+    options?: RepositoryFindOptions<ReservationFilters>,
   ): Promise<{ items: ReservationWithDetails[]; total: number }> {
     const [rows, total] = await this.repo.findAndCount(options);
     return { items: rows.map(mapEntity), total };

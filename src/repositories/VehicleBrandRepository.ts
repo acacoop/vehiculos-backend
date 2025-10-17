@@ -1,13 +1,14 @@
-import { DataSource, ILike, Repository } from "typeorm";
+import { DataSource, Repository } from "typeorm";
 import { VehicleBrand } from "../entities/VehicleBrand";
 import {
   IVehicleBrandRepository,
-  VehicleBrandSearchParams,
+  VehicleBrandFilters,
 } from "./interfaces/IVehicleBrandRepository";
 import { RepositoryFindOptions, resolvePagination } from "./interfaces/common";
+import { applySearchFilter, applyFilters } from "../utils";
 
 // Re-export types for convenience
-export type { VehicleBrandSearchParams };
+export type { VehicleBrandFilters };
 
 export class VehicleBrandRepository implements IVehicleBrandRepository {
   private readonly repo: Repository<VehicleBrand>;
@@ -16,20 +17,26 @@ export class VehicleBrandRepository implements IVehicleBrandRepository {
   }
 
   async findAndCount(
-    options?: RepositoryFindOptions<VehicleBrandSearchParams>,
+    options?: RepositoryFindOptions<VehicleBrandFilters>,
   ): Promise<[VehicleBrand[], number]> {
-    const { searchParams, pagination } = options || {};
-    const where: Record<string, unknown> = {};
-    if (searchParams?.name) {
-      where.name = ILike(`%${searchParams.name}%`);
+    const { filters, search, pagination } = options || {};
+
+    const qb = this.repo.createQueryBuilder("vb").orderBy("vb.name", "ASC");
+
+    // Apply search filter
+    if (search) {
+      applySearchFilter(qb, search, ["vb.name"]);
     }
-    const { limit, offset } = resolvePagination(pagination);
-    return this.repo.findAndCount({
-      where,
-      take: limit,
-      skip: offset,
-      order: { name: "ASC" },
+
+    // Apply filters
+    applyFilters(qb, filters, {
+      name: { field: "vb.name", operator: "LIKE" },
     });
+
+    const { limit, offset } = resolvePagination(pagination);
+    qb.take(limit).skip(offset);
+
+    return qb.getManyAndCount();
   }
 
   findOne(id: string) {

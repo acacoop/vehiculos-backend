@@ -3,11 +3,14 @@ import { User } from "../entities/User";
 import { VehicleResponsible as VehicleResponsibleEntity } from "../entities/VehicleResponsible";
 import {
   IVehicleResponsibleRepository,
-  VehicleResponsibleSearchParams,
+  VehicleResponsibleFilters,
 } from "../repositories/interfaces/IVehicleResponsibleRepository";
 import type { VehicleResponsibleInput } from "../schemas/vehicleResponsible";
 import { AppError } from "../middleware/errorHandler";
-import { validateUserExists, validateVehicleExists } from "../utils/validators";
+import {
+  validateUserExists,
+  validateVehicleExists,
+} from "../utils/validation/entity";
 import { IsNull, Repository } from "typeorm";
 import { RepositoryFindOptions } from "../repositories/interfaces/common";
 
@@ -72,7 +75,7 @@ export class VehicleResponsiblesService {
   ) {}
 
   async getAll(
-    options?: RepositoryFindOptions<VehicleResponsibleSearchParams>,
+    options?: RepositoryFindOptions<VehicleResponsibleFilters>,
   ): Promise<{ items: VehicleResponsibleWithDetails[]; total: number }> {
     const [rows, total] = await this.repo.find(options);
     return { items: rows.map(mapEntity), total };

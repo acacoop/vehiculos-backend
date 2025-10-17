@@ -1,8 +1,8 @@
-import { Repository, DataSource } from "typeorm";
+import { Brackets, Repository, DataSource } from "typeorm";
 import { UserRole } from "../entities/UserRole";
-import { UserRoleEnum } from "../utils/common";
+import { UserRoleEnum } from "../utils";
 
-export interface UserRoleSearchParams {
+export interface UserRoleFilters {
   userId?: string;
   role?: UserRoleEnum;
   activeOnly?: boolean;
@@ -18,14 +18,32 @@ export class UserRoleRepository {
   async findAndCount(options?: {
     limit?: number;
     offset?: number;
-    searchParams?: UserRoleSearchParams;
+    filters?: UserRoleFilters;
+    search?: string;
   }): Promise<[UserRole[], number]> {
     const qb = this.repo
       .createQueryBuilder("ur")
       .leftJoinAndSelect("ur.user", "user");
 
-    if (options?.searchParams) {
-      const { userId, role, activeOnly } = options.searchParams;
+    // Apply search filter across user information
+    if (options?.search) {
+      qb.andWhere(
+        new Brackets((qb) => {
+          qb.where("user.firstName LIKE :search", {
+            search: `%${options.search}%`,
+          })
+            .orWhere("user.lastName LIKE :search", {
+              search: `%${options.search}%`,
+            })
+            .orWhere("user.email LIKE :search", {
+              search: `%${options.search}%`,
+            });
+        }),
+      );
+    }
+
+    if (options?.filters) {
+      const { userId, role, activeOnly } = options.filters;
 
       if (userId) {
         qb.andWhere("user.id = :userId", { userId });

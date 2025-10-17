@@ -1,8 +1,8 @@
 import { Response, NextFunction } from "express";
 import { AuthenticatedRequest } from "./auth";
 import { PermissionFilterParams } from "../repositories/interfaces/common";
-import { PermissionType } from "../utils/common";
-import { UserRoleEnum } from "../utils/common";
+import { PermissionType } from "../utils";
+import { UserRoleEnum } from "../utils";
 import { UserRoleRepository } from "../repositories/UserRoleRepository";
 import { AppDataSource } from "../db";
 import { AppError } from "./errorHandler";

@@ -12,21 +12,32 @@ class MockVehicleModelRepository implements IVehicleModelRepository {
 
   async findAndCount(opts?: {
     pagination?: { limit?: number; offset?: number };
-    searchParams?: { name?: string; brandId?: string };
+    filters?: { name?: string; brandId?: string };
+    search?: string;
   }): Promise<[VehicleModel[], number]> {
-    const { pagination, searchParams } = opts || {};
+    const { pagination, filters, search } = opts || {};
     const limit = pagination?.limit ?? 10;
     const offset = pagination?.offset ?? 0;
     let filtered = [...this.models];
 
-    if (searchParams?.name) {
-      filtered = filtered.filter((m) =>
-        m.name.toLowerCase().includes(searchParams.name!.toLowerCase()),
+    // Apply search
+    if (search) {
+      filtered = filtered.filter(
+        (m) =>
+          m.name.toLowerCase().includes(search.toLowerCase()) ||
+          m.brand.name.toLowerCase().includes(search.toLowerCase()),
       );
     }
 
-    if (searchParams?.brandId) {
-      filtered = filtered.filter((m) => m.brand.id === searchParams.brandId);
+    // Apply filters
+    if (filters?.name) {
+      filtered = filtered.filter((m) =>
+        m.name.toLowerCase().includes(filters.name!.toLowerCase()),
+      );
+    }
+
+    if (filters?.brandId) {
+      filtered = filtered.filter((m) => m.brand.id === filters.brandId);
     }
 
     const paginated = filtered.slice(offset, offset + limit);
@@ -163,7 +174,7 @@ describe("VehicleModelService", () => {
       mockModelRepo.seedModels(models);
 
       const result = await service.getAll({
-        searchParams: { name: "cam" },
+        filters: { name: "cam" },
       });
 
       expect(result.items).toHaveLength(1);
@@ -181,7 +192,7 @@ describe("VehicleModelService", () => {
       mockModelRepo.seedModels(models);
 
       const result = await service.getAll({
-        searchParams: { brandId: "1" },
+        filters: { brandId: "1" },
       });
 
       expect(result.items).toHaveLength(2);

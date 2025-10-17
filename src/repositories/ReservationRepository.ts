@@ -8,17 +8,18 @@ import {
 import { Reservation } from "../entities/Reservation";
 import {
   IReservationRepository,
-  ReservationSearchParams,
+  ReservationFilters,
 } from "./interfaces/IReservationRepository";
 import {
   PermissionFilterParams,
   RepositoryFindOptions,
   resolvePagination,
 } from "./interfaces/common";
-import { UserRoleEnum } from "../utils/common";
-import { getAllowedPermissions } from "../utils/permissions";
+import { UserRoleEnum } from "../utils";
+import { getAllowedPermissions } from "../utils";
+import { applySearchFilter, applyFilters } from "../utils";
 
-export type { ReservationSearchParams };
+export type { ReservationFilters };
 
 export class ReservationRepository implements IReservationRepository {
   private readonly repo: Repository<Reservation>;
@@ -27,9 +28,9 @@ export class ReservationRepository implements IReservationRepository {
   }
 
   async findAndCount(
-    options?: RepositoryFindOptions<ReservationSearchParams>,
+    options?: RepositoryFindOptions<ReservationFilters>,
   ): Promise<[Reservation[], number]> {
-    const { searchParams, pagination, permissions } = options || {};
+    const { filters, search, pagination, permissions } = options || {};
 
     const qb = this.repo
       .createQueryBuilder("r")
@@ -39,13 +40,25 @@ export class ReservationRepository implements IReservationRepository {
       .leftJoinAndSelect("m.brand", "b")
       .orderBy("r.startDate", "DESC");
 
-    // Apply search filters
-    if (searchParams?.userId) {
-      qb.andWhere("u.id = :userId", { userId: searchParams.userId });
+    // Apply search filter across user and vehicle information
+    if (search) {
+      applySearchFilter(qb, search, [
+        "u.firstName",
+        "u.lastName",
+        "u.email",
+        "u.cuit",
+        "v.licensePlate",
+        "v.chassisNumber",
+        "b.name",
+        "m.name",
+      ]);
     }
-    if (searchParams?.vehicleId) {
-      qb.andWhere("v.id = :vehicleId", { vehicleId: searchParams.vehicleId });
-    }
+
+    // Apply filters
+    applyFilters(qb, filters, {
+      userId: { field: "u.id" },
+      vehicleId: { field: "v.id" },
+    });
 
     // Apply permission-based filtering
     if (permissions && permissions.userRole !== UserRoleEnum.ADMIN) {
