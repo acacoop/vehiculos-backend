@@ -1,15 +1,14 @@
 import { BaseController } from "./baseController";
-import { VehicleModelService } from "../services/vehicleModelService";
-import type { VehicleModelInput } from "../schemas/vehicleModel";
-import { RepositoryFindOptions } from "../repositories/interfaces/common";
-import { VehicleModelFilters } from "../repositories/interfaces/IVehicleModelRepository";
+import { VehicleModelService } from "services/vehicleModelsService";
+import type { VehicleModelInput } from "schemas/vehicleModel";
+import { RepositoryFindOptions } from "repositories/interfaces/common";
+import { VehicleModelFilters } from "repositories/interfaces/IVehicleModelRepository";
 
 export class VehicleModelsController extends BaseController<VehicleModelFilters> {
   constructor(private readonly service: VehicleModelService) {
     super({
       resourceName: "VehicleModel",
       allowedFilters: ["name", "brandId"],
-      usePermissionFilter: false,
     });
   }
 

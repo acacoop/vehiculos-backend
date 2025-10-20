@@ -1,13 +1,11 @@
 import {
   IVehicleBrandRepository,
   VehicleBrandFilters,
-} from "../repositories/interfaces/IVehicleBrandRepository";
-import type { VehicleBrandInput, VehicleBrand } from "../schemas/vehicleBrand";
-import { RepositoryFindOptions } from "../repositories/interfaces/common";
+} from "repositories/interfaces/IVehicleBrandRepository";
+import type { VehicleBrandInput, VehicleBrand } from "schemas/vehicleBrand";
+import { RepositoryFindOptions } from "repositories/interfaces/common";
 
 /**
- * VehicleBrandService - Business logic for VehicleBrand operations
- * Now uses Dependency Injection for better testability
  */
 export class VehicleBrandService {
   constructor(private readonly repo: IVehicleBrandRepository) {}

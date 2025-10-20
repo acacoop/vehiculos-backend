@@ -10,7 +10,7 @@ include .env
 export $(shell sed -nE 's/^([A-Za-z_][A-Za-z0-9_]*)=.*/\1/p' .env)
 endif
 
-.PHONY: up down dev sample-data sync test clean help
+.PHONY: up down dev sample-data sync test clean migration-generate migration-run migration-revert help
 
 WAIT_RETRIES?=5
 MSSQL_SA_PASSWORD?=Your_password123
@@ -66,6 +66,21 @@ sync:
 test:
 	@npm test
 
+migration-generate:
+	@echo "Generating migration..."; \
+	$(MAKE) wait-db; \
+	DB_HOST=$(HOST_DB_HOST) npm run migration:generate -- -n $(filter-out $@,$(MAKECMDGOALS))
+
+migration-run:
+	@echo "Running migrations..."; \
+	$(MAKE) wait-db; \
+	DB_HOST=$(HOST_DB_HOST) npm run migration:run
+
+migration-revert:
+	@echo "Reverting last migration..."; \
+	$(MAKE) wait-db; \
+	DB_HOST=$(HOST_DB_HOST) npm run migration:revert
+
 clean:
 	@echo "Cleaning dist/, node_modules/, Docker artifacts..."
 	@rm -rf dist
@@ -81,5 +96,8 @@ help:
 	echo "  sample-data     Load sample data using TypeORM (destructive)"; \
 	echo "  sync            Run Entra users sync script (set admin: make sync ADMIN=admin@domain.com)"; \
 	echo "  test            Run automated tests"; \
+	echo "  migration-generate NAME  Generate new migration from entity changes"; \
+	echo "  migration-run            Apply pending migrations to database"; \
+	echo "  migration-revert         Revert last applied migration"; \
 	echo "  clean           Remove build artifacts and prune dangling images"; \
 	echo "  help            Show this help message";

@@ -1,15 +1,15 @@
 import { Request, Response } from "express";
 import { BaseController } from "./baseController";
-import { VehicleACLService } from "../services/vehicleACLService";
+import { VehicleACLService } from "services/vehicleACLService";
 import {
   VehicleACLCreateSchema,
   VehicleACLUpdateSchema,
-} from "../schemas/vehicleAcl";
-import { asyncHandler } from "../middleware/errorHandler";
-import { parsePaginationQuery } from "../utils";
-import { VehicleACLFilters } from "../repositories/VehicleACLRepository";
-import { RepositoryFindOptions } from "../repositories/interfaces/common";
-import { extractFilters, extractSearch } from "../utils";
+} from "schemas/vehicleAcl";
+import { asyncHandler } from "middleware/errorHandler";
+import { parsePaginationQuery } from "utils";
+import { VehicleACLFilters } from "repositories/VehicleACLRepository";
+import { RepositoryFindOptions } from "repositories/interfaces/common";
+import { extractFilters, extractSearch } from "utils";
 
 /**
  * VehicleACLController - Manages vehicle access control lists
@@ -20,7 +20,6 @@ export class VehicleACLController extends BaseController<VehicleACLFilters> {
     super({
       resourceName: "VehicleACL",
       allowedFilters: ["userId", "vehicleId", "permission"],
-      usePermissionFilter: false,
     });
   }
 

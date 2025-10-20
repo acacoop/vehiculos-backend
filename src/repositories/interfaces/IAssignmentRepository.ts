@@ -1,4 +1,4 @@
-import { Assignment } from "../../entities/Assignment";
+import { Assignment } from "entities/Assignment";
 import { DeleteResult } from "typeorm";
 import { RepositoryFindOptions } from "./common";
 

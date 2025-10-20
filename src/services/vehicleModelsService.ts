@@ -1,18 +1,16 @@
 import {
   IVehicleModelRepository,
   VehicleModelFilters,
-} from "../repositories/interfaces/IVehicleModelRepository";
-import { IVehicleBrandRepository } from "../repositories/interfaces/IVehicleBrandRepository";
+} from "repositories/interfaces/IVehicleModelRepository";
+import { IVehicleBrandRepository } from "repositories/interfaces/IVehicleBrandRepository";
 import type {
   VehicleModelInput,
   VehicleModelType,
-} from "../schemas/vehicleModel";
-import { AppError } from "../middleware/errorHandler";
-import { RepositoryFindOptions } from "../repositories/interfaces/common";
+} from "schemas/vehicleModel";
+import { AppError } from "middleware/errorHandler";
+import { RepositoryFindOptions } from "repositories/interfaces/common";
 
 /**
- * VehicleModelService - Business logic for VehicleModel operations
- * Now uses Dependency Injection for better testability
  */
 export class VehicleModelService {
   constructor(

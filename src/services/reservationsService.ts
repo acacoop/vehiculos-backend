@@ -1,17 +1,17 @@
-import { Reservation as ReservationEntity } from "../entities/Reservation";
-import { User } from "../entities/User";
-import { Vehicle } from "../entities/Vehicle";
-import type { Reservation } from "../schemas/reservation";
+import { Reservation as ReservationEntity } from "entities/Reservation";
+import { User } from "entities/User";
+import { Vehicle } from "entities/Vehicle";
+import type { Reservation } from "schemas/reservation";
 import {
   validateUserExists,
   validateVehicleExists,
-} from "../utils/validation/entity";
+} from "utils/validation/entity";
 import {
   IReservationRepository,
   ReservationFilters,
-} from "../repositories/interfaces/IReservationRepository";
+} from "repositories/interfaces/IReservationRepository";
 import { Repository } from "typeorm";
-import { RepositoryFindOptions } from "../repositories/interfaces/common";
+import { RepositoryFindOptions } from "repositories/interfaces/common";
 
 // Composite return type (was previously in ../types)
 export interface ReservationWithDetails {

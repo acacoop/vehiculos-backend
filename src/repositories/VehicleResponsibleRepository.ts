@@ -1,17 +1,11 @@
-import { Brackets, DataSource, Repository, SelectQueryBuilder } from "typeorm";
-import { VehicleResponsible as VehicleResponsibleEntity } from "../entities/VehicleResponsible";
+import { DataSource, Repository } from "typeorm";
+import { VehicleResponsible as VehicleResponsibleEntity } from "entities/VehicleResponsible";
 import {
   IVehicleResponsibleRepository,
   VehicleResponsibleFilters,
 } from "./interfaces/IVehicleResponsibleRepository";
-import {
-  PermissionFilterParams,
-  RepositoryFindOptions,
-  resolvePagination,
-} from "./interfaces/common";
-import { UserRoleEnum } from "../utils";
-import { getAllowedPermissions } from "../utils";
-import { applySearchFilter, applyFilters } from "../utils";
+import { RepositoryFindOptions, resolvePagination } from "./interfaces/common";
+import { applySearchFilter, applyFilters } from "utils";
 
 export type { VehicleResponsibleFilters };
 
@@ -52,7 +46,7 @@ export class VehicleResponsibleRepository
   async find(
     options?: RepositoryFindOptions<VehicleResponsibleFilters>,
   ): Promise<[VehicleResponsibleEntity[], number]> {
-    const { filters, search, pagination, permissions } = options || {};
+    const { filters, search, pagination } = options || {};
     const qb = this.baseQuery();
 
     // Apply search filter across user and vehicle information
@@ -90,81 +84,12 @@ export class VehicleResponsibleRepository
       );
     }
 
-    // Apply permission-based filtering
-    if (permissions && permissions.userRole !== UserRoleEnum.ADMIN) {
-      this.applyPermissionFilter(qb, permissions);
-    }
-
-    // Apply pagination
-    qb.orderBy("vr.startDate", "DESC");
+    // Pagination
     const { limit, offset } = resolvePagination(pagination);
     qb.take(limit);
     qb.skip(offset);
 
     return qb.getManyAndCount();
-  }
-
-  /**
-   * Apply permission-based filtering to vehicle responsibles
-   * Users can only see responsible records for vehicles they have access to
-   */
-  private applyPermissionFilter(
-    qb: SelectQueryBuilder<VehicleResponsibleEntity>,
-    permissions: PermissionFilterParams,
-  ): void {
-    const now = new Date();
-    const { userId, requiredPermission } = permissions;
-
-    qb.andWhere(
-      new Brackets((qb) => {
-        // User has an active ACL for the vehicle
-        qb.orWhere(
-          `EXISTS (
-            SELECT 1 FROM vehicle_acl acl
-            WHERE acl.vehicle_id = vehicle.id
-            AND acl.user_id = :userId
-            AND acl.start_time <= :now
-            AND (acl.end_time IS NULL OR acl.end_time > :now)
-            AND acl.permission IN (:...allowedPermissions)
-          )`,
-          {
-            userId,
-            now: now.toISOString(),
-            allowedPermissions: getAllowedPermissions(requiredPermission),
-          },
-        );
-
-        // User is the current responsible for the vehicle
-        qb.orWhere(
-          `EXISTS (
-            SELECT 1 FROM vehicle_responsibles vr2
-            WHERE vr2.vehicle_id = vehicle.id
-            AND vr2.user_id = :userId
-            AND vr2.start_date <= :now
-            AND (vr2.end_date IS NULL OR vr2.end_date > :now)
-          )`,
-          {
-            userId,
-            now: now.toISOString(),
-          },
-        );
-
-        // User is currently assigned to the vehicle
-        qb.orWhere(
-          `EXISTS (
-            SELECT 1 FROM assignments asn
-            WHERE asn.vehicle_id = vehicle.id
-            AND asn.user_id = :userId
-            AND asn.start_date <= :now
-            AND (asn.end_date IS NULL OR asn.end_date > :now)
-          )`,
-          {
-            userId,
-            now: now.toISOString(),
-          },
-        );
-      }),
-    );
   }
 
   findCurrentByVehicle(vehicleId: string) {

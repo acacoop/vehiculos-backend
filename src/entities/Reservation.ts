@@ -5,12 +5,14 @@ import {
   Column,
   JoinColumn,
   Check,
+  Index,
 } from "typeorm";
 import { User } from "./User";
 import { Vehicle } from "./Vehicle";
 
 @Entity({ name: "reservations" })
 @Check("end_date > start_date")
+@Index(["startDate"])
 export class Reservation {
   @PrimaryGeneratedColumn("uuid")
   id!: string;

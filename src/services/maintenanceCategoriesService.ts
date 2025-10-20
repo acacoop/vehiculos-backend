@@ -1,6 +1,6 @@
-import { MaintenanceCategory as MaintenanceCategoryEntity } from "../entities/MaintenanceCategory";
-import { IMaintenanceCategoryRepository } from "../repositories/interfaces/IMaintenanceCategoryRepository";
-import type { MaintenanceCategory } from "../schemas/maintenanceCategory";
+import { MaintenanceCategory as MaintenanceCategoryEntity } from "entities/MaintenanceCategory";
+import { IMaintenanceCategoryRepository } from "repositories/interfaces/IMaintenanceCategoryRepository";
+import type { MaintenanceCategory } from "schemas/maintenanceCategory";
 
 function map(e: MaintenanceCategoryEntity): MaintenanceCategory {
   return { id: e.id, name: e.name };

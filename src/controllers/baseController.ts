@@ -1,13 +1,12 @@
 import { Request, Response } from "express";
-import { asyncHandler, AppError } from "../middleware/errorHandler";
+import { asyncHandler, AppError } from "middleware/errorHandler";
 import {
   isValidUUID,
   extractFilters,
   extractSearch,
   parsePaginationQuery,
-} from "../utils";
-import { RepositoryFindOptions } from "../repositories/interfaces/common";
-import { PermissionFilterRequest } from "../middleware/permissionFilter";
+} from "utils";
+import { RepositoryFindOptions } from "repositories/interfaces/common";
 
 export interface ApiResponse<T = unknown> {
   status: "success" | "error";
@@ -24,18 +23,15 @@ export interface ApiResponse<T = unknown> {
 export interface BaseControllerConfig<TFilters = Record<string, string>> {
   resourceName: string;
   allowedFilters?: (keyof TFilters)[];
-  usePermissionFilter?: boolean;
 }
 
 export abstract class BaseController<TFilters = Record<string, string>> {
   protected readonly resourceName: string;
   protected readonly allowedFilters?: (keyof TFilters)[];
-  protected readonly usePermissionFilter: boolean;
 
   constructor(config: BaseControllerConfig<TFilters>) {
     this.resourceName = config.resourceName;
     this.allowedFilters = config.allowedFilters;
-    this.usePermissionFilter = config.usePermissionFilter ?? false;
   }
 
   protected sendResponse<T>(
@@ -76,11 +72,6 @@ export abstract class BaseController<TFilters = Record<string, string>> {
       filters,
       search,
     };
-
-    if (this.usePermissionFilter) {
-      const permReq = req as PermissionFilterRequest;
-      options.permissions = permReq.permissionFilter;
-    }
 
     const { items, total } = await this.getAllService(options);
 

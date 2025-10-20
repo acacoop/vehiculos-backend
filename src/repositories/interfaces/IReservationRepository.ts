@@ -1,4 +1,4 @@
-import { Reservation } from "../../entities/Reservation";
+import { Reservation } from "entities/Reservation";
 import { DeleteResult, SelectQueryBuilder } from "typeorm";
 import { RepositoryFindOptions } from "./common";
 

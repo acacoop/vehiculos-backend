@@ -1,15 +1,15 @@
 import { Router } from "express";
-import { UserRolesController } from "../controllers/userRolesController";
-import { validateBody, validateUUIDParam } from "../middleware/validation";
+import { UserRolesController } from "controllers/userRolesController";
+import { validateBody, validateUUIDParam } from "middleware/validation";
 import {
   UserRoleInputSchema,
   UserRoleUpdateSchema,
   UserRoleEndSchema,
-} from "../schemas/userRole";
-import { requireRole, requireSelfOrAdmin } from "../middleware/permission";
-import { UserRoleEnum } from "../utils";
-import { AppDataSource } from "../db";
-import { ServiceFactory } from "../factories/serviceFactory";
+} from "schemas/userRole";
+import { requireRole, requireSelfOrAdmin } from "middleware/permission";
+import { UserRoleEnum } from "utils";
+import { AppDataSource } from "db";
+import { ServiceFactory } from "factories/serviceFactory";
 
 const router = Router();
 

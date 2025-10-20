@@ -1,15 +1,15 @@
 import { Request, Response } from "express";
 import { BaseController } from "./baseController";
-import { UserRolesService } from "../services/userRolesService";
-import { asyncHandler } from "../middleware/errorHandler";
+import { UserRolesService } from "services/userRolesService";
+import { asyncHandler } from "middleware/errorHandler";
 import {
   UserRoleInputSchema,
   UserRoleUpdateSchema,
   UserRoleEndSchema,
-} from "../schemas/userRole";
-import { parsePaginationQuery } from "../utils";
-import { UserRoleFilters } from "../repositories/UserRoleRepository";
-import { extractFilters, extractSearch } from "../utils";
+} from "schemas/userRole";
+import { parsePaginationQuery } from "utils";
+import { UserRoleFilters } from "repositories/UserRoleRepository";
+import { extractFilters, extractSearch } from "utils";
 
 /**
  * UserRolesController - Manages user roles
@@ -20,7 +20,6 @@ export class UserRolesController extends BaseController<UserRoleFilters> {
     super({
       resourceName: "UserRole",
       allowedFilters: ["userId", "role"],
-      usePermissionFilter: false,
     });
   }
 

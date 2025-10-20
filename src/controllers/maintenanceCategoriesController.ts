@@ -1,7 +1,7 @@
 import { BaseController } from "./baseController";
-import { type MaintenanceCategory } from "../schemas/maintenanceCategory";
-import { MaintenanceCategoriesService } from "../services/maintenanceCategoriesService";
-import { RepositoryFindOptions } from "../repositories/interfaces/common";
+import { type MaintenanceCategory } from "schemas/maintenanceCategory";
+import { MaintenanceCategoriesService } from "services/maintenanceCategoriesService";
+import { RepositoryFindOptions } from "repositories/interfaces/common";
 
 /**
  * MaintenanceCategoriesController - Manages maintenance categories
@@ -12,7 +12,6 @@ export class MaintenanceCategoriesController extends BaseController {
     super({
       resourceName: "MaintenanceCategory",
       allowedFilters: [],
-      usePermissionFilter: false,
     });
   }
 

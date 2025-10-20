@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
-import { UserRolesService } from "../services/userRolesService";
-import { UserRole } from "../entities/UserRole";
-import { User } from "../entities/User";
-import { UserRoleEnum } from "../utils";
+import { UserRolesService } from "services/userRolesService";
+import { UserRole } from "entities/UserRole";
+import { User } from "entities/User";
+import { UserRoleEnum } from "utils";
 import { DeleteResult, Repository } from "typeorm";
 
 // Mock UserRoleRepository

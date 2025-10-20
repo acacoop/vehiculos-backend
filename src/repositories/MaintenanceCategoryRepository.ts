@@ -1,5 +1,5 @@
 import { DataSource, Repository } from "typeorm";
-import { MaintenanceCategory } from "../entities/MaintenanceCategory";
+import { MaintenanceCategory } from "entities/MaintenanceCategory";
 import { IMaintenanceCategoryRepository } from "./interfaces/IMaintenanceCategoryRepository";
 
 export class MaintenanceCategoryRepository

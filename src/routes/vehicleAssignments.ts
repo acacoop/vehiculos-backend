@@ -1,19 +1,18 @@
 import express from "express";
-import { createAssignmentsController } from "../controllers/assignmentsController";
-import { validateUUIDParam } from "../middleware/validation";
+import { createAssignmentsController } from "controllers/assignmentsController";
+import { validateUUIDParam } from "middleware/validation";
 import {
   requireRole,
   requireVehiclePermissionWith,
-} from "../middleware/permission";
-import { UserRoleEnum } from "../utils";
-import { PermissionType } from "../utils";
-import { addPermissionFilter } from "../middleware/permissionFilter";
-import { vehicleIdFromAssignment } from "../middleware/vehicleIdMappers";
+} from "middleware/permission";
+import { UserRoleEnum } from "utils";
+import { PermissionType } from "utils";
+import { vehicleIdFromAssignment } from "middleware/vehicleIdMappers";
 
 const router = express.Router();
 const controller = createAssignmentsController();
 
-router.get("/", addPermissionFilter(PermissionType.READ), controller.getAll);
+router.get("/", requireRole(UserRoleEnum.ADMIN), controller.getAll);
 
 router.get(
   "/:id",

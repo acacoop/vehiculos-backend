@@ -3,7 +3,7 @@ import { SelectQueryBuilder, Brackets } from "typeorm";
 import {
   applySearchFilter,
   applyFilters,
-} from "../utils";
+} from "utils";
 
 // Mock entity for testing
 class TestEntity {

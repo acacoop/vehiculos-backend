@@ -1,6 +1,6 @@
 import { DataSource, Repository } from "typeorm";
-import { Maintenance } from "../entities/Maintenance";
-import { AssignedMaintenance } from "../entities/AssignedMaintenance";
+import { Maintenance } from "entities/Maintenance";
+import { AssignedMaintenance } from "entities/AssignedMaintenance";
 import { IMaintenanceRepository } from "./interfaces/IMaintenanceRepository";
 import { IAssignedMaintenanceRepository } from "./interfaces/IAssignedMaintenanceRepository";
 

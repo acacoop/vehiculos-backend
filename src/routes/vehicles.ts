@@ -1,28 +1,21 @@
 import { Router } from "express";
-import { createVehiclesController } from "../controllers/vehiclesController";
+import { createVehiclesController } from "controllers/vehiclesController";
 import vehicleKilometersRoutes from "./vehicleKilometers";
-import { validateSchema } from "../middleware/errorHandler";
-import { validateUUIDParam } from "../middleware/validation";
-import { VehicleInputSchema, VehicleUpdateSchema } from "../schemas/vehicle";
+import { validateSchema } from "middleware/errorHandler";
+import { validateUUIDParam } from "middleware/validation";
+import { VehicleInputSchema, VehicleUpdateSchema } from "schemas/vehicle";
 import {
   requireRole,
   requireVehiclePermissionFromParam,
-} from "../middleware/permission";
-import { UserRoleEnum } from "../utils";
-import { PermissionType } from "../utils";
-import { addPermissionFilter } from "../middleware/permissionFilter";
+} from "middleware/permission";
+import { UserRoleEnum } from "utils";
+import { PermissionType } from "utils";
 
 const router = Router();
 const vehiclesController = createVehiclesController();
 
-// If user is authenticated:
-//   - Admin users see all vehicles
-//   - Regular users see only vehicles they have permission to access (via ACLs, assignments, or responsibles)
-router.get(
-  "/",
-  addPermissionFilter(PermissionType.READ),
-  vehiclesController.getAll,
-);
+// Admin only access
+router.get("/", requireRole(UserRoleEnum.ADMIN), vehiclesController.getAll);
 
 router.get(
   "/:id",

@@ -1,8 +1,8 @@
 import express from "express";
-import { validateUUIDParam } from "../middleware/validation";
-import { createVehicleKilometersController } from "../controllers/vehicleKilometersController";
-import { requireVehiclePermissionFromParam } from "../middleware/permission";
-import { PermissionType } from "../utils";
+import { validateUUIDParam } from "middleware/validation";
+import { createVehicleKilometersController } from "controllers/vehicleKilometersController";
+import { requireVehiclePermissionFromParam } from "middleware/permission";
+import { PermissionType } from "utils";
 
 const router = express.Router({ mergeParams: true });
 const controller = createVehicleKilometersController();

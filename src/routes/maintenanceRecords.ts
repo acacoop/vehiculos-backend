@@ -1,19 +1,20 @@
 import express from "express";
-import { validateUUIDParam } from "../middleware/validation";
-import { maintenanceRecordsController } from "../controllers/maintenanceRecordsController";
-import { PermissionType } from "../utils";
-import { addPermissionFilter } from "../middleware/permissionFilter";
-import { requireVehiclePermissionWith } from "../middleware/permission";
+import { validateUUIDParam } from "middleware/validation";
+import { maintenanceRecordsController } from "controllers/maintenanceRecordsController";
+import { PermissionType } from "utils";
+import { requireRole } from "middleware/permission";
+import { UserRoleEnum } from "utils";
+import { requireVehiclePermissionWith } from "middleware/permission";
 import {
   vehicleIdFromAssignedMaintenance,
   vehicleIdFromMaintenanceRecord,
-} from "../middleware/vehicleIdMappers";
+} from "middleware/vehicleIdMappers";
 
 const router = express.Router();
 
 router.get(
   "/",
-  addPermissionFilter(PermissionType.READ),
+  requireRole(UserRoleEnum.ADMIN),
   maintenanceRecordsController.getAll,
 );
 

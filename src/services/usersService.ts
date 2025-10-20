@@ -1,14 +1,12 @@
-import { User as UserEntity } from "../entities/User";
-import type { User } from "../schemas/user";
+import { User as UserEntity } from "entities/User";
+import type { User } from "schemas/user";
 import {
   IUserRepository,
   UserFilters,
-} from "../repositories/interfaces/IUserRepository";
-import { RepositoryFindOptions } from "../repositories/interfaces/common";
+} from "repositories/interfaces/IUserRepository";
+import { RepositoryFindOptions } from "repositories/interfaces/common";
 
 /**
- * UsersService - Business logic for User operations
- * Now uses Dependency Injection for better testability
  */
 export class UsersService {
   constructor(private readonly userRepo: IUserRepository) {}

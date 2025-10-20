@@ -1,40 +1,40 @@
 import { DataSource } from "typeorm";
-import { UsersService } from "../services/usersService";
-import { UserRepository } from "../repositories/UserRepository";
-import { VehicleBrandService } from "../services/vehicleBrandService";
-import { VehicleBrandRepository } from "../repositories/VehicleBrandRepository";
-import { VehicleModelService } from "../services/vehicleModelService";
-import { VehicleModelRepository } from "../repositories/VehicleModelRepository";
-import { MaintenanceCategoriesService } from "../services/maintenanceCategoriesService";
-import { MaintenanceCategoryRepository } from "../repositories/MaintenanceCategoryRepository";
-import { ReservationsService } from "../services/reservationsService";
-import { ReservationRepository } from "../repositories/ReservationRepository";
-import { User } from "../entities/User";
-import { Vehicle } from "../entities/Vehicle";
-import { AssignmentsService } from "../services/assignmentsService";
-import { AssignmentRepository } from "../repositories/AssignmentRepository";
-import { VehicleResponsiblesService } from "../services/vehicleResponsiblesService";
-import { VehicleResponsibleRepository } from "../repositories/VehicleResponsibleRepository";
-import { VehicleResponsible } from "../entities/VehicleResponsible";
+import { UsersService } from "services/usersService";
+import { UserRepository } from "repositories/UserRepository";
+import { VehicleBrandService } from "services/vehicleBrandsService";
+import { VehicleBrandRepository } from "repositories/VehicleBrandRepository";
+import { VehicleModelService } from "services/vehicleModelsService";
+import { VehicleModelRepository } from "repositories/VehicleModelRepository";
+import { MaintenanceCategoriesService } from "services/maintenanceCategoriesService";
+import { MaintenanceCategoryRepository } from "repositories/MaintenanceCategoryRepository";
+import { ReservationsService } from "services/reservationsService";
+import { ReservationRepository } from "repositories/ReservationRepository";
+import { User } from "entities/User";
+import { Vehicle } from "entities/Vehicle";
+import { AssignmentsService } from "services/assignmentsService";
+import { AssignmentRepository } from "repositories/AssignmentRepository";
+import { VehicleResponsiblesService } from "services/vehicleResponsiblesService";
+import { VehicleResponsibleRepository } from "repositories/VehicleResponsibleRepository";
+import { VehicleResponsible } from "entities/VehicleResponsible";
 import {
   MaintenancesService,
   AssignedMaintenancesService,
   MaintenanceRecordsService,
-} from "../services/maintenancesService";
+} from "services/maintenancesService";
 import {
   MaintenanceRepository,
   AssignedMaintenanceRepository,
-} from "../repositories/MaintenanceRepository";
-import { MaintenanceRecordRepository } from "../repositories/MaintenanceRecordRepository";
-import { MaintenanceRecord } from "../entities/MaintenanceRecord";
-import { MaintenanceCategory } from "../entities/MaintenanceCategory";
-import { Maintenance } from "../entities/Maintenance";
-import { AssignedMaintenance } from "../entities/AssignedMaintenance";
-import { VehicleRepository } from "../repositories/VehicleRepository";
-import { VehicleModel } from "../entities/VehicleModel";
-import { VehiclesService } from "../services/vehiclesService";
-import { UserRolesService } from "../services/userRolesService";
-import { UserRoleRepository } from "../repositories/UserRoleRepository";
+} from "repositories/MaintenanceRepository";
+import { MaintenanceRecordRepository } from "repositories/MaintenanceRecordRepository";
+import { MaintenanceRecord } from "entities/MaintenanceRecord";
+import { MaintenanceCategory } from "entities/MaintenanceCategory";
+import { Maintenance } from "entities/Maintenance";
+import { AssignedMaintenance } from "entities/AssignedMaintenance";
+import { VehicleRepository } from "repositories/VehicleRepository";
+import { VehicleModel } from "entities/VehicleModel";
+import { VehiclesService } from "services/vehiclesService";
+import { UserRolesService } from "services/userRolesService";
+import { UserRoleRepository } from "repositories/UserRoleRepository";
 
 /**
  * Service Factory - Centralizes creation of service instances

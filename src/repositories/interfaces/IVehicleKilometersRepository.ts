@@ -1,4 +1,4 @@
-import { VehicleKilometers } from "../../entities/VehicleKilometers";
+import { VehicleKilometers } from "entities/VehicleKilometers";
 import { SelectQueryBuilder } from "typeorm";
 
 export interface IVehicleKilometersRepository {

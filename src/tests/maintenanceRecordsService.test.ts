@@ -1,11 +1,11 @@
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
-import { MaintenanceRecordsService } from "../services/maintenancesService";
-import { IMaintenanceRecordRepository } from "../repositories/interfaces/IMaintenanceRecordRepository";
-import { MaintenanceRecord as MaintenanceRecordEntity } from "../entities/MaintenanceRecord";
-import { AssignedMaintenance } from "../entities/AssignedMaintenance";
-import { User } from "../entities/User";
-import { Vehicle } from "../entities/Vehicle";
-import { Maintenance } from "../entities/Maintenance";
+import { MaintenanceRecordsService } from "services/maintenancesService";
+import { IMaintenanceRecordRepository } from "repositories/interfaces/IMaintenanceRecordRepository";
+import { MaintenanceRecord as MaintenanceRecordEntity } from "entities/MaintenanceRecord";
+import { AssignedMaintenance } from "entities/AssignedMaintenance";
+import { User } from "entities/User";
+import { Vehicle } from "entities/Vehicle";
+import { Maintenance } from "entities/Maintenance";
 import { Repository } from "typeorm";
 
 describe("MaintenanceRecordsService", () => {

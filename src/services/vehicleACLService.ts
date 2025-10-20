@@ -1,14 +1,14 @@
 import {
   VehicleACLRepository,
   VehicleACLFilters,
-} from "../repositories/VehicleACLRepository";
-import { VehicleACL } from "../entities/VehicleACL";
+} from "repositories/VehicleACLRepository";
+import { VehicleACL } from "entities/VehicleACL";
 import {
   VehicleACLCreateInput,
   VehicleACLUpdateInput,
-} from "../schemas/vehicleAcl";
-import { AppError } from "../middleware/errorHandler";
-import { RepositoryFindOptions } from "../repositories/interfaces/common";
+} from "schemas/vehicleAcl";
+import { AppError } from "middleware/errorHandler";
+import { RepositoryFindOptions } from "repositories/interfaces/common";
 
 export class VehicleACLService {
   constructor(private readonly repository: VehicleACLRepository) {}

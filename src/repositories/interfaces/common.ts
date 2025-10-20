@@ -1,5 +1,3 @@
-import { PermissionType, UserRoleEnum } from "../../utils";
-
 /**
  * Default pagination values
  */
@@ -29,16 +27,6 @@ export function resolvePagination(pagination?: PaginationParams) {
 }
 
 /**
- * Permission filtering parameters for repository queries
- * When userId is provided with role USER, filters results based on user permissions
- */
-export interface PermissionFilterParams {
-  userId: string;
-  userRole: UserRoleEnum;
-  requiredPermission: PermissionType;
-}
-
-/**
  * Combined parameters for repository findAndCount operations
  * @template TFilters - Entity-specific filter parameters (defaults to Record<string, unknown>)
  *
@@ -51,7 +39,6 @@ export interface PermissionFilterParams {
  */
 export interface RepositoryFindOptions<TFilters = Record<string, string>> {
   pagination?: PaginationParams;
-  permissions?: PermissionFilterParams;
   filters?: TFilters;
   search?: string;
 }

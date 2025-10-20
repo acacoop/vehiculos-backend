@@ -1,4 +1,4 @@
-import { MaintenanceCategory } from "../../entities/MaintenanceCategory";
+import { MaintenanceCategory } from "entities/MaintenanceCategory";
 import { DeleteResult } from "typeorm";
 
 export interface IMaintenanceCategoryRepository {

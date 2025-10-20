@@ -2,15 +2,15 @@ import {
   ENTRA_CLIENT_ID,
   ENTRA_CLIENT_SECRET,
   ENTRA_TENANT_ID,
-} from "../config/env.config";
-import { AppDataSource } from "../db";
-import type { User } from "../schemas/user";
-import { User as UserEntity } from "../entities/User";
-import { ServiceFactory } from "../factories/serviceFactory";
-import { UsersService } from "../services/usersService";
-import { UserRolesService } from "../services/userRolesService";
-import { UserRoleRepository } from "../repositories/UserRoleRepository";
-import { UserRoleEnum } from "../utils";
+} from "config/env.config";
+import { AppDataSource } from "db";
+import type { User } from "schemas/user";
+import { User as UserEntity } from "entities/User";
+import { ServiceFactory } from "factories/serviceFactory";
+import { UsersService } from "services/usersService";
+import { UserRolesService } from "services/userRolesService";
+import { UserRoleRepository } from "repositories/UserRoleRepository";
+import { UserRoleEnum } from "utils";
 
 const VERBOSE =
   process.env.VERBOSE === "1" || process.argv.includes("--verbose");

@@ -1,7 +1,7 @@
-import { AppDataSource } from "../db";
-import { AssignedMaintenance } from "../entities/AssignedMaintenance";
-import { MaintenanceRecord } from "../entities/MaintenanceRecord";
-import { Assignment } from "../entities/Assignment";
+import { AppDataSource } from "db";
+import { AssignedMaintenance } from "entities/AssignedMaintenance";
+import { MaintenanceRecord } from "entities/MaintenanceRecord";
+import { Assignment } from "entities/Assignment";
 import { PermissionRequest } from "./permission";
 
 /**

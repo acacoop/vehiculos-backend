@@ -1,14 +1,14 @@
 import { Request, Response } from "express";
-import { asyncHandler, AppError } from "../middleware/errorHandler";
+import { asyncHandler, AppError } from "middleware/errorHandler";
 import {
   AssignedMaintenanceSchema,
   UpdateAssignedMaintenanceSchema,
-} from "../schemas/assignMaintance";
-import type { AssignedMaintenance } from "../schemas/assignMaintance";
-import { AssignedMaintenancesService } from "../services/maintenancesService";
+} from "schemas/assignMaintance";
+import type { AssignedMaintenance } from "schemas/assignMaintance";
+import { AssignedMaintenancesService } from "services/maintenancesService";
 import { ApiResponse } from "./baseController";
-import { ServiceFactory } from "../factories/serviceFactory";
-import { AppDataSource } from "../db";
+import { ServiceFactory } from "factories/serviceFactory";
+import { AppDataSource } from "db";
 
 export class MaintenanceAssignmentsController {
   constructor(private readonly service: AssignedMaintenancesService) {}

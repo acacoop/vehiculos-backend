@@ -1,11 +1,11 @@
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
-import { AssignmentsService } from "../services/assignmentsService";
-import { IAssignmentRepository } from "../repositories/interfaces/IAssignmentRepository";
-import { Assignment } from "../entities/Assignment";
-import { User } from "../entities/User";
-import { Vehicle } from "../entities/Vehicle";
+import { AssignmentsService } from "services/assignmentsService";
+import { IAssignmentRepository } from "repositories/interfaces/IAssignmentRepository";
+import { Assignment } from "entities/Assignment";
+import { User } from "entities/User";
+import { Vehicle } from "entities/Vehicle";
 import { Repository } from "typeorm";
-import * as validators from "../utils/validation/entity";
+import * as validators from "utils/validation/entity";
 
 jest.mock("../utils/validation/entity");
 

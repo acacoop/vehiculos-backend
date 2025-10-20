@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach, jest } from "@jest/globals";
-import { AssignedMaintenancesService } from "../services/maintenancesService";
-import { IAssignedMaintenanceRepository } from "../repositories/interfaces/IAssignedMaintenanceRepository";
-import { AssignedMaintenance } from "../entities/AssignedMaintenance";
-import { Vehicle } from "../entities/Vehicle";
-import { Maintenance } from "../entities/Maintenance";
-import { MaintenanceCategory } from "../entities/MaintenanceCategory";
-import { VehicleModel } from "../entities/VehicleModel";
-import { VehicleBrand } from "../entities/VehicleBrand";
+import { AssignedMaintenancesService } from "services/maintenancesService";
+import { IAssignedMaintenanceRepository } from "repositories/interfaces/IAssignedMaintenanceRepository";
+import { AssignedMaintenance } from "entities/AssignedMaintenance";
+import { Vehicle } from "entities/Vehicle";
+import { Maintenance } from "entities/Maintenance";
+import { MaintenanceCategory } from "entities/MaintenanceCategory";
+import { VehicleModel } from "entities/VehicleModel";
+import { VehicleBrand } from "entities/VehicleBrand";
 import { Repository, DeleteResult } from "typeorm";
-import * as validators from "../utils/validation/entity";
+import * as validators from "utils/validation/entity";
 
 jest.mock("../utils/validation/entity");
 

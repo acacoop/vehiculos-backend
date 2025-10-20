@@ -6,23 +6,23 @@
   Or: ts-node-dev --env-file=.env src/scripts/loadSampleData.ts
 */
 
-import { AppDataSource } from "../db";
-import { User } from "../entities/User";
-import { Vehicle } from "../entities/Vehicle";
-import { VehicleBrand } from "../entities/VehicleBrand";
-import { VehicleModel } from "../entities/VehicleModel";
-import { MaintenanceCategory } from "../entities/MaintenanceCategory";
-import { Maintenance } from "../entities/Maintenance";
-import { Assignment } from "../entities/Assignment";
-import { AssignedMaintenance } from "../entities/AssignedMaintenance";
-import { MaintenanceRecord } from "../entities/MaintenanceRecord";
-import { Reservation } from "../entities/Reservation";
-import { VehicleResponsible } from "../entities/VehicleResponsible";
-import { VehicleKilometers } from "../entities/VehicleKilometers";
-import { VehicleACL } from "../entities/VehicleACL";
-import { PermissionType } from "../utils";
-import { UserRole } from "../entities/UserRole";
-import { UserRoleEnum } from "../utils";
+import { AppDataSource } from "db";
+import { User } from "entities/User";
+import { Vehicle } from "entities/Vehicle";
+import { VehicleBrand } from "entities/VehicleBrand";
+import { VehicleModel } from "entities/VehicleModel";
+import { MaintenanceCategory } from "entities/MaintenanceCategory";
+import { Maintenance } from "entities/Maintenance";
+import { Assignment } from "entities/Assignment";
+import { AssignedMaintenance } from "entities/AssignedMaintenance";
+import { MaintenanceRecord } from "entities/MaintenanceRecord";
+import { Reservation } from "entities/Reservation";
+import { VehicleResponsible } from "entities/VehicleResponsible";
+import { VehicleKilometers } from "entities/VehicleKilometers";
+import { VehicleACL } from "entities/VehicleACL";
+import { PermissionType } from "utils";
+import { UserRole } from "entities/UserRole";
+import { UserRoleEnum } from "utils";
 
 type SampleDataStats = {
   users: number;

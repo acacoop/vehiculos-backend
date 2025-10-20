@@ -1,10 +1,10 @@
 import { BaseController } from "./baseController";
-import type { VehicleInput, VehicleUpdate } from "../schemas/vehicle";
-import { VehiclesService } from "../services/vehiclesService";
-import { ServiceFactory } from "../factories/serviceFactory";
-import { AppDataSource } from "../db";
-import { RepositoryFindOptions } from "../repositories/interfaces/common";
-import { VehicleFilters } from "../repositories/interfaces/IVehicleRepository";
+import type { VehicleInput, VehicleUpdate } from "schemas/vehicle";
+import { VehiclesService } from "services/vehiclesService";
+import { ServiceFactory } from "factories/serviceFactory";
+import { AppDataSource } from "db";
+import { RepositoryFindOptions } from "repositories/interfaces/common";
+import { VehicleFilters } from "repositories/interfaces/IVehicleRepository";
 
 export class VehiclesController extends BaseController<VehicleFilters> {
   constructor(private readonly service: VehiclesService) {
@@ -18,7 +18,6 @@ export class VehiclesController extends BaseController<VehicleFilters> {
         "modelId",
         "year",
       ],
-      usePermissionFilter: true,
     });
   }
 

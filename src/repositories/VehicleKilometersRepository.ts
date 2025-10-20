@@ -1,5 +1,5 @@
 import { DataSource, Repository } from "typeorm";
-import { VehicleKilometers } from "../entities/VehicleKilometers";
+import { VehicleKilometers } from "entities/VehicleKilometers";
 import { IVehicleKilometersRepository } from "./interfaces/IVehicleKilometersRepository";
 
 export class VehicleKilometersRepository

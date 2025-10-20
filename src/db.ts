@@ -68,9 +68,11 @@ const createDataSourceConfig = () => {
 
   const baseConfig = {
     type: "mssql" as const,
-    synchronize: !isProd,
+    synchronize: false,
     logging: DB_LOGGING,
     entities,
+    migrations: ["src/migrations/*.ts"],
+    migrationsTableName: "migrations",
   };
 
   if (SQL_AAD_CONNECTION_STRING) {

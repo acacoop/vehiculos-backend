@@ -1,18 +1,18 @@
-import { Vehicle } from "../entities/Vehicle";
-import { User } from "../entities/User";
-import { VehicleResponsible as VehicleResponsibleEntity } from "../entities/VehicleResponsible";
+import { Vehicle } from "entities/Vehicle";
+import { User } from "entities/User";
+import { VehicleResponsible as VehicleResponsibleEntity } from "entities/VehicleResponsible";
 import {
   IVehicleResponsibleRepository,
   VehicleResponsibleFilters,
-} from "../repositories/interfaces/IVehicleResponsibleRepository";
-import type { VehicleResponsibleInput } from "../schemas/vehicleResponsible";
-import { AppError } from "../middleware/errorHandler";
+} from "repositories/interfaces/IVehicleResponsibleRepository";
+import type { VehicleResponsibleInput } from "schemas/vehicleResponsible";
+import { AppError } from "middleware/errorHandler";
 import {
   validateUserExists,
   validateVehicleExists,
-} from "../utils/validation/entity";
+} from "utils/validation/entity";
 import { IsNull, Repository } from "typeorm";
-import { RepositoryFindOptions } from "../repositories/interfaces/common";
+import { RepositoryFindOptions } from "repositories/interfaces/common";
 
 // Composite detail view (was in ../types)
 export interface VehicleResponsibleWithDetails {

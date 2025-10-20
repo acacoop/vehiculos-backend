@@ -1,9 +1,9 @@
-import { AppDataSource } from "../../db";
-import { AppError } from "../../middleware/errorHandler";
-import { Vehicle } from "../../entities/Vehicle";
-import { User } from "../../entities/User";
-import { MaintenanceCategory } from "../../entities/MaintenanceCategory";
-import { Maintenance } from "../../entities/Maintenance";
+import { AppDataSource } from "db";
+import { AppError } from "middleware/errorHandler";
+import { Vehicle } from "entities/Vehicle";
+import { User } from "entities/User";
+import { MaintenanceCategory } from "entities/MaintenanceCategory";
+import { Maintenance } from "entities/Maintenance";
 
 export const validateVehicleExists = async (
   vehicleId: string,

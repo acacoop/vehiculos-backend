@@ -1,22 +1,21 @@
 import express from "express";
-import { createVehicleResponsiblesController } from "../controllers/vehicleResponsiblesController";
-import { validateUUIDParam } from "../middleware/validation";
+import { createVehicleResponsiblesController } from "controllers/vehicleResponsiblesController";
+import { validateUUIDParam } from "middleware/validation";
 import {
   requireRole,
   requireVehiclePermissionFromParam,
   requireSelfOrAdmin,
-} from "../middleware/permission";
-import { UserRoleEnum } from "../utils";
-import { PermissionType } from "../utils";
-import { addPermissionFilter } from "../middleware/permissionFilter";
+} from "middleware/permission";
+import { UserRoleEnum } from "utils";
+import { PermissionType } from "utils";
 
 const router = express.Router();
 const vehicleResponsiblesController = createVehicleResponsiblesController();
 
-// Standard CRUD endpoints using BaseController
+// Admin only access
 router.get(
   "/",
-  addPermissionFilter(PermissionType.READ),
+  requireRole(UserRoleEnum.ADMIN),
   vehicleResponsiblesController.getAll,
 );
 

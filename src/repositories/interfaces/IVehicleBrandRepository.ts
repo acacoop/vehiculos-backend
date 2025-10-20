@@ -1,4 +1,4 @@
-import { VehicleBrand } from "../../entities/VehicleBrand";
+import { VehicleBrand } from "entities/VehicleBrand";
 import { DeleteResult } from "typeorm";
 import { RepositoryFindOptions } from "./common";
 

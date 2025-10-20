@@ -1,17 +1,16 @@
 import { BaseController } from "./baseController";
-import type { User } from "../schemas/user";
+import type { User } from "schemas/user";
 import { Request, Response } from "express";
-import { asyncHandler, AppError } from "../middleware/errorHandler";
-import { UsersService } from "../services/usersService";
-import { RepositoryFindOptions } from "../repositories/interfaces/common";
-import { UserFilters } from "../repositories/interfaces/IUserRepository";
+import { asyncHandler, AppError } from "middleware/errorHandler";
+import { UsersService } from "services/usersService";
+import { RepositoryFindOptions } from "repositories/interfaces/common";
+import { UserFilters } from "repositories/interfaces/IUserRepository";
 
 export class UsersController extends BaseController<UserFilters> {
   constructor(private readonly service: UsersService) {
     super({
       resourceName: "User",
       allowedFilters: ["email", "cuit", "firstName", "lastName", "active"],
-      usePermissionFilter: false,
     });
   }
 

@@ -1,17 +1,17 @@
 import express from "express";
-import { validateUUIDParam } from "../middleware/validation";
-import { maintenanceAssignmentsController } from "../controllers/maintenanceAssignmentsController";
-import { validateBody } from "../middleware/validation";
+import { validateUUIDParam } from "middleware/validation";
+import { maintenanceAssignmentsController } from "controllers/maintenanceAssignmentsController";
+import { validateBody } from "middleware/validation";
 import {
   AssignedMaintenanceSchema,
   UpdateAssignedMaintenanceSchema,
-} from "../schemas/assignMaintance";
+} from "schemas/assignMaintance";
 import {
   requireRole,
   requireVehiclePermissionFromParam,
-} from "../middleware/permission";
-import { UserRoleEnum } from "../utils";
-import { PermissionType } from "../utils";
+} from "middleware/permission";
+import { UserRoleEnum } from "utils";
+import { PermissionType } from "utils";
 
 const router = express.Router();
 

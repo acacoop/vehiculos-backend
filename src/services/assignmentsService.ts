@@ -1,18 +1,18 @@
 import {
   IAssignmentRepository,
   AssignmentFilters,
-} from "../repositories/interfaces/IAssignmentRepository";
-import { Assignment as AssignmentEntity } from "../entities/Assignment";
-import { User as UserEntity } from "../entities/User";
-import { Vehicle as VehicleEntity } from "../entities/Vehicle";
-import type { Assignment } from "../schemas/assignment";
+} from "repositories/interfaces/IAssignmentRepository";
+import { Assignment as AssignmentEntity } from "entities/Assignment";
+import { User as UserEntity } from "entities/User";
+import { Vehicle as VehicleEntity } from "entities/Vehicle";
+import type { Assignment } from "schemas/assignment";
 import {
   validateUserExists,
   validateVehicleExists,
-} from "../utils/validation/entity";
-import { validateISODateFormat } from "../utils";
+} from "utils/validation/entity";
+import { validateISODateFormat } from "utils";
 import { Repository } from "typeorm";
-import { RepositoryFindOptions } from "../repositories/interfaces/common";
+import { RepositoryFindOptions } from "repositories/interfaces/common";
 
 // Composite detail type (previously in ../types)
 export interface AssignmentWithDetails {
