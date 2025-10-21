@@ -1,22 +1,25 @@
-import { BaseController } from "./baseController";
-import { AppError, asyncHandler } from "../middleware/errorHandler";
-import type { Reservation } from "../schemas/reservation";
-import {
-  ReservationsService,
-  createReservationsService,
-} from "../services/reservationsService";
+import { BaseController } from "@/controllers/baseController";
+import { AppError, asyncHandler } from "@/middleware/errorHandler";
+import type { Reservation } from "@/schemas/reservation";
+import { ReservationsService } from "@/services/reservationsService";
 import { Request, Response } from "express";
-import { ReservationSchema } from "../schemas/reservation";
+import { ReservationSchema } from "@/schemas/reservation";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { AppDataSource } from "@/db";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { ReservationFilters } from "@/repositories/interfaces/IReservationRepository";
 
-export class ReservationsController extends BaseController {
+export class ReservationsController extends BaseController<ReservationFilters> {
   constructor(private readonly service: ReservationsService) {
-    super("Reservation");
+    super({
+      resourceName: "Reservation",
+      allowedFilters: ["userId", "vehicleId"],
+    });
   }
-  protected async getAllService(options: {
-    limit: number;
-    offset: number;
-    searchParams?: Record<string, string>;
-  }) {
+
+  protected async getAllService(
+    options: RepositoryFindOptions<Partial<ReservationFilters>>,
+  ) {
     return this.service.getAll(options);
   }
   protected async getByIdService(id: string) {
@@ -28,15 +31,7 @@ export class ReservationsController extends BaseController {
   }
   protected async updateService(): Promise<unknown | null> {
     throw new AppError(
-      "Update not supported. Use PATCH if needed.",
-      405,
-      "https://example.com/problems/method-not-allowed",
-      "Method Not Allowed",
-    );
-  }
-  protected async patchService(): Promise<unknown | null> {
-    throw new AppError(
-      "Patch not supported for reservations.",
+      "Update not supported for reservations.",
       405,
       "https://example.com/problems/method-not-allowed",
       "Method Not Allowed",
@@ -75,6 +70,10 @@ export class ReservationsController extends BaseController {
   });
 }
 
-export function createReservationsController() {
-  return new ReservationsController(createReservationsService());
+export function createReservationsController(
+  service?: ReservationsService,
+): ReservationsController {
+  const svc =
+    service ?? new ServiceFactory(AppDataSource).createReservationsService();
+  return new ReservationsController(svc);
 }

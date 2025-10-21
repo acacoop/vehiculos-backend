@@ -1,11 +1,18 @@
-import { AssignmentRepository } from "../repositories/AssignmentRepository";
-import { AppDataSource } from "../db";
-import { Assignment as AssignmentEntity } from "../entities/Assignment";
-import { User as UserEntity } from "../entities/User";
-import { Vehicle as VehicleEntity } from "../entities/Vehicle";
-import type { Assignment } from "../schemas/assignment";
-import { validateUserExists, validateVehicleExists } from "../utils/validators";
-import { validateISODateFormat } from "../utils/dateValidators";
+import {
+  IAssignmentRepository,
+  AssignmentFilters,
+} from "@/repositories/interfaces/IAssignmentRepository";
+import { Assignment as AssignmentEntity } from "@/entities/Assignment";
+import { User as UserEntity } from "@/entities/User";
+import { Vehicle as VehicleEntity } from "@/entities/Vehicle";
+import type { Assignment } from "@/schemas/assignment";
+import {
+  validateUserExists,
+  validateVehicleExists,
+} from "@/utils/validation/entity";
+import { validateISODateFormat } from "@/utils";
+import { Repository } from "typeorm";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 // Composite detail type (previously in ../types)
 export interface AssignmentWithDetails {
@@ -16,7 +23,7 @@ export interface AssignmentWithDetails {
     id: string;
     firstName: string;
     lastName: string;
-    cuit: number;
+    cuit: string;
     email: string;
     active: boolean;
     entraId: string;
@@ -63,31 +70,17 @@ function mapEntityToDetails(a: AssignmentEntity): AssignmentWithDetails {
   };
 }
 
-export interface GetAllAssignmentsOptions {
-  limit?: number;
-  offset?: number;
-  searchParams?: Record<string, string>;
-}
-
 export class AssignmentsService {
-  private readonly repo: AssignmentRepository;
-  private readonly userRepo = () => AppDataSource.getRepository(UserEntity);
-  private readonly vehicleRepo = () =>
-    AppDataSource.getRepository(VehicleEntity);
-
-  constructor(repo?: AssignmentRepository) {
-    this.repo = repo ?? new AssignmentRepository(AppDataSource);
-  }
+  constructor(
+    private readonly repo: IAssignmentRepository,
+    private readonly userRepo: Repository<UserEntity>,
+    private readonly vehicleRepo: Repository<VehicleEntity>,
+  ) {}
 
   async getAll(
-    options?: GetAllAssignmentsOptions
+    options?: RepositoryFindOptions<AssignmentFilters>,
   ): Promise<{ items: AssignmentWithDetails[]; total: number }> {
-    const { limit, offset, searchParams } = options || {};
-    const { 0: list, 1: total } = await this.repo.findAndCount({
-      limit,
-      offset,
-      searchParams,
-    });
+    const { 0: list, 1: total } = await this.repo.findAndCount(options);
     return { items: list.map(mapEntityToDetails), total };
   }
 
@@ -111,7 +104,7 @@ export class AssignmentsService {
 
   async isVehicleAssignedToUser(
     userId: string,
-    vehicleId: string
+    vehicleId: string,
   ): Promise<boolean> {
     const count = await this.repo.count({
       user: { id: userId },
@@ -126,8 +119,8 @@ export class AssignmentsService {
     await validateVehicleExists(vehicleId);
     if (endDate && startDate && new Date(endDate) <= new Date(startDate))
       throw new Error("End date must be after start date.");
-    const user = await this.userRepo().findOne({ where: { id: userId } });
-    const vehicle = await this.vehicleRepo().findOne({
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const vehicle = await this.vehicleRepo.findOne({
       where: { id: vehicleId },
     });
     if (!user || !vehicle) return null;
@@ -149,20 +142,20 @@ export class AssignmentsService {
 
   async update(
     id: string,
-    patch: Partial<Assignment>
+    patch: Partial<Assignment>,
   ): Promise<AssignmentWithDetails | null> {
     const entity = await this.repo.findOne(id);
     if (!entity) return null;
     if (patch.userId) {
       await validateUserExists(patch.userId);
-      const user = await this.userRepo().findOne({
+      const user = await this.userRepo.findOne({
         where: { id: patch.userId },
       });
       if (user) entity.user = user;
     }
     if (patch.vehicleId) {
       await validateVehicleExists(patch.vehicleId);
-      const vehicle = await this.vehicleRepo().findOne({
+      const vehicle = await this.vehicleRepo.findOne({
         where: { id: patch.vehicleId },
       });
       if (vehicle) entity.vehicle = vehicle;
@@ -187,7 +180,7 @@ export class AssignmentsService {
 
   async finish(
     id: string,
-    endDate?: string
+    endDate?: string,
   ): Promise<AssignmentWithDetails | null> {
     const entity = await this.repo.findOne(id);
     if (!entity) return null;
@@ -198,8 +191,4 @@ export class AssignmentsService {
     const saved = await this.repo.save(entity);
     return mapEntityToDetails(saved);
   }
-}
-
-export function createAssignmentsService() {
-  return new AssignmentsService();
 }

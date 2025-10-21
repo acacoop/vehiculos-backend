@@ -1,7 +1,10 @@
 import { DataSource, Repository } from "typeorm";
-import { MaintenanceCategory } from "../entities/MaintenanceCategory";
+import { MaintenanceCategory } from "@/entities/MaintenanceCategory";
+import { IMaintenanceCategoryRepository } from "@/repositories/interfaces/IMaintenanceCategoryRepository";
 
-export class MaintenanceCategoryRepository {
+export class MaintenanceCategoryRepository
+  implements IMaintenanceCategoryRepository
+{
   private readonly repo: Repository<MaintenanceCategory>;
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(MaintenanceCategory);

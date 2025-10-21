@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { licensePlateRegex } from "./validations";
+import { licensePlateRegex } from "@/schemas/validations";
 
 // Input schema for creating/updating a vehicle
 export const VehicleInputSchema = z.object({

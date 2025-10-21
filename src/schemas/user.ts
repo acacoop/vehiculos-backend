@@ -6,15 +6,9 @@ export const UserSchema = z.object({
   firstName: z.string(),
   lastName: z.string(),
   email: z.string().email(),
-  cuit: z
-    .number()
-    .int()
-    .refine((v) => String(v).length === 11, {
-      message: "CUIT must be 11 digits",
-    }),
+  cuit: z.string().regex(/^\d{11}$/), // 11 digits as string
   active: z.boolean().default(true),
   entraId: z.string().uuid().or(z.literal("")).default(""),
-  roles: z.array(z.string()).optional(),
 });
 
 export type User = z.infer<typeof UserSchema>;

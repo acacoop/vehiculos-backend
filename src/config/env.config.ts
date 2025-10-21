@@ -1,16 +1,20 @@
 import { z } from "zod";
 
-// Environment variable schema & export. Keep this in sync with .env.example documentation.
 const envSchema = z.object({
   APP_PORT: z.coerce.number().default(3000),
-  // Individual DB parameters (for local development)
   DB_HOST: z.string().default("localhost"),
   DB_PORT: z.coerce.number().default(1433),
   DB_USER: z.string().default("sa"),
   DB_PASSWORD: z.string().default("Your_password123"),
   DB_NAME: z.string().default("vehicles_db"),
-  DB_LOGGING: z.coerce.boolean().default(false),
-  // Azure AAD connection string (for production)
+  DB_LOGGING: z
+    .enum(["true", "false"])
+    .transform((v: string) => v === "true")
+    .default("false"),
+  AUTH_BYPASS: z
+    .enum(["true", "false"])
+    .transform((v: string) => v === "true")
+    .default("false"),
   SQL_AAD_CONNECTION_STRING: z.string().optional(),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60 * 1000),
   RATE_LIMIT_MAX: z.coerce.number().default(1000),
@@ -41,6 +45,7 @@ export const {
   DB_PASSWORD,
   DB_NAME,
   DB_LOGGING,
+  AUTH_BYPASS,
   SQL_AAD_CONNECTION_STRING,
   RATE_LIMIT_WINDOW_MS,
   RATE_LIMIT_MAX,
@@ -55,12 +60,7 @@ export const {
 } = parsed.data;
 
 export const SERVER_PORT =
-  Number(process.env.PORT) || // inyectado por Azure (8080)
+  Number(process.env.PORT) ||
   Number(process.env.APP_PORT) ||
-  Number(APP_PORT) || // el de tu schema zod
+  Number(APP_PORT) ||
   3000;
-
-// print process env
-if (process.env.NODE_ENV !== "production") {
-  console.log("Process Environment Variables:", process.env);
-}

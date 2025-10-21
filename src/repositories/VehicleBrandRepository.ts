@@ -1,36 +1,55 @@
-import { DataSource, ILike, Repository } from "typeorm";
-import { VehicleBrand } from "../entities/VehicleBrand";
+import { DataSource, Repository } from "typeorm";
+import { VehicleBrand } from "@/entities/VehicleBrand";
+import {
+  IVehicleBrandRepository,
+  VehicleBrandFilters,
+} from "@/repositories/interfaces/IVehicleBrandRepository";
+import {
+  RepositoryFindOptions,
+  resolvePagination,
+} from "@/repositories/interfaces/common";
+import { applySearchFilter, applyFilters } from "@/utils";
 
-export interface VehicleBrandSearchParams {
-  name?: string;
-}
+// Re-export types for convenience
+export type { VehicleBrandFilters };
 
-export class VehicleBrandRepository {
+export class VehicleBrandRepository implements IVehicleBrandRepository {
   private readonly repo: Repository<VehicleBrand>;
   constructor(dataSource: DataSource) {
     this.repo = dataSource.getRepository(VehicleBrand);
   }
 
-  async findAndCount(options?: {
-    limit?: number;
-    offset?: number;
-    searchParams?: VehicleBrandSearchParams;
-  }): Promise<[VehicleBrand[], number]> {
-    const where: Record<string, unknown> = {};
-    if (options?.searchParams?.name) {
-      where.name = ILike(`%${options.searchParams.name}%`);
+  async findAndCount(
+    options?: RepositoryFindOptions<VehicleBrandFilters>,
+  ): Promise<[VehicleBrand[], number]> {
+    const { filters, search, pagination } = options || {};
+
+    const qb = this.repo.createQueryBuilder("vb").orderBy("vb.name", "ASC");
+
+    // Apply search filter
+    if (search) {
+      applySearchFilter(qb, search, ["vb.name"]);
     }
-    return this.repo.findAndCount({
-      where,
-      take: options?.limit,
-      skip: options?.offset,
-      order: { name: "ASC" },
+
+    // Apply filters
+    applyFilters(qb, filters, {
+      name: { field: "vb.name", operator: "LIKE" },
     });
+
+    const { limit, offset } = resolvePagination(pagination);
+    qb.take(limit).skip(offset);
+
+    return qb.getManyAndCount();
   }
 
   findOne(id: string) {
     return this.repo.findOne({ where: { id } });
   }
+
+  findOneByWhere(where: { id: string }) {
+    return this.repo.findOne({ where });
+  }
+
   create(data: Partial<VehicleBrand>) {
     return this.repo.create(data);
   }

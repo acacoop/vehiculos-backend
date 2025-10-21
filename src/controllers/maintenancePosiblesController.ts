@@ -1,30 +1,35 @@
-import { BaseController } from "./baseController";
+import { BaseController } from "@/controllers/baseController";
 import {
   MaintenanceCreateSchema,
   MaintenanceUpdateSchema,
-} from "../schemas/maintenance/maintenance";
-import { MaintenancesService } from "../services/maintenancesService";
+} from "@/schemas/maintenance";
+import { MaintenancesService } from "@/services/maintenancesService";
 import { Request, Response } from "express";
-import { asyncHandler, AppError } from "../middleware/errorHandler";
+import { asyncHandler, AppError } from "@/middleware/errorHandler";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { AppDataSource } from "@/db";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
+/**
+ * MaintenancePosiblesController - Manages possible maintenances
+ * Uses simplified BaseController architecture
+ */
 export class MaintenancePosiblesController extends BaseController {
   constructor(private readonly service: MaintenancesService) {
-    super("Maintenance");
+    super({
+      resourceName: "Maintenance",
+      allowedFilters: [],
+    });
   }
 
-  // Implement abstract methods from BaseController
-  protected async getAllService(_options: {
-    limit: number;
-    offset: number;
-    searchParams?: Record<string, string>;
-  }) {
-    // Fetch all possible maintenances
+  protected async getAllService(
+    _options: RepositoryFindOptions<Record<string, string>>,
+  ) {
     const maintenances = await this.service.getAll();
     return { items: maintenances, total: maintenances.length };
   }
 
   protected async getByIdService(id: string) {
-    // Return maintenance with details (includes category name)
     const maintenance = await this.service.getWithDetails(id);
     if (!maintenance) {
       return null;
@@ -68,36 +73,15 @@ export class MaintenancePosiblesController extends BaseController {
     }
   }
 
-  protected async patchService(id: string, data: unknown) {
-    // For PATCH, use the same logic as update since both accept partial data
-    const maintenanceData = MaintenanceUpdateSchema.parse(data);
-
-    try {
-      return await this.service.update(id, maintenanceData);
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new AppError(
-          error.message,
-          400,
-          "https://example.com/problems/validation-error",
-          "Validation Error",
-        );
-      }
-      throw error;
-    }
-  }
-
   protected async deleteService(id: string) {
     return await this.service.delete(id);
   }
 
-  // Get all vehicles assigned to a specific maintenance
   public getVehiclesByMaintenance = asyncHandler(
     async (req: Request, res: Response) => {
       const maintenanceId = req.params.id;
 
       try {
-        // First verify that the maintenance exists
         const maintenance = await this.service.getById(maintenanceId);
         if (!maintenance) {
           throw new AppError(
@@ -133,10 +117,13 @@ export class MaintenancePosiblesController extends BaseController {
   );
 }
 
-export function createMaintenancePosiblesController() {
-  const service = new MaintenancesService();
-  return new MaintenancePosiblesController(service);
-}
+export const createMaintenancePosiblesController = (
+  service?: MaintenancesService,
+) => {
+  const svc =
+    service ?? new ServiceFactory(AppDataSource).createMaintenancesService();
+  return new MaintenancePosiblesController(svc);
+};
 
 export const maintenancePosiblesController =
   createMaintenancePosiblesController();

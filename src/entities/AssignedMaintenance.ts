@@ -5,8 +5,8 @@ import {
   ManyToOne,
   JoinColumn,
 } from "typeorm";
-import { Vehicle } from "./Vehicle";
-import { Maintenance } from "./Maintenance";
+import { Vehicle } from "@/entities/Vehicle";
+import { Maintenance } from "@/entities/Maintenance";
 
 @Entity({ name: "assigned_maintenances" })
 export class AssignedMaintenance {

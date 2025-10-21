@@ -1,19 +1,30 @@
-import { BaseController } from "./baseController";
-import type { VehicleInput, VehicleUpdate } from "../schemas/vehicle";
-import VehiclesService from "../services/vehicles/vehiclesService";
+import { BaseController } from "@/controllers/baseController";
+import type { VehicleInput, VehicleUpdate } from "@/schemas/vehicle";
+import { VehiclesService } from "@/services/vehiclesService";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { AppDataSource } from "@/db";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { VehicleFilters } from "@/repositories/interfaces/IVehicleRepository";
 
-export class VehiclesController extends BaseController {
+export class VehiclesController extends BaseController<VehicleFilters> {
   constructor(private readonly service: VehiclesService) {
-    super("Vehicle");
+    super({
+      resourceName: "Vehicle",
+      allowedFilters: [
+        "licensePlate",
+        "brand",
+        "model",
+        "brandId",
+        "modelId",
+        "year",
+      ],
+    });
   }
 
-  // Implement abstract methods from BaseController
-  protected async getAllService(options: {
-    limit: number;
-    offset: number;
-    searchParams?: Record<string, string>;
-  }) {
-    return await this.service.getAll(options);
+  protected async getAllService(
+    options: RepositoryFindOptions<Partial<VehicleFilters>>,
+  ) {
+    return this.service.getAll(options);
   }
 
   protected async getByIdService(id: string) {
@@ -28,14 +39,13 @@ export class VehiclesController extends BaseController {
     return await this.service.update(id, data);
   }
 
-  protected async patchService(id: string, data: VehicleUpdate) {
-    return await this.service.update(id, data);
-  }
-
   protected async deleteService(id: string) {
     return await this.service.delete(id);
   }
 }
 // Factory helper so each route file can create its isolated instance if desired
-export const createVehiclesController = () =>
-  new VehiclesController(new VehiclesService());
+export const createVehiclesController = () => {
+  const serviceFactory = new ServiceFactory(AppDataSource);
+  const vehiclesService = serviceFactory.createVehiclesService();
+  return new VehiclesController(vehiclesService);
+};

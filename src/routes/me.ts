@@ -1,9 +1,8 @@
-import { Router } from 'express';
-import { meController } from '../controllers/meController';
+import { Router } from "express";
+import { meController } from "@/controllers/meController";
 
 const router = Router();
 
-// GET /me - current authenticated user
-router.get('/', meController.getCurrent);
+router.get("/", meController.getCurrent);
 
 export default router;

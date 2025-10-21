@@ -5,7 +5,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from "typeorm";
-import { VehicleBrand } from "./VehicleBrand";
+import { VehicleBrand } from "@/entities/VehicleBrand";
 
 @Entity({ name: "vehicle_models" })
 export class VehicleModel {
@@ -16,6 +16,9 @@ export class VehicleModel {
   @JoinColumn({ name: "brand_id" })
   brand!: VehicleBrand;
 
-  @Column({ name: "name", unique: true })
+  @Column({ name: "name", unique: true, length: 100 })
   name!: string;
+
+  @Column({ name: "vehicle_type", nullable: true })
+  vehicleType?: string;
 }

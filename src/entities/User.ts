@@ -1,20 +1,22 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, Index } from "typeorm";
 
 @Entity({ name: "users" })
+@Index(["email"])
+@Index(["cuit"])
 export class User {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ name: "first_name" })
+  @Column({ name: "first_name", length: 100 })
   firstName!: string;
 
-  @Column({ name: "last_name" })
+  @Column({ name: "last_name", length: 100 })
   lastName!: string;
 
-  @Column({ name: "cuit", unique: true, type: "bigint" })
-  cuit!: number;
+  @Column({ name: "cuit", unique: true, length: 14 })
+  cuit!: string;
 
-  @Column({ unique: true })
+  @Column({ unique: true, length: 255 })
   email!: string;
 
   @Column({ default: true })

@@ -1,28 +1,25 @@
-import { AppDataSource } from "../db";
-import { Maintenance } from "../entities/Maintenance";
-import { MaintenanceCategory } from "../entities/MaintenanceCategory";
-import { AssignedMaintenance } from "../entities/AssignedMaintenance";
+import { Maintenance } from "@/entities/Maintenance";
+import { MaintenanceCategory } from "@/entities/MaintenanceCategory";
+import { AssignedMaintenance } from "@/entities/AssignedMaintenance";
+import { IMaintenanceRepository } from "@/repositories/interfaces/IMaintenanceRepository";
+import { IAssignedMaintenanceRepository } from "@/repositories/interfaces/IAssignedMaintenanceRepository";
 import {
-  MaintenanceRepository,
-  AssignedMaintenanceRepository,
-} from "../repositories/MaintenanceRepository";
-import { MaintenanceRecordRepository } from "../repositories/MaintenanceRecordRepository";
+  IMaintenanceRecordRepository,
+  MaintenanceRecordFilters,
+} from "@/repositories/interfaces/IMaintenanceRecordRepository";
 import {
   validateMaintenanceCategoryExists,
   validateMaintenanceExists,
   validateVehicleExists,
-} from "../utils/validators";
-import type { Maintenance as MaintenanceSchemaType } from "../schemas/maintenance/maintenance";
-// (Schema MaintenanceCategory/AssignedMaintenance types not needed explicitly here)
-import type { MaintenanceRecord } from "../schemas/maintenance/maintanceRecord";
-import { Vehicle } from "../entities/Vehicle";
-import { MaintenanceRecord as MaintenanceRecordEntity } from "../entities/MaintenanceRecord";
+} from "@/utils/validation/entity";
+import type { Maintenance as MaintenanceSchemaType } from "@/schemas/maintenance";
+import type { MaintenanceRecord } from "@/schemas/maintenanceRecord";
+import { Vehicle } from "@/entities/Vehicle";
+import { MaintenanceRecord as MaintenanceRecordEntity } from "@/entities/MaintenanceRecord";
+import { Repository } from "typeorm";
+import { User } from "@/entities/User";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
-// NOTE: The Maintenance zod schema currently only includes: id, categoryId, name.
-// Legacy API exposed additional optional fields (kilometersFrequency, daysFrequency, observations, instructions).
-// We keep them as optional extensions in the DTO mapping below (not enforced by current schema) to avoid breaking consumers.
-// Consider: extend MaintenanceSchema to include these fields in a follow-up.
-// Local DTO types (previously from ../types)
 export type MaintenanceDTO = MaintenanceSchemaType & {
   kilometersFrequency?: number;
   daysFrequency?: number;
@@ -30,6 +27,7 @@ export type MaintenanceDTO = MaintenanceSchemaType & {
   instructions?: string;
   categoryName?: string;
 };
+
 export interface MaintenanceVehicleAssignment {
   id: string;
   vehicleId: string;
@@ -82,16 +80,11 @@ function map(m: Maintenance): MaintenanceDTO & {
 }
 
 export class MaintenancesService {
-  private readonly repo: MaintenanceRepository;
-  private readonly assignedRepo: AssignedMaintenanceRepository;
   constructor(
-    repo?: MaintenanceRepository,
-    assignedRepo?: AssignedMaintenanceRepository,
-  ) {
-    this.repo = repo ?? new MaintenanceRepository(AppDataSource);
-    this.assignedRepo =
-      assignedRepo ?? new AssignedMaintenanceRepository(AppDataSource);
-  }
+    private readonly repo: IMaintenanceRepository,
+    private readonly assignedRepo: IAssignedMaintenanceRepository,
+    private readonly maintenanceCategoryRepo: Repository<MaintenanceCategory>,
+  ) {}
   async getAll(): Promise<MaintenanceDTO[]> {
     const list = await this.repo.findAll();
     return list.map(map);
@@ -113,9 +106,9 @@ export class MaintenancesService {
     instructions?: string;
   }): Promise<MaintenanceDTO | null> {
     await validateMaintenanceCategoryExists(data.categoryId);
-    const category = await AppDataSource.getRepository(
-      MaintenanceCategory,
-    ).findOne({ where: { id: data.categoryId } });
+    const category = await this.maintenanceCategoryRepo.findOne({
+      where: { id: data.categoryId },
+    });
     if (!category) return null;
     const created = this.repo.create({
       category,
@@ -143,9 +136,9 @@ export class MaintenancesService {
     if (!existing) return null;
     if (patch.categoryId) {
       await validateMaintenanceCategoryExists(patch.categoryId);
-      const category = await AppDataSource.getRepository(
-        MaintenanceCategory,
-      ).findOne({ where: { id: patch.categoryId } });
+      const category = await this.maintenanceCategoryRepo.findOne({
+        where: { id: patch.categoryId },
+      });
       if (category) existing.category = category;
     }
     if (patch.name !== undefined) existing.name = patch.name;
@@ -187,7 +180,7 @@ export class MaintenancesService {
         name: am.vehicle.model.name,
         brand: {
           id: am.vehicle.model.brand.id,
-            name: am.vehicle.model.brand.name,
+          name: am.vehicle.model.brand.name,
         },
       },
       year: am.vehicle.year,
@@ -196,10 +189,11 @@ export class MaintenancesService {
 }
 
 export class AssignedMaintenancesService {
-  private readonly repo: AssignedMaintenanceRepository;
-  constructor(repo?: AssignedMaintenanceRepository) {
-    this.repo = repo ?? new AssignedMaintenanceRepository(AppDataSource);
-  }
+  constructor(
+    private readonly repo: IAssignedMaintenanceRepository,
+    private readonly vehicleRepo: Repository<Vehicle>,
+    private readonly maintenanceRepo: Repository<Maintenance>,
+  ) {}
   map(am: AssignedMaintenance): AssignedMaintenanceDTO {
     return {
       id: am.id,
@@ -234,10 +228,10 @@ export class AssignedMaintenancesService {
     const { vehicleId, maintenanceId } = data;
     await validateVehicleExists(vehicleId);
     await validateMaintenanceExists(maintenanceId);
-    const vehicle = await AppDataSource.getRepository(Vehicle).findOne({
+    const vehicle = await this.vehicleRepo.findOne({
       where: { id: vehicleId },
     });
-    const maintenance = await AppDataSource.getRepository(Maintenance).findOne({
+    const maintenance = await this.maintenanceRepo.findOne({
       where: { id: maintenanceId },
       relations: ["category"],
     });
@@ -282,17 +276,12 @@ export class AssignedMaintenancesService {
 }
 
 export class MaintenanceRecordsService {
-  private readonly recordRepo: MaintenanceRecordRepository;
-  private readonly maintenanceRecordRepo = AppDataSource.getRepository(
-    MaintenanceRecordEntity,
-  );
-  private readonly assignedRepo =
-    AppDataSource.getRepository(AssignedMaintenance);
-  private readonly userRepo = AppDataSource.getRepository("User");
-  constructor(recordRepo?: MaintenanceRecordRepository) {
-    this.recordRepo =
-      recordRepo ?? new MaintenanceRecordRepository(AppDataSource);
-  }
+  constructor(
+    private readonly recordRepo: IMaintenanceRecordRepository,
+    private readonly maintenanceRecordRepo: Repository<MaintenanceRecordEntity>,
+    private readonly assignedRepo: Repository<AssignedMaintenance>,
+    private readonly userRepo: Repository<User>,
+  ) {}
   private mapEntity(mr: MaintenanceRecordEntity): MaintenanceRecord {
     return {
       id: mr.id,
@@ -303,11 +292,7 @@ export class MaintenanceRecordsService {
       notes: mr.notes ?? undefined,
     };
   }
-  async getAll(options?: {
-    limit?: number;
-    offset?: number;
-    filters?: Record<string, string>;
-  }) {
+  async getAll(options?: RepositoryFindOptions<MaintenanceRecordFilters>) {
     const [rows, total] = await this.recordRepo.findAndCount(options);
     return {
       items: rows.map((r) => this.mapEntity(r as MaintenanceRecordEntity)),

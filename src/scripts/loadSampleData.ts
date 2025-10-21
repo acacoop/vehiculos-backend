@@ -1,24 +1,28 @@
 /*
   Script to load sample data using TypeORM entities instead of raw SQL.
   This ensures compatibility with entity validation and avoids conflicts with sync scripts.
-  
+
   Usage: npm run sample-data
   Or: ts-node-dev --env-file=.env src/scripts/loadSampleData.ts
 */
 
-import { AppDataSource } from "../db";
-import { User } from "../entities/User";
-import { Vehicle } from "../entities/Vehicle";
-import { VehicleBrand } from "../entities/VehicleBrand";
-import { VehicleModel } from "../entities/VehicleModel";
-import { MaintenanceCategory } from "../entities/MaintenanceCategory";
-import { Maintenance } from "../entities/Maintenance";
-import { Assignment } from "../entities/Assignment";
-import { AssignedMaintenance } from "../entities/AssignedMaintenance";
-import { MaintenanceRecord } from "../entities/MaintenanceRecord";
-import { Reservation } from "../entities/Reservation";
-import { VehicleResponsible } from "../entities/VehicleResponsible";
-import { VehicleKilometers } from "../entities/VehicleKilometers";
+import { AppDataSource } from "@/db";
+import { User } from "@/entities/User";
+import { Vehicle } from "@/entities/Vehicle";
+import { VehicleBrand } from "@/entities/VehicleBrand";
+import { VehicleModel } from "@/entities/VehicleModel";
+import { MaintenanceCategory } from "@/entities/MaintenanceCategory";
+import { Maintenance } from "@/entities/Maintenance";
+import { Assignment } from "@/entities/Assignment";
+import { AssignedMaintenance } from "@/entities/AssignedMaintenance";
+import { MaintenanceRecord } from "@/entities/MaintenanceRecord";
+import { Reservation } from "@/entities/Reservation";
+import { VehicleResponsible } from "@/entities/VehicleResponsible";
+import { VehicleKilometers } from "@/entities/VehicleKilometers";
+import { VehicleACL } from "@/entities/VehicleACL";
+import { PermissionType } from "@/utils";
+import { UserRole } from "@/entities/UserRole";
+import { UserRoleEnum } from "@/utils";
 
 type SampleDataStats = {
   users: number;
@@ -31,10 +35,11 @@ type SampleDataStats = {
   reservations: number;
   vehicleResponsibles: number;
   vehicleKilometers: number;
+  vehicleACLs: number;
+  userRoles: number;
 };
 
 async function clearSampleData(): Promise<void> {
-  // Clear in reverse dependency order to avoid foreign key constraints
   // Use DELETE with 1=1 condition to delete all records but respect foreign keys
   await AppDataSource.query("DELETE FROM maintenance_records WHERE 1=1");
   await AppDataSource.query("DELETE FROM vehicle_kilometers WHERE 1=1");
@@ -48,6 +53,10 @@ async function clearSampleData(): Promise<void> {
   await AppDataSource.query("DELETE FROM vehicle_models WHERE 1=1");
   await AppDataSource.query("DELETE FROM vehicle_brands WHERE 1=1");
 
+  // Authorization data (order matters for FKs)
+  await AppDataSource.query("DELETE FROM vehicle_acl WHERE 1=1");
+  await AppDataSource.query("DELETE FROM user_roles WHERE 1=1");
+
   // Only delete sample users (those with SAMPLE_ prefix in entraId or @sample.test domain)
   // This preserves all real users from Entra sync
   const userRepo = AppDataSource.getRepository(User);
@@ -58,7 +67,7 @@ async function clearSampleData(): Promise<void> {
     .execute();
 
   console.log(
-    `✅ Sample data cleared (${result.affected || 0} sample users removed, real users preserved)`
+    `✅ Sample data cleared (${result.affected || 0} sample users removed, real users preserved)`,
   );
 }
 
@@ -70,7 +79,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Carlos",
       lastName: "Rodríguez",
-      cuit: 12345678901,
+      cuit: "12345678901",
       email: "carlos.rodriguez@sample.test",
       active: true,
       entraId: "SAMPLE_USER_001",
@@ -78,7 +87,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "María",
       lastName: "González",
-      cuit: 23456789012,
+      cuit: "23456789012",
       email: "maria.gonzalez@sample.test",
       active: true,
       entraId: "SAMPLE_USER_002",
@@ -86,7 +95,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Ana",
       lastName: "Martínez",
-      cuit: 34567890123,
+      cuit: "34567890123",
       email: "ana.martinez@sample.test",
       active: true,
       entraId: "SAMPLE_USER_003",
@@ -95,7 +104,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Juan",
       lastName: "Pérez",
-      cuit: 45678901234,
+      cuit: "45678901234",
       email: "juan.perez@sample.test",
       active: true,
       entraId: "SAMPLE_USER_004",
@@ -103,7 +112,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Luis",
       lastName: "López",
-      cuit: 56789012345,
+      cuit: "56789012345",
       email: "luis.lopez@sample.test",
       active: false,
       entraId: "SAMPLE_USER_005",
@@ -111,7 +120,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Sofia",
       lastName: "Hernández",
-      cuit: 67890123456,
+      cuit: "67890123456",
       email: "sofia.hernandez@sample.test",
       active: true,
       entraId: "SAMPLE_USER_006",
@@ -119,7 +128,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Diego",
       lastName: "García",
-      cuit: 78901234567,
+      cuit: "78901234567",
       email: "diego.garcia@sample.test",
       active: true,
       entraId: "SAMPLE_USER_007",
@@ -127,7 +136,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Valentina",
       lastName: "Silva",
-      cuit: 89012345678,
+      cuit: "89012345678",
       email: "valentina.silva@sample.test",
       active: true,
       entraId: "SAMPLE_USER_008",
@@ -136,7 +145,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Andrés",
       lastName: "Morales",
-      cuit: 90123456789,
+      cuit: "90123456789",
       email: "andres.morales@sample.test",
       active: true,
       entraId: "SAMPLE_USER_009",
@@ -144,7 +153,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Camila",
       lastName: "Torres",
-      cuit: 12987654321,
+      cuit: "12987654321",
       email: "camila.torres@sample.test",
       active: false,
       entraId: "SAMPLE_USER_010",
@@ -152,7 +161,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Miguel",
       lastName: "Vargas",
-      cuit: 23876543210,
+      cuit: "23876543210",
       email: "miguel.vargas@sample.test",
       active: true,
       entraId: "SAMPLE_USER_011",
@@ -160,7 +169,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Isabella",
       lastName: "Ruiz",
-      cuit: 34765432109,
+      cuit: "34765432109",
       email: "isabella.ruiz@sample.test",
       active: true,
       entraId: "SAMPLE_USER_012",
@@ -169,7 +178,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Roberto",
       lastName: "Jiménez",
-      cuit: 45654321098,
+      cuit: "45654321098",
       email: "roberto.jimenez@sample.test",
       active: true,
       entraId: "SAMPLE_USER_013",
@@ -177,7 +186,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Lucía",
       lastName: "Castro",
-      cuit: 56543210987,
+      cuit: "56543210987",
       email: "lucia.castro@sample.test",
       active: true,
       entraId: "SAMPLE_USER_014",
@@ -185,7 +194,7 @@ async function createSampleUsers(): Promise<User[]> {
     {
       firstName: "Fernando",
       lastName: "Romero",
-      cuit: 67432109876,
+      cuit: "67432109876",
       email: "fernando.romero@sample.test",
       active: true,
       entraId: "SAMPLE_USER_015",
@@ -226,46 +235,58 @@ async function createBrandsAndModels(): Promise<{
     "Citroën",
   ];
   const brands = await brandRepo.save(
-    brandRepo.create(brandNames.map((name) => ({ name })))
+    brandRepo.create(brandNames.map((name) => ({ name }))),
   );
 
   const findBrand = (name: string) => brands.find((b) => b.name === name)!;
 
   const modelData = [
-    { name: "Corolla", brand: findBrand("Toyota") },
-    { name: "RAV4", brand: findBrand("Toyota") },
-    { name: "Yaris", brand: findBrand("Toyota") },
-    { name: "Civic", brand: findBrand("Honda") },
-    { name: "CR-V", brand: findBrand("Honda") },
-    { name: "Sentra", brand: findBrand("Nissan") },
-    { name: "Versa", brand: findBrand("Nissan") },
-    { name: "Leaf", brand: findBrand("Nissan") },
-    { name: "Elantra", brand: findBrand("Hyundai") },
-    { name: "CX-5", brand: findBrand("Mazda") },
-    { name: "Outback", brand: findBrand("Subaru") },
-    { name: "Ranger", brand: findBrand("Ford") },
-    { name: "Transit", brand: findBrand("Ford") },
-    { name: "Colorado", brand: findBrand("Chevrolet") },
-    { name: "Sprinter", brand: findBrand("Mercedes-Benz") },
-    { name: "Model 3", brand: findBrand("Tesla") },
-    { name: "Golf", brand: findBrand("Volkswagen") },
-    { name: "Amarok", brand: findBrand("Volkswagen") },
-    { name: "208", brand: findBrand("Peugeot") },
-    { name: "2008", brand: findBrand("Peugeot") },
-    { name: "Clio", brand: findBrand("Renault") },
-    { name: "Kwid", brand: findBrand("Renault") },
-    { name: "Cronos", brand: findBrand("Fiat") },
-    { name: "Argo", brand: findBrand("Fiat") },
-    { name: "Sportage", brand: findBrand("Kia") },
-    { name: "Seltos", brand: findBrand("Kia") },
-    { name: "Renegade", brand: findBrand("Jeep") },
-    { name: "Compass", brand: findBrand("Jeep") },
-    { name: "X1", brand: findBrand("BMW") },
-    { name: "320i", brand: findBrand("BMW") },
-    { name: "A3", brand: findBrand("Audi") },
-    { name: "Q5", brand: findBrand("Audi") },
-    { name: "C3", brand: findBrand("Citroën") },
-    { name: "C4 Cactus", brand: findBrand("Citroën") },
+    { name: "Corolla", brand: findBrand("Toyota"), vehicleType: "Sedan" },
+    { name: "RAV4", brand: findBrand("Toyota"), vehicleType: "SUV" },
+    { name: "Yaris", brand: findBrand("Toyota"), vehicleType: "Hatchback" },
+    { name: "Civic", brand: findBrand("Honda"), vehicleType: "Sedan" },
+    { name: "CR-V", brand: findBrand("Honda"), vehicleType: "SUV" },
+    { name: "Sentra", brand: findBrand("Nissan"), vehicleType: "Sedan" },
+    { name: "Versa", brand: findBrand("Nissan"), vehicleType: "Sedan" },
+    {
+      name: "Leaf",
+      brand: findBrand("Nissan"),
+      vehicleType: "Hatchback eléctrico",
+    },
+    { name: "Elantra", brand: findBrand("Hyundai"), vehicleType: "Sedan" },
+    { name: "CX-5", brand: findBrand("Mazda"), vehicleType: "SUV" },
+    { name: "Outback", brand: findBrand("Subaru"), vehicleType: "Crossover" },
+    { name: "Ranger", brand: findBrand("Ford"), vehicleType: "Pickup" },
+    { name: "Transit", brand: findBrand("Ford"), vehicleType: "Van" },
+    { name: "Colorado", brand: findBrand("Chevrolet"), vehicleType: "Pickup" },
+    { name: "Sprinter", brand: findBrand("Mercedes-Benz"), vehicleType: "Van" },
+    {
+      name: "Model 3",
+      brand: findBrand("Tesla"),
+      vehicleType: "Sedan eléctrico",
+    },
+    { name: "Golf", brand: findBrand("Volkswagen"), vehicleType: "Hatchback" },
+    { name: "Amarok", brand: findBrand("Volkswagen"), vehicleType: "Pickup" },
+    { name: "208", brand: findBrand("Peugeot"), vehicleType: "Hatchback" },
+    { name: "2008", brand: findBrand("Peugeot"), vehicleType: "SUV" },
+    { name: "Clio", brand: findBrand("Renault"), vehicleType: "Hatchback" },
+    { name: "Kwid", brand: findBrand("Renault"), vehicleType: "Hatchback" },
+    { name: "Cronos", brand: findBrand("Fiat"), vehicleType: "Sedan" },
+    { name: "Argo", brand: findBrand("Fiat"), vehicleType: "Hatchback" },
+    { name: "Sportage", brand: findBrand("Kia"), vehicleType: "SUV" },
+    { name: "Seltos", brand: findBrand("Kia"), vehicleType: "SUV" },
+    { name: "Renegade", brand: findBrand("Jeep"), vehicleType: "SUV" },
+    { name: "Compass", brand: findBrand("Jeep"), vehicleType: "SUV" },
+    { name: "X1", brand: findBrand("BMW"), vehicleType: "SUV" },
+    { name: "320i", brand: findBrand("BMW"), vehicleType: "Sedan" },
+    { name: "A3", brand: findBrand("Audi"), vehicleType: "Hatchback" },
+    { name: "Q5", brand: findBrand("Audi"), vehicleType: "SUV" },
+    { name: "C3", brand: findBrand("Citroën"), vehicleType: "Hatchback" },
+    {
+      name: "C4 Cactus",
+      brand: findBrand("Citroën"),
+      vehicleType: "Crossover",
+    },
   ];
 
   const models = await modelRepo.save(modelRepo.create(modelData));
@@ -273,46 +294,352 @@ async function createBrandsAndModels(): Promise<{
 }
 
 async function createSampleVehicles(
-  models: VehicleModel[]
+  models: VehicleModel[],
 ): Promise<Vehicle[]> {
   const vehicleRepo = AppDataSource.getRepository(Vehicle);
   const findModel = (name: string) => models.find((m) => m.name === name)!;
 
   const vehiclesData = [
-    { licensePlate: "ABC123", model: findModel("Corolla"), year: 2023 },
-    { licensePlate: "DEF456", model: findModel("Civic"), year: 2022 },
-    { licensePlate: "GHI789", model: findModel("Sentra"), year: 2023 },
-    { licensePlate: "JKL012", model: findModel("Elantra"), year: 2022 },
-    { licensePlate: "MNO345", model: findModel("RAV4"), year: 2023 },
-    { licensePlate: "PQR678", model: findModel("CR-V"), year: 2022 },
-    { licensePlate: "STU901", model: findModel("CX-5"), year: 2023 },
-    { licensePlate: "VWX234", model: findModel("Outback"), year: 2022 },
-    { licensePlate: "YZA567", model: findModel("Ranger"), year: 2023 },
-    { licensePlate: "BCD890", model: findModel("Colorado"), year: 2022 },
-    { licensePlate: "EFG123", model: findModel("Transit"), year: 2023 },
-    { licensePlate: "HIJ456", model: findModel("Sprinter"), year: 2022 },
-    { licensePlate: "KLM789", model: findModel("Yaris"), year: 2023 },
-    { licensePlate: "NOP012", model: findModel("Versa"), year: 2022 },
-    { licensePlate: "QRS345", model: findModel("Model 3"), year: 2023 },
-    { licensePlate: "TUV678", model: findModel("Leaf"), year: 2022 },
-    { licensePlate: "AAA111", model: findModel("Golf"), year: 2023 },
-    { licensePlate: "BBB222", model: findModel("Amarok"), year: 2024 },
-    { licensePlate: "CCC333", model: findModel("208"), year: 2023 },
-    { licensePlate: "DDD444", model: findModel("2008"), year: 2024 },
-    { licensePlate: "EEE555", model: findModel("Clio"), year: 2022 },
-    { licensePlate: "FFF666", model: findModel("Kwid"), year: 2023 },
-    { licensePlate: "GGG777", model: findModel("Cronos"), year: 2024 },
-    { licensePlate: "HHH888", model: findModel("Argo"), year: 2023 },
-    { licensePlate: "III999", model: findModel("Sportage"), year: 2023 },
-    { licensePlate: "JJJ000", model: findModel("Seltos"), year: 2024 },
-    { licensePlate: "KKK111", model: findModel("Renegade"), year: 2023 },
-    { licensePlate: "LLL222", model: findModel("Compass"), year: 2024 },
-    { licensePlate: "MMM333", model: findModel("X1"), year: 2023 },
-    { licensePlate: "NNN444", model: findModel("320i"), year: 2024 },
-    { licensePlate: "OOO555", model: findModel("A3"), year: 2023 },
-    { licensePlate: "PPP666", model: findModel("Q5"), year: 2024 },
-    { licensePlate: "QQQ777", model: findModel("C3"), year: 2023 },
-    { licensePlate: "RRR888", model: findModel("C4 Cactus"), year: 2024 },
+    {
+      licensePlate: "ABC123",
+      model: findModel("Corolla"),
+      year: 2023,
+      vehicleType: findModel("Corolla").vehicleType,
+      chassisNumber: "8ADZY23T0PM012345",
+      engineNumber: "2ZR-FE-230001",
+      transmission: "CVT",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "DEF456",
+      model: findModel("Civic"),
+      year: 2022,
+      vehicleType: findModel("Civic").vehicleType,
+      chassisNumber: "19XFC2F59NE012456",
+      engineNumber: "L15B7-220002",
+      transmission: "CVT",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "GHI789",
+      model: findModel("Sentra"),
+      year: 2023,
+      vehicleType: findModel("Sentra").vehicleType,
+      chassisNumber: "3N1AB8CV8PY012789",
+      engineNumber: "HR16DE-230003",
+      transmission: "CVT",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "JKL012",
+      model: findModel("Elantra"),
+      year: 2022,
+      vehicleType: findModel("Elantra").vehicleType,
+      chassisNumber: "KMHL14JA7NA012012",
+      engineNumber: "G4FJ-220004",
+      transmission: "Manual",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "MNO345",
+      model: findModel("RAV4"),
+      year: 2023,
+      vehicleType: findModel("RAV4").vehicleType,
+      chassisNumber: "JTMW1RFV6PD012345",
+      engineNumber: "2AR-FE-230005",
+      transmission: "Automática",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "PQR678",
+      model: findModel("CR-V"),
+      year: 2022,
+      vehicleType: findModel("CR-V").vehicleType,
+      chassisNumber: "7FARW2H82NE012678",
+      engineNumber: "L15B7-220006",
+      transmission: "CVT",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "STU901",
+      model: findModel("CX-5"),
+      year: 2023,
+      vehicleType: findModel("CX-5").vehicleType,
+      chassisNumber: "JM3KFBCM1P0012901",
+      engineNumber: "PY-VPS-230007",
+      transmission: "Automática",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "VWX234",
+      model: findModel("Outback"),
+      year: 2022,
+      vehicleType: findModel("Outback").vehicleType,
+      chassisNumber: "4S4BTANC6N3012234",
+      engineNumber: "FB25-220008",
+      transmission: "CVT",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "YZA567",
+      model: findModel("Ranger"),
+      year: 2023,
+      vehicleType: findModel("Ranger").vehicleType,
+      chassisNumber: "1FTER4FH9PLA12567",
+      engineNumber: "PUMA-230009",
+      transmission: "Manual",
+      fuelType: "Diésel",
+    },
+    {
+      licensePlate: "BCD890",
+      model: findModel("Colorado"),
+      year: 2022,
+      vehicleType: findModel("Colorado").vehicleType,
+      chassisNumber: "1GCGTCE39N1012890",
+      engineNumber: "LWN-220010",
+      transmission: "Automática",
+      fuelType: "Diésel",
+    },
+    {
+      licensePlate: "EFG123",
+      model: findModel("Transit"),
+      year: 2023,
+      vehicleType: findModel("Transit").vehicleType,
+      chassisNumber: "1FTBW3XMXPKA13123",
+      engineNumber: "PUMA-230011",
+      transmission: "Manual",
+      fuelType: "Diésel",
+    },
+    {
+      licensePlate: "HIJ456",
+      model: findModel("Sprinter"),
+      year: 2022,
+      vehicleType: findModel("Sprinter").vehicleType,
+      chassisNumber: "WDYPF4CC3N1013456",
+      engineNumber: "OM651-220012",
+      transmission: "Automática",
+      fuelType: "Diésel",
+    },
+    {
+      licensePlate: "KLM789",
+      model: findModel("Yaris"),
+      year: 2023,
+      vehicleType: findModel("Yaris").vehicleType,
+      chassisNumber: "VNKKJ3BX1PA013789",
+      engineNumber: "1NZ-FE-230013",
+      transmission: "Manual",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "NOP012",
+      model: findModel("Versa"),
+      year: 2022,
+      vehicleType: findModel("Versa").vehicleType,
+      chassisNumber: "3N1CN8EV1NL014012",
+      engineNumber: "HR12DE-220014",
+      transmission: "CVT",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "QRS345",
+      model: findModel("Model 3"),
+      year: 2023,
+      vehicleType: findModel("Model 3").vehicleType,
+      chassisNumber: "5YJ3E1EA1PF014345",
+      engineNumber: "7G-230015",
+      transmission: "Automática",
+      fuelType: "Eléctrico",
+    },
+    {
+      licensePlate: "TUV678",
+      model: findModel("Leaf"),
+      year: 2022,
+      vehicleType: findModel("Leaf").vehicleType,
+      chassisNumber: "1N4AZ1CPXNC014678",
+      engineNumber: "EM57-220016",
+      transmission: "Automática",
+      fuelType: "Eléctrico",
+    },
+    {
+      licensePlate: "AAA111",
+      model: findModel("Golf"),
+      year: 2023,
+      vehicleType: findModel("Golf").vehicleType,
+      chassisNumber: "WVWZZZ1KZPW015111",
+      engineNumber: "EA211-230017",
+      transmission: "Manual",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "BBB222",
+      model: findModel("Amarok"),
+      year: 2024,
+      vehicleType: findModel("Amarok").vehicleType,
+      chassisNumber: "WVW2ZZZSRPR015222",
+      engineNumber: "EA288-240018",
+      transmission: "Automática",
+      fuelType: "Diésel",
+    },
+    {
+      licensePlate: "CCC333",
+      model: findModel("208"),
+      year: 2023,
+      vehicleType: findModel("208").vehicleType,
+      chassisNumber: "VF3C9HXK8PS015333",
+      engineNumber: "EB2DT-230019",
+      transmission: "Manual",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "DDD444",
+      model: findModel("2008"),
+      year: 2024,
+      vehicleType: findModel("2008").vehicleType,
+      chassisNumber: "VF3C9BHXKPS015444",
+      engineNumber: "EB2DT-240020",
+      transmission: "Automática",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "EEE555",
+      model: findModel("Clio"),
+      year: 2022,
+      vehicleType: findModel("Clio").vehicleType,
+      chassisNumber: "VF1BRA00264015555",
+      engineNumber: "SCe70-220021",
+      transmission: "Manual",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "FFF666",
+      model: findModel("Kwid"),
+      year: 2023,
+      vehicleType: findModel("Kwid").vehicleType,
+      chassisNumber: "93YBRA0FH4J015666",
+      engineNumber: "SCe70-230022",
+      transmission: "Manual",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "GGG777",
+      model: findModel("Cronos"),
+      year: 2024,
+      vehicleType: findModel("Cronos").vehicleType,
+      chassisNumber: "9BD178000P0015777",
+      engineNumber: "FIRE-240023",
+      transmission: "Manual",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "HHH888",
+      model: findModel("Argo"),
+      year: 2023,
+      vehicleType: findModel("Argo").vehicleType,
+      chassisNumber: "9BD35800XP0015888",
+      engineNumber: "FIRE-230024",
+      transmission: "CVT",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "III999",
+      model: findModel("Sportage"),
+      year: 2023,
+      vehicleType: findModel("Sportage").vehicleType,
+      chassisNumber: "KNDJ23AU1P7015999",
+      engineNumber: "G4NA-230025",
+      transmission: "Automática",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "JJJ000",
+      model: findModel("Seltos"),
+      year: 2024,
+      vehicleType: findModel("Seltos").vehicleType,
+      chassisNumber: "KNDJP3A53P7016000",
+      engineNumber: "G4FJ-240026",
+      transmission: "CVT",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "KKK111",
+      model: findModel("Renegade"),
+      year: 2023,
+      vehicleType: findModel("Renegade").vehicleType,
+      chassisNumber: "ZACCPBBT0PPZ16111",
+      engineNumber: "T270-230027",
+      transmission: "Automática",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "LLL222",
+      model: findModel("Compass"),
+      year: 2024,
+      vehicleType: findModel("Compass").vehicleType,
+      chassisNumber: "1C4NJDEB8QD016222",
+      engineNumber: "T270-240028",
+      transmission: "Automática",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "MMM333",
+      model: findModel("X1"),
+      year: 2023,
+      vehicleType: findModel("X1").vehicleType,
+      chassisNumber: "WBXHT9C06P5B16333",
+      engineNumber: "B48A20A-230029",
+      transmission: "Automática",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "NNN444",
+      model: findModel("320i"),
+      year: 2024,
+      vehicleType: findModel("320i").vehicleType,
+      chassisNumber: "WBA8E1G06QNB16444",
+      engineNumber: "B48A20A-240030",
+      transmission: "Automática",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "OOO555",
+      model: findModel("A3"),
+      year: 2023,
+      vehicleType: findModel("A3").vehicleType,
+      chassisNumber: "WAUZ8Z4F9P1016555",
+      engineNumber: "TFSI-230031",
+      transmission: "Automática",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "PPP666",
+      model: findModel("Q5"),
+      year: 2024,
+      vehicleType: findModel("Q5").vehicleType,
+      chassisNumber: "WA1ENAFY8Q2016666",
+      engineNumber: "TFSI-240032",
+      transmission: "Automática",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "QQQ777",
+      model: findModel("C3"),
+      year: 2023,
+      vehicleType: findModel("C3").vehicleType,
+      chassisNumber: "VF7A1BHX1PS016777",
+      engineNumber: "EB2DT-230033",
+      transmission: "Manual",
+      fuelType: "Nafta",
+    },
+    {
+      licensePlate: "RRR888",
+      model: findModel("C4 Cactus"),
+      year: 2024,
+      vehicleType: findModel("C4 Cactus").vehicleType,
+      chassisNumber: "VF7EHW0H8QS016888",
+      engineNumber: "EB2DT-240034",
+      transmission: "Automática",
+      fuelType: "Nafta",
+    },
   ];
 
   const vehicles = vehicleRepo.create(vehiclesData);
@@ -452,7 +779,7 @@ async function createMaintenanceData(): Promise<{
 
 async function createAssignments(
   users: User[],
-  vehicles: Vehicle[]
+  vehicles: Vehicle[],
 ): Promise<Assignment[]> {
   const assignmentRepo = AppDataSource.getRepository(Assignment);
 
@@ -462,52 +789,58 @@ async function createAssignments(
     vehicles.find((v) => v.licensePlate === licensePlate)!;
 
   const assignmentsData = [
-    // Management gets newer vehicles (long-term assignments)
+    // Current assignments (drivers)
     {
-      user: findUser("carlos.rodriguez@sample.test"),
+      user: findUser("ana.martinez@sample.test"),
       vehicle: findVehicle("ABC123"),
       startDate: "2024-01-01",
       endDate: null,
     },
     {
-      user: findUser("maria.gonzalez@sample.test"),
+      user: findUser("diego.garcia@sample.test"),
+      vehicle: findVehicle("DEF456"),
+      startDate: "2024-03-01",
+      endDate: null,
+    },
+    {
+      user: findUser("valentina.silva@sample.test"),
       vehicle: findVehicle("MNO345"),
       startDate: "2024-02-01",
       endDate: null,
     },
-    {
-      user: findUser("ana.martinez@sample.test"),
-      vehicle: findVehicle("QRS345"),
-      startDate: "2024-01-15",
-      endDate: null,
-    },
 
-    // Operations team gets versatile vehicles
+    // Old assignments (should not grant permission now)
     {
       user: findUser("juan.perez@sample.test"),
-      vehicle: findVehicle("DEF456"),
-      startDate: "2024-03-01",
-      endDate: "2025-06-30",
+      vehicle: findVehicle("ABC123"),
+      startDate: "2023-01-01",
+      endDate: "2023-12-31", // ended
     },
     {
       user: findUser("sofia.hernandez@sample.test"),
-      vehicle: findVehicle("STU901"),
-      startDate: "2024-04-01",
-      endDate: "2025-08-31",
-    },
-    {
-      user: findUser("diego.garcia@sample.test"),
-      vehicle: findVehicle("VWX234"),
-      startDate: "2024-05-01",
-      endDate: "2025-05-31",
+      vehicle: findVehicle("MNO345"),
+      startDate: "2023-06-01",
+      endDate: "2024-05-31", // ended
     },
 
-    // Field staff gets pickup trucks and vans
+    // Other assignments
+    {
+      user: findUser("carlos.rodriguez@sample.test"),
+      vehicle: findVehicle("QRS345"),
+      startDate: "2024-01-01",
+      endDate: null,
+    },
+    {
+      user: findUser("maria.gonzalez@sample.test"),
+      vehicle: findVehicle("STU901"),
+      startDate: "2024-02-01",
+      endDate: null,
+    },
     {
       user: findUser("andres.morales@sample.test"),
       vehicle: findVehicle("YZA567"),
       startDate: "2024-06-01",
-      endDate: "2025-03-31",
+      endDate: null,
     },
     {
       user: findUser("miguel.vargas@sample.test"),
@@ -519,21 +852,19 @@ async function createAssignments(
       user: findUser("isabella.ruiz@sample.test"),
       vehicle: findVehicle("HIJ456"),
       startDate: "2024-08-01",
-      endDate: "2025-07-31",
+      endDate: null,
     },
-
-    // Maintenance team gets compact vehicles
     {
       user: findUser("roberto.jimenez@sample.test"),
       vehicle: findVehicle("KLM789"),
       startDate: "2024-09-01",
-      endDate: "2025-02-28",
+      endDate: null,
     },
     {
       user: findUser("lucia.castro@sample.test"),
       vehicle: findVehicle("NOP012"),
       startDate: "2024-10-01",
-      endDate: "2025-04-30",
+      endDate: null,
     },
     {
       user: findUser("fernando.romero@sample.test"),
@@ -551,7 +882,7 @@ async function createAssignments(
 
 async function createAssignedMaintenances(
   vehicles: Vehicle[],
-  maintenances: Maintenance[]
+  maintenances: Maintenance[],
 ): Promise<AssignedMaintenance[]> {
   const assignedMaintenanceRepo =
     AppDataSource.getRepository(AssignedMaintenance);
@@ -661,7 +992,7 @@ async function createAssignedMaintenances(
   ];
 
   const assignedMaintenances = assignedMaintenanceRepo.create(
-    assignedMaintenancesData
+    assignedMaintenancesData,
   );
   const savedAssignedMaintenances =
     await assignedMaintenanceRepo.save(assignedMaintenances);
@@ -672,7 +1003,7 @@ async function createAssignedMaintenances(
 
 async function createSampleReservations(
   users: User[],
-  vehicles: Vehicle[]
+  vehicles: Vehicle[],
 ): Promise<Reservation[]> {
   const reservationRepo = AppDataSource.getRepository(Reservation);
 
@@ -710,7 +1041,7 @@ async function createSampleReservations(
 
 async function createVehicleResponsibles(
   users: User[],
-  vehicles: Vehicle[]
+  vehicles: Vehicle[],
 ): Promise<VehicleResponsible[]> {
   const responsibleRepo = AppDataSource.getRepository(VehicleResponsible);
 
@@ -720,35 +1051,58 @@ async function createVehicleResponsibles(
     vehicles.find((v) => v.licensePlate === licensePlate)!;
 
   const responsiblesData = [
-    // Current responsibles
+    // Current responsibles (positive cases)
     {
-      vehicle: findVehicle("ABC123"),
-      user: findUser("carlos.rodriguez@sample.test"),
+      vehicle: findVehicle("DEF456"), // V2
+      user: findUser("maria.gonzalez@sample.test"),
+      ceco: "23000000", // in range 23000000-23999999
       startDate: "2024-01-01",
       endDate: null,
     },
     {
-      vehicle: findVehicle("MNO345"),
-      user: findUser("maria.gonzalez@sample.test"),
+      vehicle: findVehicle("MNO345"), // V3
+      user: findUser("valentina.silva@sample.test"),
+      ceco: "17001234", // in range 17000000-17999999
       startDate: "2024-02-01",
       endDate: null,
     },
+
+    // Old responsibles (should not grant permission now)
     {
-      vehicle: findVehicle("DEF456"),
+      vehicle: findVehicle("ABC123"), // V1
       user: findUser("juan.perez@sample.test"),
-      startDate: "2024-03-01",
-      endDate: null,
+      ceco: "12003456", // in range 12000000-12999999
+      startDate: "2023-01-01",
+      endDate: "2023-12-31", // ended
     },
+    {
+      vehicle: findVehicle("DEF456"), // V2
+      user: findUser("diego.garcia@sample.test"),
+      ceco: "23000000",
+      startDate: "2023-06-01",
+      endDate: "2024-05-31", // ended
+    },
+
+    // Other responsibles
     {
       vehicle: findVehicle("YZA567"),
       user: findUser("andres.morales@sample.test"),
+      ceco: "18000123",
       startDate: "2024-06-01",
       endDate: null,
     },
     {
       vehicle: findVehicle("EFG123"),
       user: findUser("miguel.vargas@sample.test"),
+      ceco: "15000000",
       startDate: "2024-07-01",
+      endDate: null,
+    },
+    {
+      vehicle: findVehicle("HIJ456"),
+      user: findUser("isabella.ruiz@sample.test"),
+      ceco: "30000000", // outside ranges
+      startDate: "2024-08-01",
       endDate: null,
     },
   ];
@@ -759,9 +1113,95 @@ async function createVehicleResponsibles(
   return savedResponsibles;
 }
 
+// --- Authorization sample data (simplified) ---
+async function createAuthorizationData(users: User[], vehicles: Vehicle[]) {
+  const vehicleACLRepo = AppDataSource.getRepository(VehicleACL);
+  const userRoleRepo = AppDataSource.getRepository(UserRole);
+
+  // Helper finders
+  const findUser = (email: string) => users.find((u) => u.email === email)!;
+  const findVehicle = (lp: string) =>
+    vehicles.find((v) => v.licensePlate === lp)!;
+
+  // User roles (Carlos admin, others user)
+  const savedRoles = await userRoleRepo.save(
+    userRoleRepo.create([
+      {
+        user: findUser("carlos.rodriguez@sample.test"),
+        role: UserRoleEnum.ADMIN,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+        endTime: undefined, // indefinite
+      },
+      {
+        user: findUser("ana.martinez@sample.test"),
+        role: UserRoleEnum.USER,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+      },
+    ]),
+  );
+
+  // Simple Vehicle ACLs - direct user-vehicle-permission-period mappings
+  const savedACLs = await vehicleACLRepo.save(
+    vehicleACLRepo.create([
+      // Miguel has DRIVER permission on ABC123 and DEF456
+      {
+        user: findUser("miguel.vargas@sample.test"),
+        vehicle: findVehicle("ABC123"),
+        permission: PermissionType.DRIVER,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+        endTime: null,
+      },
+      {
+        user: findUser("miguel.vargas@sample.test"),
+        vehicle: findVehicle("DEF456"),
+        permission: PermissionType.DRIVER,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+        endTime: null,
+      },
+      // Juan (old driver) has READ permission on ABC123 via ACL
+      {
+        user: findUser("juan.perez@sample.test"),
+        vehicle: findVehicle("ABC123"),
+        permission: PermissionType.READ,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+        endTime: null,
+      },
+      // Lucia has MAINTAINER permission on GHI789
+      {
+        user: findUser("lucia.castro@sample.test"),
+        vehicle: findVehicle("GHI789"),
+        permission: PermissionType.MAINTAINER,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+        endTime: null,
+      },
+      // Roberto has FULL permission on STU901
+      {
+        user: findUser("roberto.jimenez@sample.test"),
+        vehicle: findVehicle("STU901"),
+        permission: PermissionType.FULL,
+        startTime: new Date("2024-01-01T00:00:00Z"),
+        endTime: null,
+      },
+      // Expired ACL example: Sofia had DRIVER permission on MNO345 but it expired
+      {
+        user: findUser("sofia.hernandez@sample.test"),
+        vehicle: findVehicle("MNO345"),
+        permission: PermissionType.DRIVER,
+        startTime: new Date("2023-06-01T00:00:00Z"),
+        endTime: new Date("2024-05-31T23:59:59Z"), // expired
+      },
+    ]),
+  );
+
+  return {
+    vehicleACLs: savedACLs.length,
+    userRoles: savedRoles.length,
+  };
+}
+
 async function createVehicleKilometers(
   users: User[],
-  vehicles: Vehicle[]
+  vehicles: Vehicle[],
 ): Promise<VehicleKilometers[]> {
   const kilometerRepo = AppDataSource.getRepository(VehicleKilometers);
 
@@ -822,7 +1262,7 @@ async function createVehicleKilometers(
 
 async function createMaintenanceRecords(
   users: User[],
-  assignedMaintenances: AssignedMaintenance[]
+  assignedMaintenances: AssignedMaintenance[],
 ): Promise<MaintenanceRecord[]> {
   const recordRepo = AppDataSource.getRepository(MaintenanceRecord);
 
@@ -833,17 +1273,17 @@ async function createMaintenanceRecords(
   const oilChangeABC = assignedMaintenances.find(
     (am) =>
       am.vehicle.licensePlate === "ABC123" &&
-      am.maintenance.name === "Oil Change"
+      am.maintenance.name === "Oil Change",
   );
   const oilChangeDEF = assignedMaintenances.find(
     (am) =>
       am.vehicle.licensePlate === "DEF456" &&
-      am.maintenance.name === "Oil Change"
+      am.maintenance.name === "Oil Change",
   );
   const tireRotationABC = assignedMaintenances.find(
     (am) =>
       am.vehicle.licensePlate === "ABC123" &&
-      am.maintenance.name === "Tire Rotation"
+      am.maintenance.name === "Tire Rotation",
   );
 
   const recordsData = [];
@@ -907,14 +1347,15 @@ export async function loadSampleData(): Promise<SampleDataStats> {
   const assignments = await createAssignments(users, vehicles);
   const assignedMaintenances = await createAssignedMaintenances(
     vehicles,
-    maintenances
+    maintenances,
   );
   const reservations = await createSampleReservations(users, vehicles);
   const vehicleResponsibles = await createVehicleResponsibles(users, vehicles);
   const vehicleKilometers = await createVehicleKilometers(users, vehicles);
+  const authStats = await createAuthorizationData(users, vehicles);
   const maintenanceRecords = await createMaintenanceRecords(
     users,
-    assignedMaintenances
+    assignedMaintenances,
   );
 
   const stats: SampleDataStats = {
@@ -928,6 +1369,8 @@ export async function loadSampleData(): Promise<SampleDataStats> {
     reservations: reservations.length,
     vehicleResponsibles: vehicleResponsibles.length,
     vehicleKilometers: vehicleKilometers.length,
+    vehicleACLs: authStats.vehicleACLs,
+    userRoles: authStats.userRoles,
   };
 
   console.log(`   Brands: ${brands.length}`);
@@ -944,6 +1387,8 @@ export async function loadSampleData(): Promise<SampleDataStats> {
   console.log(`   Reservations: ${stats.reservations}`);
   console.log(`   Vehicle Responsibles: ${stats.vehicleResponsibles}`);
   console.log(`   Vehicle Kilometers: ${stats.vehicleKilometers}`);
+  console.log(`   Vehicle ACLs: ${stats.vehicleACLs}`);
+  console.log(`   User Roles: ${stats.userRoles}`);
 
   return stats;
 }

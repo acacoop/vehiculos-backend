@@ -1,13 +1,20 @@
 import { DataSource, Repository } from "typeorm";
-import { MaintenanceRecord } from "../entities/MaintenanceRecord";
+import { MaintenanceRecord } from "@/entities/MaintenanceRecord";
+import {
+  IMaintenanceRecordRepository,
+  MaintenanceRecordFilters,
+} from "@/repositories/interfaces/IMaintenanceRecordRepository";
+import {
+  RepositoryFindOptions,
+  resolvePagination,
+} from "@/repositories/interfaces/common";
+import { applySearchFilter, applyFilters } from "@/utils";
 
-export interface MaintenanceRecordSearchParams {
-  userId?: string;
-  vehicleId?: string;
-  maintenanceId?: string;
-}
+export type { MaintenanceRecordFilters };
 
-export class MaintenanceRecordRepository {
+export class MaintenanceRecordRepository
+  implements IMaintenanceRecordRepository
+{
   private readonly repo: Repository<MaintenanceRecord>;
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(MaintenanceRecord);
@@ -15,33 +22,51 @@ export class MaintenanceRecordRepository {
   qb() {
     return this.repo.createQueryBuilder("mr");
   }
-  findAndCount(opts?: {
-    limit?: number;
-    offset?: number;
-    filters?: MaintenanceRecordSearchParams;
-  }) {
-    const { filters } = opts || {};
+
+  async findAndCount(
+    options?: RepositoryFindOptions<MaintenanceRecordFilters>,
+  ): Promise<[MaintenanceRecord[], number]> {
+    const { filters, search, pagination } = options || {};
+
     const qb = this.qb()
       .leftJoinAndSelect("mr.assignedMaintenance", "am")
       .leftJoinAndSelect("am.vehicle", "v")
+      .leftJoinAndSelect("v.model", "model")
+      .leftJoinAndSelect("model.brand", "brand")
       .leftJoinAndSelect("am.maintenance", "m")
-      .leftJoinAndSelect("mr.user", "u");
+      .leftJoinAndSelect("mr.user", "u")
+      .orderBy("mr.date", "DESC");
 
-    if (filters?.userId)
-      qb.andWhere("u.id = :userId", { userId: filters.userId });
-    if (filters?.vehicleId)
-      qb.andWhere("v.id = :vehicleId", { vehicleId: filters.vehicleId });
-    if (filters?.maintenanceId)
-      qb.andWhere("m.id = :maintenanceId", {
-        maintenanceId: filters.maintenanceId,
-      });
+    // Apply search filter across maintenance details, user, and vehicle
+    if (search) {
+      applySearchFilter(qb, search, [
+        "m.name",
+        "mr.notes",
+        "u.firstName",
+        "u.lastName",
+        "u.email",
+        "v.licensePlate",
+        "brand.name",
+        "model.name",
+      ]);
+    }
 
-    return qb
-      .orderBy("mr.date", "DESC")
-      .skip(opts?.offset)
-      .take(opts?.limit)
-      .getManyAndCount();
+    // Apply filters
+    applyFilters(qb, filters, {
+      userId: { field: "u.id" },
+      vehicleId: { field: "v.id" },
+      maintenanceId: { field: "m.id" },
+      assignedMaintenanceId: { field: "am.id" },
+    });
+
+    // Pagination
+    const { limit, offset } = resolvePagination(pagination);
+    qb.take(limit);
+    qb.skip(offset);
+
+    return qb.getManyAndCount();
   }
+
   findOne(id: string) {
     return this.repo.findOne({ where: { id } });
   }
@@ -49,6 +74,8 @@ export class MaintenanceRecordRepository {
     return this.qb()
       .leftJoinAndSelect("mr.assignedMaintenance", "am")
       .leftJoinAndSelect("am.vehicle", "v")
+      .leftJoinAndSelect("v.model", "model")
+      .leftJoinAndSelect("model.brand", "brand")
       .leftJoinAndSelect("am.maintenance", "m")
       .leftJoinAndSelect("mr.user", "u")
       .where("v.id = :vehicleId", { vehicleId })

@@ -1,22 +1,27 @@
-import { BaseController } from "./baseController";
-import type { VehicleResponsibleInput } from "../schemas/vehicleResponsible";
-import { AppError } from "../middleware/errorHandler";
+import { BaseController } from "@/controllers/baseController";
+import type { VehicleResponsibleInput } from "@/schemas/vehicleResponsible";
+import { AppError } from "@/middleware/errorHandler";
 import { Request, Response } from "express";
-import { asyncHandler } from "../middleware/errorHandler";
-import VehicleResponsiblesService from "../services/vehicleResponsiblesService";
+import { asyncHandler } from "@/middleware/errorHandler";
+import { VehicleResponsiblesService } from "@/services/vehicleResponsiblesService";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { AppDataSource } from "@/db";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { VehicleResponsibleFilters } from "@/repositories/interfaces/IVehicleResponsibleRepository";
+import { isValidUUID } from "@/utils";
 
-export class VehicleResponsiblesController extends BaseController {
+export class VehicleResponsiblesController extends BaseController<VehicleResponsibleFilters> {
   constructor(private readonly service: VehicleResponsiblesService) {
-    super("Vehicle Responsible");
+    super({
+      resourceName: "VehicleResponsible",
+      allowedFilters: ["vehicleId", "userId", "active", "date"],
+    });
   }
 
-  // Implement abstract methods from BaseController
-  protected async getAllService(options: {
-    limit: number;
-    offset: number;
-    searchParams?: Record<string, string>;
-  }) {
-    return await this.service.getAll(options);
+  protected async getAllService(
+    options: RepositoryFindOptions<Partial<VehicleResponsibleFilters>>,
+  ) {
+    return this.service.getAll(options);
   }
 
   protected async getByIdService(id: string) {
@@ -33,11 +38,6 @@ export class VehicleResponsiblesController extends BaseController {
     return await this.service.update(id, responsibleData);
   }
 
-  protected async patchService(id: string, data: unknown) {
-    const responsibleData = data as Partial<VehicleResponsibleInput>;
-    return await this.service.update(id, responsibleData);
-  }
-
   protected async deleteService(id: string) {
     return await this.service.delete(id);
   }
@@ -47,7 +47,7 @@ export class VehicleResponsiblesController extends BaseController {
     async (req: Request, res: Response) => {
       const vehicleId = req.params.vehicleId;
 
-      if (!this.isValidUUID(vehicleId)) {
+      if (!isValidUUID(vehicleId)) {
         throw new AppError(
           `Invalid UUID format provided: ${vehicleId}`,
           400,
@@ -75,7 +75,7 @@ export class VehicleResponsiblesController extends BaseController {
     async (req: Request, res: Response) => {
       const userId = req.params.userId;
 
-      if (!this.isValidUUID(userId)) {
+      if (!isValidUUID(userId)) {
         throw new AppError(
           `Invalid UUID format provided: ${userId}`,
           400,
@@ -91,5 +91,11 @@ export class VehicleResponsiblesController extends BaseController {
   );
 }
 
-export const createVehicleResponsiblesController = () =>
-  new VehicleResponsiblesController(new VehicleResponsiblesService());
+export const createVehicleResponsiblesController = (
+  service?: VehicleResponsiblesService,
+) => {
+  const svc =
+    service ??
+    new ServiceFactory(AppDataSource).createVehicleResponsiblesService();
+  return new VehicleResponsiblesController(svc);
+};

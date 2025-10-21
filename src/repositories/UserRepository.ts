@@ -1,43 +1,54 @@
-import { DataSource, ILike, Repository } from "typeorm";
-import { User as UserEntity } from "../entities/User";
+import { DataSource, Repository } from "typeorm";
+import { User as UserEntity } from "@/entities/User";
+import {
+  IUserRepository,
+  UserFilters,
+} from "@/repositories/interfaces/IUserRepository";
+import {
+  RepositoryFindOptions,
+  resolvePagination,
+} from "@/repositories/interfaces/common";
+import { applySearchFilter, applyFilters } from "@/utils";
 
-export interface UserSearchParams {
-  email?: string;
-  cuit?: string;
-  firstName?: string;
-  lastName?: string;
-  active?: string; // 'true' | 'false'
-}
+// Re-export types for convenience
+export type { UserFilters };
 
-export class UserRepository {
+export class UserRepository implements IUserRepository {
   private readonly repo: Repository<UserEntity>;
+
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(UserEntity);
   }
 
-  async findAndCount(opts?: {
-    limit?: number;
-    offset?: number;
-    searchParams?: UserSearchParams;
-  }): Promise<[UserEntity[], number]> {
-    const { searchParams } = opts || {};
-    const where: Record<string, unknown> = {};
-    if (searchParams) {
-      if (searchParams.email) where.email = searchParams.email;
-      if (searchParams.cuit) where.cuit = Number(searchParams.cuit);
-      if (searchParams.firstName)
-        where.firstName = ILike(`%${searchParams.firstName}%`);
-      if (searchParams.lastName)
-        where.lastName = ILike(`%${searchParams.lastName}%`);
-      if (searchParams.active !== undefined)
-        where.active = searchParams.active === "true";
+  async findAndCount(
+    opts?: RepositoryFindOptions<UserFilters>,
+  ): Promise<[UserEntity[], number]> {
+    const { filters, search, pagination } = opts || {};
+    const qb = this.repo.createQueryBuilder("u").orderBy("u.lastName", "ASC");
+
+    // Apply search filter
+    if (search) {
+      applySearchFilter(qb, search, [
+        "u.firstName",
+        "u.lastName",
+        "u.email",
+        "u.cuit",
+      ]);
     }
-    return this.repo.findAndCount({
-      where,
-      take: opts?.limit,
-      skip: opts?.offset,
-      order: { lastName: "ASC" },
+
+    // Apply filters
+    applyFilters(qb, filters, {
+      email: { field: "u.email" },
+      cuit: { field: "u.cuit", transform: (v) => Number(v) },
+      firstName: { field: "u.firstName", operator: "LIKE" },
+      lastName: { field: "u.lastName", operator: "LIKE" },
+      active: { field: "u.active", transform: (v) => v === "true" },
     });
+
+    const { limit, offset } = resolvePagination(pagination);
+    qb.take(limit).skip(offset);
+
+    return qb.getManyAndCount();
   }
 
   findOne(id: string) {
@@ -49,7 +60,7 @@ export class UserRepository {
   findByEmail(email: string) {
     return this.repo.findOne({ where: { email } });
   }
-  findByCuit(cuit: number) {
+  findByCuit(cuit: string) {
     return this.repo.findOne({ where: { cuit } });
   }
   create(data: Partial<UserEntity>) {

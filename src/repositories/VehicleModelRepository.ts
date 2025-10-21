@@ -1,37 +1,47 @@
-import { DataSource, ILike, Repository } from "typeorm";
-import { VehicleModel } from "../entities/VehicleModel";
+import { DataSource, Repository } from "typeorm";
+import { VehicleModel } from "@/entities/VehicleModel";
+import {
+  IVehicleModelRepository,
+  VehicleModelFilters,
+} from "@/repositories/interfaces/IVehicleModelRepository";
+import {
+  RepositoryFindOptions,
+  resolvePagination,
+} from "@/repositories/interfaces/common";
+import { applySearchFilter, applyFilters } from "@/utils";
 
-export interface VehicleModelSearchParams {
-  name?: string;
-  brandId?: string;
-}
+// Re-export types for convenience
+export type { VehicleModelFilters };
 
-export class VehicleModelRepository {
+export class VehicleModelRepository implements IVehicleModelRepository {
   private readonly repo: Repository<VehicleModel>;
   constructor(dataSource: DataSource) {
     this.repo = dataSource.getRepository(VehicleModel);
   }
 
-  async findAndCount(options?: {
-    limit?: number;
-    offset?: number;
-    searchParams?: VehicleModelSearchParams;
-  }): Promise<[VehicleModel[], number]> {
+  async findAndCount(
+    options?: RepositoryFindOptions<VehicleModelFilters>,
+  ): Promise<[VehicleModel[], number]> {
+    const { filters, search, pagination } = options || {};
     const qb = this.repo
       .createQueryBuilder("m")
       .leftJoinAndSelect("m.brand", "b")
       .orderBy("b.name", "ASC")
       .addOrderBy("m.name", "ASC");
-    if (options?.searchParams?.name) {
-      qb.andWhere("m.name ILIKE :name", {
-        name: `%${options.searchParams.name}%`,
-      });
+
+    // Apply search filter
+    if (search) {
+      applySearchFilter(qb, search, ["m.name", "b.name"]);
     }
-    if (options?.searchParams?.brandId) {
-      qb.andWhere("b.id = :brandId", { brandId: options.searchParams.brandId });
-    }
-    if (typeof options?.limit === "number") qb.take(options.limit);
-    if (typeof options?.offset === "number") qb.skip(options.offset);
+
+    // Apply filters
+    applyFilters(qb, filters, {
+      name: { field: "m.name", operator: "LIKE" },
+      brandId: { field: "b.id" },
+    });
+
+    const { limit, offset } = resolvePagination(pagination);
+    qb.take(limit).skip(offset);
     return qb.getManyAndCount();
   }
 

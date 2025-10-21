@@ -1,16 +1,13 @@
-import { AppDataSource } from "../db";
-import { MaintenanceCategory as MaintenanceCategoryEntity } from "../entities/MaintenanceCategory";
-import { MaintenanceCategoryRepository } from "../repositories/MaintenanceCategoryRepository";
-import type { MaintenanceCategory } from "../schemas/maintenance/category";
+import { MaintenanceCategory as MaintenanceCategoryEntity } from "@/entities/MaintenanceCategory";
+import { IMaintenanceCategoryRepository } from "@/repositories/interfaces/IMaintenanceCategoryRepository";
+import type { MaintenanceCategory } from "@/schemas/maintenanceCategory";
 
 function map(e: MaintenanceCategoryEntity): MaintenanceCategory {
   return { id: e.id, name: e.name };
 }
 
 export class MaintenanceCategoriesService {
-  constructor(
-    private readonly repo = new MaintenanceCategoryRepository(AppDataSource),
-  ) {}
+  constructor(private readonly repo: IMaintenanceCategoryRepository) {}
   async getAll(): Promise<MaintenanceCategory[]> {
     const list = await this.repo.findAll();
     return list.map(map);
@@ -40,8 +37,4 @@ export class MaintenanceCategoriesService {
     const res = await this.repo.delete(id);
     return res.affected === 1;
   }
-}
-
-export function createMaintenanceCategoriesService() {
-  return new MaintenanceCategoriesService();
 }

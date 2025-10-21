@@ -4,10 +4,13 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  Check,
 } from "typeorm";
-import { MaintenanceCategory } from "./MaintenanceCategory";
+import { MaintenanceCategory } from "@/entities/MaintenanceCategory";
 
 @Entity({ name: "maintenances" })
+@Check("(kilometers_frequency IS NULL OR kilometers_frequency > 0)")
+@Check("(days_frequency IS NULL OR days_frequency > 0)")
 export class Maintenance {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
@@ -16,7 +19,7 @@ export class Maintenance {
   @JoinColumn({ name: "category_id" })
   category!: MaintenanceCategory;
 
-  @Column()
+  @Column({ length: 200 })
   name!: string;
 
   @Column({ name: "kilometers_frequency", type: "int", nullable: true })

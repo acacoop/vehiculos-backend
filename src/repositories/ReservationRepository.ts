@@ -1,32 +1,63 @@
 import { DataSource, In, Repository } from "typeorm";
-import { Reservation } from "../entities/Reservation";
+import { Reservation } from "@/entities/Reservation";
+import {
+  IReservationRepository,
+  ReservationFilters,
+} from "@/repositories/interfaces/IReservationRepository";
+import {
+  RepositoryFindOptions,
+  resolvePagination,
+} from "@/repositories/interfaces/common";
+import { applySearchFilter, applyFilters } from "@/utils";
 
-export interface ReservationSearchParams {
-  userId?: string;
-  vehicleId?: string;
-}
+export type { ReservationFilters };
 
-export class ReservationRepository {
+export class ReservationRepository implements IReservationRepository {
   private readonly repo: Repository<Reservation>;
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(Reservation);
   }
-  findAndCount(opts?: {
-    limit?: number;
-    offset?: number;
-    searchParams?: ReservationSearchParams;
-  }) {
-    const { searchParams } = opts || {};
-    const where: Record<string, unknown> = {};
-    if (searchParams?.userId) where.user = { id: searchParams.userId };
-    if (searchParams?.vehicleId) where.vehicle = { id: searchParams.vehicleId };
-    return this.repo.findAndCount({
-      where,
-      take: opts?.limit,
-      skip: opts?.offset,
-      order: { startDate: "DESC" },
+
+  async findAndCount(
+    options?: RepositoryFindOptions<ReservationFilters>,
+  ): Promise<[Reservation[], number]> {
+    const { filters, search, pagination } = options || {};
+
+    const qb = this.repo
+      .createQueryBuilder("r")
+      .leftJoinAndSelect("r.user", "u")
+      .leftJoinAndSelect("r.vehicle", "v")
+      .leftJoinAndSelect("v.model", "m")
+      .leftJoinAndSelect("m.brand", "b")
+      .orderBy("r.startDate", "DESC");
+
+    // Apply search filter across user and vehicle information
+    if (search) {
+      applySearchFilter(qb, search, [
+        "u.firstName",
+        "u.lastName",
+        "u.email",
+        "u.cuit",
+        "v.licensePlate",
+        "v.chassisNumber",
+        "b.name",
+        "m.name",
+      ]);
+    }
+
+    // Apply filters
+    applyFilters(qb, filters, {
+      userId: { field: "u.id" },
+      vehicleId: { field: "v.id" },
     });
+
+    // Pagination defaults (limit and offset optional)
+    const { limit, offset } = resolvePagination(pagination);
+    qb.take(limit);
+    qb.skip(offset);
+    return qb.getManyAndCount();
   }
+
   find(where: Record<string, unknown>) {
     return this.repo.find({ where, order: { startDate: "DESC" } });
   }
@@ -38,6 +69,9 @@ export class ReservationRepository {
   }
   save(entity: Reservation) {
     return this.repo.save(entity);
+  }
+  delete(id: string) {
+    return this.repo.delete(id);
   }
   distinctVehicleIdsByAssignedUser(userId: string) {
     return this.repo

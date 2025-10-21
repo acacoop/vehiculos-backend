@@ -1,28 +1,29 @@
-import { BaseController } from "./baseController";
-import type { Assignment } from "../schemas/assignment";
-import { AppError, asyncHandler } from "../middleware/errorHandler";
+import { BaseController } from "@/controllers/baseController";
+import type { Assignment } from "@/schemas/assignment";
+import { AppError, asyncHandler } from "@/middleware/errorHandler";
 import { Request, Response } from "express";
 import {
   AssignmentUpdateSchema,
   AssignmentFinishSchema,
-} from "../schemas/assignment";
-import {
-  AssignmentsService,
-  createAssignmentsService,
-} from "../services/assignmentsService";
+} from "@/schemas/assignment";
+import { AssignmentsService } from "@/services/assignmentsService";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { AppDataSource } from "@/db";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { AssignmentFilters } from "@/repositories/interfaces/IAssignmentRepository";
 
-export class AssignmentsController extends BaseController {
+export class AssignmentsController extends BaseController<AssignmentFilters> {
   constructor(private readonly service: AssignmentsService) {
-    super("Assignment");
+    super({
+      resourceName: "Assignment",
+      allowedFilters: ["userId", "vehicleId", "date"],
+    });
   }
 
-  // Implement abstract methods from BaseController
-  protected async getAllService(options: {
-    limit: number;
-    offset: number;
-    searchParams?: Record<string, string>;
-  }) {
-    return await this.service.getAll(options);
+  protected async getAllService(
+    options: RepositoryFindOptions<Partial<AssignmentFilters>>,
+  ) {
+    return this.service.getAll(options);
   }
 
   protected async getByIdService(id: string) {
@@ -34,20 +35,7 @@ export class AssignmentsController extends BaseController {
     return await this.service.create(assignmentData);
   }
 
-  // Not implemented for assignments - these operations are not supported
   protected async updateService(
-    _id: string,
-    _data: unknown,
-  ): Promise<unknown | null> {
-    throw new AppError(
-      "Update operation is not supported for assignments. Use PATCH instead.",
-      405,
-      "https://example.com/problems/method-not-allowed",
-      "Method Not Allowed",
-    );
-  }
-
-  protected async patchService(
     id: string,
     data: unknown,
   ): Promise<unknown | null> {
@@ -82,7 +70,6 @@ export class AssignmentsController extends BaseController {
     }
   }
 
-  // Custom method to finish/end an assignment
   public finishAssignment = asyncHandler(
     async (req: Request, res: Response) => {
       const id = req.params.id;
@@ -140,6 +127,10 @@ export class AssignmentsController extends BaseController {
   }
 }
 
-export function createAssignmentsController() {
-  return new AssignmentsController(createAssignmentsService());
+export function createAssignmentsController(
+  service?: AssignmentsService,
+): AssignmentsController {
+  const svc =
+    service ?? new ServiceFactory(AppDataSource).createAssignmentsService();
+  return new AssignmentsController(svc);
 }
