@@ -4,7 +4,10 @@ import {
   IVehicleBrandRepository,
   VehicleBrandFilters,
 } from "@/repositories/interfaces/IVehicleBrandRepository";
-import { RepositoryFindOptions, resolvePagination } from "@/repositories/interfaces/common";
+import {
+  RepositoryFindOptions,
+  resolvePagination,
+} from "@/repositories/interfaces/common";
 import { applySearchFilter, applyFilters } from "@/utils";
 
 // Re-export types for convenience

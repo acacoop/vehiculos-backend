@@ -11,7 +11,10 @@ import {
   IAssignmentRepository,
   AssignmentFilters,
 } from "@/repositories/interfaces/IAssignmentRepository";
-import { RepositoryFindOptions, resolvePagination } from "@/repositories/interfaces/common";
+import {
+  RepositoryFindOptions,
+  resolvePagination,
+} from "@/repositories/interfaces/common";
 import { applySearchFilter, applyFilters } from "@/utils";
 
 export type { AssignmentFilters };

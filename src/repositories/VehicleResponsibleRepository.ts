@@ -4,7 +4,10 @@ import {
   IVehicleResponsibleRepository,
   VehicleResponsibleFilters,
 } from "@/repositories/interfaces/IVehicleResponsibleRepository";
-import { RepositoryFindOptions, resolvePagination } from "@/repositories/interfaces/common";
+import {
+  RepositoryFindOptions,
+  resolvePagination,
+} from "@/repositories/interfaces/common";
 import { applySearchFilter, applyFilters } from "@/utils";
 
 export type { VehicleResponsibleFilters };

@@ -15,10 +15,10 @@
     "sync:users": "ts-node-dev --env-file=.env src/scripts/syncEntraUsers.ts",
     "sample-data": "ts-node-dev --env-file=.env src/scripts/loadSampleData.ts",
     "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json}\"",
-    "migration:generate": "ts-node-dev node_modules/typeorm/cli.js migration:generate -d src/db.ts",
-    "migration:create": "ts-node-dev node_modules/typeorm/cli.js migration:create -d src/db.ts",
-    "migration:run": "ts-node-dev node_modules/typeorm/cli.js migration:run -d src/db.ts",
-    "migration:revert": "ts-node-dev node_modules/typeorm/cli.js migration:revert -d src/db.ts"
+    "migration:generate": "ts-node-dev --require tsconfig-paths/register node_modules/typeorm/cli.js migration:generate -d src/db.ts src/migrations/$NAME",
+    "migration:create": "ts-node-dev --require tsconfig-paths/register node_modules/typeorm/cli.js migration:create -d src/db.ts",
+    "migration:run": "ts-node-dev --require tsconfig-paths/register node_modules/typeorm/cli.js migration:run -d src/db.ts",
+    "migration:revert": "ts-node-dev --require tsconfig-paths/register node_modules/typeorm/cli.js migration:revert -d src/db.ts"
   },
   "engines": {
     "node": ">=22"

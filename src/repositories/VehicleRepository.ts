@@ -4,7 +4,10 @@ import {
   IVehicleRepository,
   VehicleFilters,
 } from "@/repositories/interfaces/IVehicleRepository";
-import { RepositoryFindOptions, resolvePagination } from "@/repositories/interfaces/common";
+import {
+  RepositoryFindOptions,
+  resolvePagination,
+} from "@/repositories/interfaces/common";
 import { applySearchFilter, applyFilters } from "@/utils";
 
 export class VehicleRepository implements IVehicleRepository {

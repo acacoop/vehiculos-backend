@@ -69,7 +69,7 @@ test:
 migration-generate:
 	@echo "Generating migration..."; \
 	$(MAKE) wait-db; \
-	DB_HOST=$(HOST_DB_HOST) npm run migration:generate -- -n $(filter-out $@,$(MAKECMDGOALS))
+	NAME=$(filter-out $@,$(MAKECMDGOALS)) DB_HOST=$(HOST_DB_HOST) npm run migration:generate
 
 migration-run:
 	@echo "Running migrations..."; \
