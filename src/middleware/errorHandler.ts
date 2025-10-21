@@ -63,14 +63,12 @@ const createProblemDetails = (
   return problem;
 };
 
-// Global error handler
 export const globalErrorHandler = (
   err: Error,
   req: Request,
   res: Response,
   _next: NextFunction,
 ): void => {
-  // Set content type for RFC 7807
   res.set("Content-Type", "application/problem+json");
 
   if (err instanceof AppError) {
@@ -104,7 +102,6 @@ export const globalErrorHandler = (
     return;
   }
 
-  // Generic server error
   console.error("Unexpected error:", err);
   const problem = createProblemDetails(
     500,
@@ -116,7 +113,6 @@ export const globalErrorHandler = (
   res.status(500).json(problem);
 };
 
-// Helper function to get default titles for status codes
 const getDefaultTitle = (statusCode: number): string => {
   const titles: Record<number, string> = {
     400: "Bad Request",
@@ -131,7 +127,6 @@ const getDefaultTitle = (statusCode: number): string => {
   return titles[statusCode] || "Error";
 };
 
-// Async wrapper to catch errors
 type AsyncFunction = (
   req: Request,
   res: Response,

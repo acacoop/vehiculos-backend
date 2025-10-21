@@ -37,7 +37,6 @@ jobs:
 
             - name: Run linter
               run: npx eslint . --max-warnings 0
-              continue-on-error: true
 
             - name: Run tests
               run: npm test

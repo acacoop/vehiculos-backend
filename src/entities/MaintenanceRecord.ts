@@ -6,8 +6,8 @@ import {
   JoinColumn,
   Check,
 } from "typeorm";
-import { AssignedMaintenance } from "./AssignedMaintenance";
-import { User } from "./User";
+import { AssignedMaintenance } from "@/entities/AssignedMaintenance";
+import { User } from "@/entities/User";
 
 @Entity({ name: "maintenance_records" })
 @Check("kilometers >= 0")

@@ -18,7 +18,7 @@ WORKDIR /app
 
 # Copy only needed files from builder (prune dev deps by reinstalling prod only)
 COPY package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 
 # Copy compiled output and any runtime assets (openAPI, etc.)
 COPY --from=builder /app/dist ./dist

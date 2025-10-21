@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
-import { VehicleACLService } from "../services/vehicleACLService";
-import { VehicleACL } from "../entities/VehicleACL";
-import { PermissionType } from "../utils/common";
-import { User } from "../entities/User";
-import { Vehicle } from "../entities/Vehicle";
+import { VehicleACLService } from "@/services/vehicleACLService";
+import { VehicleACL } from "@/entities/VehicleACL";
+import { PermissionType } from "@/utils";
+import { User } from "@/entities/User";
+import { Vehicle } from "@/entities/Vehicle";
 import { DeleteResult } from "typeorm";
-import { VehicleACLRepository } from "../repositories/VehicleACLRepository";
+import { VehicleACLRepository } from "@/repositories/VehicleACLRepository";
 
 // Mock VehicleACLRepository
 class MockVehicleACLRepository {
@@ -13,33 +13,50 @@ class MockVehicleACLRepository {
   private idCounter = 1;
 
   async findAndCount(opts?: {
-    limit?: number;
-    offset?: number;
-    searchParams?: {
+    pagination?: { limit?: number; offset?: number };
+    filters?: {
       userId?: string;
       vehicleId?: string;
       activeAt?: Date;
+      permission?: PermissionType;
     };
+    search?: string;
   }): Promise<[VehicleACL[], number]> {
-    const { limit = 10, offset = 0, searchParams } = opts || {};
+    const { pagination, filters, search } = opts || {};
+    const limit = pagination?.limit || 10;
+    const offset = pagination?.offset || 0;
     let filtered = [...this.acls];
 
-    if (searchParams) {
-      if (searchParams.userId) {
+    // Apply search
+    if (search) {
+      filtered = filtered.filter(
+        (acl) =>
+          acl.user.id.toLowerCase().includes(search.toLowerCase()) ||
+          acl.vehicle.id.toLowerCase().includes(search.toLowerCase()) ||
+          acl.permission.toLowerCase().includes(search.toLowerCase()),
+      );
+    }
+
+    // Apply filters
+    if (filters) {
+      if (filters.userId) {
+        filtered = filtered.filter((acl) => acl.user.id === filters.userId);
+      }
+      if (filters.vehicleId) {
         filtered = filtered.filter(
-          (acl) => acl.user.id === searchParams.userId,
+          (acl) => acl.vehicle.id === filters.vehicleId,
         );
       }
-      if (searchParams.vehicleId) {
+      if (filters.permission) {
         filtered = filtered.filter(
-          (acl) => acl.vehicle.id === searchParams.vehicleId,
+          (acl) => acl.permission === filters.permission,
         );
       }
-      if (searchParams.activeAt) {
+      if (filters.activeAt) {
         filtered = filtered.filter(
           (acl) =>
-            acl.startTime <= searchParams.activeAt! &&
-            (!acl.endTime || acl.endTime > searchParams.activeAt!),
+            acl.startTime <= filters.activeAt! &&
+            (!acl.endTime || acl.endTime > filters.activeAt!),
         );
       }
     }
@@ -208,7 +225,7 @@ describe("VehicleACLService", () => {
       mockRepo.seedACLs(acls);
 
       const result = await service.getAll({
-        searchParams: { userId: "user1" },
+        filters: { userId: "user1" },
       });
 
       expect(result.items).toHaveLength(1);
@@ -238,7 +255,7 @@ describe("VehicleACLService", () => {
       mockRepo.seedACLs(acls);
 
       const result = await service.getAll({
-        searchParams: { vehicleId: "vehicle1" },
+        filters: { vehicleId: "vehicle1" },
       });
 
       expect(result.items).toHaveLength(2);
@@ -272,7 +289,7 @@ describe("VehicleACLService", () => {
       mockRepo.seedACLs(acls);
 
       const result = await service.getAll({
-        searchParams: { activeAt: new Date() },
+        filters: { activeAt: new Date() },
       });
 
       expect(result.items).toHaveLength(1);

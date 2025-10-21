@@ -1,11 +1,11 @@
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
-import { VehicleKilometersService } from "../services/vehicleKilometersService";
-import { IVehicleKilometersRepository } from "../repositories/interfaces/IVehicleKilometersRepository";
-import { VehicleKilometers as VehicleKilometersEntity } from "../entities/VehicleKilometers";
-import { User } from "../entities/User";
-import { Vehicle } from "../entities/Vehicle";
-import { VehicleModel } from "../entities/VehicleModel";
-import { VehicleKilometersRepository } from "../repositories/VehicleKilometersRepository";
+import { VehicleKilometersService } from "@/services/vehicleKilometersService";
+import { IVehicleKilometersRepository } from "@/repositories/interfaces/IVehicleKilometersRepository";
+import { VehicleKilometers as VehicleKilometersEntity } from "@/entities/VehicleKilometers";
+import { User } from "@/entities/User";
+import { Vehicle } from "@/entities/Vehicle";
+import { VehicleModel } from "@/entities/VehicleModel";
+import { VehicleKilometersRepository } from "@/repositories/VehicleKilometersRepository";
 import { Repository } from "typeorm";
 
 describe("VehicleKilometersService", () => {

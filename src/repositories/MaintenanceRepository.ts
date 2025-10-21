@@ -1,8 +1,8 @@
 import { DataSource, Repository } from "typeorm";
-import { Maintenance } from "../entities/Maintenance";
-import { AssignedMaintenance } from "../entities/AssignedMaintenance";
-import { IMaintenanceRepository } from "./interfaces/IMaintenanceRepository";
-import { IAssignedMaintenanceRepository } from "./interfaces/IAssignedMaintenanceRepository";
+import { Maintenance } from "@/entities/Maintenance";
+import { AssignedMaintenance } from "@/entities/AssignedMaintenance";
+import { IMaintenanceRepository } from "@/repositories/interfaces/IMaintenanceRepository";
+import { IAssignedMaintenanceRepository } from "@/repositories/interfaces/IAssignedMaintenanceRepository";
 
 export class MaintenanceRepository implements IMaintenanceRepository {
   private readonly repo: Repository<Maintenance>;

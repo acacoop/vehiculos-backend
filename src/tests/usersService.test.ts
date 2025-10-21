@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
-import { UsersService } from "../services/usersService";
-import { IUserRepository } from "../repositories/interfaces/IUserRepository";
-import { User } from "../entities/User";
+import { UsersService } from "@/services/usersService";
+import { IUserRepository } from "@/repositories/interfaces/IUserRepository";
+import { User } from "@/entities/User";
 import { DeleteResult } from "typeorm";
 
 class MockUserRepository implements IUserRepository {
@@ -9,33 +9,43 @@ class MockUserRepository implements IUserRepository {
   private idCounter = 1;
 
   async findAndCount(opts?: {
-    limit?: number;
-    offset?: number;
-    searchParams?: Record<string, string>;
+    pagination?: { limit?: number; offset?: number };
+    filters?: Record<string, string>;
+    search?: string;
   }): Promise<[User[], number]> {
-    const { limit = 10, offset = 0, searchParams } = opts || {};
+    const { pagination, filters, search } = opts || {};
+    const limit = pagination?.limit || 10;
+    const offset = pagination?.offset || 0;
     let filtered = [...this.users];
 
-    if (searchParams) {
-      if (searchParams.email) {
-        filtered = filtered.filter((u) => u.email === searchParams.email);
+    // Apply search
+    if (search) {
+      filtered = filtered.filter(
+        (u) =>
+          u.firstName.toLowerCase().includes(search.toLowerCase()) ||
+          u.lastName.toLowerCase().includes(search.toLowerCase()) ||
+          u.email.toLowerCase().includes(search.toLowerCase()) ||
+          (u.cuit && u.cuit.includes(search)),
+      );
+    }
+
+    // Apply filters
+    if (filters) {
+      if (filters.email) {
+        filtered = filtered.filter((u) => u.email === filters.email);
       }
-      if (searchParams.firstName) {
+      if (filters.firstName) {
         filtered = filtered.filter((u) =>
-          u.firstName
-            .toLowerCase()
-            .includes(searchParams.firstName.toLowerCase()),
+          u.firstName.toLowerCase().includes(filters.firstName.toLowerCase()),
         );
       }
-      if (searchParams.lastName) {
+      if (filters.lastName) {
         filtered = filtered.filter((u) =>
-          u.lastName
-            .toLowerCase()
-            .includes(searchParams.lastName.toLowerCase()),
+          u.lastName.toLowerCase().includes(filters.lastName.toLowerCase()),
         );
       }
-      if (searchParams.active !== undefined) {
-        const isActive = searchParams.active === "true";
+      if (filters.active !== undefined) {
+        const isActive = filters.active === "true";
         filtered = filtered.filter((u) => u.active === isActive);
       }
     }
@@ -126,7 +136,9 @@ describe("UsersService", () => {
       ];
       mockRepo.seedUsers(users);
 
-      const result = await service.getAll({ limit: 2, offset: 0 });
+      const result = await service.getAll({
+        pagination: { limit: 2, offset: 0 },
+      });
 
       expect(result.items).toHaveLength(2);
       expect(result.total).toBe(3);
@@ -142,7 +154,7 @@ describe("UsersService", () => {
       mockRepo.seedUsers(users);
 
       const result = await service.getAll({
-        searchParams: { active: "true" },
+        filters: { active: "true" },
       });
 
       expect(result.items).toHaveLength(1);

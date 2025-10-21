@@ -1,16 +1,20 @@
-import { BaseController } from "./baseController";
-import { VehicleModelService } from "../services/vehicleModelService";
-import type { VehicleModelInput } from "../schemas/vehicleModel";
+import { BaseController } from "@/controllers/baseController";
+import { VehicleModelService } from "@/services/vehicleModelsService";
+import type { VehicleModelInput } from "@/schemas/vehicleModel";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { VehicleModelFilters } from "@/repositories/interfaces/IVehicleModelRepository";
 
-export class VehicleModelsController extends BaseController {
+export class VehicleModelsController extends BaseController<VehicleModelFilters> {
   constructor(private readonly service: VehicleModelService) {
-    super("VehicleModel");
+    super({
+      resourceName: "VehicleModel",
+      allowedFilters: ["name", "brandId"],
+    });
   }
-  protected async getAllService(options: {
-    limit: number;
-    offset: number;
-    searchParams?: Record<string, string>;
-  }) {
+
+  protected async getAllService(
+    options: RepositoryFindOptions<Partial<VehicleModelFilters>>,
+  ) {
     return this.service.getAll(options);
   }
   protected async getByIdService(id: string) {
@@ -20,9 +24,6 @@ export class VehicleModelsController extends BaseController {
     return this.service.create(data as VehicleModelInput);
   }
   protected async updateService(id: string, data: Partial<VehicleModelInput>) {
-    return this.service.update(id, data);
-  }
-  protected async patchService(id: string, data: Partial<VehicleModelInput>) {
     return this.service.update(id, data);
   }
   protected async deleteService(id: string) {

@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { asyncHandler, AppError } from "../middleware/errorHandler";
-import { AuthenticatedRequest } from "../middleware/auth";
-import { ServiceFactory } from "../factories/serviceFactory";
-import { AppDataSource } from "../db";
+import { asyncHandler, AppError } from "@/middleware/errorHandler";
+import { AuthenticatedRequest } from "@/middleware/auth";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { AppDataSource } from "@/db";
 
 const serviceFactory = new ServiceFactory(AppDataSource);
 const usersService = serviceFactory.createUsersService();
@@ -10,7 +10,6 @@ const usersService = serviceFactory.createUsersService();
 export class MeController {
   public getCurrent = asyncHandler(async (req: Request, res: Response) => {
     const { user } = req as AuthenticatedRequest;
-    // requireAuth guarantees req.user exists; guard just in case
     if (!user) {
       throw new AppError(
         "Unauthorized",
@@ -21,7 +20,6 @@ export class MeController {
     }
     const dbUser = await usersService.getById(user.id);
     if (!dbUser) {
-      // Should not happen because middleware validated, but handle gracefully
       throw new AppError(
         "User not found",
         404,
@@ -29,7 +27,6 @@ export class MeController {
         "Resource Not Found",
       );
     }
-    // Return in the same format as other user endpoints
     res.status(200).json({ status: "success", data: dbUser });
   });
 }

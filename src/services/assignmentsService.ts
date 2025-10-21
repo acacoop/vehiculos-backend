@@ -1,13 +1,18 @@
-import { IAssignmentRepository } from "../repositories/interfaces/IAssignmentRepository";
-import { Assignment as AssignmentEntity } from "../entities/Assignment";
-import { User as UserEntity } from "../entities/User";
-import { Vehicle as VehicleEntity } from "../entities/Vehicle";
-import type { Assignment } from "../schemas/assignment";
-import { validateUserExists, validateVehicleExists } from "../utils/validators";
-import { validateISODateFormat } from "../utils/dateValidators";
+import {
+  IAssignmentRepository,
+  AssignmentFilters,
+} from "@/repositories/interfaces/IAssignmentRepository";
+import { Assignment as AssignmentEntity } from "@/entities/Assignment";
+import { User as UserEntity } from "@/entities/User";
+import { Vehicle as VehicleEntity } from "@/entities/Vehicle";
+import type { Assignment } from "@/schemas/assignment";
+import {
+  validateUserExists,
+  validateVehicleExists,
+} from "@/utils/validation/entity";
+import { validateISODateFormat } from "@/utils";
 import { Repository } from "typeorm";
-import { RepositoryFindOptions } from "../repositories/interfaces/common";
-import { AssignmentSearchParams } from "../repositories/interfaces/IAssignmentRepository";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 // Composite detail type (previously in ../types)
 export interface AssignmentWithDetails {
@@ -73,7 +78,7 @@ export class AssignmentsService {
   ) {}
 
   async getAll(
-    options?: RepositoryFindOptions<AssignmentSearchParams>,
+    options?: RepositoryFindOptions<AssignmentFilters>,
   ): Promise<{ items: AssignmentWithDetails[]; total: number }> {
     const { 0: list, 1: total } = await this.repo.findAndCount(options);
     return { items: list.map(mapEntityToDetails), total };

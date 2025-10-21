@@ -1,14 +1,16 @@
-import { DataSource, Repository, SelectQueryBuilder } from "typeorm";
-import { VehicleResponsible as VehicleResponsibleEntity } from "../entities/VehicleResponsible";
+import { DataSource, Repository } from "typeorm";
+import { VehicleResponsible as VehicleResponsibleEntity } from "@/entities/VehicleResponsible";
 import {
   IVehicleResponsibleRepository,
-  VehicleResponsibleSearchParams,
-} from "./interfaces/IVehicleResponsibleRepository";
-import { RepositoryFindOptions, resolvePagination } from "./interfaces/common";
-import { UserRoleEnum } from "../utils/common";
-import { getAllowedPermissions } from "../utils/permissions";
+  VehicleResponsibleFilters,
+} from "@/repositories/interfaces/IVehicleResponsibleRepository";
+import {
+  RepositoryFindOptions,
+  resolvePagination,
+} from "@/repositories/interfaces/common";
+import { applySearchFilter, applyFilters } from "@/utils";
 
-export type { VehicleResponsibleSearchParams };
+export type { VehicleResponsibleFilters };
 
 export class VehicleResponsibleRepository
   implements IVehicleResponsibleRepository
@@ -45,91 +47,52 @@ export class VehicleResponsibleRepository
   }
 
   async find(
-    options?: RepositoryFindOptions<VehicleResponsibleSearchParams>,
+    options?: RepositoryFindOptions<VehicleResponsibleFilters>,
   ): Promise<[VehicleResponsibleEntity[], number]> {
-    const { searchParams, pagination, permissions } = options || {};
+    const { filters, search, pagination } = options || {};
     const qb = this.baseQuery();
 
-    // Apply search filters
-    if (searchParams?.vehicleId) {
-      qb.andWhere("vehicle.id = :vehicleId", {
-        vehicleId: searchParams.vehicleId,
-      });
+    // Apply search filter across user and vehicle information
+    if (search) {
+      applySearchFilter(qb, search, [
+        "user.firstName",
+        "user.lastName",
+        "user.email",
+        "vehicle.licensePlate",
+        "vehicle.chassisNumber",
+        "brand.name",
+        "model.name",
+      ]);
     }
-    if (searchParams?.userId) {
-      qb.andWhere("user.id = :userId", { userId: searchParams.userId });
-    }
-    if (searchParams?.active === "true") {
+
+    // Apply filters
+    applyFilters(qb, filters, {
+      vehicleId: { field: "vehicle.id" },
+      userId: { field: "user.id" },
+    });
+
+    // Handle active filter separately (complex condition)
+    if (filters?.active === "true") {
       qb.andWhere("vr.end_date IS NULL");
     }
-    if (searchParams?.active === "false") {
+    if (filters?.active === "false") {
       qb.andWhere("vr.end_date IS NOT NULL");
     }
-    if (searchParams?.date) {
+
+    // Handle date filter separately (complex condition)
+    if (filters?.date) {
       qb.andWhere(
         "vr.startDate <= :d AND (vr.endDate IS NULL OR vr.endDate >= :d)",
-        { d: searchParams.date },
+        { d: filters.date },
       );
     }
 
-    // Apply permission-based filtering
-    if (permissions?.userId && permissions.userRole !== UserRoleEnum.ADMIN) {
-      this.applyPermissionFilter(qb, permissions);
-    }
-
-    // Apply pagination
-    qb.orderBy("vr.startDate", "DESC");
+    // Pagination
     const { limit, offset } = resolvePagination(pagination);
     qb.take(limit);
     qb.skip(offset);
 
     return qb.getManyAndCount();
-  }
-
-  /**
-   * Apply permission-based filtering to vehicle responsibles
-   * Users can only see responsible records for vehicles they have access to
-   */
-  private applyPermissionFilter(
-    qb: SelectQueryBuilder<VehicleResponsibleEntity>,
-    permissions: RepositoryFindOptions["permissions"],
-  ): void {
-    const now = new Date();
-    const { userId, requiredPermission } = permissions!;
-
-    qb.andWhere(
-      `(
-        EXISTS (
-          SELECT 1 FROM vehicle_acl acl
-          WHERE acl.vehicle_id = vehicle.id
-          AND acl.user_id = :userId
-          AND acl.start_time <= :now
-          AND (acl.end_time IS NULL OR acl.end_time > :now)
-          ${requiredPermission ? "AND acl.permission IN (:...allowedPermissions)" : ""}
-        )
-        OR EXISTS (
-          SELECT 1 FROM vehicle_responsibles vr2
-          WHERE vr2.vehicle_id = vehicle.id
-          AND vr2.user_id = :userId
-          AND vr2.start_time <= :now
-          AND (vr2.end_time IS NULL OR vr2.end_time > :now)
-        )
-        OR EXISTS (
-          SELECT 1 FROM assignments asn
-          WHERE asn.vehicle_id = vehicle.id
-          AND asn.user_id = :userId
-          AND asn.start_date <= CURRENT_DATE
-          AND (asn.end_date IS NULL OR asn.end_date >= CURRENT_DATE)
-        )
-      )`,
-      {
-        userId,
-        now,
-        ...(requiredPermission && {
-          allowedPermissions: getAllowedPermissions(requiredPermission),
-        }),
-      },
-    );
   }
 
   findCurrentByVehicle(vehicleId: string) {
@@ -176,14 +139,13 @@ export class VehicleResponsibleRepository
    * Find active responsible assignments for a specific date (defaults to today)
    * Active means: startDate <= date AND (endDate IS NULL OR endDate >= date)
    */
-  async findActiveResponsibles(searchParams?: VehicleResponsibleSearchParams) {
-    const targetDate =
-      searchParams?.date || new Date().toISOString().split("T")[0];
+  async findActiveResponsibles(filters?: VehicleResponsibleFilters) {
+    const targetDate = filters?.date || new Date().toISOString().split("T")[0];
 
     const [responsibles] = await this.find({
-      searchParams: {
-        userId: searchParams?.userId,
-        vehicleId: searchParams?.vehicleId,
+      filters: {
+        userId: filters?.userId,
+        vehicleId: filters?.vehicleId,
         date: targetDate,
       },
     });

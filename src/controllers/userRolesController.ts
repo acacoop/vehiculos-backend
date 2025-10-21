@@ -1,32 +1,71 @@
 import { Request, Response } from "express";
-import { BaseController } from "./baseController";
-import { UserRolesService } from "../services/userRolesService";
-import { asyncHandler } from "../middleware/errorHandler";
+import { BaseController } from "@/controllers/baseController";
+import { UserRolesService } from "@/services/userRolesService";
+import { asyncHandler } from "@/middleware/errorHandler";
 import {
   UserRoleInputSchema,
   UserRoleUpdateSchema,
   UserRoleEndSchema,
-} from "../schemas/userRole";
-import { UserRoleEnum } from "../utils/common";
+} from "@/schemas/userRole";
+import { parsePaginationQuery } from "@/utils";
+import { UserRoleFilters } from "@/repositories/UserRoleRepository";
+import { extractFilters, extractSearch } from "@/utils";
 
-export class UserRolesController extends BaseController {
+/**
+ * UserRolesController - Manages user roles
+ * Uses simplified BaseController with special handling for boolean filter
+ */
+export class UserRolesController extends BaseController<UserRoleFilters> {
   constructor(private readonly service: UserRolesService) {
-    super("UserRole");
+    super({
+      resourceName: "UserRole",
+      allowedFilters: ["userId", "role"],
+    });
   }
 
-  protected async getAllService(options: {
-    limit: number;
-    offset: number;
-    searchParams?: Record<string, string>;
-  }) {
-    const { limit, offset, searchParams } = options;
+  // Override getAll to handle activeOnly boolean conversion
+  public getAll = asyncHandler(async (req: Request, res: Response) => {
+    const { page, limit, offset } = parsePaginationQuery(req.query);
 
-    return this.service.getAll({
+    // Extract search parameter
+    const search = extractSearch(req.query);
+
+    // Extract filters
+    const filters = extractFilters<UserRoleFilters>(req.query, [
+      "userId",
+      "role",
+    ]);
+
+    // Handle activeOnly separately as it needs boolean conversion
+    if (req.query.activeOnly && typeof req.query.activeOnly === "string") {
+      filters.activeOnly = req.query.activeOnly === "true";
+    }
+
+    const { items, total } = await this.service.getAll({
       limit,
       offset,
-      userId: searchParams?.userId,
-      role: searchParams?.role as UserRoleEnum,
-      activeOnly: searchParams?.activeOnly === "true",
+      filters,
+      search,
+    });
+
+    this.sendResponse(res, items, undefined, 200, {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit),
+    });
+  });
+
+  protected async getAllService(options: {
+    pagination: { limit: number; offset: number };
+    filters?: Partial<UserRoleFilters>;
+    search?: string;
+  }) {
+    return this.service.getAll({
+      limit: options.pagination.limit,
+      offset: options.pagination.offset,
+      filters: options.filters,
+      search: options.search,
     });
   }
 
@@ -40,11 +79,6 @@ export class UserRolesController extends BaseController {
   }
 
   protected async updateService(id: string, data: unknown) {
-    const parsed = UserRoleUpdateSchema.parse(data);
-    return this.service.update(id, parsed);
-  }
-
-  protected async patchService(id: string, data: unknown) {
     const parsed = UserRoleUpdateSchema.partial().parse(data);
     return this.service.update(id, parsed);
   }

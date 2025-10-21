@@ -1,9 +1,10 @@
 import { DataSource, Repository } from "typeorm";
-import { VehicleACL as VehicleACLEntity } from "../entities/VehicleACL";
-import { PermissionType, PERMISSION_WEIGHT } from "../utils/common";
-import { resolvePagination } from "./interfaces/common";
+import { VehicleACL as VehicleACLEntity } from "@/entities/VehicleACL";
+import { PermissionType, PERMISSION_WEIGHT } from "@/utils";
+import { resolvePagination } from "@/repositories/interfaces/common";
+import { applySearchFilter, applyFilters } from "@/utils";
 
-export interface VehicleACLSearchParams {
+export interface VehicleACLFilters {
   userId?: string;
   vehicleId?: string;
   permission?: PermissionType;
@@ -20,9 +21,10 @@ export class VehicleACLRepository {
   async findAndCount(options?: {
     limit?: number;
     offset?: number;
-    searchParams?: VehicleACLSearchParams;
+    filters?: VehicleACLFilters;
+    search?: string;
   }): Promise<[VehicleACLEntity[], number]> {
-    const { searchParams, limit, offset } = options || {};
+    const { filters, search, limit, offset } = options || {};
     const { limit: resolvedLimit, offset: resolvedOffset } = resolvePagination({
       limit,
       offset,
@@ -32,28 +34,38 @@ export class VehicleACLRepository {
       .createQueryBuilder("acl")
       .leftJoinAndSelect("acl.user", "u")
       .leftJoinAndSelect("acl.vehicle", "v")
+      .leftJoinAndSelect("v.model", "m")
+      .leftJoinAndSelect("m.brand", "b")
       .orderBy("acl.startTime", "DESC");
 
-    if (searchParams) {
-      if (searchParams.userId) {
-        qb.andWhere("u.id = :userId", { userId: searchParams.userId });
-      }
-      if (searchParams.vehicleId) {
-        qb.andWhere("v.id = :vehicleId", { vehicleId: searchParams.vehicleId });
-      }
-      if (searchParams.permission) {
-        qb.andWhere("acl.permission = :permission", {
-          permission: searchParams.permission,
-        });
-      }
-      if (searchParams.activeAt) {
-        qb.andWhere("acl.start_time <= :activeAt", {
-          activeAt: searchParams.activeAt,
-        });
-        qb.andWhere("(acl.end_time IS NULL OR acl.end_time > :activeAt)", {
-          activeAt: searchParams.activeAt,
-        });
-      }
+    // Apply search filter across user and vehicle information
+    if (search) {
+      applySearchFilter(qb, search, [
+        "u.firstName",
+        "u.lastName",
+        "u.email",
+        "v.licensePlate",
+        "v.chassisNumber",
+        "b.name",
+        "m.name",
+      ]);
+    }
+
+    // Apply filters
+    applyFilters(qb, filters, {
+      userId: { field: "u.id" },
+      vehicleId: { field: "v.id" },
+      permission: { field: "acl.permission" },
+    });
+
+    // Handle activeAt filter separately (complex condition)
+    if (filters?.activeAt) {
+      qb.andWhere("acl.start_time <= :activeAt", {
+        activeAt: filters.activeAt,
+      });
+      qb.andWhere("(acl.end_time IS NULL OR acl.end_time > :activeAt)", {
+        activeAt: filters.activeAt,
+      });
     }
 
     qb.take(resolvedLimit);
@@ -76,7 +88,7 @@ export class VehicleACLRepository {
     at: Date = new Date(),
   ): Promise<VehicleACLEntity[]> {
     const [acls] = await this.findAndCount({
-      searchParams: { userId, activeAt: at },
+      filters: { userId, activeAt: at },
     });
     return acls;
   }
@@ -91,7 +103,7 @@ export class VehicleACLRepository {
     at: Date = new Date(),
   ): Promise<boolean> {
     const [acls] = await this.findAndCount({
-      searchParams: { userId, vehicleId, activeAt: at },
+      filters: { userId, vehicleId, activeAt: at },
     });
 
     const requiredWeight = PERMISSION_WEIGHT[requiredPermission];

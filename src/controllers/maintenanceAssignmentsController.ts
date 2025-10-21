@@ -1,18 +1,18 @@
 import { Request, Response } from "express";
-import { asyncHandler, AppError } from "../middleware/errorHandler";
+import { asyncHandler, AppError } from "@/middleware/errorHandler";
 import {
   AssignedMaintenanceSchema,
   UpdateAssignedMaintenanceSchema,
-} from "../schemas/assignMaintance";
-import type { AssignedMaintenance } from "../schemas/assignMaintance";
-import { AssignedMaintenancesService } from "../services/maintenancesService";
-import { ApiResponse } from "./baseController";
-import { ServiceFactory } from "../factories/serviceFactory";
-import { AppDataSource } from "../db";
+} from "@/schemas/assignMaintance";
+import type { AssignedMaintenance } from "@/schemas/assignMaintance";
+import { AssignedMaintenancesService } from "@/services/maintenancesService";
+import { ApiResponse } from "@/controllers/baseController";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { AppDataSource } from "@/db";
 
 export class MaintenanceAssignmentsController {
   constructor(private readonly service: AssignedMaintenancesService) {}
-  // GET: Fetch all maintenance assignments for a specific vehicle
+
   getByVehicle = asyncHandler(async (req: Request, res: Response) => {
     const vehicleId = req.params.vehicleId;
 
@@ -26,7 +26,6 @@ export class MaintenanceAssignmentsController {
     res.status(200).json(response);
   });
 
-  // POST: Associate a maintenance with a vehicle
   create = asyncHandler(async (req: Request, res: Response) => {
     const assignedMaintenance: AssignedMaintenance =
       AssignedMaintenanceSchema.parse(req.body);
@@ -51,7 +50,6 @@ export class MaintenanceAssignmentsController {
 
       res.status(201).json(response);
     } catch (error) {
-      // Handle validation errors from service
       if (error instanceof Error && error.message.includes("does not exist")) {
         const response: ApiResponse<null> = {
           status: "error",
@@ -60,12 +58,10 @@ export class MaintenanceAssignmentsController {
         res.status(404).json(response);
         return;
       }
-      // Re-throw other errors to be handled by global error handler
       throw error;
     }
   });
 
-  // PUT: Update a maintenance assignment
   update = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
     const updateData = UpdateAssignedMaintenanceSchema.parse(req.body);
@@ -100,7 +96,6 @@ export class MaintenanceAssignmentsController {
     }
   });
 
-  // DELETE: Remove a maintenance assignment
   delete = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
 

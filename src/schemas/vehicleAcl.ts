@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PermissionType } from "../utils/common";
+import { PermissionType } from "@/utils";
 
 /**
  * Schema for creating a new VehicleACL entry

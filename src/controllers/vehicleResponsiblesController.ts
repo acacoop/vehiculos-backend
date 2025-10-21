@@ -1,63 +1,27 @@
-import { BaseController } from "./baseController";
-import type { VehicleResponsibleInput } from "../schemas/vehicleResponsible";
-import { AppError } from "../middleware/errorHandler";
+import { BaseController } from "@/controllers/baseController";
+import type { VehicleResponsibleInput } from "@/schemas/vehicleResponsible";
+import { AppError } from "@/middleware/errorHandler";
 import { Request, Response } from "express";
-import { asyncHandler } from "../middleware/errorHandler";
-import { VehicleResponsiblesService } from "../services/vehicleResponsiblesService";
-import { ServiceFactory } from "../factories/serviceFactory";
-import { AppDataSource } from "../db";
-import { PermissionFilterRequest } from "../middleware/permissionFilter";
-import { RepositoryFindOptions } from "../repositories/interfaces/common";
-import { VehicleResponsibleSearchParams } from "../repositories/interfaces/IVehicleResponsibleRepository";
-import { parsePaginationQuery } from "../utils/common";
+import { asyncHandler } from "@/middleware/errorHandler";
+import { VehicleResponsiblesService } from "@/services/vehicleResponsiblesService";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { AppDataSource } from "@/db";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { VehicleResponsibleFilters } from "@/repositories/interfaces/IVehicleResponsibleRepository";
+import { isValidUUID } from "@/utils";
 
-export class VehicleResponsiblesController extends BaseController {
+export class VehicleResponsiblesController extends BaseController<VehicleResponsibleFilters> {
   constructor(private readonly service: VehicleResponsiblesService) {
-    super("Vehicle Responsible");
+    super({
+      resourceName: "VehicleResponsible",
+      allowedFilters: ["vehicleId", "userId", "active", "date"],
+    });
   }
 
-  // Override getAll to use permission filter from middleware
-  public getAll = asyncHandler(async (req: Request, res: Response) => {
-    const permReq = req as PermissionFilterRequest;
-    const { page, limit, offset } = parsePaginationQuery(req.query);
-
-    // Extract search parameters (excluding pagination params)
-    const searchParams: VehicleResponsibleSearchParams = {};
-    for (const [key, value] of Object.entries(req.query)) {
-      if (key !== "page" && key !== "limit" && typeof value === "string") {
-        searchParams[key as keyof VehicleResponsibleSearchParams] = value;
-      }
-    }
-
-    const options: RepositoryFindOptions<VehicleResponsibleSearchParams> = {
-      pagination: { limit, offset },
-      searchParams,
-      permissions: permReq.permissionFilter, // Populated by middleware
-    };
-
-    const { items, total } = await this.service.getAll(options);
-
-    this.sendResponse(res, items, undefined, 200, {
-      page,
-      limit,
-      total,
-      pages: Math.ceil(total / limit),
-    });
-  });
-
-  // Implement abstract methods from BaseController
-  protected async getAllService(options: {
-    limit: number;
-    offset: number;
-    searchParams?: Record<string, string>;
-  }) {
-    // This method is overridden by getAll() above
-    // Kept for BaseController compatibility
-    const { items, total } = await this.service.getAll({
-      pagination: { limit: options.limit, offset: options.offset },
-      searchParams: options.searchParams,
-    });
-    return { items, total };
+  protected async getAllService(
+    options: RepositoryFindOptions<Partial<VehicleResponsibleFilters>>,
+  ) {
+    return this.service.getAll(options);
   }
 
   protected async getByIdService(id: string) {
@@ -74,11 +38,6 @@ export class VehicleResponsiblesController extends BaseController {
     return await this.service.update(id, responsibleData);
   }
 
-  protected async patchService(id: string, data: unknown) {
-    const responsibleData = data as Partial<VehicleResponsibleInput>;
-    return await this.service.update(id, responsibleData);
-  }
-
   protected async deleteService(id: string) {
     return await this.service.delete(id);
   }
@@ -88,7 +47,7 @@ export class VehicleResponsiblesController extends BaseController {
     async (req: Request, res: Response) => {
       const vehicleId = req.params.vehicleId;
 
-      if (!this.isValidUUID(vehicleId)) {
+      if (!isValidUUID(vehicleId)) {
         throw new AppError(
           `Invalid UUID format provided: ${vehicleId}`,
           400,
@@ -116,7 +75,7 @@ export class VehicleResponsiblesController extends BaseController {
     async (req: Request, res: Response) => {
       const userId = req.params.userId;
 
-      if (!this.isValidUUID(userId)) {
+      if (!isValidUUID(userId)) {
         throw new AppError(
           `Invalid UUID format provided: ${userId}`,
           400,

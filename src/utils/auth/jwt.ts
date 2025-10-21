@@ -10,16 +10,20 @@ import {
   ENTRA_EXPECTED_ISSUER,
   ENTRA_ALLOWED_CLIENT_IDS,
   ENTRA_REQUIRED_SCOPE,
-} from "../config/env.config";
+} from "@/config/env.config";
 
 function getIssuer() {
-  if (ENTRA_EXPECTED_ISSUER) return ENTRA_EXPECTED_ISSUER.replace(/\/?$/, "/");
+  if (ENTRA_EXPECTED_ISSUER) {
+    // Ensure issuer ends with a single slash (safe string manipulation)
+    return ENTRA_EXPECTED_ISSUER.endsWith("/")
+      ? ENTRA_EXPECTED_ISSUER
+      : `${ENTRA_EXPECTED_ISSUER}/`;
+  }
   if (!ENTRA_TENANT_ID)
     throw new Error("ENTRA_TENANT_ID must be set to validate tokens");
-  // v2.0 issuer supports both v1 and v2 tokens for validation of signature, but we will still check version-specific claims.
   return `https://login.microsoftonline.com/${ENTRA_TENANT_ID}/v2.0/`;
 }
-// Lazy init remote JWKS via discovery
+
 let remoteJwksPromise: ReturnType<typeof createRemoteJWKSet> | null = null;
 
 async function getRemoteJWKSVerified() {
@@ -34,14 +38,14 @@ async function getRemoteJWKSVerified() {
 }
 
 export type EntraPayload = JWTPayload & {
-  oid?: string; // user object id
-  tid?: string; // tenant id
+  oid?: string;
+  tid?: string;
   preferred_username?: string;
   name?: string;
   roles?: string[];
   groups?: string[];
-  appid?: string; // for app tokens
-  azp?: string; // authorized party (client id)
+  appid?: string;
+  azp?: string;
 };
 
 export interface VerifiedEntraToken {
@@ -50,18 +54,10 @@ export interface VerifiedEntraToken {
   token: string;
 }
 
-/**
- * Verifica el token JWT de Azure Entra ID siguiendo mejores prácticas:
- * - Valida la firma y el issuer
- * - Valida el audience (API clientId)
- * - Valida el tenant
- * - Valida el clientId permitido
- * - Valida el scope requerido
- */
 export async function verifyEntraAccessToken(
   token: string,
 ): Promise<VerifiedEntraToken> {
-  const issuer = getIssuer(); // canonical v2 issuer (login.microsoftonline.com/<tenant>/v2.0/)
+  const issuer = getIssuer();
   const audience = ENTRA_API_AUDIENCE;
   const allowedClients = (ENTRA_ALLOWED_CLIENT_IDS || "")
     .split(",")
@@ -70,18 +66,17 @@ export async function verifyEntraAccessToken(
   const requiredScope = ENTRA_REQUIRED_SCOPE;
 
   const jwks = await getRemoteJWKSVerified();
-  // Build accepted issuers list (v2 canonical + legacy v1 sts.windows.net form) if tenant known
-  const baseIssuers: string[] = [issuer.replace(/\/+$/, "")];
+  const normalizedIssuer = issuer.endsWith("/") ? issuer.slice(0, -1) : issuer;
+  const baseIssuers: string[] = [normalizedIssuer];
   if (ENTRA_TENANT_ID)
     baseIssuers.push(`https://sts.windows.net/${ENTRA_TENANT_ID}`);
   const issuerSet = new Set<string>();
   for (const i of baseIssuers) {
-    const trimmed = i.replace(/\/+$/, "");
+    const trimmed = i.endsWith("/") ? i.slice(0, -1) : i;
     issuerSet.add(trimmed);
     issuerSet.add(`${trimmed}/`);
   }
   const acceptedIssuers = Array.from(issuerSet);
-  // Normalize audiences (support GUID and api://GUID forms interchangeably)
   const rawAudList = audience
     ? audience
         .split(",")
@@ -103,12 +98,10 @@ export async function verifyEntraAccessToken(
     audience: acceptedAudiences,
   });
 
-  // Tenant validation
   if (payload.tid && ENTRA_TENANT_ID && payload.tid !== ENTRA_TENANT_ID) {
     throw new Error("Token tenant mismatch");
   }
 
-  // Client ID validation
   if (allowedClients.length) {
     const clientId = (payload.azp || payload.appid) as string | undefined;
     if (!clientId || !allowedClients.includes(clientId)) {
@@ -116,7 +109,6 @@ export async function verifyEntraAccessToken(
     }
   }
 
-  // Scope validation (for delegated tokens)
   if (requiredScope) {
     const scopes =
       typeof payload.scp === "string" ? payload.scp.split(" ") : [];

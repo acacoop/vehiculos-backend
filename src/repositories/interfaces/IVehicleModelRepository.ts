@@ -1,8 +1,8 @@
-import { VehicleModel } from "../../entities/VehicleModel";
+import { VehicleModel } from "@/entities/VehicleModel";
 import { DeleteResult } from "typeorm";
-import { RepositoryFindOptions } from "./common";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
-export interface VehicleModelSearchParams {
+export interface VehicleModelFilters {
   name?: string;
   brandId?: string;
 }
@@ -13,7 +13,7 @@ export interface VehicleModelSearchParams {
  */
 export interface IVehicleModelRepository {
   findAndCount(
-    options?: RepositoryFindOptions<VehicleModelSearchParams>,
+    options?: RepositoryFindOptions<VehicleModelFilters>,
   ): Promise<[VehicleModel[], number]>;
   findOne(id: string): Promise<VehicleModel | null>;
   create(data: Partial<VehicleModel>): VehicleModel;

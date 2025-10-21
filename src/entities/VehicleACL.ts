@@ -7,9 +7,9 @@ import {
   Check,
   Index,
 } from "typeorm";
-import { PermissionType } from "../utils/common";
-import { User } from "./User";
-import { Vehicle } from "./Vehicle";
+import { PermissionType } from "@/utils";
+import { User } from "@/entities/User";
+import { Vehicle } from "@/entities/Vehicle";
 
 @Entity({ name: "vehicle_acl" })
 @Check("end_time IS NULL OR end_time > start_time")

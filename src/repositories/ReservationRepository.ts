@@ -1,14 +1,16 @@
-import { DataSource, In, Repository, SelectQueryBuilder } from "typeorm";
-import { Reservation } from "../entities/Reservation";
+import { DataSource, In, Repository } from "typeorm";
+import { Reservation } from "@/entities/Reservation";
 import {
   IReservationRepository,
-  ReservationSearchParams,
-} from "./interfaces/IReservationRepository";
-import { RepositoryFindOptions, resolvePagination } from "./interfaces/common";
-import { UserRoleEnum } from "../utils/common";
-import { getAllowedPermissions } from "../utils/permissions";
+  ReservationFilters,
+} from "@/repositories/interfaces/IReservationRepository";
+import {
+  RepositoryFindOptions,
+  resolvePagination,
+} from "@/repositories/interfaces/common";
+import { applySearchFilter, applyFilters } from "@/utils";
 
-export type { ReservationSearchParams };
+export type { ReservationFilters };
 
 export class ReservationRepository implements IReservationRepository {
   private readonly repo: Repository<Reservation>;
@@ -17,80 +19,43 @@ export class ReservationRepository implements IReservationRepository {
   }
 
   async findAndCount(
-    options?: RepositoryFindOptions<ReservationSearchParams>,
+    options?: RepositoryFindOptions<ReservationFilters>,
   ): Promise<[Reservation[], number]> {
-    const { searchParams, pagination, permissions } = options || {};
+    const { filters, search, pagination } = options || {};
 
     const qb = this.repo
       .createQueryBuilder("r")
       .leftJoinAndSelect("r.user", "u")
       .leftJoinAndSelect("r.vehicle", "v")
+      .leftJoinAndSelect("v.model", "m")
+      .leftJoinAndSelect("m.brand", "b")
       .orderBy("r.startDate", "DESC");
 
-    // Apply search filters
-    if (searchParams?.userId) {
-      qb.andWhere("u.id = :userId", { userId: searchParams.userId });
-    }
-    if (searchParams?.vehicleId) {
-      qb.andWhere("v.id = :vehicleId", { vehicleId: searchParams.vehicleId });
+    // Apply search filter across user and vehicle information
+    if (search) {
+      applySearchFilter(qb, search, [
+        "u.firstName",
+        "u.lastName",
+        "u.email",
+        "u.cuit",
+        "v.licensePlate",
+        "v.chassisNumber",
+        "b.name",
+        "m.name",
+      ]);
     }
 
-    // Apply permission-based filtering
-    if (permissions?.userId && permissions.userRole !== UserRoleEnum.ADMIN) {
-      this.applyPermissionFilter(qb, permissions);
-    }
+    // Apply filters
+    applyFilters(qb, filters, {
+      userId: { field: "u.id" },
+      vehicleId: { field: "v.id" },
+    });
 
     // Pagination defaults (limit and offset optional)
     const { limit, offset } = resolvePagination(pagination);
     qb.take(limit);
     qb.skip(offset);
     return qb.getManyAndCount();
-  }
-
-  /**
-   * Apply permission-based filtering to reservations
-   * Users can only see reservations for vehicles they have access to
-   */
-  private applyPermissionFilter(
-    qb: SelectQueryBuilder<Reservation>,
-    permissions: RepositoryFindOptions["permissions"],
-  ): void {
-    const now = new Date();
-    const { userId, requiredPermission } = permissions!;
-
-    qb.andWhere(
-      `(
-        EXISTS (
-          SELECT 1 FROM vehicle_acl acl
-          WHERE acl.vehicle_id = v.id
-          AND acl.user_id = :userId
-          AND acl.start_time <= :now
-          AND (acl.end_time IS NULL OR acl.end_time > :now)
-          ${requiredPermission ? "AND acl.permission IN (:...allowedPermissions)" : ""}
-        )
-        OR EXISTS (
-          SELECT 1 FROM vehicle_responsibles vr
-          WHERE vr.vehicle_id = v.id
-          AND vr.user_id = :userId
-          AND vr.start_time <= :now
-          AND (vr.end_time IS NULL OR vr.end_time > :now)
-        )
-        OR EXISTS (
-          SELECT 1 FROM assignments asn
-          WHERE asn.vehicle_id = v.id
-          AND asn.user_id = :userId
-          AND asn.start_date <= CURRENT_DATE
-          AND (asn.end_date IS NULL OR asn.end_date >= CURRENT_DATE)
-        )
-      )`,
-      {
-        userId,
-        now,
-        ...(requiredPermission && {
-          allowedPermissions: getAllowedPermissions(requiredPermission),
-        }),
-      },
-    );
   }
 
   find(where: Record<string, unknown>) {

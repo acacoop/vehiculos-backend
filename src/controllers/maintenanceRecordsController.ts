@@ -1,104 +1,41 @@
-import { Request, Response } from "express";
-import { asyncHandler, AppError } from "../middleware/errorHandler";
-import { MaintenanceRecordSchema } from "../schemas/maintenanceRecord";
-import { MaintenanceRecordsService } from "../services/maintenancesService";
-import type { MaintenanceRecord } from "../schemas/maintenanceRecord";
-import { ApiResponse } from "./baseController";
-import { ServiceFactory } from "../factories/serviceFactory";
-import { AppDataSource } from "../db";
-import { PermissionFilterRequest } from "../middleware/permissionFilter";
-import { RepositoryFindOptions } from "../repositories/interfaces/common";
-import { MaintenanceRecordSearchParams } from "../repositories/interfaces/IMaintenanceRecordRepository";
-import { parsePaginationQuery } from "../utils/common";
+import { BaseController } from "@/controllers/baseController";
+import { AppError } from "@/middleware/errorHandler";
+import { MaintenanceRecordSchema } from "@/schemas/maintenanceRecord";
+import { MaintenanceRecordsService } from "@/services/maintenancesService";
+import type { MaintenanceRecord } from "@/schemas/maintenanceRecord";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { AppDataSource } from "@/db";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { MaintenanceRecordFilters } from "@/repositories/interfaces/IMaintenanceRecordRepository";
 
-export class MaintenanceRecordsController {
-  constructor(private readonly service: MaintenanceRecordsService) {}
-  // GET: Fetch all maintenance records with pagination and filtering
-  getAll = asyncHandler(async (req: Request, res: Response) => {
-    const permReq = req as PermissionFilterRequest;
-    const { page, limit, offset } = parsePaginationQuery(req.query);
+export class MaintenanceRecordsController extends BaseController<MaintenanceRecordFilters> {
+  constructor(private readonly service: MaintenanceRecordsService) {
+    super({
+      resourceName: "MaintenanceRecord",
+      allowedFilters: [
+        "userId",
+        "vehicleId",
+        "maintenanceId",
+        "assignedMaintenanceId",
+      ],
+    });
+  }
 
-    // Extract filtering parameters
-    const searchParams: MaintenanceRecordSearchParams = {};
-    const allowedFilters: Array<keyof MaintenanceRecordSearchParams> = [
-      "vehicleId",
-      "maintenanceId",
-      "userId",
-      "assignedMaintenanceId",
-    ];
+  protected async getAllService(
+    options: RepositoryFindOptions<Partial<MaintenanceRecordFilters>>,
+  ) {
+    return this.service.getAll(options);
+  }
 
-    for (const [key, value] of Object.entries(req.query)) {
-      if (
-        allowedFilters.includes(key as keyof MaintenanceRecordSearchParams) &&
-        typeof value === "string"
-      ) {
-        searchParams[key as keyof MaintenanceRecordSearchParams] = value;
-      }
-    }
+  protected async getByIdService(id: string) {
+    return this.service.getById(id);
+  }
 
-    const options: RepositoryFindOptions<MaintenanceRecordSearchParams> = {
-      pagination: { limit, offset },
-      searchParams,
-      permissions: permReq.permissionFilter, // Populated by middleware
-    };
-
-    const { items, total } = await this.service.getAll(options);
-
-    const totalPages = Math.ceil(total / limit);
-
-    const response: ApiResponse<MaintenanceRecord[]> = {
-      status: "success",
-      data: items,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: totalPages,
-      },
-    };
-
-    res.status(200).json(response);
-  });
-
-  // GET: Fetch a specific maintenance record by ID
-  getById = asyncHandler(async (req: Request, res: Response) => {
-    const id = req.params.id;
-
-    const record = await this.service.getById(id);
-
-    if (!record) {
-      res.status(404).json({
-        status: "error",
-        message: "Maintenance record not found",
-      });
-      return;
-    }
-
-    const response: ApiResponse<MaintenanceRecord> = {
-      status: "success",
-      data: record,
-    };
-
-    res.status(200).json(response);
-  });
-
-  // POST: Create a new maintenance record
-  create = asyncHandler(async (req: Request, res: Response) => {
-    const maintenanceRecord: MaintenanceRecord = MaintenanceRecordSchema.parse(
-      req.body,
-    );
-
+  protected async createService(data: unknown) {
+    const maintenanceRecord = MaintenanceRecordSchema.parse(data);
     try {
-      const newRecord = await this.service.create(maintenanceRecord);
-
-      const response: ApiResponse<typeof newRecord> = {
-        status: "success",
-        data: newRecord,
-        message: "Maintenance record created successfully",
-      };
-      res.status(201).json(response);
+      return await this.service.create(maintenanceRecord as MaintenanceRecord);
     } catch (error) {
-      if (error instanceof AppError) throw error;
       if (error instanceof Error) {
         throw new AppError(
           error.message,
@@ -109,7 +46,25 @@ export class MaintenanceRecordsController {
       }
       throw error;
     }
-  });
+  }
+
+  protected async updateService(): Promise<unknown | null> {
+    throw new AppError(
+      "Update not supported for maintenance records",
+      405,
+      "https://example.com/problems/method-not-allowed",
+      "Method Not Allowed",
+    );
+  }
+
+  protected async deleteService(): Promise<boolean> {
+    throw new AppError(
+      "Delete not supported for maintenance records",
+      405,
+      "https://example.com/problems/method-not-allowed",
+      "Method Not Allowed",
+    );
+  }
 }
 export function createMaintenanceRecordsController() {
   const serviceFactory = new ServiceFactory(AppDataSource);

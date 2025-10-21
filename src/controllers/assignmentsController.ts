@@ -1,66 +1,29 @@
-import { BaseController } from "./baseController";
-import type { Assignment } from "../schemas/assignment";
-import { AppError, asyncHandler } from "../middleware/errorHandler";
+import { BaseController } from "@/controllers/baseController";
+import type { Assignment } from "@/schemas/assignment";
+import { AppError, asyncHandler } from "@/middleware/errorHandler";
 import { Request, Response } from "express";
 import {
   AssignmentUpdateSchema,
   AssignmentFinishSchema,
-} from "../schemas/assignment";
-import { AssignmentsService } from "../services/assignmentsService";
-import { ServiceFactory } from "../factories/serviceFactory";
-import { AppDataSource } from "../db";
-import { PermissionFilterRequest } from "../middleware/permissionFilter";
-import { RepositoryFindOptions } from "../repositories/interfaces/common";
-import { AssignmentSearchParams } from "../repositories/interfaces/IAssignmentRepository";
-import { parsePaginationQuery } from "../utils/common";
+} from "@/schemas/assignment";
+import { AssignmentsService } from "@/services/assignmentsService";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { AppDataSource } from "@/db";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { AssignmentFilters } from "@/repositories/interfaces/IAssignmentRepository";
 
-export class AssignmentsController extends BaseController {
+export class AssignmentsController extends BaseController<AssignmentFilters> {
   constructor(private readonly service: AssignmentsService) {
-    super("Assignment");
+    super({
+      resourceName: "Assignment",
+      allowedFilters: ["userId", "vehicleId", "date"],
+    });
   }
 
-  // Override getAll to use permission filter from middleware
-  public getAll = asyncHandler(async (req: Request, res: Response) => {
-    const permReq = req as PermissionFilterRequest;
-    const { page, limit, offset } = parsePaginationQuery(req.query);
-
-    // Extract search parameters (excluding pagination params)
-    const searchParams: AssignmentSearchParams = {};
-    for (const [key, value] of Object.entries(req.query)) {
-      if (key !== "page" && key !== "limit" && typeof value === "string") {
-        searchParams[key as keyof AssignmentSearchParams] = value;
-      }
-    }
-
-    const options: RepositoryFindOptions<AssignmentSearchParams> = {
-      pagination: { limit, offset },
-      searchParams,
-      permissions: permReq.permissionFilter, // Populated by middleware
-    };
-
-    const { items, total } = await this.service.getAll(options);
-
-    this.sendResponse(res, items, undefined, 200, {
-      page,
-      limit,
-      total,
-      pages: Math.ceil(total / limit),
-    });
-  });
-
-  // Implement abstract methods from BaseController
-  protected async getAllService(options: {
-    limit: number;
-    offset: number;
-    searchParams?: Record<string, string>;
-  }) {
-    // This method is overridden by getAll() above
-    // Kept for BaseController compatibility
-    const { items, total } = await this.service.getAll({
-      pagination: { limit: options.limit, offset: options.offset },
-      searchParams: options.searchParams,
-    });
-    return { items, total };
+  protected async getAllService(
+    options: RepositoryFindOptions<Partial<AssignmentFilters>>,
+  ) {
+    return this.service.getAll(options);
   }
 
   protected async getByIdService(id: string) {
@@ -72,20 +35,7 @@ export class AssignmentsController extends BaseController {
     return await this.service.create(assignmentData);
   }
 
-  // Not implemented for assignments - these operations are not supported
   protected async updateService(
-    _id: string,
-    _data: unknown,
-  ): Promise<unknown | null> {
-    throw new AppError(
-      "Update operation is not supported for assignments. Use PATCH instead.",
-      405,
-      "https://example.com/problems/method-not-allowed",
-      "Method Not Allowed",
-    );
-  }
-
-  protected async patchService(
     id: string,
     data: unknown,
   ): Promise<unknown | null> {
@@ -120,7 +70,6 @@ export class AssignmentsController extends BaseController {
     }
   }
 
-  // Custom method to finish/end an assignment
   public finishAssignment = asyncHandler(
     async (req: Request, res: Response) => {
       const id = req.params.id;

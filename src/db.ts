@@ -9,24 +9,23 @@ import {
   DB_NAME,
   DB_LOGGING,
   SQL_AAD_CONNECTION_STRING,
-} from "./config/env.config";
+} from "@/config/env.config";
 
 // Entities will be added here progressively
-import { Vehicle } from "./entities/Vehicle";
-import { User } from "./entities/User";
-import { Assignment } from "./entities/Assignment";
-import { Reservation } from "./entities/Reservation";
-import { VehicleKilometers } from "./entities/VehicleKilometers";
-import { MaintenanceCategory } from "./entities/MaintenanceCategory";
-import { Maintenance } from "./entities/Maintenance";
-import { AssignedMaintenance } from "./entities/AssignedMaintenance";
-import { MaintenanceRecord } from "./entities/MaintenanceRecord";
-import { VehicleResponsible } from "./entities/VehicleResponsible";
-import { VehicleBrand } from "./entities/VehicleBrand";
-import { VehicleModel } from "./entities/VehicleModel";
-// Authorization entities
-import { VehicleACL } from "./entities/VehicleACL";
-import { UserRole } from "./entities/UserRole";
+import { Vehicle } from "@/entities/Vehicle";
+import { User } from "@/entities/User";
+import { Assignment } from "@/entities/Assignment";
+import { Reservation } from "@/entities/Reservation";
+import { VehicleKilometers } from "@/entities/VehicleKilometers";
+import { MaintenanceCategory } from "@/entities/MaintenanceCategory";
+import { Maintenance } from "@/entities/Maintenance";
+import { AssignedMaintenance } from "@/entities/AssignedMaintenance";
+import { MaintenanceRecord } from "@/entities/MaintenanceRecord";
+import { VehicleResponsible } from "@/entities/VehicleResponsible";
+import { VehicleBrand } from "@/entities/VehicleBrand";
+import { VehicleModel } from "@/entities/VehicleModel";
+import { VehicleACL } from "@/entities/VehicleACL";
+import { UserRole } from "@/entities/UserRole";
 
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
 
@@ -71,6 +70,8 @@ const createDataSourceConfig = () => {
     synchronize: !isProd,
     logging: DB_LOGGING,
     entities,
+    migrations: ["src/migrations/*.ts"],
+    migrationsTableName: "migrations",
   };
 
   if (SQL_AAD_CONNECTION_STRING) {

@@ -6,7 +6,7 @@ import {
   JoinColumn,
   Check,
 } from "typeorm";
-import { MaintenanceCategory } from "./MaintenanceCategory";
+import { MaintenanceCategory } from "@/entities/MaintenanceCategory";
 
 @Entity({ name: "maintenances" })
 @Check("(kilometers_frequency IS NULL OR kilometers_frequency > 0)")

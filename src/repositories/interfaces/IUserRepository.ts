@@ -1,8 +1,8 @@
-import { User } from "../../entities/User";
+import { User } from "@/entities/User";
 import { DeleteResult } from "typeorm";
-import { RepositoryFindOptions } from "./common";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
-export interface UserSearchParams {
+export interface UserFilters {
   email?: string;
   cuit?: string;
   firstName?: string;
@@ -16,7 +16,7 @@ export interface UserSearchParams {
  */
 export interface IUserRepository {
   findAndCount(
-    opts?: RepositoryFindOptions<UserSearchParams>,
+    opts?: RepositoryFindOptions<UserFilters>,
   ): Promise<[User[], number]>;
   findOne(id: string): Promise<User | null>;
   findByEntraId(entraId: string): Promise<User | null>;

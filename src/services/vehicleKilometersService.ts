@@ -1,12 +1,11 @@
-import { AppDataSource } from "../db";
-import { VehicleKilometers as VehicleKilometersEntity } from "../entities/VehicleKilometers";
-import { User } from "../entities/User";
-import { Vehicle } from "../entities/Vehicle";
-import type { VehicleKilometersLog } from "../schemas/vehicleKilometers";
-import { AppError } from "../middleware/errorHandler";
-import { VehicleKilometersRepository } from "../repositories/VehicleKilometersRepository";
+import { AppDataSource } from "@/db";
+import { VehicleKilometers as VehicleKilometersEntity } from "@/entities/VehicleKilometers";
+import { User } from "@/entities/User";
+import { Vehicle } from "@/entities/Vehicle";
+import type { VehicleKilometersLog } from "@/schemas/vehicleKilometers";
+import { AppError } from "@/middleware/errorHandler";
+import { VehicleKilometersRepository } from "@/repositories/VehicleKilometersRepository";
 
-// NOTE: createdAt removed for now (not present in VehicleKilometersLog schema). If needed, extend schema later.
 function mapEntity(e: VehicleKilometersEntity): VehicleKilometersLog {
   return {
     id: e.id,

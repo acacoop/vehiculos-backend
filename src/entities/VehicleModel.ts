@@ -5,7 +5,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from "typeorm";
-import { VehicleBrand } from "./VehicleBrand";
+import { VehicleBrand } from "@/entities/VehicleBrand";
 
 @Entity({ name: "vehicle_models" })
 export class VehicleModel {

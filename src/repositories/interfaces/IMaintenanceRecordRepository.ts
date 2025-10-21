@@ -1,8 +1,8 @@
-import { MaintenanceRecord } from "../../entities/MaintenanceRecord";
+import { MaintenanceRecord } from "@/entities/MaintenanceRecord";
 import { SelectQueryBuilder } from "typeorm";
-import { RepositoryFindOptions } from "./common";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
-export interface MaintenanceRecordSearchParams {
+export interface MaintenanceRecordFilters {
   userId?: string;
   vehicleId?: string;
   maintenanceId?: string;
@@ -12,7 +12,7 @@ export interface MaintenanceRecordSearchParams {
 export interface IMaintenanceRecordRepository {
   qb(): SelectQueryBuilder<MaintenanceRecord>;
   findAndCount(
-    options?: RepositoryFindOptions<MaintenanceRecordSearchParams>,
+    options?: RepositoryFindOptions<MaintenanceRecordFilters>,
   ): Promise<[MaintenanceRecord[], number]>;
   findOne(id: string): Promise<MaintenanceRecord | null>;
   findByVehicle(vehicleId: string): Promise<MaintenanceRecord[]>;

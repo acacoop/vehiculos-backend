@@ -1,6 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, Index } from "typeorm";
 
 @Entity({ name: "users" })
+@Index(["email"])
+@Index(["cuit"])
 export class User {
   @PrimaryGeneratedColumn("uuid")
   id!: string;

@@ -6,8 +6,8 @@ import {
   JoinColumn,
   Check,
 } from "typeorm";
-import { User } from "./User";
-import { UserRoleEnum } from "../utils/common";
+import { User } from "@/entities/User";
+import { UserRoleEnum } from "@/utils";
 
 @Entity({ name: "user_roles" })
 @Check("end_time IS NULL OR end_time > start_time")

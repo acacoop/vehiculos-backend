@@ -1,11 +1,11 @@
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
-import { VehiclesService } from "../services/vehiclesService";
-import { IVehicleRepository } from "../repositories/interfaces/IVehicleRepository";
-import { VehicleResponsiblesService } from "../services/vehicleResponsiblesService";
-import type { VehicleResponsibleWithDetails } from "../services/vehicleResponsiblesService";
-import { Vehicle as VehicleEntity } from "../entities/Vehicle";
-import { VehicleModel } from "../entities/VehicleModel";
-import { VehicleBrand } from "../entities/VehicleBrand";
+import { VehiclesService } from "@/services/vehiclesService";
+import { IVehicleRepository } from "@/repositories/interfaces/IVehicleRepository";
+import { VehicleResponsiblesService } from "@/services/vehicleResponsiblesService";
+import type { VehicleResponsibleWithDetails } from "@/services/vehicleResponsiblesService";
+import { Vehicle as VehicleEntity } from "@/entities/Vehicle";
+import { VehicleModel } from "@/entities/VehicleModel";
+import { VehicleBrand } from "@/entities/VehicleBrand";
 import { Repository } from "typeorm";
 
 describe("VehiclesService", () => {
