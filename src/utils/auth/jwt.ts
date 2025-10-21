@@ -13,7 +13,12 @@ import {
 } from "@/config/env.config";
 
 function getIssuer() {
-  if (ENTRA_EXPECTED_ISSUER) return ENTRA_EXPECTED_ISSUER.replace(/\/?$/, "/");
+  if (ENTRA_EXPECTED_ISSUER) {
+    // Ensure issuer ends with a single slash (safe string manipulation)
+    return ENTRA_EXPECTED_ISSUER.endsWith("/")
+      ? ENTRA_EXPECTED_ISSUER
+      : `${ENTRA_EXPECTED_ISSUER}/`;
+  }
   if (!ENTRA_TENANT_ID)
     throw new Error("ENTRA_TENANT_ID must be set to validate tokens");
   return `https://login.microsoftonline.com/${ENTRA_TENANT_ID}/v2.0/`;
@@ -61,12 +66,13 @@ export async function verifyEntraAccessToken(
   const requiredScope = ENTRA_REQUIRED_SCOPE;
 
   const jwks = await getRemoteJWKSVerified();
-  const baseIssuers: string[] = [issuer.replace(/\/+$/, "")];
+  const normalizedIssuer = issuer.endsWith("/") ? issuer.slice(0, -1) : issuer;
+  const baseIssuers: string[] = [normalizedIssuer];
   if (ENTRA_TENANT_ID)
     baseIssuers.push(`https://sts.windows.net/${ENTRA_TENANT_ID}`);
   const issuerSet = new Set<string>();
   for (const i of baseIssuers) {
-    const trimmed = i.replace(/\/+$/, "");
+    const trimmed = i.endsWith("/") ? i.slice(0, -1) : i;
     issuerSet.add(trimmed);
     issuerSet.add(`${trimmed}/`);
   }
