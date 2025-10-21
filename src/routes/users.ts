@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { UsersController } from "controllers/usersController";
-import { validateSchema } from "middleware/errorHandler";
-import { validateUUIDParam } from "middleware/validation";
-import { UserSchema } from "schemas/user";
-import { AppDataSource } from "db";
-import { ServiceFactory } from "factories/serviceFactory";
-import { requireRole } from "middleware/permission";
-import { UserRoleEnum } from "utils";
+import { UsersController } from "@/controllers/usersController";
+import { validateSchema } from "@/middleware/errorHandler";
+import { validateUUIDParam } from "@/middleware/validation";
+import { UserSchema } from "@/schemas/user";
+import { AppDataSource } from "@/db";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { requireRole } from "@/middleware/permission";
+import { UserRoleEnum } from "@/utils";
 
 const router = Router();
 

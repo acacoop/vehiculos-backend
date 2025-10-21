@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
-import { AppError } from "./errorHandler";
-import { RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX } from "config/env.config";
+import { AppError } from "@/middleware/errorHandler";
+import { RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX } from "@/config/env.config";
 
 export const rateLimiter = rateLimit({
   windowMs: RATE_LIMIT_WINDOW_MS,

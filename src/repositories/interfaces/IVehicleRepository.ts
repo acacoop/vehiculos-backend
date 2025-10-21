@@ -1,6 +1,6 @@
-import { Vehicle } from "entities/Vehicle";
+import { Vehicle } from "@/entities/Vehicle";
 import { DeleteResult } from "typeorm";
-import { RepositoryFindOptions } from "./common";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 /**
  * Vehicle-specific filter parameters

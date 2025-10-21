@@ -1,6 +1,6 @@
-import { Assignment } from "entities/Assignment";
+import { Assignment } from "@/entities/Assignment";
 import { DeleteResult } from "typeorm";
-import { RepositoryFindOptions } from "./common";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 export interface AssignmentFilters {
   userId?: string;

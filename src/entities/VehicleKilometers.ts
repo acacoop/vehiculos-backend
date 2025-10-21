@@ -8,8 +8,8 @@ import {
   Check,
   Index,
 } from "typeorm";
-import { Vehicle } from "./Vehicle";
-import { User } from "./User";
+import { Vehicle } from "@/entities/Vehicle";
+import { User } from "@/entities/User";
 
 @Entity({ name: "vehicle_kilometers" })
 @Unique(["vehicle", "date"]) // mirror unique (vehicle_id, date)

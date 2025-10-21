@@ -1,5 +1,5 @@
 import { describe, it, expect } from "@jest/globals";
-import { extractFilters, extractSearch } from "utils";
+import { extractFilters, extractSearch } from "@/utils";
 
 describe("filterHelpers", () => {
   describe("extractFilters", () => {

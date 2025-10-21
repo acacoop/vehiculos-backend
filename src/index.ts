@@ -2,34 +2,34 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 
 // Import middleware
-import { globalErrorHandler } from "./middleware/errorHandler";
+import { globalErrorHandler } from "@/middleware/errorHandler";
 import {
   rateLimiter,
   sanitizeInput,
   securityHeaders,
   corsOptions,
-} from "./middleware/security";
-import { setupSwagger } from "./config/swagger";
-import { requireAuth } from "./middleware/auth";
-import meRoutes from "./routes/me";
+} from "@/middleware/security";
+import { setupSwagger } from "@/config/swagger";
+import { requireAuth } from "@/middleware/auth";
+import meRoutes from "@/routes/me";
 
 // Import routes
-import usersRoutes from "./routes/users";
-import vehiclesRoutes from "./routes/vehicles";
-import assignmentsRoutes from "./routes/vehicleAssignments";
-import reservationsRoutes from "./routes/reservations";
-import vehicleResponsiblesRoutes from "./routes/vehicleResponsibles";
-import userRolesRoutes from "./routes/userRoles";
-import maintenanceCategoriesRoutes from "./routes/maintenanceCategories";
-import maintenanceRoutes from "./routes/maintenancePosibles";
-import assignedMaintenanceRoutes from "./routes/maintenanceAssignments";
-import maintenanceRecordsRoutes from "./routes/maintenanceRecords";
-import vehicleKilometersRoutes from "./routes/vehicleKilometers";
-import vehicleBrandsRoutes from "./routes/vehicleBrands";
-import vehicleModelsRoutes from "./routes/vehicleModels";
-import vehicleACLRoutes from "./routes/vehicleACL";
+import usersRoutes from "@/routes/users";
+import vehiclesRoutes from "@/routes/vehicles";
+import assignmentsRoutes from "@/routes/vehicleAssignments";
+import reservationsRoutes from "@/routes/reservations";
+import vehicleResponsiblesRoutes from "@/routes/vehicleResponsibles";
+import userRolesRoutes from "@/routes/userRoles";
+import maintenanceCategoriesRoutes from "@/routes/maintenanceCategories";
+import maintenanceRoutes from "@/routes/maintenancePosibles";
+import assignedMaintenanceRoutes from "@/routes/maintenanceAssignments";
+import maintenanceRecordsRoutes from "@/routes/maintenanceRecords";
+import vehicleKilometersRoutes from "@/routes/vehicleKilometers";
+import vehicleBrandsRoutes from "@/routes/vehicleBrands";
+import vehicleModelsRoutes from "@/routes/vehicleModels";
+import vehicleACLRoutes from "@/routes/vehicleACL";
 
-import { SERVER_PORT } from "./config/env.config";
+import { SERVER_PORT } from "@/config/env.config";
 
 const app = express();
 

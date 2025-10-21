@@ -1,24 +1,24 @@
-import { Maintenance } from "entities/Maintenance";
-import { MaintenanceCategory } from "entities/MaintenanceCategory";
-import { AssignedMaintenance } from "entities/AssignedMaintenance";
-import { IMaintenanceRepository } from "repositories/interfaces/IMaintenanceRepository";
-import { IAssignedMaintenanceRepository } from "repositories/interfaces/IAssignedMaintenanceRepository";
+import { Maintenance } from "@/entities/Maintenance";
+import { MaintenanceCategory } from "@/entities/MaintenanceCategory";
+import { AssignedMaintenance } from "@/entities/AssignedMaintenance";
+import { IMaintenanceRepository } from "@/repositories/interfaces/IMaintenanceRepository";
+import { IAssignedMaintenanceRepository } from "@/repositories/interfaces/IAssignedMaintenanceRepository";
 import {
   IMaintenanceRecordRepository,
   MaintenanceRecordFilters,
-} from "repositories/interfaces/IMaintenanceRecordRepository";
+} from "@/repositories/interfaces/IMaintenanceRecordRepository";
 import {
   validateMaintenanceCategoryExists,
   validateMaintenanceExists,
   validateVehicleExists,
-} from "utils/validation/entity";
-import type { Maintenance as MaintenanceSchemaType } from "schemas/maintenance";
-import type { MaintenanceRecord } from "schemas/maintenanceRecord";
-import { Vehicle } from "entities/Vehicle";
-import { MaintenanceRecord as MaintenanceRecordEntity } from "entities/MaintenanceRecord";
+} from "@/utils/validation/entity";
+import type { Maintenance as MaintenanceSchemaType } from "@/schemas/maintenance";
+import type { MaintenanceRecord } from "@/schemas/maintenanceRecord";
+import { Vehicle } from "@/entities/Vehicle";
+import { MaintenanceRecord as MaintenanceRecordEntity } from "@/entities/MaintenanceRecord";
 import { Repository } from "typeorm";
-import { User } from "entities/User";
-import { RepositoryFindOptions } from "repositories/interfaces/common";
+import { User } from "@/entities/User";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 export type MaintenanceDTO = MaintenanceSchemaType & {
   kilometersFrequency?: number;

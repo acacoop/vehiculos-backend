@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { VehicleACLController } from "controllers/vehicleACLController";
-import { VehicleACLService } from "services/vehicleACLService";
-import { VehicleACLRepository } from "repositories/VehicleACLRepository";
-import { AppDataSource } from "db";
-import { requireRole } from "middleware/permission";
-import { UserRoleEnum } from "utils";
+import { VehicleACLController } from "@/controllers/vehicleACLController";
+import { VehicleACLService } from "@/services/vehicleACLService";
+import { VehicleACLRepository } from "@/repositories/VehicleACLRepository";
+import { AppDataSource } from "@/db";
+import { requireRole } from "@/middleware/permission";
+import { UserRoleEnum } from "@/utils";
 
 const router = Router();
 

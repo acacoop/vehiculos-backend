@@ -1,11 +1,11 @@
 import {
   IVehicleModelRepository,
   VehicleModelFilters,
-} from "repositories/interfaces/IVehicleModelRepository";
-import { IVehicleBrandRepository } from "repositories/interfaces/IVehicleBrandRepository";
-import type { VehicleModelInput, VehicleModelType } from "schemas/vehicleModel";
-import { AppError } from "middleware/errorHandler";
-import { RepositoryFindOptions } from "repositories/interfaces/common";
+} from "@/repositories/interfaces/IVehicleModelRepository";
+import { IVehicleBrandRepository } from "@/repositories/interfaces/IVehicleBrandRepository";
+import type { VehicleModelInput, VehicleModelType } from "@/schemas/vehicleModel";
+import { AppError } from "@/middleware/errorHandler";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 /**
  */

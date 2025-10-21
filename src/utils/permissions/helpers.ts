@@ -1,4 +1,4 @@
-import { PermissionType, PERMISSION_WEIGHT } from "./enums";
+import { PermissionType, PERMISSION_WEIGHT } from "@/utils/permissions/enums";
 
 export function getAllowedPermissions(
   requiredPermission: PermissionType,

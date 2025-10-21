@@ -1,6 +1,6 @@
-import { VehicleResponsible } from "entities/VehicleResponsible";
+import { VehicleResponsible } from "@/entities/VehicleResponsible";
 import { DeleteResult } from "typeorm";
-import { RepositoryFindOptions } from "./common";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 export interface VehicleResponsibleFilters {
   vehicleId?: string;

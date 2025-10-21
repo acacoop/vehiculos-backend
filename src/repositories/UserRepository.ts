@@ -1,8 +1,8 @@
 import { DataSource, Repository } from "typeorm";
-import { User as UserEntity } from "entities/User";
-import { IUserRepository, UserFilters } from "./interfaces/IUserRepository";
-import { RepositoryFindOptions, resolvePagination } from "./interfaces/common";
-import { applySearchFilter, applyFilters } from "utils";
+import { User as UserEntity } from "@/entities/User";
+import { IUserRepository, UserFilters } from "@/repositories/interfaces/IUserRepository";
+import { RepositoryFindOptions, resolvePagination } from "@/repositories/interfaces/common";
+import { applySearchFilter, applyFilters } from "@/utils";
 
 // Re-export types for convenience
 export type { UserFilters };

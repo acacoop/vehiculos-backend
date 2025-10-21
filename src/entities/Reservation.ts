@@ -7,8 +7,8 @@ import {
   Check,
   Index,
 } from "typeorm";
-import { User } from "./User";
-import { Vehicle } from "./Vehicle";
+import { User } from "@/entities/User";
+import { Vehicle } from "@/entities/Vehicle";
 
 @Entity({ name: "reservations" })
 @Check("end_date > start_date")

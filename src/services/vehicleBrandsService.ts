@@ -1,9 +1,9 @@
 import {
   IVehicleBrandRepository,
   VehicleBrandFilters,
-} from "repositories/interfaces/IVehicleBrandRepository";
-import type { VehicleBrandInput, VehicleBrand } from "schemas/vehicleBrand";
-import { RepositoryFindOptions } from "repositories/interfaces/common";
+} from "@/repositories/interfaces/IVehicleBrandRepository";
+import type { VehicleBrandInput, VehicleBrand } from "@/schemas/vehicleBrand";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 /**
  */

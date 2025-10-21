@@ -1,11 +1,11 @@
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
-import { MaintenancesService } from "services/maintenancesService";
-import { IMaintenanceRepository } from "repositories/interfaces/IMaintenanceRepository";
-import { IAssignedMaintenanceRepository } from "repositories/interfaces/IAssignedMaintenanceRepository";
-import { Maintenance } from "entities/Maintenance";
-import { MaintenanceCategory } from "entities/MaintenanceCategory";
+import { MaintenancesService } from "@/services/maintenancesService";
+import { IMaintenanceRepository } from "@/repositories/interfaces/IMaintenanceRepository";
+import { IAssignedMaintenanceRepository } from "@/repositories/interfaces/IAssignedMaintenanceRepository";
+import { Maintenance } from "@/entities/Maintenance";
+import { MaintenanceCategory } from "@/entities/MaintenanceCategory";
 import { Repository } from "typeorm";
-import * as validators from "utils/validation/entity";
+import * as validators from "@/utils/validation/entity";
 
 jest.mock("../utils/validation/entity");
 

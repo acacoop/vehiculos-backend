@@ -1,16 +1,16 @@
-import { BaseController } from "./baseController";
-import type { Assignment } from "schemas/assignment";
-import { AppError, asyncHandler } from "middleware/errorHandler";
+import { BaseController } from "@/controllers/baseController";
+import type { Assignment } from "@/schemas/assignment";
+import { AppError, asyncHandler } from "@/middleware/errorHandler";
 import { Request, Response } from "express";
 import {
   AssignmentUpdateSchema,
   AssignmentFinishSchema,
-} from "schemas/assignment";
-import { AssignmentsService } from "services/assignmentsService";
-import { ServiceFactory } from "factories/serviceFactory";
-import { AppDataSource } from "db";
-import { RepositoryFindOptions } from "repositories/interfaces/common";
-import { AssignmentFilters } from "repositories/interfaces/IAssignmentRepository";
+} from "@/schemas/assignment";
+import { AssignmentsService } from "@/services/assignmentsService";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { AppDataSource } from "@/db";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { AssignmentFilters } from "@/repositories/interfaces/IAssignmentRepository";
 
 export class AssignmentsController extends BaseController<AssignmentFilters> {
   constructor(private readonly service: AssignmentsService) {

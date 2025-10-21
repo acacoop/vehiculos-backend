@@ -1,11 +1,11 @@
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
-import { VehicleResponsiblesService } from "services/vehicleResponsiblesService";
-import { IVehicleResponsibleRepository } from "repositories/interfaces/IVehicleResponsibleRepository";
-import { VehicleResponsible } from "entities/VehicleResponsible";
-import { User } from "entities/User";
-import { Vehicle } from "entities/Vehicle";
+import { VehicleResponsiblesService } from "@/services/vehicleResponsiblesService";
+import { IVehicleResponsibleRepository } from "@/repositories/interfaces/IVehicleResponsibleRepository";
+import { VehicleResponsible } from "@/entities/VehicleResponsible";
+import { User } from "@/entities/User";
+import { Vehicle } from "@/entities/Vehicle";
 import { Repository } from "typeorm";
-import * as validators from "utils/validation/entity";
+import * as validators from "@/utils/validation/entity";
 
 jest.mock("../utils/validation/entity");
 

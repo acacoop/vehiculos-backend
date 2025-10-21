@@ -1,11 +1,11 @@
 import { DataSource, In, Repository } from "typeorm";
-import { Vehicle as VehicleEntity } from "entities/Vehicle";
+import { Vehicle as VehicleEntity } from "@/entities/Vehicle";
 import {
   IVehicleRepository,
   VehicleFilters,
-} from "./interfaces/IVehicleRepository";
-import { RepositoryFindOptions, resolvePagination } from "./interfaces/common";
-import { applySearchFilter, applyFilters } from "utils";
+} from "@/repositories/interfaces/IVehicleRepository";
+import { RepositoryFindOptions, resolvePagination } from "@/repositories/interfaces/common";
+import { applySearchFilter, applyFilters } from "@/utils";
 
 export class VehicleRepository implements IVehicleRepository {
   private readonly repo: Repository<VehicleEntity>;

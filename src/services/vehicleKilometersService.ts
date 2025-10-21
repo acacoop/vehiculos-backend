@@ -1,10 +1,10 @@
-import { AppDataSource } from "db";
-import { VehicleKilometers as VehicleKilometersEntity } from "entities/VehicleKilometers";
-import { User } from "entities/User";
-import { Vehicle } from "entities/Vehicle";
-import type { VehicleKilometersLog } from "schemas/vehicleKilometers";
-import { AppError } from "middleware/errorHandler";
-import { VehicleKilometersRepository } from "repositories/VehicleKilometersRepository";
+import { AppDataSource } from "@/db";
+import { VehicleKilometers as VehicleKilometersEntity } from "@/entities/VehicleKilometers";
+import { User } from "@/entities/User";
+import { Vehicle } from "@/entities/Vehicle";
+import type { VehicleKilometersLog } from "@/schemas/vehicleKilometers";
+import { AppError } from "@/middleware/errorHandler";
+import { VehicleKilometersRepository } from "@/repositories/VehicleKilometersRepository";
 
 function mapEntity(e: VehicleKilometersEntity): VehicleKilometersLog {
   return {

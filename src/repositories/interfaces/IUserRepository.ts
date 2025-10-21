@@ -1,6 +1,6 @@
-import { User } from "entities/User";
+import { User } from "@/entities/User";
 import { DeleteResult } from "typeorm";
-import { RepositoryFindOptions } from "./common";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 export interface UserFilters {
   email?: string;

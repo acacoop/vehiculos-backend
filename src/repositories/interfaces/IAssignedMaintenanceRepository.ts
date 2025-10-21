@@ -1,4 +1,4 @@
-import { AssignedMaintenance } from "entities/AssignedMaintenance";
+import { AssignedMaintenance } from "@/entities/AssignedMaintenance";
 import { DeleteResult } from "typeorm";
 
 export interface IAssignedMaintenanceRepository {

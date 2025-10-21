@@ -1,6 +1,6 @@
-import { VehicleBrand } from "entities/VehicleBrand";
+import { VehicleBrand } from "@/entities/VehicleBrand";
 import { DeleteResult } from "typeorm";
-import { RepositoryFindOptions } from "./common";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 export interface VehicleBrandFilters {
   name?: string;

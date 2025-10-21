@@ -1,9 +1,9 @@
-import { UserRoleRepository } from "repositories/UserRoleRepository";
-import { UserRole } from "entities/UserRole";
-import { User } from "entities/User";
+import { UserRoleRepository } from "@/repositories/UserRoleRepository";
+import { UserRole } from "@/entities/UserRole";
+import { User } from "@/entities/User";
 import { Repository } from "typeorm";
-import { AppError } from "middleware/errorHandler";
-import { UserRoleEnum } from "utils";
+import { AppError } from "@/middleware/errorHandler";
+import { UserRoleEnum } from "@/utils";
 
 export interface UserRoleDTO {
   id: string;

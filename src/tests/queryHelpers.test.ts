@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from "@jest/globals";
 import { SelectQueryBuilder, Brackets } from "typeorm";
-import { applySearchFilter, applyFilters } from "utils";
+import { applySearchFilter, applyFilters } from "@/utils";
 
 // Mock entity for testing
 class TestEntity {

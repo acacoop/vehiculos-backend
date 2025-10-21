@@ -6,7 +6,7 @@ import {
   Index,
 } from "typeorm";
 
-import { VehicleModel } from "./VehicleModel";
+import { VehicleModel } from "@/entities/VehicleModel";
 
 @Entity({ name: "vehicles" })
 @Index(["licensePlate"])

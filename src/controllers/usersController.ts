@@ -1,10 +1,10 @@
-import { BaseController } from "./baseController";
-import type { User } from "schemas/user";
+import { BaseController } from "@/controllers/baseController";
+import type { User } from "@/schemas/user";
 import { Request, Response } from "express";
-import { asyncHandler, AppError } from "middleware/errorHandler";
-import { UsersService } from "services/usersService";
-import { RepositoryFindOptions } from "repositories/interfaces/common";
-import { UserFilters } from "repositories/interfaces/IUserRepository";
+import { asyncHandler, AppError } from "@/middleware/errorHandler";
+import { UsersService } from "@/services/usersService";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { UserFilters } from "@/repositories/interfaces/IUserRepository";
 
 export class UsersController extends BaseController<UserFilters> {
   constructor(private readonly service: UsersService) {

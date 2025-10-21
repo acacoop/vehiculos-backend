@@ -1,8 +1,8 @@
 import { DataSource, Repository } from "typeorm";
-import { VehicleACL as VehicleACLEntity } from "entities/VehicleACL";
-import { PermissionType, PERMISSION_WEIGHT } from "utils";
-import { resolvePagination } from "./interfaces/common";
-import { applySearchFilter, applyFilters } from "utils";
+import { VehicleACL as VehicleACLEntity } from "@/entities/VehicleACL";
+import { PermissionType, PERMISSION_WEIGHT } from "@/utils";
+import { resolvePagination } from "@/repositories/interfaces/common";
+import { applySearchFilter, applyFilters } from "@/utils";
 
 export interface VehicleACLFilters {
   userId?: string;

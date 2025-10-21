@@ -1,8 +1,8 @@
-import { AppDataSource } from "db";
-import { AssignedMaintenance } from "entities/AssignedMaintenance";
-import { MaintenanceRecord } from "entities/MaintenanceRecord";
-import { Assignment } from "entities/Assignment";
-import { PermissionRequest } from "./permission";
+import { AppDataSource } from "@/db";
+import { AssignedMaintenance } from "@/entities/AssignedMaintenance";
+import { MaintenanceRecord } from "@/entities/MaintenanceRecord";
+import { Assignment } from "@/entities/Assignment";
+import { PermissionRequest } from "@/middleware/permission";
 
 /**
  * Collection of mapper functions to extract vehicleId from requests.

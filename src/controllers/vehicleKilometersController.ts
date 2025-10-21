@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
-import { asyncHandler } from "middleware/errorHandler";
-import { VehicleKilometersLogCreateSchema } from "schemas/vehicleKilometers";
-import type { VehicleKilometersLog } from "schemas/vehicleKilometers";
+import { asyncHandler } from "@/middleware/errorHandler";
+import { VehicleKilometersLogCreateSchema } from "@/schemas/vehicleKilometers";
+import type { VehicleKilometersLog } from "@/schemas/vehicleKilometers";
 import {
   VehicleKilometersService,
   createVehicleKilometersService,
-} from "services/vehicleKilometersService";
+} from "@/services/vehicleKilometersService";
 
 export class VehicleKilometersController {
   constructor(private readonly service: VehicleKilometersService) {}

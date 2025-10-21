@@ -1,11 +1,11 @@
 import { DataSource, Repository } from "typeorm";
-import { MaintenanceRecord } from "entities/MaintenanceRecord";
+import { MaintenanceRecord } from "@/entities/MaintenanceRecord";
 import {
   IMaintenanceRecordRepository,
   MaintenanceRecordFilters,
-} from "./interfaces/IMaintenanceRecordRepository";
-import { RepositoryFindOptions, resolvePagination } from "./interfaces/common";
-import { applySearchFilter, applyFilters } from "utils";
+} from "@/repositories/interfaces/IMaintenanceRecordRepository";
+import { RepositoryFindOptions, resolvePagination } from "@/repositories/interfaces/common";
+import { applySearchFilter, applyFilters } from "@/utils";
 
 export type { MaintenanceRecordFilters };
 

@@ -1,10 +1,10 @@
-import { User as UserEntity } from "entities/User";
-import type { User } from "schemas/user";
+import { User as UserEntity } from "@/entities/User";
+import type { User } from "@/schemas/user";
 import {
   IUserRepository,
   UserFilters,
-} from "repositories/interfaces/IUserRepository";
-import { RepositoryFindOptions } from "repositories/interfaces/common";
+} from "@/repositories/interfaces/IUserRepository";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 /**
  */

@@ -1,14 +1,14 @@
 import express from "express";
-import { validateUUIDParam, validateBody } from "middleware/validation";
-import { createReservationsController } from "controllers/reservationsController";
-import { ReservationSchema } from "schemas/reservation";
+import { validateUUIDParam, validateBody } from "@/middleware/validation";
+import { createReservationsController } from "@/controllers/reservationsController";
+import { ReservationSchema } from "@/schemas/reservation";
 import {
   requireRole,
   requireVehiclePermissionFromParam,
   requireVehiclePermissionFromBody,
-} from "middleware/permission";
-import { UserRoleEnum } from "utils";
-import { PermissionType } from "utils";
+} from "@/middleware/permission";
+import { UserRoleEnum } from "@/utils";
+import { PermissionType } from "@/utils";
 
 const router = express.Router();
 const controller = createReservationsController();

@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { asyncHandler, AppError } from "middleware/errorHandler";
-import { AuthenticatedRequest } from "middleware/auth";
-import { ServiceFactory } from "factories/serviceFactory";
-import { AppDataSource } from "db";
+import { asyncHandler, AppError } from "@/middleware/errorHandler";
+import { AuthenticatedRequest } from "@/middleware/auth";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { AppDataSource } from "@/db";
 
 const serviceFactory = new ServiceFactory(AppDataSource);
 const usersService = serviceFactory.createUsersService();

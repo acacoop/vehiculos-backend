@@ -1,7 +1,7 @@
-import { BaseController } from "./baseController";
-import { type MaintenanceCategory } from "schemas/maintenanceCategory";
-import { MaintenanceCategoriesService } from "services/maintenanceCategoriesService";
-import { RepositoryFindOptions } from "repositories/interfaces/common";
+import { BaseController } from "@/controllers/baseController";
+import { type MaintenanceCategory } from "@/schemas/maintenanceCategory";
+import { MaintenanceCategoriesService } from "@/services/maintenanceCategoriesService";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 /**
  * MaintenanceCategoriesController - Manages maintenance categories

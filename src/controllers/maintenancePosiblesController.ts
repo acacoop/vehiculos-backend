@@ -1,14 +1,14 @@
-import { BaseController } from "./baseController";
+import { BaseController } from "@/controllers/baseController";
 import {
   MaintenanceCreateSchema,
   MaintenanceUpdateSchema,
-} from "schemas/maintenance";
-import { MaintenancesService } from "services/maintenancesService";
+} from "@/schemas/maintenance";
+import { MaintenancesService } from "@/services/maintenancesService";
 import { Request, Response } from "express";
-import { asyncHandler, AppError } from "middleware/errorHandler";
-import { ServiceFactory } from "factories/serviceFactory";
-import { AppDataSource } from "db";
-import { RepositoryFindOptions } from "repositories/interfaces/common";
+import { asyncHandler, AppError } from "@/middleware/errorHandler";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { AppDataSource } from "@/db";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 /**
  * MaintenancePosiblesController - Manages possible maintenances

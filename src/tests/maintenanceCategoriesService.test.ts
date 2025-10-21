@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
-import { MaintenanceCategoriesService } from "services/maintenanceCategoriesService";
-import { IMaintenanceCategoryRepository } from "repositories/interfaces/IMaintenanceCategoryRepository";
-import { MaintenanceCategory } from "entities/MaintenanceCategory";
+import { MaintenanceCategoriesService } from "@/services/maintenanceCategoriesService";
+import { IMaintenanceCategoryRepository } from "@/repositories/interfaces/IMaintenanceCategoryRepository";
+import { MaintenanceCategory } from "@/entities/MaintenanceCategory";
 import { DeleteResult } from "typeorm";
 
 class MockMaintenanceCategoryRepository

@@ -1,14 +1,14 @@
-import { BaseController } from "./baseController";
-import type { VehicleResponsibleInput } from "schemas/vehicleResponsible";
-import { AppError } from "middleware/errorHandler";
+import { BaseController } from "@/controllers/baseController";
+import type { VehicleResponsibleInput } from "@/schemas/vehicleResponsible";
+import { AppError } from "@/middleware/errorHandler";
 import { Request, Response } from "express";
-import { asyncHandler } from "middleware/errorHandler";
-import { VehicleResponsiblesService } from "services/vehicleResponsiblesService";
-import { ServiceFactory } from "factories/serviceFactory";
-import { AppDataSource } from "db";
-import { RepositoryFindOptions } from "repositories/interfaces/common";
-import { VehicleResponsibleFilters } from "repositories/interfaces/IVehicleResponsibleRepository";
-import { isValidUUID } from "utils";
+import { asyncHandler } from "@/middleware/errorHandler";
+import { VehicleResponsiblesService } from "@/services/vehicleResponsiblesService";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { AppDataSource } from "@/db";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { VehicleResponsibleFilters } from "@/repositories/interfaces/IVehicleResponsibleRepository";
+import { isValidUUID } from "@/utils";
 
 export class VehicleResponsiblesController extends BaseController<VehicleResponsibleFilters> {
   constructor(private readonly service: VehicleResponsiblesService) {

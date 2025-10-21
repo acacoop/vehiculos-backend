@@ -1,6 +1,6 @@
-import { Reservation } from "entities/Reservation";
+import { Reservation } from "@/entities/Reservation";
 import { DeleteResult, SelectQueryBuilder } from "typeorm";
-import { RepositoryFindOptions } from "./common";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 export interface ReservationFilters {
   userId?: string;

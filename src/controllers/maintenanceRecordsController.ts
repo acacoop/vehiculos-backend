@@ -1,12 +1,12 @@
-import { BaseController } from "./baseController";
-import { AppError } from "middleware/errorHandler";
-import { MaintenanceRecordSchema } from "schemas/maintenanceRecord";
-import { MaintenanceRecordsService } from "services/maintenancesService";
-import type { MaintenanceRecord } from "schemas/maintenanceRecord";
-import { ServiceFactory } from "factories/serviceFactory";
-import { AppDataSource } from "db";
-import { RepositoryFindOptions } from "repositories/interfaces/common";
-import { MaintenanceRecordFilters } from "repositories/interfaces/IMaintenanceRecordRepository";
+import { BaseController } from "@/controllers/baseController";
+import { AppError } from "@/middleware/errorHandler";
+import { MaintenanceRecordSchema } from "@/schemas/maintenanceRecord";
+import { MaintenanceRecordsService } from "@/services/maintenancesService";
+import type { MaintenanceRecord } from "@/schemas/maintenanceRecord";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { AppDataSource } from "@/db";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { MaintenanceRecordFilters } from "@/repositories/interfaces/IMaintenanceRecordRepository";
 
 export class MaintenanceRecordsController extends BaseController<MaintenanceRecordFilters> {
   constructor(private readonly service: MaintenanceRecordsService) {

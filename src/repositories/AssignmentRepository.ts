@@ -6,13 +6,13 @@ import {
   IsNull,
   Or,
 } from "typeorm";
-import { Assignment } from "entities/Assignment";
+import { Assignment } from "@/entities/Assignment";
 import {
   IAssignmentRepository,
   AssignmentFilters,
-} from "./interfaces/IAssignmentRepository";
-import { RepositoryFindOptions, resolvePagination } from "./interfaces/common";
-import { applySearchFilter, applyFilters } from "utils";
+} from "@/repositories/interfaces/IAssignmentRepository";
+import { RepositoryFindOptions, resolvePagination } from "@/repositories/interfaces/common";
+import { applySearchFilter, applyFilters } from "@/utils";
 
 export type { AssignmentFilters };
 

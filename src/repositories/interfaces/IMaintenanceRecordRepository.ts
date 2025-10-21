@@ -1,6 +1,6 @@
-import { MaintenanceRecord } from "entities/MaintenanceRecord";
+import { MaintenanceRecord } from "@/entities/MaintenanceRecord";
 import { SelectQueryBuilder } from "typeorm";
-import { RepositoryFindOptions } from "./common";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 export interface MaintenanceRecordFilters {
   userId?: string;

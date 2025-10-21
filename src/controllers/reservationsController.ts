@@ -1,13 +1,13 @@
-import { BaseController } from "./baseController";
-import { AppError, asyncHandler } from "middleware/errorHandler";
-import type { Reservation } from "schemas/reservation";
-import { ReservationsService } from "services/reservationsService";
+import { BaseController } from "@/controllers/baseController";
+import { AppError, asyncHandler } from "@/middleware/errorHandler";
+import type { Reservation } from "@/schemas/reservation";
+import { ReservationsService } from "@/services/reservationsService";
 import { Request, Response } from "express";
-import { ReservationSchema } from "schemas/reservation";
-import { ServiceFactory } from "factories/serviceFactory";
-import { AppDataSource } from "db";
-import { RepositoryFindOptions } from "repositories/interfaces/common";
-import { ReservationFilters } from "repositories/interfaces/IReservationRepository";
+import { ReservationSchema } from "@/schemas/reservation";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { AppDataSource } from "@/db";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { ReservationFilters } from "@/repositories/interfaces/IReservationRepository";
 
 export class ReservationsController extends BaseController<ReservationFilters> {
   constructor(private readonly service: ReservationsService) {

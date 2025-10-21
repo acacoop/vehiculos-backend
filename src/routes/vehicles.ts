@@ -1,15 +1,15 @@
 import { Router } from "express";
-import { createVehiclesController } from "controllers/vehiclesController";
-import vehicleKilometersRoutes from "./vehicleKilometers";
-import { validateSchema } from "middleware/errorHandler";
-import { validateUUIDParam } from "middleware/validation";
-import { VehicleInputSchema, VehicleUpdateSchema } from "schemas/vehicle";
+import { createVehiclesController } from "@/controllers/vehiclesController";
+import vehicleKilometersRoutes from "@/routes/vehicleKilometers";
+import { validateSchema } from "@/middleware/errorHandler";
+import { validateUUIDParam } from "@/middleware/validation";
+import { VehicleInputSchema, VehicleUpdateSchema } from "@/schemas/vehicle";
 import {
   requireRole,
   requireVehiclePermissionFromParam,
-} from "middleware/permission";
-import { UserRoleEnum } from "utils";
-import { PermissionType } from "utils";
+} from "@/middleware/permission";
+import { UserRoleEnum } from "@/utils";
+import { PermissionType } from "@/utils";
 
 const router = Router();
 const vehiclesController = createVehiclesController();

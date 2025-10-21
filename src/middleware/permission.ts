@@ -1,15 +1,15 @@
 import { Response, NextFunction } from "express";
-import { AppError } from "./errorHandler";
-import { AuthenticatedRequest } from "./auth";
-import { PermissionType, PERMISSION_WEIGHT } from "utils";
-import { VehicleACL } from "entities/VehicleACL";
+import { AppError } from "@/middleware/errorHandler";
+import { AuthenticatedRequest } from "@/middleware/auth";
+import { PermissionType, PERMISSION_WEIGHT } from "@/utils";
+import { VehicleACL } from "@/entities/VehicleACL";
 import { DataSource } from "typeorm";
-import { VehicleACLRepository } from "repositories/VehicleACLRepository";
-import { VehicleResponsibleRepository } from "repositories/VehicleResponsibleRepository";
-import { UserRoleRepository } from "repositories/UserRoleRepository";
-import { UserRoleEnum } from "utils";
-import { AppDataSource } from "db";
-import { AssignmentRepository } from "repositories/AssignmentRepository";
+import { VehicleACLRepository } from "@/repositories/VehicleACLRepository";
+import { VehicleResponsibleRepository } from "@/repositories/VehicleResponsibleRepository";
+import { UserRoleRepository } from "@/repositories/UserRoleRepository";
+import { UserRoleEnum } from "@/utils";
+import { AppDataSource } from "@/db";
+import { AssignmentRepository } from "@/repositories/AssignmentRepository";
 
 interface VehiclePermissionCheckOptions {
   type: "vehicle";

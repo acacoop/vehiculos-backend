@@ -1,11 +1,11 @@
 import { DataSource, Repository } from "typeorm";
-import { VehicleResponsible as VehicleResponsibleEntity } from "entities/VehicleResponsible";
+import { VehicleResponsible as VehicleResponsibleEntity } from "@/entities/VehicleResponsible";
 import {
   IVehicleResponsibleRepository,
   VehicleResponsibleFilters,
-} from "./interfaces/IVehicleResponsibleRepository";
-import { RepositoryFindOptions, resolvePagination } from "./interfaces/common";
-import { applySearchFilter, applyFilters } from "utils";
+} from "@/repositories/interfaces/IVehicleResponsibleRepository";
+import { RepositoryFindOptions, resolvePagination } from "@/repositories/interfaces/common";
+import { applySearchFilter, applyFilters } from "@/utils";
 
 export type { VehicleResponsibleFilters };
 

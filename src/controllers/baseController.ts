@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
-import { asyncHandler, AppError } from "middleware/errorHandler";
+import { asyncHandler, AppError } from "@/middleware/errorHandler";
 import {
   isValidUUID,
   extractFilters,
   extractSearch,
   parsePaginationQuery,
-} from "utils";
-import { RepositoryFindOptions } from "repositories/interfaces/common";
+} from "@/utils";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 export interface ApiResponse<T = unknown> {
   status: "success" | "error";

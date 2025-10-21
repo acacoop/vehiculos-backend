@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { VehicleBrandsController } from "controllers/vehicleBrandsController";
-import { validateSchema } from "middleware/errorHandler";
-import { VehicleBrandInputSchema } from "schemas/vehicleBrand";
-import { validateUUIDParam } from "middleware/validation";
-import { AppDataSource } from "db";
-import { ServiceFactory } from "factories/serviceFactory";
-import { requireRole } from "middleware/permission";
-import { UserRoleEnum } from "utils";
+import { VehicleBrandsController } from "@/controllers/vehicleBrandsController";
+import { validateSchema } from "@/middleware/errorHandler";
+import { VehicleBrandInputSchema } from "@/schemas/vehicleBrand";
+import { validateUUIDParam } from "@/middleware/validation";
+import { AppDataSource } from "@/db";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { requireRole } from "@/middleware/permission";
+import { UserRoleEnum } from "@/utils";
 
 const router = Router();
 

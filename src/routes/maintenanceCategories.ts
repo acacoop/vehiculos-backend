@@ -1,11 +1,11 @@
 import express from "express";
-import { MaintenanceCategoriesController } from "controllers/maintenanceCategoriesController";
-import { validateUUIDParam, validateBody } from "middleware/validation";
-import { MaintenanceCategorySchema } from "schemas/maintenanceCategory";
-import { AppDataSource } from "db";
-import { ServiceFactory } from "factories/serviceFactory";
-import { requireRole } from "middleware/permission";
-import { UserRoleEnum } from "utils";
+import { MaintenanceCategoriesController } from "@/controllers/maintenanceCategoriesController";
+import { validateUUIDParam, validateBody } from "@/middleware/validation";
+import { MaintenanceCategorySchema } from "@/schemas/maintenanceCategory";
+import { AppDataSource } from "@/db";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { requireRole } from "@/middleware/permission";
+import { UserRoleEnum } from "@/utils";
 
 const router = express.Router();
 const serviceFactory = new ServiceFactory(AppDataSource);

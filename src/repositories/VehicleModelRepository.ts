@@ -1,11 +1,11 @@
 import { DataSource, Repository } from "typeorm";
-import { VehicleModel } from "entities/VehicleModel";
+import { VehicleModel } from "@/entities/VehicleModel";
 import {
   IVehicleModelRepository,
   VehicleModelFilters,
-} from "./interfaces/IVehicleModelRepository";
-import { RepositoryFindOptions, resolvePagination } from "./interfaces/common";
-import { applySearchFilter, applyFilters } from "utils";
+} from "@/repositories/interfaces/IVehicleModelRepository";
+import { RepositoryFindOptions, resolvePagination } from "@/repositories/interfaces/common";
+import { applySearchFilter, applyFilters } from "@/utils";
 
 // Re-export types for convenience
 export type { VehicleModelFilters };

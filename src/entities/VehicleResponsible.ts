@@ -6,8 +6,8 @@ import {
   JoinColumn,
   Check,
 } from "typeorm";
-import { Vehicle } from "./Vehicle";
-import { User } from "./User";
+import { Vehicle } from "@/entities/Vehicle";
+import { User } from "@/entities/User";
 
 const DEFAULT_CECO = "99999999"; // For already existing records without ceco
 

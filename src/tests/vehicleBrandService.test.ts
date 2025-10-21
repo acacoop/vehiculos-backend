@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
-import { VehicleBrandService } from "services/vehicleBrandsService";
-import { IVehicleBrandRepository } from "repositories/interfaces/IVehicleBrandRepository";
-import { VehicleBrand } from "entities/VehicleBrand";
+import { VehicleBrandService } from "@/services/vehicleBrandsService";
+import { IVehicleBrandRepository } from "@/repositories/interfaces/IVehicleBrandRepository";
+import { VehicleBrand } from "@/entities/VehicleBrand";
 import { DeleteResult } from "typeorm";
 
 class MockVehicleBrandRepository implements IVehicleBrandRepository {

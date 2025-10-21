@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
-import { UsersService } from "services/usersService";
-import { IUserRepository } from "repositories/interfaces/IUserRepository";
-import { User } from "entities/User";
+import { UsersService } from "@/services/usersService";
+import { IUserRepository } from "@/repositories/interfaces/IUserRepository";
+import { User } from "@/entities/User";
 import { DeleteResult } from "typeorm";
 
 class MockUserRepository implements IUserRepository {

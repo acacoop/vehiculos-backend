@@ -10,7 +10,7 @@ import {
   ENTRA_EXPECTED_ISSUER,
   ENTRA_ALLOWED_CLIENT_IDS,
   ENTRA_REQUIRED_SCOPE,
-} from "config/env.config";
+} from "@/config/env.config";
 
 function getIssuer() {
   if (ENTRA_EXPECTED_ISSUER) return ENTRA_EXPECTED_ISSUER.replace(/\/?$/, "/");

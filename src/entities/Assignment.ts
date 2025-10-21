@@ -6,8 +6,8 @@ import {
   Unique,
   JoinColumn,
 } from "typeorm";
-import { User } from "./User";
-import { Vehicle } from "./Vehicle";
+import { User } from "@/entities/User";
+import { Vehicle } from "@/entities/Vehicle";
 
 @Entity({ name: "assignments" })
 @Unique(["user", "vehicle"]) // mirrors unique (user_id, vehicle_id)

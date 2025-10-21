@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
-import { VehicleACLService } from "services/vehicleACLService";
-import { VehicleACL } from "entities/VehicleACL";
-import { PermissionType } from "utils";
-import { User } from "entities/User";
-import { Vehicle } from "entities/Vehicle";
+import { VehicleACLService } from "@/services/vehicleACLService";
+import { VehicleACL } from "@/entities/VehicleACL";
+import { PermissionType } from "@/utils";
+import { User } from "@/entities/User";
+import { Vehicle } from "@/entities/Vehicle";
 import { DeleteResult } from "typeorm";
-import { VehicleACLRepository } from "repositories/VehicleACLRepository";
+import { VehicleACLRepository } from "@/repositories/VehicleACLRepository";
 
 // Mock VehicleACLRepository
 class MockVehicleACLRepository {

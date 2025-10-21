@@ -1,8 +1,8 @@
-import { BaseController } from "./baseController";
-import { VehicleBrandService } from "services/vehicleBrandsService";
-import type { VehicleBrandInput } from "schemas/vehicleBrand";
-import { RepositoryFindOptions } from "repositories/interfaces/common";
-import { VehicleBrandFilters } from "repositories/interfaces/IVehicleBrandRepository";
+import { BaseController } from "@/controllers/baseController";
+import { VehicleBrandService } from "@/services/vehicleBrandsService";
+import type { VehicleBrandInput } from "@/schemas/vehicleBrand";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { VehicleBrandFilters } from "@/repositories/interfaces/IVehicleBrandRepository";
 
 export class VehicleBrandsController extends BaseController<VehicleBrandFilters> {
   constructor(private readonly service: VehicleBrandService) {

@@ -1,11 +1,11 @@
-import { Vehicle as VehicleEntity } from "entities/Vehicle";
-import { VehicleModel } from "entities/VehicleModel";
-import type { Vehicle, VehicleInput, VehicleUpdate } from "schemas/vehicle";
-import { VehicleResponsiblesService } from "./vehicleResponsiblesService";
-import { IVehicleRepository } from "repositories/interfaces/IVehicleRepository";
+import { Vehicle as VehicleEntity } from "@/entities/Vehicle";
+import { VehicleModel } from "@/entities/VehicleModel";
+import type { Vehicle, VehicleInput, VehicleUpdate } from "@/schemas/vehicle";
+import { VehicleResponsiblesService } from "@/services/vehicleResponsiblesService";
+import { IVehicleRepository } from "@/repositories/interfaces/IVehicleRepository";
 import { Repository } from "typeorm";
-import { RepositoryFindOptions } from "repositories/interfaces/common";
-import { VehicleFilters } from "repositories/interfaces/IVehicleRepository";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { VehicleFilters } from "@/repositories/interfaces/IVehicleRepository";
 
 export class VehiclesService {
   constructor(
