@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node dist/index.js",
-    "dev": "ts-node-dev --env-file=.env --respawn --quiet src/index.ts",
+    "dev": "ts-node-dev --require tsconfig-paths/register --env-file=.env --respawn --quiet src/index.ts",
     "dev:verbose": "ts-node-dev --respawn src/index.ts",
     "build": "tsc",
     "test": "jest",
