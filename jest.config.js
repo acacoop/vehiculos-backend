@@ -13,7 +13,7 @@ module.exports = {
   ],
   testTimeout: 30000, // 30 seconds for database operations
   setupFilesAfterEnv: ["<rootDir>/src/tests/setup.ts"],
-  moduleNameMapping: {
-    "^(.*)$": "<rootDir>/src/$1",
+  moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/src/$1",
   },
 };
