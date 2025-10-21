@@ -4,6 +4,7 @@ import { UserRole } from "@/entities/UserRole";
 import { User } from "@/entities/User";
 import { UserRoleEnum } from "@/utils";
 import { DeleteResult, Repository } from "typeorm";
+import { UserRoleRepository } from "@/repositories/UserRoleRepository";
 
 // Mock UserRoleRepository
 class MockUserRoleRepository {
@@ -148,8 +149,8 @@ describe("UserRolesService", () => {
     mockUserRoleRepo = new MockUserRoleRepository();
     mockUserRepo = new MockUserRepository();
     service = new UserRolesService(
-      mockUserRoleRepo as any,
-      mockUserRepo as any as Repository<User>,
+      mockUserRoleRepo as unknown as UserRoleRepository,
+      mockUserRepo as unknown as Repository<User>,
     );
   });
 
