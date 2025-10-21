@@ -10,6 +10,7 @@ import {
 import { parsePaginationQuery } from "@/utils";
 import { UserRoleFilters } from "@/repositories/UserRoleRepository";
 import { extractFilters, extractSearch } from "@/utils";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 /**
  * UserRolesController - Manages user roles
@@ -42,8 +43,7 @@ export class UserRolesController extends BaseController<UserRoleFilters> {
     }
 
     const { items, total } = await this.service.getAll({
-      limit,
-      offset,
+      pagination: { limit, offset },
       filters,
       search,
     });
@@ -56,17 +56,10 @@ export class UserRolesController extends BaseController<UserRoleFilters> {
     });
   });
 
-  protected async getAllService(options: {
-    pagination: { limit: number; offset: number };
-    filters?: Partial<UserRoleFilters>;
-    search?: string;
-  }) {
-    return this.service.getAll({
-      limit: options.pagination.limit,
-      offset: options.pagination.offset,
-      filters: options.filters,
-      search: options.search,
-    });
+  protected async getAllService(
+    options: RepositoryFindOptions<Partial<UserRoleFilters>>,
+  ) {
+    return this.service.getAll(options);
   }
 
   protected async getByIdService(id: string) {
@@ -114,6 +107,6 @@ export class UserRolesController extends BaseController<UserRoleFilters> {
       return;
     }
 
-    this.sendResponse(res, data, "User role ended successfully");
+    this.sendResponse(res, data, "User role finished successfully");
   });
 }

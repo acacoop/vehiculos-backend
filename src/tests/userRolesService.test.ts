@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "@jest/globals";
+import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 import { UserRolesService } from "@/services/userRolesService";
 import { UserRole } from "@/entities/UserRole";
 import { User } from "@/entities/User";
@@ -10,6 +10,12 @@ import { UserRoleRepository } from "@/repositories/UserRoleRepository";
 class MockUserRoleRepository {
   private userRoles: UserRole[] = [];
   private idCounter = 1;
+  private mockQb = {
+    leftJoin: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    andWhere: jest.fn().mockReturnThis(),
+    getOne: jest.fn(),
+  };
 
   async findAndCount(opts?: {
     pagination?: { limit?: number; offset?: number };
@@ -111,6 +117,32 @@ class MockUserRoleRepository {
       return userRole;
     }
     return null;
+  }
+
+  async getOverlap(
+    userId: string,
+    role: UserRoleEnum,
+    startTime: Date,
+    endTime: Date | null,
+    excludeId?: string,
+  ): Promise<UserRole | null> {
+    return (
+      this.userRoles.find((ur) => {
+        if (excludeId && ur.id === excludeId) return false;
+        if (ur.user.id !== userId || ur.role !== role) return false;
+
+        // Check for overlap using proper overlap logic
+        return (
+          (endTime === null || ur.startTime < endTime) &&
+          (ur.endTime == null || startTime < ur.endTime)
+        );
+      }) || null
+    );
+  }
+
+  qb() {
+    // Return the consistent mock query builder
+    return this.mockQb;
   }
 
   reset() {
@@ -319,6 +351,33 @@ describe("UserRolesService", () => {
           endTime: new Date("2024-01-01"),
         }),
       ).rejects.toThrow("End time must be after start time");
+    });
+
+    it("should throw error if role overlaps with existing one", async () => {
+      const user = createTestUser("1", "test@test.com", "John", "Doe");
+      mockUserRepo.seedUsers([user]);
+
+      // Create existing role
+      const existingRole = createTestUserRole(
+        "1",
+        user,
+        UserRoleEnum.ADMIN,
+        new Date("2024-01-01"),
+        new Date("2024-12-31"),
+      );
+      mockUserRoleRepo.seedUserRoles([existingRole]);
+
+      // Configure the mock query builder to return the overlapping role
+      (mockUserRoleRepo as any).mockQb.getOne.mockResolvedValue(existingRole);
+
+      await expect(
+        service.create({
+          userId: "1",
+          role: UserRoleEnum.ADMIN,
+          startTime: new Date("2024-06-01"),
+          endTime: new Date("2024-12-31"),
+        }),
+      ).rejects.toThrow("User already has this role overlapping");
     });
   });
 

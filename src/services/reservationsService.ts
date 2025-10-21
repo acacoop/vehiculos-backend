@@ -7,11 +7,16 @@ import {
   validateVehicleExists,
 } from "@/utils/validation/entity";
 import {
+  validateDateOnlyFormat,
+  validateEndDateAfterStartDate,
+} from "@/utils/validation/date";
+import {
   IReservationRepository,
   ReservationFilters,
 } from "@/repositories/interfaces/IReservationRepository";
 import { Repository } from "typeorm";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { applyOverlapCheck } from "@/utils";
 
 // Composite return type (was previously in ../types)
 export interface ReservationWithDetails {
@@ -120,6 +125,34 @@ export class ReservationsService {
     const { userId, vehicleId, startDate, endDate } = reservation;
     await validateUserExists(userId);
     await validateVehicleExists(vehicleId);
+
+    // Validate date format
+    const startDateStr = startDate.toISOString().split("T")[0];
+    const endDateStr = endDate.toISOString().split("T")[0];
+    validateDateOnlyFormat(startDateStr, "startDate");
+    validateDateOnlyFormat(endDateStr, "endDate");
+    validateEndDateAfterStartDate(startDateStr, endDateStr);
+
+    // Check for overlapping reservations
+    const overlapQuery = this.repo.qb();
+    applyOverlapCheck(
+      overlapQuery,
+      vehicleId,
+      startDateStr,
+      endDateStr,
+      undefined, // excludeId
+      "r.vehicle.id",
+      "r.startDate",
+      "r.endDate",
+      "r.id",
+    );
+    const overlap = await overlapQuery.getOne();
+    if (overlap) {
+      throw new Error(
+        `Vehicle already has a reservation overlapping (${overlap.startDate} to ${overlap.endDate})`,
+      );
+    }
+
     const user = await this.userRepo.findOne({ where: { id: userId } });
     const vehicle = await this.vehicleRepo.findOne({
       where: { id: vehicleId },

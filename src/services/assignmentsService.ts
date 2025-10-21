@@ -10,9 +10,13 @@ import {
   validateUserExists,
   validateVehicleExists,
 } from "@/utils/validation/entity";
-import { validateISODateFormat } from "@/utils";
+import {
+  validateISODateFormat,
+  validateEndDateAfterStartDate,
+} from "@/utils/validation/date";
 import { Repository } from "typeorm";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { applyOverlapCheck } from "@/utils";
 
 // Composite detail type (previously in ../types)
 export interface AssignmentWithDetails {
@@ -117,8 +121,31 @@ export class AssignmentsService {
     const { userId, vehicleId, startDate, endDate } = data;
     await validateUserExists(userId);
     await validateVehicleExists(vehicleId);
-    if (endDate && startDate && new Date(endDate) <= new Date(startDate))
-      throw new Error("End date must be after start date.");
+    if (endDate && startDate) {
+      validateEndDateAfterStartDate(startDate, endDate);
+    }
+
+    // Check for overlapping assignments
+    const finalStartDate = startDate || new Date().toISOString().split("T")[0];
+    const overlapQuery = this.repo.qb();
+    applyOverlapCheck(
+      overlapQuery,
+      vehicleId,
+      finalStartDate,
+      endDate ?? null,
+      undefined, // excludeId
+      "a.vehicle.id",
+      "a.startDate",
+      "a.endDate",
+      "a.id",
+    );
+    const overlap = await overlapQuery.getOne();
+    if (overlap) {
+      throw new Error(
+        `Vehicle already has an assignment overlapping (${overlap.startDate} to ${overlap.endDate || "present"})`,
+      );
+    }
+
     const user = await this.userRepo.findOne({ where: { id: userId } });
     const vehicle = await this.vehicleRepo.findOne({
       where: { id: vehicleId },
@@ -168,12 +195,9 @@ export class AssignmentsService {
       if (patch.endDate) validateISODateFormat(patch.endDate, "endDate");
       entity.endDate = patch.endDate ?? null;
     }
-    if (
-      entity.endDate &&
-      entity.startDate &&
-      new Date(entity.endDate) <= new Date(entity.startDate)
-    )
-      throw new Error("End date must be after start date.");
+    if (entity.endDate && entity.startDate) {
+      validateEndDateAfterStartDate(entity.startDate, entity.endDate);
+    }
     const saved = await this.repo.save(entity);
     return mapEntityToDetails(saved);
   }
@@ -185,8 +209,9 @@ export class AssignmentsService {
     const entity = await this.repo.findOne(id);
     if (!entity) return null;
     const finalEnd = endDate || new Date().toISOString().split("T")[0];
-    if (entity.startDate && new Date(finalEnd) <= new Date(entity.startDate))
-      throw new Error("End date must be after start date.");
+    if (entity.startDate) {
+      validateEndDateAfterStartDate(entity.startDate, finalEnd);
+    }
     entity.endDate = finalEnd;
     const saved = await this.repo.save(entity);
     return mapEntityToDetails(saved);

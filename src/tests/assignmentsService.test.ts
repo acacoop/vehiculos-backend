@@ -4,7 +4,7 @@ import { IAssignmentRepository } from "@/repositories/interfaces/IAssignmentRepo
 import { Assignment } from "@/entities/Assignment";
 import { User } from "@/entities/User";
 import { Vehicle } from "@/entities/Vehicle";
-import { Repository } from "typeorm";
+import { Repository, SelectQueryBuilder } from "typeorm";
 import * as validators from "@/utils/validation/entity";
 
 jest.mock("../utils/validation/entity");
@@ -25,6 +25,7 @@ describe("AssignmentsService", () => {
       count: jest.fn(),
       findActiveAssignments: jest.fn(),
       hasActiveAssignment: jest.fn(),
+      qb: jest.fn(),
     } as unknown as jest.Mocked<IAssignmentRepository>;
 
     mockUserRepo = {
@@ -160,6 +161,20 @@ describe("AssignmentsService", () => {
       mockAssignmentRepo.create.mockReturnValue(mockCreated);
       mockAssignmentRepo.save.mockResolvedValue(mockCreated);
 
+      // Mock no overlap
+      const mockQb = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getOne: jest
+          .fn<() => Promise<Assignment | null>>()
+          .mockResolvedValue(null),
+      } as jest.Mocked<
+        Pick<SelectQueryBuilder<Assignment>, "where" | "andWhere" | "getOne">
+      >;
+      mockAssignmentRepo.qb.mockReturnValue(
+        mockQb as unknown as SelectQueryBuilder<Assignment>,
+      );
+
       const result = await service.create({
         userId: "u1",
         vehicleId: "v1",
@@ -179,6 +194,20 @@ describe("AssignmentsService", () => {
       mockUserRepo.findOne.mockResolvedValue(null);
       mockVehicleRepo.findOne.mockResolvedValue({} as Vehicle);
 
+      // Mock no overlap (not reached due to validation failure)
+      const mockQb = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getOne: jest
+          .fn<() => Promise<Assignment | null>>()
+          .mockResolvedValue(null),
+      } as jest.Mocked<
+        Pick<SelectQueryBuilder<Assignment>, "where" | "andWhere" | "getOne">
+      >;
+      mockAssignmentRepo.qb.mockReturnValue(
+        mockQb as unknown as SelectQueryBuilder<Assignment>,
+      );
+
       const result = await service.create({
         userId: "u1",
         vehicleId: "v1",
@@ -194,6 +223,20 @@ describe("AssignmentsService", () => {
         .spyOn(validators, "validateVehicleExists")
         .mockResolvedValue(undefined);
 
+      // Mock no overlap (not reached due to validation failure)
+      const mockQb = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getOne: jest
+          .fn<() => Promise<Assignment | null>>()
+          .mockResolvedValue(null),
+      } as jest.Mocked<
+        Pick<SelectQueryBuilder<Assignment>, "where" | "andWhere" | "getOne">
+      >;
+      mockAssignmentRepo.qb.mockReturnValue(
+        mockQb as unknown as SelectQueryBuilder<Assignment>,
+      );
+
       await expect(
         service.create({
           userId: "u1",
@@ -202,6 +245,37 @@ describe("AssignmentsService", () => {
           endDate: "2024-01-05",
         }),
       ).rejects.toThrow("End date must be after start date");
+    });
+
+    it("should throw error if assignment overlaps with existing one", async () => {
+      const existingAssignment = createMockAssignment();
+
+      jest.spyOn(validators, "validateUserExists").mockResolvedValue(undefined);
+      jest
+        .spyOn(validators, "validateVehicleExists")
+        .mockResolvedValue(undefined);
+
+      // Mock the query builder chain
+      const mockQb = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getOne: jest
+          .fn<() => Promise<Assignment | null>>()
+          .mockResolvedValue(existingAssignment),
+      } as jest.Mocked<
+        Pick<SelectQueryBuilder<Assignment>, "where" | "andWhere" | "getOne">
+      >;
+      mockAssignmentRepo.qb.mockReturnValue(
+        mockQb as unknown as SelectQueryBuilder<Assignment>,
+      );
+
+      await expect(
+        service.create({
+          userId: "u1",
+          vehicleId: "v1",
+          startDate: "2024-01-01",
+        }),
+      ).rejects.toThrow("Vehicle already has an assignment overlapping");
     });
   });
 

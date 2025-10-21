@@ -72,7 +72,7 @@ export class VehicleACLService {
     return result.affected === 1;
   }
 
-  async getActiveACLsForUser(userId: string, at?: Date): Promise<VehicleACL[]> {
-    return this.repository.getActiveACLsForUser(userId, at);
+  async getActiveACLsForUser(userId: string): Promise<VehicleACL[]> {
+    return this.repository.getActiveACLsForUser(userId);
   }
 }

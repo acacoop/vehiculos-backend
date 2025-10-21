@@ -1,11 +1,11 @@
 import { Assignment } from "@/entities/Assignment";
-import { DeleteResult } from "typeorm";
+import { DeleteResult, SelectQueryBuilder } from "typeorm";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 export interface AssignmentFilters {
   userId?: string;
   vehicleId?: string;
-  date?: string;
+  active?: boolean; // true = apply active filter, false/undefined = don't apply
 }
 
 export interface IAssignmentRepository {
@@ -23,4 +23,5 @@ export interface IAssignmentRepository {
     vehicleId: string,
     date?: string,
   ): Promise<boolean>;
+  qb(): SelectQueryBuilder<Assignment>;
 }

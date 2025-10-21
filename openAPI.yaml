@@ -340,6 +340,10 @@ paths:
       responses:
         "201":
           description: Vehicle created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
         "409":
@@ -572,12 +576,11 @@ paths:
             type: string
             format: uuid
           description: Filter by vehicle ID
-        - name: date
+        - name: active
           in: query
           schema:
-            type: string
-            format: date
-          description: Filter assignments active on date (YYYY-MM-DD)
+            type: boolean
+          description: Filter assignments active at current time
       responses:
         "200":
           description: List of assignments retrieved successfully
@@ -607,6 +610,39 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "500":
           $ref: "#/components/responses/InternalServerError"
+
+  /assignments/{id}/finish:
+    patch:
+      summary: Finish a vehicle assignment
+      description: Mark a vehicle assignment as finished by setting an end date
+      tags: [Assignments]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                endDate:
+                  type: string
+                  format: date-time
+                  description: Optional end date (defaults to now)
+      responses:
+        "200":
+          description: Assignment finished successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignmentResponse"
+        "404":
+          description: Assignment not found
 
   # MAINTENANCE CATEGORIES
   /maintenance/categories:
@@ -1584,12 +1620,11 @@ paths:
             type: string
             enum: [Read, Maintainer, Driver, Full]
           description: Filter by permission level
-        - name: activeAt
+        - name: active
           in: query
           schema:
-            type: string
-            format: date-time
-          description: Filter ACLs active at specific time
+            type: boolean
+          description: Filter ACLs active at current time
       responses:
         "200":
           description: List of vehicle ACLs
@@ -1734,11 +1769,11 @@ paths:
             type: string
             enum: [user, admin]
           description: Filter by role
-        - name: activeOnly
+        - name: active
           in: query
           schema:
             type: boolean
-          description: Filter only active roles
+          description: Filter by active status
       responses:
         "200":
           description: List of user roles
@@ -1862,6 +1897,39 @@ paths:
                 $ref: "#/components/schemas/UserRoleResponse"
         "404":
           description: No active role found
+
+  /user-roles/{id}/finish:
+    patch:
+      summary: Finish a user role
+      description: Finish a user role by setting an end time. Admin only.
+      tags: [User Roles]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                endTime:
+                  type: string
+                  format: date-time
+                  description: Optional end time (defaults to now)
+      responses:
+        "200":
+          description: User role finished successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRoleResponse"
+        "404":
+          description: User role not found
 
 components:
   schemas:
@@ -2563,14 +2631,14 @@ components:
           example: "850e8400-e29b-41d4-a716-446655440003"
         startDate:
           type: string
-          format: date
-          example: "2025-01-15"
+          format: date-time
+          example: "2025-01-15T09:00:00Z"
           description: "Start date of the assignment"
         endDate:
           type: string
-          format: date
+          format: date-time
           nullable: true
-          example: "2025-12-31"
+          example: "2025-12-31T17:00:00Z"
           description: "End date of the assignment (null means indefinite)"
         user:
           $ref: "#/components/schemas/User"
@@ -2593,11 +2661,11 @@ components:
           format: uuid
         startDate:
           type: string
-          format: date
+          format: date-time
           description: "Start date of the assignment (defaults to today if not provided)"
         endDate:
           type: string
-          format: date
+          format: date-time
           nullable: true
           description: "End date of the assignment (null means indefinite)"
       required:
