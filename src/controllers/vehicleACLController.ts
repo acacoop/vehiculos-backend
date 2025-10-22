@@ -6,10 +6,10 @@ import {
   VehicleACLUpdateSchema,
 } from "@/schemas/vehicleAcl";
 import { asyncHandler } from "@/middleware/errorHandler";
-import { parsePaginationQuery } from "@/utils";
+import { parsePaginationQuery } from "@/utils/index";
 import { VehicleACLFilters } from "@/repositories/VehicleACLRepository";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
-import { extractFilters, extractSearch } from "@/utils";
+import { extractFilters, extractSearch } from "@/utils/index";
 
 /**
  * VehicleACLController - Manages vehicle access control lists

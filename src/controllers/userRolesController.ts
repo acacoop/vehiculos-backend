@@ -7,9 +7,9 @@ import {
   UserRoleUpdateSchema,
   UserRoleEndSchema,
 } from "@/schemas/userRole";
-import { parsePaginationQuery } from "@/utils";
+import { parsePaginationQuery } from "@/utils/index";
 import { UserRoleFilters } from "@/repositories/UserRoleRepository";
-import { extractFilters, extractSearch } from "@/utils";
+import { extractFilters, extractSearch } from "@/utils/index";
 
 /**
  * UserRolesController - Manages user roles

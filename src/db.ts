@@ -1,4 +1,3 @@
-import "reflect-metadata";
 import { DataSource } from "typeorm";
 import sql from "mssql";
 import {
@@ -70,7 +69,7 @@ const createDataSourceConfig = () => {
     synchronize: !isProd,
     logging: DB_LOGGING,
     entities,
-    migrations: ["src/migrations/*.ts"],
+    migrations: ["dist/migrations/*.js"],
     migrationsTableName: "migrations",
   };
 

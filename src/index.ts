@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import express, { Request, Response } from "express";
 import cors from "cors";
 
@@ -108,18 +109,15 @@ async function startServer() {
     // Wait for database connection
     console.log("⏳ Initializing database connection...");
     await initializeDatabase();
-    console.log("🔍 Database initialization completed");
 
     if (!AppDataSource.isInitialized) {
       throw new Error("Database failed to initialize");
     }
 
     console.log("✅ Database connected successfully");
-    console.log("🔍 About to start Express server...");
 
     // Start Express server
     app.listen(SERVER_PORT, "0.0.0.0", () => {
-      console.log("🔍 Inside app.listen callback");
       if (process.env.NODE_ENV !== "development") {
         console.log(
           `🚗 Vehiculos API Server running on http://localhost:${SERVER_PORT}`,
@@ -137,7 +135,6 @@ async function startServer() {
         );
       }
     });
-    console.log("🔍 After app.listen call");
   } catch (error) {
     console.error("❌ Failed to start server:", error);
     process.exit(1);
