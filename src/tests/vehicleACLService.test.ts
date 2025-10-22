@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
 import { VehicleACLService } from "@/services/vehicleACLService";
 import { VehicleACL } from "@/entities/VehicleACL";
-import { PermissionType } from "@/utils";
+import { PermissionType } from "@/enums/PermissionType";
 import { User } from "@/entities/User";
 import { Vehicle } from "@/entities/Vehicle";
 import { DeleteResult } from "typeorm";

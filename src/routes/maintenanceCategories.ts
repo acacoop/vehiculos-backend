@@ -5,7 +5,7 @@ import { MaintenanceCategorySchema } from "@/schemas/maintenanceCategory";
 import { AppDataSource } from "@/db";
 import { ServiceFactory } from "@/factories/serviceFactory";
 import { requireRole } from "@/middleware/permission";
-import { UserRoleEnum } from "@/utils";
+import { UserRoleEnum } from "@/enums/UserRoleEnum";
 
 const router = express.Router();
 const serviceFactory = new ServiceFactory(AppDataSource);

@@ -1,13 +1,13 @@
 import { Response, NextFunction } from "express";
 import { AppError } from "@/middleware/errorHandler";
 import { AuthenticatedRequest } from "@/middleware/auth";
-import { PermissionType, PERMISSION_WEIGHT } from "@/utils";
+import { PermissionType, PERMISSION_WEIGHT } from "@/enums/PermissionType";
 import { VehicleACL } from "@/entities/VehicleACL";
 import { DataSource } from "typeorm";
 import { VehicleACLRepository } from "@/repositories/VehicleACLRepository";
 import { VehicleResponsibleRepository } from "@/repositories/VehicleResponsibleRepository";
 import { UserRoleRepository } from "@/repositories/UserRoleRepository";
-import { UserRoleEnum } from "@/utils";
+import { UserRoleEnum } from "@/enums/UserRoleEnum";
 import { AppDataSource } from "@/db";
 import { AssignmentRepository } from "@/repositories/AssignmentRepository";
 

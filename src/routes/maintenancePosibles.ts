@@ -6,7 +6,7 @@ import {
   MaintenanceUpdateSchema,
 } from "@/schemas/maintenance";
 import { requireRole } from "@/middleware/permission";
-import { UserRoleEnum } from "@/utils";
+import { UserRoleEnum } from "@/enums/UserRoleEnum";
 
 const router = express.Router();
 const controller = createMaintenancePosiblesController();

@@ -7,7 +7,7 @@ import {
   Check,
 } from "typeorm";
 import { User } from "@/entities/User";
-import { UserRoleEnum } from "@/utils";
+import { UserRoleEnum } from "@/enums/UserRoleEnum";
 
 @Entity({ name: "user_roles" })
 @Check("end_time IS NULL OR end_time > start_time")
@@ -19,7 +19,7 @@ export class UserRole {
   @JoinColumn({ name: "user_id" })
   user!: User;
 
-  @Column({ type: "varchar", length: 20, default: "user" })
+  @Column({ type: "varchar", length: 20, default: UserRoleEnum.USER })
   role!: UserRoleEnum;
 
   @Column({ name: "start_time", type: "datetime" })

@@ -1,6 +1,6 @@
 import { DataSource, Repository } from "typeorm";
 import { VehicleACL as VehicleACLEntity } from "@/entities/VehicleACL";
-import { PermissionType, PERMISSION_WEIGHT } from "@/utils";
+import { PermissionType, PERMISSION_WEIGHT } from "@/enums/PermissionType";
 import { resolvePagination } from "@/repositories/interfaces/common";
 import { applySearchFilter, applyFilters } from "@/utils";
 
