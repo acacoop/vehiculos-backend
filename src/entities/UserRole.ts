@@ -19,7 +19,7 @@ export class UserRole {
   @JoinColumn({ name: "user_id" })
   user!: User;
 
-  @Column({ type: "varchar", length: 20, default: UserRoleEnum.USER })
+  @Column({ type: "varchar", length: 20, default: "user" })
   role!: UserRoleEnum;
 
   @Column({ name: "start_time", type: "datetime" })

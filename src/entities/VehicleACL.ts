@@ -30,7 +30,7 @@ export class VehicleACL {
     type: "varchar",
     length: 20,
     name: "permission",
-    default: PermissionType.READ,
+    default: "Read",
   })
   permission!: PermissionType;
 
