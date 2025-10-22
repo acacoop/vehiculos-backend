@@ -7,7 +7,7 @@ import {
   Check,
   Index,
 } from "typeorm";
-import { PermissionType } from "@/utils";
+import { PermissionType } from "@/enums/PermissionType";
 import { User } from "@/entities/User";
 import { Vehicle } from "@/entities/Vehicle";
 
@@ -30,7 +30,7 @@ export class VehicleACL {
     type: "varchar",
     length: 20,
     name: "permission",
-    default: "Read",
+    default: PermissionType.READ,
   })
   permission!: PermissionType;
 

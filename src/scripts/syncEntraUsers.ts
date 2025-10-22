@@ -10,7 +10,7 @@ import { ServiceFactory } from "@/factories/serviceFactory";
 import { UsersService } from "@/services/usersService";
 import { UserRolesService } from "@/services/userRolesService";
 import { UserRoleRepository } from "@/repositories/UserRoleRepository";
-import { UserRoleEnum } from "@/utils";
+import { UserRoleEnum } from "@/enums/UserRoleEnum";
 
 const VERBOSE =
   process.env.VERBOSE === "1" || process.argv.includes("--verbose");
