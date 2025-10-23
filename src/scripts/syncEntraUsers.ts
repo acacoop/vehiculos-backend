@@ -3,7 +3,7 @@ import {
   ENTRA_CLIENT_SECRET,
   ENTRA_TENANT_ID,
 } from "@/config/env.config";
-import { AppDataSource } from "@/db";
+import { AppDataSource, initializeDatabase } from "@/db";
 import type { User } from "@/schemas/user";
 import { User as UserEntity } from "@/entities/User";
 import { ServiceFactory } from "@/factories/serviceFactory";
@@ -458,6 +458,8 @@ async function syncUserRoles(usersService: UsersService, adminEmail?: string) {
 }
 
 async function runSync() {
+  await initializeDatabase();
+
   const serviceFactory = new ServiceFactory(AppDataSource);
   const usersService = serviceFactory.createUsersService();
   const token = await getAccessToken();
@@ -477,7 +479,7 @@ async function runSync() {
   await syncUserRoles(usersService, ADMIN_EMAIL);
 }
 
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   runSync()
     .then(() => {
       process.exit(0);
