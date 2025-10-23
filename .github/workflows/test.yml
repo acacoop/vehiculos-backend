@@ -1,56 +1,56 @@
 name: Test
 
 on:
-    push:
-        branches:
-            - main
-            - test
-    pull_request:
-        branches:
-            - main
-            - test
+  push:
+    branches:
+      - main
+      - test
+  pull_request:
+    branches:
+      - main
+      - test
 
 jobs:
-    test:
-        runs-on: ubuntu-latest
+  test:
+    runs-on: ubuntu-latest
 
-        permissions:
-            contents: read
-            checks: write # Required for test result reporting
+    permissions:
+      contents: read
+      checks: write # Required for test result reporting
 
-        strategy:
-            matrix:
-                node-version: [22.x]
+    strategy:
+      matrix:
+        node-version: [22.x]
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
 
-            - name: Set up Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v4
-              with:
-                  node-version: ${{ matrix.node-version }}
-                  cache: "npm"
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
 
-            - name: Install dependencies
-              run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-            - name: Run linter
-              run: npx eslint . --max-warnings 0
+      - name: Run linter
+        run: npx eslint . --max-warnings 0
 
-            - name: Run tests
-              run: npm test
-              env:
-                  NODE_ENV: test
+      - name: Run tests
+        run: npm test
+        env:
+          NODE_ENV: test
 
-            - name: Generate coverage report
-              run: npm run test:coverage
-              continue-on-error: true
+      - name: Generate coverage report
+        run: npm run test:coverage
+        continue-on-error: true
 
-            - name: Upload coverage to artifacts
-              uses: actions/upload-artifact@v4
-              if: always()
-              with:
-                  name: coverage-report
-                  path: coverage/
-                  retention-days: 30
+      - name: Upload coverage to artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 30
