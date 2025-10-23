@@ -7,7 +7,7 @@ import {
 } from "@/schemas/vehicleAcl";
 import { asyncHandler } from "@/middleware/errorHandler";
 import { parsePaginationQuery } from "@/utils/index";
-import { VehicleACLFilters } from "@/repositories/VehicleACLRepository";
+import { VehicleACLFilters } from "@/repositories/interfaces/IVehicleACLRepository";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import { extractFilters, extractSearch } from "@/utils/index";
 

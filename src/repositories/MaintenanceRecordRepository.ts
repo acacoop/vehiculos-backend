@@ -10,8 +10,6 @@ import {
 } from "@/repositories/interfaces/common";
 import { applySearchFilter, applyFilters } from "@/utils/index";
 
-export type { MaintenanceRecordFilters };
-
 export class MaintenanceRecordRepository
   implements IMaintenanceRecordRepository
 {

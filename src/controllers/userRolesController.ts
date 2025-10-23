@@ -8,7 +8,7 @@ import {
   UserRoleEndSchema,
 } from "@/schemas/userRole";
 import { parsePaginationQuery } from "@/utils/index";
-import { UserRoleFilters } from "@/repositories/UserRoleRepository";
+import { UserRoleFilters } from "@/repositories/interfaces/IUserRoleRepository";
 import { extractFilters, extractSearch } from "@/utils/index";
 
 /**

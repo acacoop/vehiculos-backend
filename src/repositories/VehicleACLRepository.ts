@@ -3,15 +3,12 @@ import { VehicleACL as VehicleACLEntity } from "@/entities/VehicleACL";
 import { PermissionType, PERMISSION_WEIGHT } from "@/enums/PermissionType";
 import { resolvePagination } from "@/repositories/interfaces/common";
 import { applySearchFilter, applyFilters } from "@/utils/index";
+import {
+  VehicleACLFilters,
+  IVehicleACLRepository,
+} from "@/repositories/interfaces/IVehicleACLRepository";
 
-export interface VehicleACLFilters {
-  userId?: string;
-  vehicleId?: string;
-  permission?: PermissionType;
-  activeAt?: Date; // Filter for ACLs active at a specific time
-}
-
-export class VehicleACLRepository {
+export class VehicleACLRepository implements IVehicleACLRepository {
   private readonly repo: Repository<VehicleACLEntity>;
 
   constructor(dataSource: DataSource) {
@@ -120,7 +117,8 @@ export class VehicleACLRepository {
     return this.repo.save(entity);
   }
 
-  delete(id: string) {
-    return this.repo.delete(id);
+  async delete(id: string): Promise<{ affected?: number }> {
+    const result = await this.repo.delete(id);
+    return { affected: result.affected || 0 };
   }
 }

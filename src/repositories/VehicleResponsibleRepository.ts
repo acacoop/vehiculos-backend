@@ -10,8 +10,6 @@ import {
 } from "@/repositories/interfaces/common";
 import { applySearchFilter, applyFilters } from "@/utils/index";
 
-export type { VehicleResponsibleFilters };
-
 export class VehicleResponsibleRepository
   implements IVehicleResponsibleRepository
 {
