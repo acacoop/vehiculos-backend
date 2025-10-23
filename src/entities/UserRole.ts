@@ -7,7 +7,7 @@ import {
   Check,
 } from "typeorm";
 import { User } from "@/entities/User";
-import { UserRoleEnum } from "@/utils";
+import { UserRoleEnum } from "@/enums/UserRoleEnum";
 
 @Entity({ name: "user_roles" })
 @Check("end_time IS NULL OR end_time > start_time")

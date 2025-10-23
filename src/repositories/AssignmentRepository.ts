@@ -15,7 +15,7 @@ import {
   RepositoryFindOptions,
   resolvePagination,
 } from "@/repositories/interfaces/common";
-import { applySearchFilter, applyFilters } from "@/utils";
+import { applySearchFilter, applyFilters } from "@/utils/index";
 
 export type { AssignmentFilters };
 

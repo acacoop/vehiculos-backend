@@ -10,7 +10,7 @@ import {
   validateUserExists,
   validateVehicleExists,
 } from "@/utils/validation/entity";
-import { validateISODateFormat } from "@/utils";
+import { validateISODateFormat } from "@/utils/index";
 import { Repository } from "typeorm";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 

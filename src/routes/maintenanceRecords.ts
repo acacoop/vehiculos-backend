@@ -1,9 +1,9 @@
 import express from "express";
 import { validateUUIDParam } from "@/middleware/validation";
 import { maintenanceRecordsController } from "@/controllers/maintenanceRecordsController";
-import { PermissionType } from "@/utils";
+import { PermissionType } from "@/enums/PermissionType";
 import { requireRole } from "@/middleware/permission";
-import { UserRoleEnum } from "@/utils";
+import { UserRoleEnum } from "@/enums/UserRoleEnum";
 import { requireVehiclePermissionWith } from "@/middleware/permission";
 import {
   vehicleIdFromAssignedMaintenance,

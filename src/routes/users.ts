@@ -6,7 +6,7 @@ import { UserSchema } from "@/schemas/user";
 import { AppDataSource } from "@/db";
 import { ServiceFactory } from "@/factories/serviceFactory";
 import { requireRole } from "@/middleware/permission";
-import { UserRoleEnum } from "@/utils";
+import { UserRoleEnum } from "@/enums/UserRoleEnum";
 
 const router = Router();
 

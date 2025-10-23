@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "@/middleware/errorHandler";
-import { isValidUUID } from "@/utils";
+import { isValidUUID } from "@/utils/index";
 import type { ZodSchema } from "zod";
 
 /**

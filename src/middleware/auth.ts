@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "@/middleware/errorHandler";
 import { AUTH_BYPASS } from "@/config/env.config";
-import { extractBearer, verifyEntraAccessToken } from "@/utils";
+import { extractBearer, verifyEntraAccessToken } from "@/utils/index";
 import { ServiceFactory } from "@/factories/serviceFactory";
 import { AppDataSource } from "@/db";
 

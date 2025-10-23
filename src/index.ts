@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import express, { Request, Response } from "express";
 import cors from "cors";
 
@@ -30,6 +31,7 @@ import vehicleModelsRoutes from "@/routes/vehicleModels";
 import vehicleACLRoutes from "@/routes/vehicleACL";
 
 import { SERVER_PORT } from "@/config/env.config";
+import { AppDataSource, initializeDatabase } from "@/db";
 
 const app = express();
 
@@ -101,20 +103,45 @@ app.use("*", (req: Request, res: Response) => {
 // Global error handler (must be last)
 app.use(globalErrorHandler);
 
-// Start server
-app.listen(SERVER_PORT, "0.0.0.0", () => {
-  if (process.env.NODE_ENV !== "development") {
-    console.log(
-      `🚗 Vehiculos API Server running on http://localhost:${SERVER_PORT}`,
-    );
-    console.log(`📖 API Documentation: http://localhost:${SERVER_PORT}/docs`);
-    console.log(
-      `📊 Health check available at http://localhost:${SERVER_PORT}/health`,
-    );
-    console.log(`🐛 Environment: ${process.env.NODE_ENV || "development"}`);
-  } else {
-    console.log(
-      `✅ Server ready → http://localhost:${SERVER_PORT} | Docs: /docs`,
-    );
+// Start server only after database is connected
+async function startServer() {
+  try {
+    // Wait for database connection
+    console.log("⏳ Initializing database connection...");
+    await initializeDatabase();
+
+    if (!AppDataSource.isInitialized) {
+      throw new Error("Database failed to initialize");
+    }
+
+    console.log("✅ Database connected successfully");
+
+    // Start Express server
+    app.listen(SERVER_PORT, "0.0.0.0", () => {
+      if (process.env.NODE_ENV !== "development") {
+        console.log(
+          `🚗 Vehiculos API Server running on http://localhost:${SERVER_PORT}`,
+        );
+        console.log(
+          `📖 API Documentation: http://localhost:${SERVER_PORT}/docs`,
+        );
+        console.log(
+          `📊 Health check available at http://localhost:${SERVER_PORT}/health`,
+        );
+        console.log(`🐛 Environment: ${process.env.NODE_ENV || "development"}`);
+      } else {
+        console.log(
+          `✅ Server ready → http://localhost:${SERVER_PORT} | Docs: /docs`,
+        );
+      }
+    });
+  } catch (error) {
+    console.error("❌ Failed to start server:", error);
+    process.exit(1);
   }
-});
+}
+
+// Only start server if not in test mode
+if (!process.env.JEST_WORKER_ID) {
+  startServer();
+}

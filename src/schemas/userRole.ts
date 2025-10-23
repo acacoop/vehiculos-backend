@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { UserRoleEnum } from "@/utils";
+import { UserRoleEnum } from "@/enums/UserRoleEnum";
 
 export const UserRoleInputSchema = z.object({
   userId: z.string().uuid("Invalid user ID"),

@@ -1,6 +1,6 @@
 import { Brackets, Repository, DataSource } from "typeorm";
 import { UserRole } from "@/entities/UserRole";
-import { UserRoleEnum } from "@/utils";
+import { UserRoleEnum } from "@/enums/UserRoleEnum";
 
 export interface UserRoleFilters {
   userId?: string;

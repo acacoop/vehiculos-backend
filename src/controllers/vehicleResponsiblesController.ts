@@ -8,7 +8,7 @@ import { ServiceFactory } from "@/factories/serviceFactory";
 import { AppDataSource } from "@/db";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import { VehicleResponsibleFilters } from "@/repositories/interfaces/IVehicleResponsibleRepository";
-import { isValidUUID } from "@/utils";
+import { isValidUUID } from "@/utils/index";
 
 export class VehicleResponsiblesController extends BaseController<VehicleResponsibleFilters> {
   constructor(private readonly service: VehicleResponsiblesService) {

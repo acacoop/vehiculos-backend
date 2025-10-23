@@ -4,7 +4,7 @@ import { VehicleACLService } from "@/services/vehicleACLService";
 import { VehicleACLRepository } from "@/repositories/VehicleACLRepository";
 import { AppDataSource } from "@/db";
 import { requireRole } from "@/middleware/permission";
-import { UserRoleEnum } from "@/utils";
+import { UserRoleEnum } from "@/enums/UserRoleEnum";
 
 const router = Router();
 
