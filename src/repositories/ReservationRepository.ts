@@ -10,8 +10,6 @@ import {
 } from "@/repositories/interfaces/common";
 import { applySearchFilter, applyFilters } from "@/utils/index";
 
-export type { ReservationFilters };
-
 export class ReservationRepository implements IReservationRepository {
   private readonly repo: Repository<Reservation>;
   constructor(ds: DataSource) {

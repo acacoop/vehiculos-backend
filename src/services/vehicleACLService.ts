@@ -1,7 +1,5 @@
-import {
-  VehicleACLRepository,
-  VehicleACLFilters,
-} from "@/repositories/VehicleACLRepository";
+import { VehicleACLRepository } from "@/repositories/VehicleACLRepository";
+import { VehicleACLFilters } from "@/repositories/interfaces/IVehicleACLRepository";
 import { VehicleACL } from "@/entities/VehicleACL";
 import {
   VehicleACLCreateInput,

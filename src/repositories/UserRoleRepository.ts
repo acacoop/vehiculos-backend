@@ -1,14 +1,12 @@
 import { Brackets, Repository, DataSource } from "typeorm";
 import { UserRole } from "@/entities/UserRole";
 import { UserRoleEnum } from "@/enums/UserRoleEnum";
+import {
+  UserRoleFilters,
+  IUserRoleRepository,
+} from "@/repositories/interfaces/IUserRoleRepository";
 
-export interface UserRoleFilters {
-  userId?: string;
-  role?: UserRoleEnum;
-  activeOnly?: boolean;
-}
-
-export class UserRoleRepository {
+export class UserRoleRepository implements IUserRoleRepository {
   private readonly repo: Repository<UserRole>;
 
   constructor(dataSource: DataSource) {

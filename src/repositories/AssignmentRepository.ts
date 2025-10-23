@@ -17,8 +17,6 @@ import {
 } from "@/repositories/interfaces/common";
 import { applySearchFilter, applyFilters } from "@/utils/index";
 
-export type { AssignmentFilters };
-
 export class AssignmentRepository implements IAssignmentRepository {
   private readonly repo: Repository<Assignment>;
   constructor(ds: DataSource) {

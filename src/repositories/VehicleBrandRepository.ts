@@ -10,9 +10,6 @@ import {
 } from "@/repositories/interfaces/common";
 import { applySearchFilter, applyFilters } from "@/utils/index";
 
-// Re-export types for convenience
-export type { VehicleBrandFilters };
-
 export class VehicleBrandRepository implements IVehicleBrandRepository {
   private readonly repo: Repository<VehicleBrand>;
   constructor(dataSource: DataSource) {

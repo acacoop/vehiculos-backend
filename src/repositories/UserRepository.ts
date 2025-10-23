@@ -10,9 +10,6 @@ import {
 } from "@/repositories/interfaces/common";
 import { applySearchFilter, applyFilters } from "@/utils/index";
 
-// Re-export types for convenience
-export type { UserFilters };
-
 export class UserRepository implements IUserRepository {
   private readonly repo: Repository<UserEntity>;
 
