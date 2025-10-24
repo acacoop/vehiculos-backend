@@ -8,7 +8,11 @@ import {
   RepositoryFindOptions,
   resolvePagination,
 } from "@/repositories/interfaces/common";
-import { applySearchFilter, applyFilters } from "@/utils/index";
+import {
+  applySearchFilter,
+  applyFilters,
+  applyActiveFilter,
+} from "@/utils/index";
 
 export class VehicleResponsibleRepository
   implements IVehicleResponsibleRepository
@@ -69,19 +73,13 @@ export class VehicleResponsibleRepository
       userId: { field: "user.id" },
     });
 
-    // Handle active filter separately (complex condition)
-    if (filters?.active === "true") {
-      qb.andWhere("vr.end_date IS NULL");
-    }
-    if (filters?.active === "false") {
-      qb.andWhere("vr.end_date IS NOT NULL");
-    }
-
-    // Handle date filter separately (complex condition)
-    if (filters?.date) {
-      qb.andWhere(
-        "vr.startDate <= :d AND (vr.endDate IS NULL OR vr.endDate >= :d)",
-        { d: filters.date },
+    // Apply active filter for date filtering
+    if (filters?.active) {
+      applyActiveFilter(
+        qb,
+        new Date().toISOString().split("T")[0],
+        "vr.startDate",
+        "vr.endDate",
       );
     }
 
@@ -94,57 +92,43 @@ export class VehicleResponsibleRepository
   }
 
   findCurrentByVehicle(vehicleId: string) {
-    return this.baseQuery()
-      .where("vehicle.id = :vehicleId", { vehicleId })
-      .andWhere("vr.end_date IS NULL")
-      .getOne();
-  }
-  findCurrentForUser(userId: string) {
-    return this.baseQuery()
-      .where("user.id = :userId", { userId })
-      .andWhere("vr.end_date IS NULL")
-      .orderBy("vr.startDate", "DESC")
-      .getMany();
-  }
-  findVehiclesForUserOnDate(userId: string, date: string) {
-    return this.qb()
-      .leftJoinAndSelect("vr.user", "user")
-      .leftJoinAndSelect("vr.vehicle", "vehicle")
-      .where("user.id = :userId", { userId })
-      .andWhere(
-        "vr.startDate <= :d AND (vr.endDate IS NULL OR vr.endDate >= :d)",
-        { d: date },
-      )
-      .orderBy("vr.startDate", "DESC")
-      .getMany();
-  }
-  getOverlap(
-    vehicleId: string,
-    startDate: string,
-    endDate: string | null,
-    excludeId?: string,
-  ) {
-    const qb = this.qb().where("vr.vehicle.id = :vehicleId", { vehicleId });
-    if (excludeId) qb.andWhere("vr.id != :excludeId", { excludeId });
-    qb.andWhere(
-      "(:start < COALESCE(vr.endDate, :max)) AND (COALESCE(:end, :max) > vr.startDate)",
-      { start: startDate, end: endDate, max: "9999-12-31" },
+    const qb = this.baseQuery().where("vehicle.id = :vehicleId", { vehicleId });
+    applyActiveFilter(
+      qb,
+      new Date().toISOString().split("T")[0],
+      "vr.startDate",
+      "vr.endDate",
     );
     return qb.getOne();
   }
-
+  findCurrentForUser(userId: string) {
+    const qb = this.baseQuery().where("user.id = :userId", { userId });
+    applyActiveFilter(
+      qb,
+      new Date().toISOString().split("T")[0],
+      "vr.startDate",
+      "vr.endDate",
+    );
+    return qb.orderBy("vr.startDate", "DESC").getMany();
+  }
+  findVehiclesForUserOnDate(userId: string, date: string) {
+    const qb = this.qb()
+      .leftJoinAndSelect("vr.user", "user")
+      .leftJoinAndSelect("vr.vehicle", "vehicle")
+      .where("user.id = :userId", { userId });
+    applyActiveFilter(qb, date, "vr.startDate", "vr.endDate");
+    return qb.orderBy("vr.startDate", "DESC").getMany();
+  }
   /**
    * Find active responsible assignments for a specific date (defaults to today)
    * Active means: startDate <= date AND (endDate IS NULL OR endDate >= date)
    */
   async findActiveResponsibles(filters?: VehicleResponsibleFilters) {
-    const targetDate = filters?.date || new Date().toISOString().split("T")[0];
-
     const [responsibles] = await this.find({
       filters: {
         userId: filters?.userId,
         vehicleId: filters?.vehicleId,
-        date: targetDate,
+        active: true,
       },
     });
 
@@ -159,11 +143,21 @@ export class VehicleResponsibleRepository
     vehicleId: string,
     date?: string,
   ): Promise<boolean> {
-    const responsibles = await this.findActiveResponsibles({
-      userId,
-      vehicleId,
-      date,
-    });
-    return responsibles.length > 0;
+    if (date) {
+      // If a specific date is provided, we need to check against that date
+      const qb = this.baseQuery()
+        .where("user.id = :userId", { userId })
+        .andWhere("vehicle.id = :vehicleId", { vehicleId });
+      applyActiveFilter(qb, date, "vr.startDate", "vr.endDate");
+      const count = await qb.getCount();
+      return count > 0;
+    } else {
+      // Use the standard active filter
+      const responsibles = await this.findActiveResponsibles({
+        userId,
+        vehicleId,
+      });
+      return responsibles.length > 0;
+    }
   }
 }

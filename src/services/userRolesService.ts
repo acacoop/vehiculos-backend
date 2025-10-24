@@ -4,6 +4,8 @@ import { User } from "@/entities/User";
 import { Repository } from "typeorm";
 import { AppError } from "@/middleware/errorHandler";
 import { UserRoleEnum } from "@/enums/UserRoleEnum";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { applyOverlapCheck } from "@/utils/query/helpers";
 
 export interface UserRoleDTO {
   id: string;
@@ -40,22 +42,14 @@ export class UserRolesService {
     };
   }
 
-  async getAll(options?: {
-    limit?: number;
-    offset?: number;
-    filters?: {
+  async getAll(
+    options?: RepositoryFindOptions<{
       userId?: string;
       role?: UserRoleEnum;
       activeOnly?: boolean;
-    };
-    search?: string;
-  }): Promise<{ items: UserRoleDTO[]; total: number }> {
-    const [userRoles, total] = await this.userRoleRepo.findAndCount({
-      limit: options?.limit,
-      offset: options?.offset,
-      filters: options?.filters,
-      search: options?.search,
-    });
+    }>,
+  ): Promise<{ items: UserRoleDTO[]; total: number }> {
+    const [userRoles, total] = await this.userRoleRepo.findAndCount(options);
 
     return {
       items: userRoles.map((ur) => this.mapToDTO(ur)),
@@ -102,6 +96,31 @@ export class UserRolesService {
         400,
         "https://example.com/problems/validation-error",
         "Validation Error",
+      );
+    }
+
+    // Check for overlapping roles
+    const overlapQuery = this.userRoleRepo.qb().leftJoin("ur.user", "user");
+
+    applyOverlapCheck(overlapQuery, {
+      entityId: data.userId,
+      entityField: "user.id",
+      startDate: data.startTime,
+      endDate: data.endTime ?? null,
+      startField: "ur.startTime",
+      endField: "ur.endTime",
+      additionalFilters: {
+        "ur.role": data.role,
+      },
+    });
+
+    const overlap = await overlapQuery.getOne();
+    if (overlap) {
+      throw new AppError(
+        `User already has this role overlapping (${overlap.startTime.toISOString()} to ${overlap.endTime?.toISOString() || "present"})`,
+        409,
+        "https://example.com/problems/conflict",
+        "Role Overlap",
       );
     }
 

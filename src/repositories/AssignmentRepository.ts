@@ -1,11 +1,4 @@
-import {
-  DataSource,
-  Repository,
-  LessThanOrEqual,
-  MoreThanOrEqual,
-  IsNull,
-  Or,
-} from "typeorm";
+import { DataSource, Repository } from "typeorm";
 import { Assignment } from "@/entities/Assignment";
 import {
   IAssignmentRepository,
@@ -15,7 +8,11 @@ import {
   RepositoryFindOptions,
   resolvePagination,
 } from "@/repositories/interfaces/common";
-import { applySearchFilter, applyFilters } from "@/utils/index";
+import {
+  applySearchFilter,
+  applyFilters,
+  applyActiveFilter,
+} from "@/utils/index";
 
 export class AssignmentRepository implements IAssignmentRepository {
   private readonly repo: Repository<Assignment>;
@@ -53,8 +50,17 @@ export class AssignmentRepository implements IAssignmentRepository {
     applyFilters(qb, filters, {
       userId: { field: "u.id" },
       vehicleId: { field: "v.id" },
-      date: { field: "a.startDate", operator: "<=" }, // Filter for assignments active on date
     });
+
+    // Apply active filter
+    if (filters?.active) {
+      applyActiveFilter(
+        qb,
+        new Date().toISOString().split("T")[0],
+        "a.startDate",
+        "a.endDate",
+      );
+    }
 
     // Pagination
     const { limit, offset } = resolvePagination(pagination);
@@ -83,40 +89,48 @@ export class AssignmentRepository implements IAssignmentRepository {
   }
 
   /**
-   * Find active assignments for today
-   * Active means: startDate <= date AND (endDate IS NULL OR endDate >= date)
+   * Find active assignments
+   * Active means: startDate <= today AND (endDate IS NULL OR endDate >= today)
    */
   async findActiveAssignments(filters?: AssignmentFilters) {
-    const targetDate = filters?.date || new Date().toISOString().split("T")[0];
-
-    const where: Record<string, unknown> = {
-      startDate: LessThanOrEqual(targetDate),
-      endDate: Or(IsNull(), MoreThanOrEqual(targetDate)),
-    };
-
-    if (filters?.userId) {
-      where.user = { id: filters.userId };
-    }
-    if (filters?.vehicleId) {
-      where.vehicle = { id: filters.vehicleId };
-    }
-
-    return this.repo.find({ where });
+    const [assignments] = await this.findAndCount({
+      filters: {
+        userId: filters?.userId,
+        vehicleId: filters?.vehicleId,
+        active: true,
+      },
+    });
+    return assignments;
   }
 
   /**
-   * Check if user has active assignment for vehicle today
+   * Check if user has active assignment for vehicle
    */
   async hasActiveAssignment(
     userId: string,
     vehicleId: string,
     date?: string,
   ): Promise<boolean> {
-    const assignments = await this.findActiveAssignments({
-      userId,
-      vehicleId,
-      date,
-    });
-    return assignments.length > 0;
+    if (date) {
+      // If a specific date is provided, check against that date
+      const qb = this.repo
+        .createQueryBuilder("a")
+        .where("a.user.id = :userId", { userId })
+        .andWhere("a.vehicle.id = :vehicleId", { vehicleId });
+      applyActiveFilter(qb, date, "a.startDate", "a.endDate");
+      const count = await qb.getCount();
+      return count > 0;
+    } else {
+      // Use the standard active filter
+      const assignments = await this.findActiveAssignments({
+        userId,
+        vehicleId,
+      });
+      return assignments.length > 0;
+    }
+  }
+
+  qb() {
+    return this.repo.createQueryBuilder("a");
   }
 }

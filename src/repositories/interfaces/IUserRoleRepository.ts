@@ -4,7 +4,7 @@ import { UserRoleEnum } from "@/enums/UserRoleEnum";
 export interface UserRoleFilters {
   userId?: string;
   role?: UserRoleEnum;
-  activeOnly?: boolean;
+  active?: boolean;
 }
 
 /**

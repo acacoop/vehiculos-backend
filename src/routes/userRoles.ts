@@ -55,8 +55,8 @@ router.patch(
   controller.update,
 );
 
-router.post(
-  "/:id/end",
+router.patch(
+  "/:id/finish",
   requireRole(UserRoleEnum.ADMIN),
   validateUUIDParam("id"),
   validateBody(UserRoleEndSchema),

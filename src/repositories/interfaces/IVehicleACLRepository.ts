@@ -5,7 +5,7 @@ export interface VehicleACLFilters {
   userId?: string;
   vehicleId?: string;
   permission?: PermissionType;
-  activeAt?: Date; // Filter for ACLs active at a specific time
+  active?: boolean;
 }
 
 /**

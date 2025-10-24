@@ -17,7 +17,7 @@ class MockVehicleACLRepository {
     filters?: {
       userId?: string;
       vehicleId?: string;
-      activeAt?: Date;
+      active?: boolean;
       permission?: PermissionType;
     };
     search?: string;
@@ -52,11 +52,10 @@ class MockVehicleACLRepository {
           (acl) => acl.permission === filters.permission,
         );
       }
-      if (filters.activeAt) {
+      if (filters.active) {
+        const now = new Date();
         filtered = filtered.filter(
-          (acl) =>
-            acl.startTime <= filters.activeAt! &&
-            (!acl.endTime || acl.endTime > filters.activeAt!),
+          (acl) => acl.startTime <= now && (!acl.endTime || acl.endTime > now),
         );
       }
     }
@@ -289,7 +288,7 @@ describe("VehicleACLService", () => {
       mockRepo.seedACLs(acls);
 
       const result = await service.getAll({
-        filters: { activeAt: new Date() },
+        filters: { active: true },
       });
 
       expect(result.items).toHaveLength(1);
