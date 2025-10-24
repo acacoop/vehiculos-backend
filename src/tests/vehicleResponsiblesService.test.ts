@@ -4,7 +4,7 @@ import { IVehicleResponsibleRepository } from "@/repositories/interfaces/IVehicl
 import { VehicleResponsible } from "@/entities/VehicleResponsible";
 import { User } from "@/entities/User";
 import { Vehicle } from "@/entities/Vehicle";
-import { Repository } from "typeorm";
+import { Repository, SelectQueryBuilder } from "typeorm";
 import * as validators from "@/utils/validation/entity";
 
 jest.mock("../utils/validation/entity");
@@ -17,12 +17,30 @@ describe("VehicleResponsiblesService", () => {
   let mockVehicleResponsibleRepo: jest.Mocked<Repository<VehicleResponsible>>;
 
   beforeEach(() => {
+    const mockQb = {
+      leftJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getOne: jest
+        .fn<() => Promise<VehicleResponsible | null>>()
+        .mockResolvedValue(null),
+    } as jest.Mocked<
+      Pick<
+        SelectQueryBuilder<VehicleResponsible>,
+        "leftJoin" | "where" | "andWhere" | "getOne"
+      >
+    >;
+
     mockRepo = {
+      qb: jest
+        .fn()
+        .mockReturnValue(
+          mockQb as unknown as SelectQueryBuilder<VehicleResponsible>,
+        ),
       find: jest.fn(),
       findDetailedById: jest.fn(),
       findCurrentByVehicle: jest.fn(),
       findCurrentForUser: jest.fn(),
-      getOverlap: jest.fn(),
       create: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),
@@ -144,7 +162,6 @@ describe("VehicleResponsiblesService", () => {
         .mockResolvedValue(undefined);
       mockVehicleRepo.findOne.mockResolvedValue(mockVehicle);
       mockUserRepo.findOne.mockResolvedValue(mockUser);
-      mockRepo.getOverlap.mockResolvedValue(null);
       mockRepo.create.mockReturnValue(mockCreated);
       mockRepo.save.mockResolvedValue(mockCreated);
       mockRepo.findDetailedById.mockResolvedValue(mockCreated);

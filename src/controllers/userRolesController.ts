@@ -8,13 +8,10 @@ import {
   UserRoleEndSchema,
 } from "@/schemas/userRole";
 import { parsePaginationQuery } from "@/utils/index";
-import { UserRoleFilters } from "@/repositories/UserRoleRepository";
+import { UserRoleFilters } from "@/repositories/interfaces/IUserRoleRepository";
 import { extractFilters, extractSearch } from "@/utils/index";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
-/**
- * UserRolesController - Manages user roles
- * Uses simplified BaseController with special handling for boolean filter
- */
 export class UserRolesController extends BaseController<UserRoleFilters> {
   constructor(private readonly service: UserRolesService) {
     super({
@@ -32,18 +29,13 @@ export class UserRolesController extends BaseController<UserRoleFilters> {
 
     // Extract filters
     const filters = extractFilters<UserRoleFilters>(req.query, [
-      "userId",
+      "active",
       "role",
+      "userId",
     ]);
 
-    // Handle activeOnly separately as it needs boolean conversion
-    if (req.query.activeOnly && typeof req.query.activeOnly === "string") {
-      filters.activeOnly = req.query.activeOnly === "true";
-    }
-
     const { items, total } = await this.service.getAll({
-      limit,
-      offset,
+      pagination: { limit, offset },
       filters,
       search,
     });
@@ -56,17 +48,10 @@ export class UserRolesController extends BaseController<UserRoleFilters> {
     });
   });
 
-  protected async getAllService(options: {
-    pagination: { limit: number; offset: number };
-    filters?: Partial<UserRoleFilters>;
-    search?: string;
-  }) {
-    return this.service.getAll({
-      limit: options.pagination.limit,
-      offset: options.pagination.offset,
-      filters: options.filters,
-      search: options.search,
-    });
+  protected async getAllService(
+    options: RepositoryFindOptions<Partial<UserRoleFilters>>,
+  ) {
+    return this.service.getAll(options);
   }
 
   protected async getByIdService(id: string) {
@@ -114,6 +99,6 @@ export class UserRolesController extends BaseController<UserRoleFilters> {
       return;
     }
 
-    this.sendResponse(res, data, "User role ended successfully");
+    this.sendResponse(res, data, "User role finished successfully");
   });
 }

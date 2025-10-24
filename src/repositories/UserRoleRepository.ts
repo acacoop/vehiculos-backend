@@ -1,74 +1,64 @@
-import { Brackets, Repository, DataSource } from "typeorm";
+import { Repository, DataSource } from "typeorm";
 import { UserRole } from "@/entities/UserRole";
 import { UserRoleEnum } from "@/enums/UserRoleEnum";
+import {
+  UserRoleFilters,
+  IUserRoleRepository,
+} from "@/repositories/interfaces/IUserRoleRepository";
+import {
+  applySearchFilter,
+  applyFilters,
+  applyActiveFilter,
+} from "@/utils/query/helpers";
+import {
+  RepositoryFindOptions,
+  resolvePagination,
+} from "@/repositories/interfaces/common";
 
-export interface UserRoleFilters {
-  userId?: string;
-  role?: UserRoleEnum;
-  activeOnly?: boolean;
-}
-
-export class UserRoleRepository {
+export class UserRoleRepository implements IUserRoleRepository {
   private readonly repo: Repository<UserRole>;
 
   constructor(dataSource: DataSource) {
     this.repo = dataSource.getRepository(UserRole);
   }
 
-  async findAndCount(options?: {
-    limit?: number;
-    offset?: number;
-    filters?: UserRoleFilters;
-    search?: string;
-  }): Promise<[UserRole[], number]> {
+  async findAndCount(
+    opts?: RepositoryFindOptions<UserRoleFilters>,
+  ): Promise<[UserRole[], number]> {
+    const { pagination, filters, search } = opts || {};
+    const { limit, offset } = resolvePagination(pagination);
+
     const qb = this.repo
       .createQueryBuilder("ur")
       .leftJoinAndSelect("ur.user", "user");
 
     // Apply search filter across user information
-    if (options?.search) {
-      qb.andWhere(
-        new Brackets((qb) => {
-          qb.where("user.firstName LIKE :search", {
-            search: `%${options.search}%`,
-          })
-            .orWhere("user.lastName LIKE :search", {
-              search: `%${options.search}%`,
-            })
-            .orWhere("user.email LIKE :search", {
-              search: `%${options.search}%`,
-            });
-        }),
+    if (search) {
+      applySearchFilter(qb, search, [
+        "user.firstName",
+        "user.lastName",
+        "user.email",
+      ]);
+    }
+
+    // Apply filters
+    applyFilters(qb, filters, {
+      userId: { field: "user.id" },
+      role: { field: "ur.role" },
+    });
+
+    // Apply active filter
+    if (filters?.active) {
+      applyActiveFilter(
+        qb,
+        new Date().toISOString().split("T")[0],
+        "ur.startTime",
+        "ur.endTime",
       );
     }
 
-    if (options?.filters) {
-      const { userId, role, activeOnly } = options.filters;
-
-      if (userId) {
-        qb.andWhere("user.id = :userId", { userId });
-      }
-
-      if (role) {
-        qb.andWhere("ur.role = :role", { role });
-      }
-
-      if (activeOnly) {
-        qb.andWhere("ur.startTime <= :now", { now: new Date() }).andWhere(
-          "(ur.endTime IS NULL OR ur.endTime > :now)",
-          { now: new Date() },
-        );
-      }
-    }
-
-    if (options?.limit) {
-      qb.take(options.limit);
-    }
-
-    if (options?.offset) {
-      qb.skip(options.offset);
-    }
-
+    qb.take(limit);
+    qb.skip(offset);
     qb.orderBy("ur.startTime", "DESC");
 
     return await qb.getManyAndCount();
@@ -106,14 +96,17 @@ export class UserRoleRepository {
   }
 
   async hasActiveRole(userId: string, role: UserRoleEnum): Promise<boolean> {
-    const now = new Date();
-    const count = await this.repo
+    const qb = this.repo
       .createQueryBuilder("ur")
-      .where("ur.user_id = :userId", { userId })
-      .andWhere("ur.role = :role", { role })
-      .andWhere("ur.start_time <= :now", { now })
-      .andWhere("(ur.end_time IS NULL OR ur.end_time >= :now)", { now })
-      .getCount();
+      .where("ur.user.id = :userId", { userId })
+      .andWhere("ur.role = :role", { role });
+    applyActiveFilter(
+      qb,
+      new Date().toISOString().split("T")[0],
+      "ur.startTime",
+      "ur.endTime",
+    );
+    const count = await qb.getCount();
     return count > 0;
   }
 
@@ -140,5 +133,9 @@ export class UserRoleRepository {
 
     role.endTime = endTime || new Date();
     return await this.save(role);
+  }
+
+  qb() {
+    return this.repo.createQueryBuilder("ur");
   }
 }

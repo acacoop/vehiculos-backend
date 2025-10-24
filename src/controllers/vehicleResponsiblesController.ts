@@ -14,7 +14,7 @@ export class VehicleResponsiblesController extends BaseController<VehicleRespons
   constructor(private readonly service: VehicleResponsiblesService) {
     super({
       resourceName: "VehicleResponsible",
-      allowedFilters: ["vehicleId", "userId", "active", "date"],
+      allowedFilters: ["vehicleId", "userId", "active"],
     });
   }
 

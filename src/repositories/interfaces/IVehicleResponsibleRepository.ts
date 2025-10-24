@@ -1,12 +1,11 @@
 import { VehicleResponsible } from "@/entities/VehicleResponsible";
-import { DeleteResult } from "typeorm";
+import { DeleteResult, SelectQueryBuilder } from "typeorm";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 export interface VehicleResponsibleFilters {
   vehicleId?: string;
   userId?: string;
-  active?: string; // 'true' | 'false'
-  date?: string; // ISO date
+  active?: boolean; // true = apply active filter, false/undefined = don't apply
 }
 
 /**
@@ -14,6 +13,7 @@ export interface VehicleResponsibleFilters {
  * This abstraction allows for easy mocking in tests
  */
 export interface IVehicleResponsibleRepository {
+  qb(): SelectQueryBuilder<VehicleResponsible>;
   findOne(id: string): Promise<VehicleResponsible | null>;
   findDetailedById(id: string): Promise<VehicleResponsible | null>;
   save(ent: VehicleResponsible): Promise<VehicleResponsible>;
@@ -28,12 +28,6 @@ export interface IVehicleResponsibleRepository {
     userId: string,
     date: string,
   ): Promise<VehicleResponsible[]>;
-  getOverlap(
-    vehicleId: string,
-    startDate: string,
-    endDate: string | null,
-    excludeId?: string,
-  ): Promise<VehicleResponsible | null>;
   findActiveResponsibles(
     filters?: VehicleResponsibleFilters,
   ): Promise<VehicleResponsible[]>;

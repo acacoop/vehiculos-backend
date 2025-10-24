@@ -13,6 +13,7 @@ import {
 } from "@/utils/validation/entity";
 import { IsNull, Repository } from "typeorm";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { applyOverlapCheck } from "@/utils/query/helpers";
 
 // Composite detail view (was in ../types)
 export interface VehicleResponsibleWithDetails {
@@ -100,12 +101,20 @@ export class VehicleResponsiblesService {
     endDate: string | null,
     excludeId?: string,
   ) {
-    const overlap = await this.repo.getOverlap(
-      vehicleId,
+    const qb = this.repo
+      .qb()
+      .leftJoin("vr.vehicle", "vehicle")
+      .leftJoin("vr.user", "user");
+
+    applyOverlapCheck(qb, {
+      entityId: vehicleId,
+      entityField: "vehicle.id",
       startDate,
       endDate,
       excludeId,
-    );
+    });
+
+    const overlap = await qb.getOne();
     if (overlap) {
       throw new AppError(
         `Vehicle already has a responsible overlapping (${overlap.startDate} to ${overlap.endDate || "present"})`,

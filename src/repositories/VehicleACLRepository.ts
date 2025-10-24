@@ -1,34 +1,28 @@
 import { DataSource, Repository } from "typeorm";
 import { VehicleACL as VehicleACLEntity } from "@/entities/VehicleACL";
 import { PermissionType, PERMISSION_WEIGHT } from "@/enums/PermissionType";
-import { resolvePagination } from "@/repositories/interfaces/common";
+import {
+  RepositoryFindOptions,
+  resolvePagination,
+} from "@/repositories/interfaces/common";
 import { applySearchFilter, applyFilters } from "@/utils/index";
+import {
+  VehicleACLFilters,
+  IVehicleACLRepository,
+} from "@/repositories/interfaces/IVehicleACLRepository";
 
-export interface VehicleACLFilters {
-  userId?: string;
-  vehicleId?: string;
-  permission?: PermissionType;
-  activeAt?: Date; // Filter for ACLs active at a specific time
-}
-
-export class VehicleACLRepository {
+export class VehicleACLRepository implements IVehicleACLRepository {
   private readonly repo: Repository<VehicleACLEntity>;
 
   constructor(dataSource: DataSource) {
     this.repo = dataSource.getRepository(VehicleACLEntity);
   }
 
-  async findAndCount(options?: {
-    limit?: number;
-    offset?: number;
-    filters?: VehicleACLFilters;
-    search?: string;
-  }): Promise<[VehicleACLEntity[], number]> {
-    const { filters, search, limit, offset } = options || {};
-    const { limit: resolvedLimit, offset: resolvedOffset } = resolvePagination({
-      limit,
-      offset,
-    });
+  async findAndCount(
+    options?: RepositoryFindOptions<VehicleACLFilters>,
+  ): Promise<[VehicleACLEntity[], number]> {
+    const { filters, search, pagination } = options || {};
+    const { limit, offset } = resolvePagination(pagination);
 
     const qb = this.repo
       .createQueryBuilder("acl")
@@ -58,18 +52,18 @@ export class VehicleACLRepository {
       permission: { field: "acl.permission" },
     });
 
-    // Handle activeAt filter separately (complex condition)
-    if (filters?.activeAt) {
-      qb.andWhere("acl.start_time <= :activeAt", {
-        activeAt: filters.activeAt,
+    // Apply active filter
+    if (filters?.active) {
+      qb.andWhere("acl.start_time <= :activeDate", {
+        activeDate: new Date().toISOString().split("T")[0],
       });
-      qb.andWhere("(acl.end_time IS NULL OR acl.end_time > :activeAt)", {
-        activeAt: filters.activeAt,
+      qb.andWhere("(acl.end_time IS NULL OR acl.end_time > :activeDate)", {
+        activeDate: new Date().toISOString().split("T")[0],
       });
     }
 
-    qb.take(resolvedLimit);
-    qb.skip(resolvedOffset);
+    qb.take(limit);
+    qb.skip(offset);
     return qb.getManyAndCount();
   }
 
@@ -81,29 +75,25 @@ export class VehicleACLRepository {
   }
 
   /**
-   * Get all active ACLs for a user at a specific point in time
+   * Get all active ACLs for a user
    */
-  async getActiveACLsForUser(
-    userId: string,
-    at: Date = new Date(),
-  ): Promise<VehicleACLEntity[]> {
+  async getActiveACLsForUser(userId: string): Promise<VehicleACLEntity[]> {
     const [acls] = await this.findAndCount({
-      filters: { userId, activeAt: at },
+      filters: { userId, active: true },
     });
     return acls;
   }
 
   /**
-   * Check if user has at least the required permission for a vehicle at a specific time
+   * Check if user has at least the required permission for a vehicle
    */
   async hasPermission(
     userId: string,
     vehicleId: string,
     requiredPermission: PermissionType,
-    at: Date = new Date(),
   ): Promise<boolean> {
     const [acls] = await this.findAndCount({
-      filters: { userId, vehicleId, activeAt: at },
+      filters: { userId, vehicleId, active: true },
     });
 
     const requiredWeight = PERMISSION_WEIGHT[requiredPermission];
@@ -120,7 +110,8 @@ export class VehicleACLRepository {
     return this.repo.save(entity);
   }
 
-  delete(id: string) {
-    return this.repo.delete(id);
+  async delete(id: string): Promise<{ affected?: number }> {
+    const result = await this.repo.delete(id);
+    return { affected: result.affected || 0 };
   }
 }

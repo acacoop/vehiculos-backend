@@ -203,6 +203,20 @@ describe("ReservationsService", () => {
       mockReservationRepo.create.mockReturnValue(mockCreated);
       mockReservationRepo.save.mockResolvedValue(mockCreated);
 
+      // Mock no overlap
+      const mockQb = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getOne: jest
+          .fn<() => Promise<Reservation | null>>()
+          .mockResolvedValue(null),
+      } as jest.Mocked<
+        Pick<SelectQueryBuilder<Reservation>, "where" | "andWhere" | "getOne">
+      >;
+      mockReservationRepo.qb.mockReturnValue(
+        mockQb as unknown as SelectQueryBuilder<Reservation>,
+      );
+
       const result = await service.create({
         userId: "u1",
         vehicleId: "v1",
@@ -223,6 +237,20 @@ describe("ReservationsService", () => {
       mockUserRepo.findOne.mockResolvedValue(null);
       mockVehicleRepo.findOne.mockResolvedValue({} as Vehicle);
 
+      // Mock no overlap (not reached due to validation failure)
+      const mockQb = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getOne: jest
+          .fn<() => Promise<Reservation | null>>()
+          .mockResolvedValue(null),
+      } as jest.Mocked<
+        Pick<SelectQueryBuilder<Reservation>, "where" | "andWhere" | "getOne">
+      >;
+      mockReservationRepo.qb.mockReturnValue(
+        mockQb as unknown as SelectQueryBuilder<Reservation>,
+      );
+
       const result = await service.create({
         userId: "u1",
         vehicleId: "v1",
@@ -241,6 +269,20 @@ describe("ReservationsService", () => {
       mockUserRepo.findOne.mockResolvedValue({} as User);
       mockVehicleRepo.findOne.mockResolvedValue(null);
 
+      // Mock no overlap (not reached due to validation failure)
+      const mockQb = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getOne: jest
+          .fn<() => Promise<Reservation | null>>()
+          .mockResolvedValue(null),
+      } as jest.Mocked<
+        Pick<SelectQueryBuilder<Reservation>, "where" | "andWhere" | "getOne">
+      >;
+      mockReservationRepo.qb.mockReturnValue(
+        mockQb as unknown as SelectQueryBuilder<Reservation>,
+      );
+
       const result = await service.create({
         userId: "u1",
         vehicleId: "v1",
@@ -249,6 +291,42 @@ describe("ReservationsService", () => {
       });
 
       expect(result).toBeNull();
+    });
+
+    it("should throw error if reservation overlaps with existing one", async () => {
+      const existingReservation = createMockReservation();
+
+      jest.spyOn(validators, "validateUserExists").mockResolvedValue(undefined);
+      jest
+        .spyOn(validators, "validateVehicleExists")
+        .mockResolvedValue(undefined);
+
+      // Mock the query builder chain
+      const mockQb = {
+        leftJoin: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getOne: jest
+          .fn<() => Promise<Reservation | null>>()
+          .mockResolvedValue(existingReservation),
+      } as jest.Mocked<
+        Pick<
+          SelectQueryBuilder<Reservation>,
+          "leftJoin" | "where" | "andWhere" | "getOne"
+        >
+      >;
+      mockReservationRepo.qb.mockReturnValue(
+        mockQb as unknown as SelectQueryBuilder<Reservation>,
+      );
+
+      await expect(
+        service.create({
+          userId: "u1",
+          vehicleId: "v1",
+          startDate: new Date("2024-01-01"),
+          endDate: new Date("2024-01-05"),
+        }),
+      ).rejects.toThrow("Vehicle already has a reservation overlapping");
     });
   });
 });

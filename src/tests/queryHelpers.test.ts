@@ -1,6 +1,10 @@
 import { describe, it, expect, beforeEach, jest } from "@jest/globals";
 import { SelectQueryBuilder, Brackets } from "typeorm";
-import { applySearchFilter, applyFilters } from "@/utils/index";
+import {
+  applySearchFilter,
+  applyFilters,
+  applyOverlapCheck,
+} from "@/utils/index";
 
 // Mock entity for testing
 class TestEntity {
@@ -430,6 +434,108 @@ describe("queryHelpers", () => {
       expect(query).toContain("entity.name LIKE :search");
       expect(query).toContain("entity.active = :active");
       expect(query).toContain("LIMIT");
+    });
+  });
+
+  describe("applyOverlapCheck", () => {
+    it("should apply overlap check query for vehicle reservations", () => {
+      applyOverlapCheck(qb, {
+        entityId: "vehicle-123",
+        entityField: "r.vehicle.id",
+        startDate: "2024-01-01",
+        endDate: "2024-01-10",
+        startField: "r.startDate",
+        endField: "r.endDate",
+        idField: "r.id",
+      });
+
+      const query = qb.getQuery();
+      const params = qb.getParameters();
+
+      expect(query).toContain("r.vehicle.id = :entityId");
+      expect(query).toContain(
+        "(r.startDate < :endDate OR :endDate IS NULL) AND (r.endDate > :startDate OR r.endDate IS NULL)",
+      );
+      expect(params.entityId).toBe("vehicle-123");
+      expect(params.startDate).toBe("2024-01-01");
+      expect(params.endDate).toBe("2024-01-10");
+    });
+
+    it("should exclude specified ID when provided", () => {
+      applyOverlapCheck(qb, {
+        entityId: "vehicle-123",
+        entityField: "r.vehicle.id",
+        startDate: "2024-01-01",
+        endDate: "2024-01-10",
+        excludeId: "exclude-456",
+        startField: "r.startDate",
+        endField: "r.endDate",
+        idField: "r.id",
+      });
+
+      const query = qb.getQuery();
+      const params = qb.getParameters();
+
+      expect(query).toContain("r.id != :excludeId");
+      expect(params.excludeId).toBe("exclude-456");
+    });
+
+    it("should handle null end date", () => {
+      applyOverlapCheck(qb, {
+        entityId: "vehicle-123",
+        entityField: "r.vehicle.id",
+        startDate: "2024-01-01",
+        endDate: null,
+        startField: "r.startDate",
+        endField: "r.endDate",
+        idField: "r.id",
+      });
+
+      const params = qb.getParameters();
+
+      expect(params.startDate).toBe("2024-01-01");
+      expect(params.endDate).toBeNull();
+    });
+
+    it("should use default field names when not specified", () => {
+      applyOverlapCheck(qb, {
+        entityId: "vehicle-123",
+        entityField: "vehicle.id",
+        startDate: "2024-01-01",
+        endDate: "2024-01-10",
+      });
+
+      const query = qb.getQuery();
+
+      expect(query).toContain("vehicle.id = :entityId");
+      expect(query).toContain(
+        "(startDate < :endDate OR :endDate IS NULL) AND (endDate > :startDate OR endDate IS NULL)",
+      );
+    });
+
+    it("should apply additional filters", () => {
+      applyOverlapCheck(qb, {
+        entityId: "user-123",
+        entityField: "user.id",
+        startDate: "2024-01-01",
+        endDate: "2024-01-10",
+        additionalFilters: {
+          "ur.role": "admin",
+          "ur.status": "active",
+        },
+        startField: "ur.startTime",
+        endField: "ur.endTime",
+      });
+
+      const query = qb.getQuery();
+      const params = qb.getParameters();
+
+      expect(query).toContain("user.id = :entityId");
+      expect(query).toContain("ur.role = :ur_role");
+      expect(query).toContain("ur.status = :ur_status");
+      expect(params.entityId).toBe("user-123");
+      expect(params.ur_role).toBe("admin");
+      expect(params.ur_status).toBe("active");
     });
   });
 });
