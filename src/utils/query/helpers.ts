@@ -162,13 +162,13 @@ export function applyOverlapCheckLegacy<T extends ObjectLiteral>(
  * Apply active filter for date ranges
  * Active means: startField <= targetDate AND (endField IS NULL OR endField >= targetDate)
  * @param qb - The query builder
- * @param targetDate - The date to check activity for (defaults to current date)
+ * @param targetDate - The date-only string (YYYY-MM-DD) to check activity for (defaults to current date)
  * @param startField - Field name for start date (default: "startDate")
  * @param endField - Field name for end date (default: "endDate")
  */
 export function applyActiveFilter<T extends ObjectLiteral>(
   qb: SelectQueryBuilder<T>,
-  targetDate?: Date | string,
+  targetDate?: string,
   startField: string = "startDate",
   endField: string = "endDate",
 ): void {
