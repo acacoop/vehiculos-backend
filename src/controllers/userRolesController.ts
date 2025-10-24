@@ -7,15 +7,11 @@ import {
   UserRoleUpdateSchema,
   UserRoleEndSchema,
 } from "@/schemas/userRole";
-import { parsePaginationQuery } from "@/utils";
-import { UserRoleFilters } from "@/repositories/UserRoleRepository";
-import { extractFilters, extractSearch } from "@/utils";
+import { parsePaginationQuery } from "@/utils/index";
+import { UserRoleFilters } from "@/repositories/interfaces/IUserRoleRepository";
+import { extractFilters, extractSearch } from "@/utils/index";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
-/**
- * UserRolesController - Manages user roles
- * Uses simplified BaseController with special handling for boolean filter
- */
 export class UserRolesController extends BaseController<UserRoleFilters> {
   constructor(private readonly service: UserRolesService) {
     super({
@@ -33,14 +29,10 @@ export class UserRolesController extends BaseController<UserRoleFilters> {
 
     // Extract filters
     const filters = extractFilters<UserRoleFilters>(req.query, [
-      "userId",
+      "active",
       "role",
+      "userId",
     ]);
-
-    // Handle activeOnly separately as it needs boolean conversion
-    if (req.query.activeOnly && typeof req.query.activeOnly === "string") {
-      filters.activeOnly = req.query.activeOnly === "true";
-    }
 
     const { items, total } = await this.service.getAll({
       pagination: { limit, offset },

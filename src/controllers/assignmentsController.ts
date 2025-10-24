@@ -16,7 +16,7 @@ export class AssignmentsController extends BaseController<AssignmentFilters> {
   constructor(private readonly service: AssignmentsService) {
     super({
       resourceName: "Assignment",
-      allowedFilters: ["userId", "vehicleId", "date"],
+      allowedFilters: ["userId", "vehicleId", "active"],
     });
   }
 

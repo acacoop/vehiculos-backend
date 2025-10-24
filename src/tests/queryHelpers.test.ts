@@ -4,7 +4,7 @@ import {
   applySearchFilter,
   applyFilters,
   applyOverlapCheck,
-} from "@/utils/query/helpers";
+} from "@/utils/index";
 
 // Mock entity for testing
 class TestEntity {

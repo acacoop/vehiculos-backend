@@ -8,9 +8,7 @@ import {
   RepositoryFindOptions,
   resolvePagination,
 } from "@/repositories/interfaces/common";
-import { applySearchFilter, applyFilters } from "@/utils";
-
-export type { ReservationFilters };
+import { applySearchFilter, applyFilters } from "@/utils/index";
 
 export class ReservationRepository implements IReservationRepository {
   private readonly repo: Repository<Reservation>;

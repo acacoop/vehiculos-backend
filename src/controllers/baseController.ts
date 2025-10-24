@@ -5,7 +5,7 @@ import {
   extractFilters,
   extractSearch,
   parsePaginationQuery,
-} from "@/utils";
+} from "@/utils/index";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 export interface ApiResponse<T = unknown> {

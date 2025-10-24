@@ -1,4 +1,3 @@
-import "reflect-metadata";
 import { DataSource } from "typeorm";
 import sql from "mssql";
 import {
@@ -70,7 +69,7 @@ const createDataSourceConfig = () => {
     synchronize: !isProd,
     logging: DB_LOGGING,
     entities,
-    migrations: ["src/migrations/*.ts"],
+    migrations: ["dist/migrations/*.js"],
     migrationsTableName: "migrations",
   };
 
@@ -171,10 +170,17 @@ async function ensureDatabase(retries = 3, delayMs = 2000) {
   }
 }
 
-// Only auto-initialize if not running Jest tests
-// Jest sets JEST_WORKER_ID when running tests
-// Test environment deployments (for product owner) will still initialize
-if (!process.env.JEST_WORKER_ID) {
+// Export the initialization function for manual control
+export async function initializeDatabase() {
+  if (!process.env.JEST_WORKER_ID) {
+    await ensureDatabase();
+    await AppDataSource.initialize();
+  }
+}
+
+// Auto-initialize only if explicitly requested (for backwards compatibility)
+// The main app (index.ts) will call initializeDatabase() manually
+if (process.env.AUTO_INIT_DB === "true" && !process.env.JEST_WORKER_ID) {
   (async () => {
     await ensureDatabase();
 

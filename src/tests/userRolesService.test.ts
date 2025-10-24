@@ -2,7 +2,7 @@ import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 import { UserRolesService } from "@/services/userRolesService";
 import { UserRole } from "@/entities/UserRole";
 import { User } from "@/entities/User";
-import { UserRoleEnum } from "@/utils";
+import { UserRoleEnum } from "@/enums/UserRoleEnum";
 import { DeleteResult, Repository } from "typeorm";
 import { UserRoleRepository } from "@/repositories/UserRoleRepository";
 

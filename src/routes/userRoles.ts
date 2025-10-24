@@ -7,7 +7,7 @@ import {
   UserRoleEndSchema,
 } from "@/schemas/userRole";
 import { requireRole, requireSelfOrAdmin } from "@/middleware/permission";
-import { UserRoleEnum } from "@/utils";
+import { UserRoleEnum } from "@/enums/UserRoleEnum";
 import { AppDataSource } from "@/db";
 import { ServiceFactory } from "@/factories/serviceFactory";
 

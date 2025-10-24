@@ -13,7 +13,7 @@ import {
 import {
   validateISODateFormat,
   validateEndDateAfterStartDate,
-} from "@/utils/validation/date";
+} from "@/utils/index";
 import { Repository } from "typeorm";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import { applyOverlapCheck } from "@/utils";
@@ -128,17 +128,16 @@ export class AssignmentsService {
     // Check for overlapping assignments
     const finalStartDate = startDate || new Date().toISOString().split("T")[0];
     const overlapQuery = this.repo.qb();
-    applyOverlapCheck(
-      overlapQuery,
-      vehicleId,
-      finalStartDate,
-      endDate ?? null,
-      undefined, // excludeId
-      "a.vehicle.id",
-      "a.startDate",
-      "a.endDate",
-      "a.id",
-    );
+    applyOverlapCheck(overlapQuery, {
+      entityId: vehicleId,
+      entityField: "a.vehicle.id",
+      startDate: finalStartDate,
+      endDate: endDate ?? null,
+      excludeId: undefined,
+      startField: "a.startDate",
+      endField: "a.endDate",
+      idField: "a.id",
+    });
     const overlap = await overlapQuery.getOne();
     if (overlap) {
       throw new Error(

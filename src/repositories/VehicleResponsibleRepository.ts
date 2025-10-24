@@ -8,9 +8,11 @@ import {
   RepositoryFindOptions,
   resolvePagination,
 } from "@/repositories/interfaces/common";
-import { applySearchFilter, applyFilters, applyActiveFilter } from "@/utils";
-
-export type { VehicleResponsibleFilters };
+import {
+  applySearchFilter,
+  applyFilters,
+  applyActiveFilter,
+} from "@/utils/index";
 
 export class VehicleResponsibleRepository
   implements IVehicleResponsibleRepository

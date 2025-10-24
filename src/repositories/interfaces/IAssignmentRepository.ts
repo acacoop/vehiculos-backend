@@ -5,7 +5,7 @@ import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 export interface AssignmentFilters {
   userId?: string;
   vehicleId?: string;
-  active?: boolean; // true = apply active filter, false/undefined = don't apply
+  active?: boolean;
 }
 
 export interface IAssignmentRepository {

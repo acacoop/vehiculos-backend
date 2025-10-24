@@ -8,7 +8,7 @@ import {
   RepositoryFindOptions,
   resolvePagination,
 } from "@/repositories/interfaces/common";
-import { applySearchFilter, applyFilters } from "@/utils";
+import { applySearchFilter, applyFilters } from "@/utils/index";
 
 export class VehicleRepository implements IVehicleRepository {
   private readonly repo: Repository<VehicleEntity>;

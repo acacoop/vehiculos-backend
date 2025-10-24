@@ -1,7 +1,12 @@
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
 import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 import { Express } from "express";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Load static OpenAPI YAML once at startup
 const staticSpec = YAML.load(path.join(__dirname, "../../openAPI.yaml"));

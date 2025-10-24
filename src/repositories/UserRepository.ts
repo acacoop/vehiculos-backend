@@ -8,10 +8,7 @@ import {
   RepositoryFindOptions,
   resolvePagination,
 } from "@/repositories/interfaces/common";
-import { applySearchFilter, applyFilters } from "@/utils";
-
-// Re-export types for convenience
-export type { UserFilters };
+import { applySearchFilter, applyFilters } from "@/utils/index";
 
 export class UserRepository implements IUserRepository {
   private readonly repo: Repository<UserEntity>;

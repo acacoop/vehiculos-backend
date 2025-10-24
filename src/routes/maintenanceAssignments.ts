@@ -10,8 +10,8 @@ import {
   requireRole,
   requireVehiclePermissionFromParam,
 } from "@/middleware/permission";
-import { UserRoleEnum } from "@/utils";
-import { PermissionType } from "@/utils";
+import { UserRoleEnum } from "@/enums/UserRoleEnum";
+import { PermissionType } from "@/enums/PermissionType";
 
 const router = express.Router();
 

@@ -6,10 +6,10 @@ import {
   VehicleACLUpdateSchema,
 } from "@/schemas/vehicleAcl";
 import { asyncHandler } from "@/middleware/errorHandler";
-import { parsePaginationQuery } from "@/utils";
-import { VehicleACLFilters } from "@/repositories/VehicleACLRepository";
+import { parsePaginationQuery } from "@/utils/index";
+import { VehicleACLFilters } from "@/repositories/interfaces/IVehicleACLRepository";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
-import { extractFilters, extractSearch } from "@/utils";
+import { extractFilters, extractSearch } from "@/utils/index";
 
 /**
  * VehicleACLController - Manages vehicle access control lists
@@ -32,15 +32,11 @@ export class VehicleACLController extends BaseController<VehicleACLFilters> {
 
     // Extract filters
     const filters = extractFilters<VehicleACLFilters>(req.query, [
+      "active",
       "userId",
       "vehicleId",
       "permission",
     ]);
-
-    // Handle activeAt separately as it needs Date conversion
-    if (req.query.activeAt && typeof req.query.activeAt === "string") {
-      filters.activeAt = new Date(req.query.activeAt);
-    }
 
     const options: RepositoryFindOptions<VehicleACLFilters> = {
       pagination: { limit, offset },
@@ -86,9 +82,8 @@ export class VehicleACLController extends BaseController<VehicleACLFilters> {
   public getActiveForUser = asyncHandler(
     async (req: Request, res: Response) => {
       const userId = req.params.userId;
-      const at = req.query.at ? new Date(req.query.at as string) : undefined;
 
-      const acls = await this.service.getActiveACLsForUser(userId, at);
+      const acls = await this.service.getActiveACLsForUser(userId);
 
       this.sendResponse(res, acls, "Active ACLs for user");
     },

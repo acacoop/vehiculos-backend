@@ -1,6 +1,10 @@
 import { Repository, DataSource } from "typeorm";
 import { UserRole } from "@/entities/UserRole";
-import { UserRoleEnum } from "@/utils";
+import { UserRoleEnum } from "@/enums/UserRoleEnum";
+import {
+  UserRoleFilters,
+  IUserRoleRepository,
+} from "@/repositories/interfaces/IUserRoleRepository";
 import {
   applySearchFilter,
   applyFilters,
@@ -11,13 +15,7 @@ import {
   resolvePagination,
 } from "@/repositories/interfaces/common";
 
-export interface UserRoleFilters {
-  userId?: string;
-  role?: UserRoleEnum;
-  active?: boolean; // true = apply active filter, false/undefined = don't apply
-}
-
-export class UserRoleRepository {
+export class UserRoleRepository implements IUserRoleRepository {
   private readonly repo: Repository<UserRole>;
 
   constructor(dataSource: DataSource) {

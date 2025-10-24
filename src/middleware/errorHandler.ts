@@ -71,6 +71,26 @@ export const globalErrorHandler = (
 ): void => {
   res.set("Content-Type", "application/problem+json");
 
+  // Handle JSON parsing errors (from body-parser)
+  if (
+    err instanceof SyntaxError &&
+    req.headers["content-type"]?.includes("application/json")
+  ) {
+    const problem = createProblemDetails(
+      400,
+      "Invalid JSON",
+      "The request body contains invalid JSON. Please ensure your JSON is properly formatted without trailing commas or syntax errors.",
+      "https://example.com/problems/invalid-json",
+      req.originalUrl,
+      {
+        hint: "Common issues: trailing commas, missing quotes, invalid escape sequences",
+        contentType: req.headers["content-type"],
+      },
+    );
+    res.status(400).json(problem);
+    return;
+  }
+
   if (err instanceof AppError) {
     const problem = createProblemDetails(
       err.statusCode,

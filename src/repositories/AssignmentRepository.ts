@@ -8,9 +8,11 @@ import {
   RepositoryFindOptions,
   resolvePagination,
 } from "@/repositories/interfaces/common";
-import { applySearchFilter, applyFilters, applyActiveFilter } from "@/utils";
-
-export type { AssignmentFilters };
+import {
+  applySearchFilter,
+  applyFilters,
+  applyActiveFilter,
+} from "@/utils/index";
 
 export class AssignmentRepository implements IAssignmentRepository {
   private readonly repo: Repository<Assignment>;

@@ -3,7 +3,7 @@ import { UserRole } from "@/entities/UserRole";
 import { User } from "@/entities/User";
 import { Repository } from "typeorm";
 import { AppError } from "@/middleware/errorHandler";
-import { UserRoleEnum } from "@/utils";
+import { UserRoleEnum } from "@/enums/UserRoleEnum";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import { applyOverlapCheck } from "@/utils/query/helpers";
 

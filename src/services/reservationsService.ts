@@ -135,17 +135,16 @@ export class ReservationsService {
 
     // Check for overlapping reservations
     const overlapQuery = this.repo.qb();
-    applyOverlapCheck(
-      overlapQuery,
-      vehicleId,
-      startDateStr,
-      endDateStr,
-      undefined, // excludeId
-      "r.vehicle.id",
-      "r.startDate",
-      "r.endDate",
-      "r.id",
-    );
+    applyOverlapCheck(overlapQuery, {
+      entityId: vehicleId,
+      entityField: "r.vehicle.id",
+      startDate: startDateStr,
+      endDate: endDateStr,
+      excludeId: undefined,
+      startField: "r.startDate",
+      endField: "r.endDate",
+      idField: "r.id",
+    });
     const overlap = await overlapQuery.getOne();
     if (overlap) {
       throw new Error(

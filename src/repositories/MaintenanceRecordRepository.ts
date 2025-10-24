@@ -8,9 +8,7 @@ import {
   RepositoryFindOptions,
   resolvePagination,
 } from "@/repositories/interfaces/common";
-import { applySearchFilter, applyFilters } from "@/utils";
-
-export type { MaintenanceRecordFilters };
+import { applySearchFilter, applyFilters } from "@/utils/index";
 
 export class MaintenanceRecordRepository
   implements IMaintenanceRecordRepository

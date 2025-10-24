@@ -8,10 +8,7 @@ import {
   RepositoryFindOptions,
   resolvePagination,
 } from "@/repositories/interfaces/common";
-import { applySearchFilter, applyFilters } from "@/utils";
-
-// Re-export types for convenience
-export type { VehicleModelFilters };
+import { applySearchFilter, applyFilters } from "@/utils/index";
 
 export class VehicleModelRepository implements IVehicleModelRepository {
   private readonly repo: Repository<VehicleModel>;
