@@ -6,10 +6,7 @@ import {
   validateUserExists,
   validateVehicleExists,
 } from "@/utils/validation/entity";
-import {
-  validateDateOnlyFormat,
-  validateEndDateAfterStartDate,
-} from "@/utils/validation/date";
+import { validateEndDateAfterStartDate } from "@/utils/validation/date";
 import {
   IReservationRepository,
   ReservationFilters,
@@ -129,8 +126,6 @@ export class ReservationsService {
     // Validate date format
     const startDateStr = startDate.toISOString().split("T")[0];
     const endDateStr = endDate.toISOString().split("T")[0];
-    validateDateOnlyFormat(startDateStr, "startDate");
-    validateDateOnlyFormat(endDateStr, "endDate");
     validateEndDateAfterStartDate(startDateStr, endDateStr);
 
     // Check for overlapping reservations
