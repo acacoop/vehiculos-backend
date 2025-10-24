@@ -368,6 +368,7 @@ describe("UserRolesService", () => {
       mockUserRoleRepo.seedUserRoles([existingRole]);
 
       // Configure the mock query builder to return the overlapping role
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockUserRoleRepo as any).mockQb.getOne.mockResolvedValue(existingRole);
 
       await expect(
