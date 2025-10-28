@@ -1395,10 +1395,7 @@ export async function loadSampleData(): Promise<SampleDataStats> {
 }
 
 // Only run if this file is executed directly (not imported)
-if (
-  import.meta.url === `file://${fileURLToPath(import.meta.url)}` ||
-  fileURLToPath(import.meta.url) === process.argv[1]
-) {
+if (fileURLToPath(import.meta.url) === process.argv[1]) {
   loadSampleData()
     .then(() => {
       console.log("\n🎉 Sample data script completed successfully!");
