@@ -481,10 +481,7 @@ async function runSync() {
 }
 
 // Only run if this file is executed directly (not imported)
-if (
-  import.meta.url === `file://${fileURLToPath(import.meta.url)}` ||
-  fileURLToPath(import.meta.url) === process.argv[1]
-) {
+if (fileURLToPath(import.meta.url) === process.argv[1]) {
   runSync()
     .then(() => {
       process.exit(0);
