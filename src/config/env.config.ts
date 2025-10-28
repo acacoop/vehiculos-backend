@@ -26,6 +26,7 @@ const envSchema = z.object({
   ENTRA_ALLOWED_CLIENT_IDS: z.string().optional(),
   ENTRA_EXPECTED_ISSUER: z.string().optional(),
   ENTRA_REQUIRED_SCOPE: z.string().optional(),
+  ADMIN: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -57,6 +58,7 @@ export const {
   ENTRA_ALLOWED_CLIENT_IDS,
   ENTRA_EXPECTED_ISSUER,
   ENTRA_REQUIRED_SCOPE,
+  ADMIN,
 } = parsed.data;
 
 export const SERVER_PORT =

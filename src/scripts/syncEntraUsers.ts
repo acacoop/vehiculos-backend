@@ -2,6 +2,7 @@ import {
   ENTRA_CLIENT_ID,
   ENTRA_CLIENT_SECRET,
   ENTRA_TENANT_ID,
+  ADMIN,
 } from "@/config/env.config";
 import { AppDataSource, initializeDatabase } from "@/db";
 import type { User } from "@/schemas/user";
@@ -18,7 +19,8 @@ const VERBOSE =
 
 // Parse admin email from command line argument
 // Usage: npm run sync -- admin@domain.com
-const ADMIN_EMAIL = process.argv.slice(2).find((arg) => arg.includes("@"));
+const ADMIN_EMAIL =
+  process.argv.slice(2).find((arg) => arg.includes("@")) || ADMIN;
 
 const DISABLE_MISSING = true;
 
