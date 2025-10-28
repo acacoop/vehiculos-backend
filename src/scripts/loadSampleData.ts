@@ -1393,8 +1393,7 @@ export async function loadSampleData(): Promise<SampleDataStats> {
   return stats;
 }
 
-// If this script is run directly (not imported)
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   loadSampleData()
     .then(() => {
       console.log("\n🎉 Sample data script completed successfully!");
