@@ -11,6 +11,7 @@ import { UsersService } from "@/services/usersService";
 import { UserRolesService } from "@/services/userRolesService";
 import { UserRoleRepository } from "@/repositories/UserRoleRepository";
 import { UserRoleEnum } from "@/enums/UserRoleEnum";
+import { fileURLToPath } from "node:url";
 
 const VERBOSE =
   process.env.VERBOSE === "1" || process.argv.includes("--verbose");
@@ -479,7 +480,11 @@ async function runSync() {
   await syncUserRoles(usersService, ADMIN_EMAIL);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Only run if this file is executed directly (not imported)
+if (
+  import.meta.url === `file://${fileURLToPath(import.meta.url)}` ||
+  fileURLToPath(import.meta.url) === process.argv[1]
+) {
   runSync()
     .then(() => {
       process.exit(0);

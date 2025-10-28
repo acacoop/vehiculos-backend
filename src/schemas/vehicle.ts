@@ -5,7 +5,10 @@ import { licensePlateRegex } from "@/schemas/validations";
 export const VehicleInputSchema = z.object({
   licensePlate: z.string().regex(licensePlateRegex),
   modelId: z.string().uuid(),
-  year: z.number(),
+  year: z
+    .number()
+    .min(1900)
+    .max(new Date().getFullYear() + 1),
   chassisNumber: z.string().optional(),
   engineNumber: z.string().optional(),
   vehicleType: z.string().optional(),
