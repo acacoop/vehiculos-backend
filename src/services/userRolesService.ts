@@ -109,6 +109,7 @@ export class UserRolesService {
       endDate: data.endTime ?? null,
       startField: "ur.startTime",
       endField: "ur.endTime",
+      idField: "ur.id",
       additionalFilters: {
         "ur.role": data.role,
       },

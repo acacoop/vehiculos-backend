@@ -112,6 +112,9 @@ export class VehicleResponsiblesService {
       startDate,
       endDate,
       excludeId,
+      startField: "vr.startDate",
+      endField: "vr.endDate",
+      idField: "vr.id",
     });
 
     const overlap = await qb.getOne();
