@@ -1939,12 +1939,10 @@ components:
         id:
           type: string
           format: uuid
-        vehicleId:
-          type: string
-          format: uuid
-        userId:
-          type: string
-          format: uuid
+        user:
+          $ref: "#/components/schemas/User"
+        vehicle:
+          $ref: "#/components/schemas/Vehicle"
         date:
           type: string
           format: date-time
@@ -1955,8 +1953,8 @@ components:
           type: string
           format: date-time
       required:
-        - vehicleId
-        - userId
+        - user
+        - vehicle
         - date
         - kilometers
 
@@ -2143,6 +2141,11 @@ components:
             name:
               type: string
               example: "Corolla"
+            vehicleType:
+              type: string
+              nullable: true
+              description: "Tipo de vehículo (sedán, pickup, SUV, utilitario, etc.)"
+              example: "SUV"
             brand:
               type: object
               properties:
@@ -2175,11 +2178,6 @@ components:
           nullable: true
           description: "Número de motor"
           example: "1NZ-FE-987654321"
-        vehicleType:
-          type: string
-          nullable: true
-          description: "Tipo de vehículo (sedán, pickup, SUV, utilitario, etc.)"
-          example: "SUV"
         transmission:
           type: string
           nullable: true
@@ -2221,9 +2219,6 @@ components:
         engineNumber:
           type: string
           description: "Número de motor"
-        vehicleType:
-          type: string
-          description: "Tipo de vehículo"
         transmission:
           type: string
           description: "Transmisión"
@@ -2253,8 +2248,6 @@ components:
         chassisNumber:
           type: string
         engineNumber:
-          type: string
-        vehicleType:
           type: string
         transmission:
           type: string

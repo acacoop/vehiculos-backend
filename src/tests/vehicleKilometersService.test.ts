@@ -28,7 +28,19 @@ describe("VehicleKilometersService", () => {
     id: "vehicle-1",
     licensePlate: "ABC123",
     year: 2020,
-    model: {} as VehicleModel,
+    model: {
+      id: "model-1",
+      name: "Corolla",
+      vehicleType: "Sedan",
+      brand: {
+        id: "brand-1",
+        name: "Toyota",
+      },
+    } as VehicleModel,
+    chassisNumber: undefined,
+    engineNumber: undefined,
+    transmission: undefined,
+    fuelType: undefined,
   };
 
   const mockKilometers: VehicleKilometersEntity = {
@@ -77,7 +89,7 @@ describe("VehicleKilometersService", () => {
       const result = await service.getByVehicle("vehicle-1");
 
       expect(result).toHaveLength(1);
-      expect(result[0].vehicleId).toBe("vehicle-1");
+      expect(result[0].vehicle.id).toBe("vehicle-1");
       expect(result[0].kilometers).toBe(5000);
       expect(mockRepo.findByVehicle).toHaveBeenCalledWith("vehicle-1");
     });

@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { UserSchema } from "@/schemas/user";
+import { VehicleSchema } from "@/schemas/vehicle";
 
 // Base schema representing a stored kilometers log (includes vehicleId & optional id)
 export const VehicleKilometersLogSchema = z.object({
@@ -11,6 +13,19 @@ export const VehicleKilometersLogSchema = z.object({
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
 });
+
+// Output schema with full user and vehicle objects
+export const VehicleKilometersLogOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  user: UserSchema,
+  vehicle: VehicleSchema,
+  date: z.coerce.date(),
+  kilometers: z.number().int().nonnegative(),
+  // Extended metadata (not always returned)
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+});
+
 // Schema exclusivo para crear (vehicleId viene por la ruta, id lo genera la DB)
 export const VehicleKilometersLogCreateSchema = z.object({
   userId: z.string().uuid(),
@@ -19,6 +34,9 @@ export const VehicleKilometersLogCreateSchema = z.object({
 });
 
 export type VehicleKilometersLog = z.infer<typeof VehicleKilometersLogSchema>;
+export type VehicleKilometersLogOutput = z.infer<
+  typeof VehicleKilometersLogOutputSchema
+>;
 export type VehicleKilometersLogCreate = z.infer<
   typeof VehicleKilometersLogCreateSchema
 >;

@@ -11,7 +11,6 @@ export const VehicleInputSchema = z.object({
     .max(new Date().getFullYear() + 1),
   chassisNumber: z.string().optional(),
   engineNumber: z.string().optional(),
-  vehicleType: z.string().optional(),
   transmission: z.string().optional(),
   fuelType: z.string().optional(),
 });
@@ -28,12 +27,12 @@ export const VehicleSchema = z.object({
   year: z.number(),
   chassisNumber: z.string().optional().nullable(),
   engineNumber: z.string().optional().nullable(),
-  vehicleType: z.string().optional().nullable(),
   transmission: z.string().optional().nullable(),
   fuelType: z.string().optional().nullable(),
   model: z.object({
     id: z.string().uuid(),
     name: z.string(),
+    vehicleType: z.string().optional().nullable(),
     brand: z.object({ id: z.string().uuid(), name: z.string() }),
   }),
 });

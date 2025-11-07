@@ -46,7 +46,6 @@ export class VehiclesService {
       year: input.year,
       chassisNumber: input.chassisNumber,
       engineNumber: input.engineNumber,
-      vehicleType: input.vehicleType,
       transmission: input.transmission,
       fuelType: input.fuelType,
     });
@@ -70,7 +69,6 @@ export class VehiclesService {
     if (typeof data.year === "number") existing.year = data.year;
     if ("chassisNumber" in data) existing.chassisNumber = data.chassisNumber;
     if ("engineNumber" in data) existing.engineNumber = data.engineNumber;
-    if ("vehicleType" in data) existing.vehicleType = data.vehicleType;
     if ("transmission" in data) existing.transmission = data.transmission;
     if ("fuelType" in data) existing.fuelType = data.fuelType;
     const saved = await this.vehicleRepo.save(existing);
@@ -91,12 +89,12 @@ function mapEntity(e: VehicleEntity): Vehicle {
     year: e.year,
     chassisNumber: e.chassisNumber,
     engineNumber: e.engineNumber,
-    vehicleType: e.vehicleType,
     transmission: e.transmission,
     fuelType: e.fuelType,
     model: {
       id: e.model.id,
       name: e.model.name,
+      vehicleType: e.model.vehicleType,
       brand: { id: e.model.brand.id, name: e.model.brand.name },
     },
   } as Vehicle;

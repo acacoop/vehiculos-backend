@@ -2,15 +2,43 @@ import { AppDataSource } from "@/db";
 import { VehicleKilometers as VehicleKilometersEntity } from "@/entities/VehicleKilometers";
 import { User } from "@/entities/User";
 import { Vehicle } from "@/entities/Vehicle";
-import type { VehicleKilometersLog } from "@/schemas/vehicleKilometers";
+import type {
+  VehicleKilometersLog,
+  VehicleKilometersLogOutput,
+} from "@/schemas/vehicleKilometers";
 import { AppError } from "@/middleware/errorHandler";
 import { VehicleKilometersRepository } from "@/repositories/VehicleKilometersRepository";
 
-function mapEntity(e: VehicleKilometersEntity): VehicleKilometersLog {
+function mapEntity(e: VehicleKilometersEntity): VehicleKilometersLogOutput {
   return {
     id: e.id,
-    vehicleId: e.vehicle.id,
-    userId: e.user.id,
+    user: {
+      id: e.user.id,
+      firstName: e.user.firstName,
+      lastName: e.user.lastName,
+      email: e.user.email,
+      cuit: e.user.cuit,
+      active: e.user.active,
+      entraId: e.user.entraId,
+    },
+    vehicle: {
+      id: e.vehicle.id,
+      licensePlate: e.vehicle.licensePlate,
+      year: e.vehicle.year,
+      chassisNumber: e.vehicle.chassisNumber,
+      engineNumber: e.vehicle.engineNumber,
+      transmission: e.vehicle.transmission,
+      fuelType: e.vehicle.fuelType,
+      model: {
+        id: e.vehicle.model.id,
+        name: e.vehicle.model.name,
+        vehicleType: e.vehicle.model.vehicleType,
+        brand: {
+          id: e.vehicle.model.brand.id,
+          name: e.vehicle.model.brand.name,
+        },
+      },
+    },
     date: e.date,
     kilometers: e.kilometers,
   };
@@ -24,11 +52,11 @@ export class VehicleKilometersService {
     this.repo = repo ?? new VehicleKilometersRepository(AppDataSource);
   }
 
-  async getByVehicle(vehicleId: string): Promise<VehicleKilometersLog[]> {
+  async getByVehicle(vehicleId: string): Promise<VehicleKilometersLogOutput[]> {
     const list = await this.repo.findByVehicle(vehicleId);
     return list.map(mapEntity);
   }
-  async create(log: VehicleKilometersLog): Promise<VehicleKilometersLog> {
+  async create(log: VehicleKilometersLog): Promise<VehicleKilometersLogOutput> {
     const prev = await this.repo.findPrev(log.vehicleId, log.date);
     const next = await this.repo.findNext(log.vehicleId, log.date);
     if (prev && log.kilometers < prev.kilometers)
