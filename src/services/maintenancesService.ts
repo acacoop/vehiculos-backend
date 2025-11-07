@@ -25,7 +25,7 @@ export type MaintenanceDTO = MaintenanceSchemaType & {
   daysFrequency?: number;
   observations?: string;
   instructions?: string;
-  categoryName?: string;
+  category?: { name: string };
 };
 
 export interface MaintenanceVehicleAssignment {
@@ -65,7 +65,7 @@ function map(m: Maintenance): MaintenanceDTO & {
   return {
     id: m.id,
     categoryId: m.category.id,
-    categoryName: m.category?.name,
+    category: m.category ? { name: m.category.name } : undefined,
     name: m.name,
     kilometersFrequency: m.kilometersFrequency ?? undefined,
     daysFrequency: m.daysFrequency ?? undefined,

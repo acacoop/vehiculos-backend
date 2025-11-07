@@ -2931,10 +2931,15 @@ components:
           type: string
           nullable: true
           example: "Cambiar filtro y revisar tapa"
-        categoryName:
-          type: string
-          example: "Motor"
-          description: "Category name (included in detailed views)"
+        category:
+          type: object
+          description: "Maintenance category"
+          properties:
+            name:
+              type: string
+              example: "Motor"
+          required:
+            - name
       required:
         - id
         - categoryId
