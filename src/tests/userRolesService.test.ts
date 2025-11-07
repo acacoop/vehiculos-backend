@@ -264,7 +264,7 @@ describe("UserRolesService", () => {
       const result = await service.getAll({ filters: { userId: "1" } });
 
       expect(result.items).toHaveLength(1);
-      expect(result.items[0].userId).toBe("1");
+      expect(result.items[0].user.id).toBe("1");
     });
 
     it("should filter by activeOnly", async () => {
@@ -326,7 +326,7 @@ describe("UserRolesService", () => {
 
       expect(result).not.toBeNull();
       expect(result.role).toBe(UserRoleEnum.ADMIN);
-      expect(result.userId).toBe("1");
+      expect(result.user.id).toBe("1");
     });
 
     it("should throw error if user not found", async () => {

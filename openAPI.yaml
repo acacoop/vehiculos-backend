@@ -3017,12 +3017,32 @@ components:
           type: integer
           minimum: 0
           example: 90
-        maintenance_name:
-          type: string
-          example: "Cambio de aceite"
-        maintenance_category_name:
-          type: string
-          example: "Motor"
+        maintenance:
+          type: object
+          description: "Maintenance details"
+          properties:
+            name:
+              type: string
+              example: "Cambio de aceite"
+            category:
+              type: object
+              description: "Maintenance category"
+              properties:
+                name:
+                  type: string
+                  example: "Motor"
+              required:
+                - name
+            observations:
+              type: string
+              nullable: true
+              example: "Usar aceite sintético"
+            instructions:
+              type: string
+              nullable: true
+              example: "Cambiar filtro y revisar tapa"
+          required:
+            - name
       required:
         - vehicleId
         - maintenanceId
@@ -3125,14 +3145,34 @@ components:
           type: string
           description: Vehicle license plate
           example: "ABC123"
-        brand:
-          type: string
-          description: Vehicle brand
-          example: "Toyota"
         model:
-          type: string
-          description: Vehicle model
-          example: "Corolla"
+          type: object
+          description: "Vehicle model with nested brand"
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+            name:
+              type: string
+              example: "Corolla"
+            brand:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  example: "11111111-2222-3333-4444-555555555555"
+                name:
+                  type: string
+                  example: "Toyota"
+              required:
+                - id
+                - name
+          required:
+            - id
+            - name
+            - brand
         year:
           type: integer
           minimum: 1900
@@ -3144,7 +3184,6 @@ components:
         - vehicleId
         - maintenanceId
         - licensePlate
-        - brand
         - model
         - year
 
@@ -3167,8 +3206,12 @@ components:
                 kilometersFrequency: 10000
                 daysFrequency: 180
                 licensePlate: "ABC123"
-                brand: "Toyota"
-                model: "Corolla"
+                model:
+                  id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+                  name: "Corolla"
+                  brand:
+                    id: "11111111-2222-3333-4444-555555555555"
+                    name: "Toyota"
                 year: 2020
               - id: "5f879c10-d3b0-4dde-8c14-316f50c93b5b"
                 vehicleId: "fe6ec984-6ce0-4bbe-88a0-421b8f2e8b9d"
@@ -3176,8 +3219,12 @@ components:
                 kilometersFrequency: 10000
                 daysFrequency: 180
                 licensePlate: "DEF456"
-                brand: "Honda"
-                model: "Civic"
+                model:
+                  id: "bbbbbbbb-cccc-dddd-eeee-ffffffffffff"
+                  name: "Civic"
+                  brand:
+                    id: "22222222-3333-4444-5555-666666666666"
+                    name: "Honda"
                 year: 2019
             message: "Found 2 vehicle(s) assigned to maintenance"
 

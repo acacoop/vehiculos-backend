@@ -50,10 +50,12 @@ export interface AssignedMaintenanceDTO {
   daysFrequency?: number;
   observations?: string;
   instructions?: string;
-  maintenance_name: string;
-  maintenance_category_name?: string;
-  maintenance_observations?: string;
-  maintenance_instructions?: string;
+  maintenance: {
+    name: string;
+    category?: { name: string };
+    observations?: string;
+    instructions?: string;
+  };
 }
 
 function map(m: Maintenance): MaintenanceDTO & {
@@ -203,10 +205,14 @@ export class AssignedMaintenancesService {
       daysFrequency: am.daysFrequency ?? undefined,
       observations: am.observations ?? undefined,
       instructions: am.instructions ?? undefined,
-      maintenance_name: am.maintenance.name,
-      maintenance_category_name: am.maintenance.category?.name,
-      maintenance_observations: am.maintenance.observations ?? undefined,
-      maintenance_instructions: am.maintenance.instructions ?? undefined,
+      maintenance: {
+        name: am.maintenance.name,
+        category: am.maintenance.category
+          ? { name: am.maintenance.category.name }
+          : undefined,
+        observations: am.maintenance.observations ?? undefined,
+        instructions: am.maintenance.instructions ?? undefined,
+      },
     };
   }
   async getByVehicle(vehicleId: string) {

@@ -176,8 +176,8 @@ describe("AssignedMaintenancesService", () => {
       expect(result).toHaveLength(2);
       expect(result[0].vehicleId).toBe("v1");
       expect(result[0].maintenanceId).toBe("m1");
-      expect(result[0].maintenance_name).toBe("Oil Change");
-      expect(result[0].maintenance_category_name).toBe("Engine");
+      expect(result[0].maintenance.name).toBe("Oil Change");
+      expect(result[0].maintenance.category?.name).toBe("Engine");
     });
 
     it("should return empty array when vehicle has no assigned maintenances", async () => {
@@ -243,8 +243,8 @@ describe("AssignedMaintenancesService", () => {
 
       expect(result?.observations).toBe("Vehicle specific note");
       expect(result?.instructions).toBe("Special procedure");
-      expect(result?.maintenance_observations).toBe("Check oil level");
-      expect(result?.maintenance_instructions).toBe("Use synthetic oil");
+      expect(result?.maintenance.observations).toBe("Check oil level");
+      expect(result?.maintenance.instructions).toBe("Use synthetic oil");
     });
   });
 
