@@ -20,7 +20,7 @@ import {
   extractSearch,
 } from "@/utils/index";
 
-export class MaintenanceAssignmentsController {
+export class AssignedMaintenancesController {
   constructor(private readonly service: AssignedMaintenancesService) {}
 
   getAll = asyncHandler(async (req: Request, res: Response) => {
@@ -66,12 +66,12 @@ export class MaintenanceAssignmentsController {
   getByMaintenance = asyncHandler(async (req: Request, res: Response) => {
     const maintenanceId = req.params.maintenanceId;
 
-    const maintenanceAssignments =
+    const assignedMaintenances =
       await this.service.getByMaintenance(maintenanceId);
 
     const response: ApiResponse<AssignedMaintenanceDTO[]> = {
       status: "success",
-      data: maintenanceAssignments,
+      data: assignedMaintenances,
     };
 
     res.status(200).json(response);
@@ -190,14 +190,14 @@ export class MaintenanceAssignmentsController {
   });
 }
 
-export const createMaintenanceAssignmentsController = (
+export const createAssignedMaintenancesController = (
   service?: AssignedMaintenancesService,
 ) => {
   const svc =
     service ??
     new ServiceFactory(AppDataSource).createAssignedMaintenancesService();
-  return new MaintenanceAssignmentsController(svc);
+  return new AssignedMaintenancesController(svc);
 };
 
-export const maintenanceAssignmentsController =
-  createMaintenanceAssignmentsController();
+export const assignedMaintenancesController =
+  createAssignedMaintenancesController();

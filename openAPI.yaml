@@ -1108,14 +1108,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateMaintenanceAssignmentInput"
+              $ref: "#/components/schemas/UpdateAssignedMaintenanceInput"
       responses:
         "200":
           description: Maintenance assignment updated successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MaintenanceAssignmentResponse"
+                $ref: "#/components/schemas/AssignedMaintenanceResponse"
               example:
                 status: "success"
                 message: "Maintenance assignment updated successfully"
@@ -3189,7 +3189,7 @@ components:
               items:
                 $ref: "#/components/schemas/AssignedMaintenance"
 
-    UpdateMaintenanceAssignmentInput:
+    UpdateAssignedMaintenanceInput:
       type: object
       properties:
         kilometersFrequency:
@@ -3205,14 +3205,6 @@ components:
       example:
         kilometersFrequency: 10000
         daysFrequency: 90
-
-    MaintenanceAssignmentResponse:
-      allOf:
-        - $ref: "#/components/schemas/ApiResponse"
-        - type: object
-          properties:
-            data:
-              $ref: "#/components/schemas/AssignedMaintenance"
 
     # MAINTENANCE VEHICLE ASSIGNMENT SCHEMAS
     MaintenanceVehicleAssignment:

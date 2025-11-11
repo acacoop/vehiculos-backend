@@ -6,12 +6,9 @@ import {
   requireRole,
   requireVehiclePermissionFromParam,
   requireVehiclePermissionFromBody,
-  requireEntityVehiclePermission,
 } from "@/middleware/permission";
 import { UserRoleEnum } from "@/enums/UserRoleEnum";
 import { PermissionType } from "@/enums/PermissionType";
-import { ServiceFactory } from "@/factories/serviceFactory";
-import { AppDataSource } from "@/db";
 
 const router = express.Router();
 const controller = createReservationsController();
@@ -21,10 +18,9 @@ router.get("/", requireRole(UserRoleEnum.ADMIN), controller.getAll);
 router.get(
   "/:id",
   validateUUIDParam("id"),
-  requireEntityVehiclePermission(
-    new ServiceFactory(AppDataSource).createReservationsService(),
-    PermissionType.READ,
-  ),
+  // TODO: Implement proper vehicle permission checking for reservations
+  // Currently using admin-only access until vehicle permission logic is implemented
+  requireRole(UserRoleEnum.ADMIN),
   controller.getById,
 );
 

@@ -23,7 +23,7 @@ import vehicleResponsiblesRoutes from "@/routes/vehicleResponsibles";
 import userRolesRoutes from "@/routes/userRoles";
 import maintenanceCategoriesRoutes from "@/routes/maintenanceCategories";
 import maintenanceRoutes from "@/routes/maintenancePosibles";
-import assignedMaintenanceRoutes from "@/routes/maintenanceAssignments";
+import assignedMaintenanceRoutes from "@/routes/assignedMaintenances";
 import maintenanceRecordsRoutes from "@/routes/maintenanceRecords";
 import vehicleKilometersRoutes from "@/routes/vehicleKilometers";
 import vehicleBrandsRoutes from "@/routes/vehicleBrands";

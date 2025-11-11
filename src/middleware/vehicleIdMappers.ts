@@ -1,7 +1,6 @@
 import { AppDataSource } from "@/db";
 import { AssignedMaintenance } from "@/entities/AssignedMaintenance";
 import { MaintenanceRecord } from "@/entities/MaintenanceRecord";
-import { Assignment } from "@/entities/Assignment";
 import { PermissionRequest } from "@/middleware/permission";
 
 /**
@@ -67,22 +66,11 @@ export const vehicleIdFromMaintenanceRecord = async (
 };
 
 /**
- * Maps assignment ID from params to vehicle ID by looking up the assignment.
- * Useful for GET /assignments/:id endpoints.
+ * Maps maintenance record DTO to vehicle ID.
+ * Useful for maintenance record DTOs returned by the service.
  */
-export const vehicleIdFromAssignment = async (
-  req: PermissionRequest,
-): Promise<string | null> => {
-  const assignmentId = req.params?.id;
-  if (!assignmentId) {
-    return null;
-  }
-
-  const repo = AppDataSource.getRepository(Assignment);
-  const assignment = await repo.findOne({
-    where: { id: assignmentId },
-    relations: ["vehicle"],
-  });
-
-  return assignment?.vehicle?.id ?? null;
+export const vehicleIdFromMaintenanceRecordDTO = (
+  entity: { assignedMaintenance?: { vehicle?: { id?: string } } } | null,
+): string | null | undefined => {
+  return entity?.assignedMaintenance?.vehicle?.id ?? null;
 };
