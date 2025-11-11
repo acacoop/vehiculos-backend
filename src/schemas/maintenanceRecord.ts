@@ -11,3 +11,55 @@ export const MaintenanceRecordSchema = z.object({
 });
 
 export type MaintenanceRecord = z.infer<typeof MaintenanceRecordSchema>;
+
+// DTO for maintenance record with full nested objects
+export interface MaintenanceRecordDTO {
+  id: string;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    cuit: string;
+    email: string;
+    entraId: string;
+    active: boolean;
+  };
+  assignedMaintenance: {
+    id: string;
+    vehicle: {
+      id: string;
+      licensePlate: string;
+      year: number;
+      chassisNumber?: string | null;
+      engineNumber?: string | null;
+      transmission?: string | null;
+      fuelType?: string | null;
+      model: {
+        id: string;
+        name: string;
+        vehicleType?: string | null;
+        brand: {
+          id: string;
+          name: string;
+        };
+      };
+    };
+    maintenance: {
+      id: string;
+      categoryId: string;
+      category: { name: string };
+      name: string;
+      kilometersFrequency?: number;
+      daysFrequency?: number;
+      observations?: string;
+      instructions?: string;
+    };
+    kilometersFrequency?: number;
+    daysFrequency?: number;
+    observations?: string;
+    instructions?: string;
+  };
+  date: Date;
+  kilometers: number;
+  notes?: string;
+}

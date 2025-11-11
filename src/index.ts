@@ -23,12 +23,12 @@ import vehicleResponsiblesRoutes from "@/routes/vehicleResponsibles";
 import userRolesRoutes from "@/routes/userRoles";
 import maintenanceCategoriesRoutes from "@/routes/maintenanceCategories";
 import maintenanceRoutes from "@/routes/maintenancePosibles";
-import assignedMaintenanceRoutes from "@/routes/maintenanceAssignments";
+import assignedMaintenanceRoutes from "@/routes/assignedMaintenances";
 import maintenanceRecordsRoutes from "@/routes/maintenanceRecords";
-import vehicleKilometersRoutes from "@/routes/vehicleKilometers";
 import vehicleBrandsRoutes from "@/routes/vehicleBrands";
 import vehicleModelsRoutes from "@/routes/vehicleModels";
 import vehicleACLRoutes from "@/routes/vehicleACL";
+import vehicleKilometersLogsRoutes from "@/routes/vehicleKilometersLogs";
 
 import { SERVER_PORT } from "@/config/env.config";
 import { AppDataSource, initializeDatabase } from "@/db";
@@ -80,6 +80,7 @@ app.use("/users", usersRoutes);
 app.use("/vehicles", vehiclesRoutes);
 app.use("/assignments", assignmentsRoutes);
 app.use("/reservations", reservationsRoutes);
+app.use("/vehicle-kilometersLogs", vehicleKilometersLogsRoutes);
 app.use("/vehicle-responsibles", vehicleResponsiblesRoutes);
 app.use("/user-roles", userRolesRoutes);
 app.use("/vehicle-brands", vehicleBrandsRoutes);
@@ -89,7 +90,6 @@ app.use("/maintenance/categories", maintenanceCategoriesRoutes);
 app.use("/maintenance/posibles", maintenanceRoutes);
 app.use("/maintenance/assignments", assignedMaintenanceRoutes);
 app.use("/maintenance/records", maintenanceRecordsRoutes);
-app.use("/vehicles/kilometers", vehicleKilometersRoutes);
 
 // 404 handler
 app.use("*", (req: Request, res: Response) => {

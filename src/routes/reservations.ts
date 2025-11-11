@@ -16,6 +16,15 @@ const controller = createReservationsController();
 router.get("/", requireRole(UserRoleEnum.ADMIN), controller.getAll);
 
 router.get(
+  "/:id",
+  validateUUIDParam("id"),
+  // TODO: Implement proper vehicle permission checking for reservations
+  // Currently using admin-only access until vehicle permission logic is implemented
+  requireRole(UserRoleEnum.ADMIN),
+  controller.getById,
+);
+
+router.get(
   "/user/:id",
   requireRole(UserRoleEnum.ADMIN),
   validateUUIDParam("id"),

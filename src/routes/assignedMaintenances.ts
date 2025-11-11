@@ -1,6 +1,5 @@
 import express from "express";
 import { validateUUIDParam } from "@/middleware/validation";
-import { maintenanceAssignmentsController } from "@/controllers/maintenanceAssignmentsController";
 import { validateBody } from "@/middleware/validation";
 import {
   AssignedMaintenanceSchema,
@@ -12,21 +11,43 @@ import {
 } from "@/middleware/permission";
 import { UserRoleEnum } from "@/enums/UserRoleEnum";
 import { PermissionType } from "@/enums/PermissionType";
+import { assignedMaintenancesController } from "@/controllers/assignedMaintenancesController";
 
 const router = express.Router();
 
 router.get(
-  "/:vehicleId",
+  "/",
+  requireRole(UserRoleEnum.ADMIN),
+  assignedMaintenancesController.getAll,
+);
+
+router.get(
+  "/:assignedMaintenanceId",
+  validateUUIDParam("assignedMaintenanceId"),
+  // TODO: Adjust permissions as needed
+  requireRole(UserRoleEnum.ADMIN),
+  assignedMaintenancesController.getById,
+);
+
+router.get(
+  "/vehicle/:vehicleId",
   validateUUIDParam("vehicleId"),
   requireVehiclePermissionFromParam(PermissionType.READ, "vehicleId"),
-  maintenanceAssignmentsController.getByVehicle,
+  assignedMaintenancesController.getByVehicle,
+);
+
+router.get(
+  "/maintenance/:maintenanceId",
+  validateUUIDParam("maintenanceId"),
+  requireRole(UserRoleEnum.ADMIN),
+  assignedMaintenancesController.getByMaintenance,
 );
 
 router.post(
   "/",
   requireRole(UserRoleEnum.ADMIN),
   validateBody(AssignedMaintenanceSchema),
-  maintenanceAssignmentsController.create,
+  assignedMaintenancesController.create,
 );
 
 router.patch(
@@ -34,14 +55,14 @@ router.patch(
   requireRole(UserRoleEnum.ADMIN),
   validateUUIDParam("id"),
   validateBody(UpdateAssignedMaintenanceSchema),
-  maintenanceAssignmentsController.update,
+  assignedMaintenancesController.update,
 );
 
 router.delete(
   "/:id",
   requireRole(UserRoleEnum.ADMIN),
   validateUUIDParam("id"),
-  maintenanceAssignmentsController.delete,
+  assignedMaintenancesController.delete,
 );
 
 export default router;

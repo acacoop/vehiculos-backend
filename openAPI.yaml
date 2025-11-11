@@ -412,13 +412,126 @@ paths:
         "404":
           description: Vehicle not found
 
-  /vehicles/{id}/kilometers:
+  # VEHICLE KILOMETERS LOGS
+  /vehicle-kilometersLogs:
     get:
-      summary: Get all kilometer logs for a vehicle
+      summary: Get all vehicle kilometers logs with pagination and search
       description: |
-        Returns the chronological list of kilometer readings for a given vehicle.
-        Useful for tracking usage and validating new entries.
-      tags: [Vehicles]
+        Get all kilometer logs across all vehicles with optional search and filters.
+
+        **Search:** `search` - Search across vehicle licensePlate, chassisNumber, user firstName, lastName, email
+
+        **Filters:**
+        - `vehicleId` - Filter by specific vehicle UUID
+        - `userId` - Filter by specific user UUID
+        - `fromDate` - Filter logs from this date onwards (ISO 8601)
+        - `toDate` - Filter logs up to this date (ISO 8601)
+        - `minKilometers` - Filter logs with kilometers >= this value
+        - `maxKilometers` - Filter logs with kilometers <= this value
+      tags: [Vehicle Kilometers Logs]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+        - name: vehicleId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by vehicle ID
+        - name: userId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by user ID
+        - name: fromDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter logs from this date onwards
+        - name: toDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter logs up to this date
+        - name: minKilometers
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+          description: Filter logs with kilometers greater than or equal to this value
+        - name: maxKilometers
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+          description: Filter logs with kilometers less than or equal to this value
+      responses:
+        "200":
+          description: List of kilometer logs retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleKilometersLogListResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      summary: Create a new kilometer log
+      description: |
+        Create a new kilometer log entry. The kilometers value must be chronologically valid:
+        - Must be >= the previous reading (if exists)
+        - Must be <= the next reading (if exists)
+
+        Returns 422 if the kilometers value violates chronological order.
+      tags: [Vehicle Kilometers Logs]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VehicleKilometersLogCreateInput"
+            examples:
+              valid:
+                summary: Valid log entry
+                value:
+                  vehicleId: "650e8400-e29b-41d4-a716-446655440001"
+                  userId: "550e8400-e29b-41d4-a716-446655440000"
+                  date: "2025-02-05T09:00:00Z"
+                  kilometers: 48500
+              invalid:
+                summary: Invalid log (km less than previous)
+                value:
+                  vehicleId: "650e8400-e29b-41d4-a716-446655440001"
+                  userId: "550e8400-e29b-41d4-a716-446655440000"
+                  date: "2025-02-05T09:00:00Z"
+                  kilometers: 40000
+      responses:
+        "201":
+          description: Kilometer log created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleKilometersLogResponse"
+        "422":
+          description: Invalid kilometers value (out of chronological order)
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          description: Vehicle or User not found
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /vehicle-kilometersLogs/{id}:
+    get:
+      summary: Get kilometer log by ID
+      tags: [Vehicle Kilometers Logs]
       parameters:
         - name: id
           in: path
@@ -428,21 +541,22 @@ paths:
             format: uuid
       responses:
         "200":
-          description: List of kilometer logs for the vehicle
+          description: Kilometer log found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/VehicleKilometersLogListResponse"
+                $ref: "#/components/schemas/VehicleKilometersLogResponse"
         "404":
           $ref: "#/components/responses/NotFound"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-    post:
-      summary: Add a new kilometer log for a vehicle
+    patch:
+      summary: Update kilometer log
       description: |
-        Adds a new kilometer reading for a vehicle. The kilometers value must be greater than or equal to the previous reading and less than or equal to the next reading (if inserting out-of-order).
-        Returns error 422 if the value is out of range.
-      tags: [Vehicles]
+        Update an existing kilometer log. The updated kilometers value must maintain chronological order:
+        - Must be >= the previous reading (excluding this record)
+        - Must be <= the next reading (excluding this record)
+
+        Returns 422 if the new kilometers value violates chronological order.
+      tags: [Vehicle Kilometers Logs]
       parameters:
         - name: id
           in: path
@@ -455,37 +569,39 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/VehicleKilometersLogCreateInput"
-            examples:
-              valid:
-                summary: Valid log
-                value:
-                  userId: "550e8400-e29b-41d4-a716-446655440000"
-                  date: "2025-02-05T09:00:00Z"
-                  kilometers: 48500
-              invalid:
-                summary: Invalid log (km less than previous)
-                value:
-                  userId: "550e8400-e29b-41d4-a716-446655440000"
-                  date: "2025-02-05T09:00:00Z"
-                  kilometers: 40000
+              $ref: "#/components/schemas/VehicleKilometersLogUpdateInput"
       responses:
-        "201":
-          description: Kilometer log created successfully
+        "200":
+          description: Kilometer log updated successfully
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/VehicleKilometersLogResponse"
         "422":
-          description: Invalid kilometers value (out of range)
+          description: Invalid kilometers value (out of chronological order)
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
         "400":
           $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      summary: Delete kilometer log
+      tags: [Vehicle Kilometers Logs]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Kilometer log deleted successfully
+        "404":
+          description: Kilometer log not found
 
   # RESERVATIONS
   /reservations:
@@ -647,8 +763,24 @@ paths:
   # MAINTENANCE CATEGORIES
   /maintenance/categories:
     get:
-      summary: Get all maintenance categories
+      summary: Get all maintenance categories with optional filters
+      description: |
+        Get all maintenance categories with optional search and filters.
+
+        **Search:** `search` - Search by category name
+
+        **Filters:**
+        - `name` - Partial match by category name
       tags: [Maintenance]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+        - name: name
+          in: query
+          schema:
+            type: string
+          description: Filter by category name
       responses:
         "200":
           description: List of maintenance categories retrieved successfully
@@ -759,8 +891,31 @@ paths:
   # MAINTENANCE POSIBLES
   /maintenance/posibles:
     get:
-      summary: Get all possible maintenance types
+      summary: Get all possible maintenance types with optional filters
+      description: |
+        Get all possible maintenance types with optional search and filters.
+
+        **Search:** `search` - Search across maintenance name and category name
+
+        **Filters:**
+        - `name` - Partial match by maintenance name
+        - `categoryId` - Filter by maintenance category ID
       tags: [Maintenance]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+        - name: name
+          in: query
+          schema:
+            type: string
+          description: Filter by maintenance name
+        - name: categoryId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by maintenance category ID
       responses:
         "200":
           description: List of possible maintenance types retrieved successfully
@@ -922,6 +1077,42 @@ paths:
 
   # MAINTENANCE ASSIGNMENTS
   /maintenance/assignments:
+    get:
+      summary: Get all maintenance assignments with optional filters
+      description: |
+        Get all maintenance assignments with optional search and filters.
+
+        **Search:** `search` - Search across vehicle licensePlate, maintenance name, and category name
+
+        **Filters:**
+        - `vehicleId` - Filter by vehicle ID
+        - `maintenanceId` - Filter by maintenance type ID
+      tags: [Maintenance]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+        - name: vehicleId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by vehicle ID
+        - name: maintenanceId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by maintenance type ID
+      responses:
+        "200":
+          description: List of maintenance assignments retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignedMaintenanceListResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     post:
       summary: Assign maintenance to a vehicle
       tags: [Maintenance]
@@ -943,7 +1134,7 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-  /maintenance/assignments/{vehicleId}:
+  /maintenance/assignments/vehicle/{vehicleId}:
     get:
       summary: Get all maintenance assignments for a specific vehicle
       tags: [Maintenance]
@@ -961,6 +1152,55 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AssignedMaintenanceListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /maintenance/assignments/maintenance/{maintenanceId}:
+    get:
+      summary: Get all maintenance assignments for a specific maintenance type
+      tags: [Maintenance]
+      parameters:
+        - name: maintenanceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Maintenance type assignments retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignedMaintenanceListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /maintenance/assignments/{assignedMaintenanceId}:
+    get:
+      summary: Get maintenance assignment by ID
+      tags: [Maintenance]
+      parameters:
+        - name: assignedMaintenanceId
+          in: path
+          required: true
+          description: UUID of the maintenance assignment to retrieve
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Maintenance assignment retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignedMaintenanceResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
         "400":
           $ref: "#/components/responses/BadRequest"
         "500":
@@ -984,14 +1224,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateMaintenanceAssignmentInput"
+              $ref: "#/components/schemas/UpdateAssignedMaintenanceInput"
       responses:
         "200":
           description: Maintenance assignment updated successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MaintenanceAssignmentResponse"
+                $ref: "#/components/schemas/AssignedMaintenanceResponse"
               example:
                 status: "success"
                 message: "Maintenance assignment updated successfully"
@@ -1939,12 +2179,10 @@ components:
         id:
           type: string
           format: uuid
-        vehicleId:
-          type: string
-          format: uuid
-        userId:
-          type: string
-          format: uuid
+        user:
+          $ref: "#/components/schemas/User"
+        vehicle:
+          $ref: "#/components/schemas/Vehicle"
         date:
           type: string
           format: date-time
@@ -1955,27 +2193,57 @@ components:
           type: string
           format: date-time
       required:
-        - vehicleId
-        - userId
+        - user
+        - vehicle
         - date
         - kilometers
 
     VehicleKilometersLogCreateInput:
       type: object
       properties:
+        vehicleId:
+          type: string
+          format: uuid
+          description: UUID of the vehicle
         userId:
           type: string
           format: uuid
+          description: UUID of the user recording the kilometers
         date:
           type: string
           format: date-time
+          description: Date and time when the reading was taken
         kilometers:
           type: integer
           minimum: 0
+          description: Kilometers reading (must maintain chronological order)
       required:
+        - vehicleId
         - userId
         - date
         - kilometers
+
+    VehicleKilometersLogUpdateInput:
+      type: object
+      properties:
+        vehicleId:
+          type: string
+          format: uuid
+          description: UUID of the vehicle (optional)
+        userId:
+          type: string
+          format: uuid
+          description: UUID of the user (optional)
+        date:
+          type: string
+          format: date-time
+          description: Date and time when the reading was taken (optional)
+        kilometers:
+          type: integer
+          minimum: 0
+          description: Kilometers reading (must maintain chronological order)
+      minProperties: 1
+      description: At least one field must be provided for update
 
     VehicleKilometersLogResponse:
       allOf:
@@ -2143,6 +2411,11 @@ components:
             name:
               type: string
               example: "Corolla"
+            vehicleType:
+              type: string
+              nullable: true
+              description: "Tipo de vehículo (sedán, pickup, SUV, utilitario, etc.)"
+              example: "SUV"
             brand:
               type: object
               properties:
@@ -2175,11 +2448,6 @@ components:
           nullable: true
           description: "Número de motor"
           example: "1NZ-FE-987654321"
-        vehicleType:
-          type: string
-          nullable: true
-          description: "Tipo de vehículo (sedán, pickup, SUV, utilitario, etc.)"
-          example: "SUV"
         transmission:
           type: string
           nullable: true
@@ -2221,9 +2489,6 @@ components:
         engineNumber:
           type: string
           description: "Número de motor"
-        vehicleType:
-          type: string
-          description: "Tipo de vehículo"
         transmission:
           type: string
           description: "Transmisión"
@@ -2253,8 +2518,6 @@ components:
         chassisNumber:
           type: string
         engineNumber:
-          type: string
-        vehicleType:
           type: string
         transmission:
           type: string
@@ -2938,10 +3201,15 @@ components:
           type: string
           nullable: true
           example: "Cambiar filtro y revisar tapa"
-        categoryName:
-          type: string
-          example: "Motor"
-          description: "Category name (included in detailed views)"
+        category:
+          type: object
+          description: "Maintenance category"
+          properties:
+            name:
+              type: string
+              example: "Motor"
+          required:
+            - name
       required:
         - id
         - categoryId
@@ -3003,31 +3271,32 @@ components:
           type: string
           format: uuid
           example: "b50e8400-e29b-41d4-a716-446655440006"
-        vehicleId:
-          type: string
-          format: uuid
-          example: "650e8400-e29b-41d4-a716-446655440001"
-        maintenanceId:
-          type: string
-          format: uuid
-          example: "a50e8400-e29b-41d4-a716-446655440005"
+        vehicle:
+          $ref: "#/components/schemas/Vehicle"
+        maintenance:
+          $ref: "#/components/schemas/Maintenance"
         kilometersFrequency:
           type: integer
           minimum: 0
+          nullable: true
           example: 10000
         daysFrequency:
           type: integer
           minimum: 0
+          nullable: true
           example: 90
-        maintenance_name:
+        observations:
           type: string
-          example: "Cambio de aceite"
-        maintenance_category_name:
+          nullable: true
+          example: "Additional observations for this assignment"
+        instructions:
           type: string
-          example: "Motor"
+          nullable: true
+          example: "Specific instructions for this vehicle"
       required:
-        - vehicleId
-        - maintenanceId
+        - id
+        - vehicle
+        - maintenance
 
     AssignedMaintenanceInput:
       type: object
@@ -3066,7 +3335,7 @@ components:
               items:
                 $ref: "#/components/schemas/AssignedMaintenance"
 
-    UpdateMaintenanceAssignmentInput:
+    UpdateAssignedMaintenanceInput:
       type: object
       properties:
         kilometersFrequency:
@@ -3082,14 +3351,6 @@ components:
       example:
         kilometersFrequency: 10000
         daysFrequency: 90
-
-    MaintenanceAssignmentResponse:
-      allOf:
-        - $ref: "#/components/schemas/ApiResponse"
-        - type: object
-          properties:
-            data:
-              $ref: "#/components/schemas/AssignedMaintenance"
 
     # MAINTENANCE VEHICLE ASSIGNMENT SCHEMAS
     MaintenanceVehicleAssignment:
@@ -3127,14 +3388,34 @@ components:
           type: string
           description: Vehicle license plate
           example: "ABC123"
-        brand:
-          type: string
-          description: Vehicle brand
-          example: "Toyota"
         model:
-          type: string
-          description: Vehicle model
-          example: "Corolla"
+          type: object
+          description: "Vehicle model with nested brand"
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+            name:
+              type: string
+              example: "Corolla"
+            brand:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  example: "11111111-2222-3333-4444-555555555555"
+                name:
+                  type: string
+                  example: "Toyota"
+              required:
+                - id
+                - name
+          required:
+            - id
+            - name
+            - brand
         year:
           type: integer
           minimum: 1900
@@ -3146,7 +3427,6 @@ components:
         - vehicleId
         - maintenanceId
         - licensePlate
-        - brand
         - model
         - year
 
@@ -3169,8 +3449,12 @@ components:
                 kilometersFrequency: 10000
                 daysFrequency: 180
                 licensePlate: "ABC123"
-                brand: "Toyota"
-                model: "Corolla"
+                model:
+                  id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+                  name: "Corolla"
+                  brand:
+                    id: "11111111-2222-3333-4444-555555555555"
+                    name: "Toyota"
                 year: 2020
               - id: "5f879c10-d3b0-4dde-8c14-316f50c93b5b"
                 vehicleId: "fe6ec984-6ce0-4bbe-88a0-421b8f2e8b9d"
@@ -3178,8 +3462,12 @@ components:
                 kilometersFrequency: 10000
                 daysFrequency: 180
                 licensePlate: "DEF456"
-                brand: "Honda"
-                model: "Civic"
+                model:
+                  id: "bbbbbbbb-cccc-dddd-eeee-ffffffffffff"
+                  name: "Civic"
+                  brand:
+                    id: "22222222-3333-4444-5555-666666666666"
+                    name: "Honda"
                 year: 2019
             message: "Found 2 vehicle(s) assigned to maintenance"
 
@@ -3191,14 +3479,143 @@ components:
           type: string
           format: uuid
           example: "c50e8400-e29b-41d4-a716-446655440007"
-        assignedMaintenanceId:
-          type: string
-          format: uuid
-          example: "b50e8400-e29b-41d4-a716-446655440006"
-        userId:
-          type: string
-          format: uuid
-          example: "550e8400-e29b-41d4-a716-446655440000"
+        user:
+          $ref: "#/components/schemas/User"
+        assignedMaintenance:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: "b50e8400-e29b-41d4-a716-446655440006"
+            vehicle:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  example: "650e8400-e29b-41d4-a716-446655440001"
+                licensePlate:
+                  type: string
+                  example: "ABC123"
+                year:
+                  type: integer
+                  example: 2020
+                chassisNumber:
+                  type: string
+                  nullable: true
+                  example: "CHASSIS123"
+                engineNumber:
+                  type: string
+                  nullable: true
+                  example: "ENGINE123"
+                transmission:
+                  type: string
+                  nullable: true
+                  example: "Manual"
+                fuelType:
+                  type: string
+                  nullable: true
+                  example: "Gasoline"
+                model:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      example: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+                    name:
+                      type: string
+                      example: "Corolla"
+                    vehicleType:
+                      type: string
+                      nullable: true
+                      example: "Sedan"
+                    brand:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          example: "11111111-2222-3333-4444-555555555555"
+                        name:
+                          type: string
+                          example: "Toyota"
+                      required:
+                        - id
+                        - name
+                  required:
+                    - id
+                    - name
+                    - brand
+              required:
+                - id
+                - licensePlate
+                - year
+                - model
+            maintenance:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  example: "a50e8400-e29b-41d4-a716-446655440005"
+                categoryId:
+                  type: string
+                  format: uuid
+                  example: "950e8400-e29b-41d4-a716-446655440004"
+                category:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      example: "Engine Maintenance"
+                  required:
+                    - name
+                name:
+                  type: string
+                  example: "Oil Change"
+                kilometersFrequency:
+                  type: integer
+                  nullable: true
+                  example: 10000
+                daysFrequency:
+                  type: integer
+                  nullable: true
+                  example: 90
+                observations:
+                  type: string
+                  nullable: true
+                  example: "Use synthetic oil"
+                instructions:
+                  type: string
+                  nullable: true
+                  example: "Change filter and check cap"
+              required:
+                - id
+                - categoryId
+                - category
+                - name
+            kilometersFrequency:
+              type: integer
+              nullable: true
+              example: 10000
+            daysFrequency:
+              type: integer
+              nullable: true
+              example: 90
+            observations:
+              type: string
+              nullable: true
+              example: "Additional observations for this assignment"
+            instructions:
+              type: string
+              nullable: true
+              example: "Specific instructions for this vehicle"
+          required:
+            - id
+            - vehicle
+            - maintenance
         date:
           type: string
           format: date-time
@@ -3209,10 +3626,12 @@ components:
           example: 75000
         notes:
           type: string
+          nullable: true
           example: "Mantenimiento realizado según especificaciones del fabricante"
       required:
-        - assignedMaintenanceId
-        - userId
+        - id
+        - user
+        - assignedMaintenance
         - date
         - kilometers
 

@@ -6,6 +6,7 @@
   Or: ts-node-dev --env-file=.env src/scripts/loadSampleData.ts
 */
 
+import { fileURLToPath } from "node:url";
 import { AppDataSource } from "@/db";
 import { User } from "@/entities/User";
 import { Vehicle } from "@/entities/Vehicle";
@@ -1393,8 +1394,8 @@ export async function loadSampleData(): Promise<SampleDataStats> {
   return stats;
 }
 
-// If this script is run directly (not imported)
-if (require.main === module) {
+// Only run if this file is executed directly (not imported)
+if (fileURLToPath(import.meta.url) === process.argv[1]) {
   loadSampleData()
     .then(() => {
       console.log("\n🎉 Sample data script completed successfully!");

@@ -2,6 +2,7 @@ import {
   ENTRA_CLIENT_ID,
   ENTRA_CLIENT_SECRET,
   ENTRA_TENANT_ID,
+  ADMIN,
 } from "@/config/env.config";
 import { AppDataSource, initializeDatabase } from "@/db";
 import type { User } from "@/schemas/user";
@@ -11,13 +12,15 @@ import { UsersService } from "@/services/usersService";
 import { UserRolesService } from "@/services/userRolesService";
 import { UserRoleRepository } from "@/repositories/UserRoleRepository";
 import { UserRoleEnum } from "@/enums/UserRoleEnum";
+import { fileURLToPath } from "node:url";
 
 const VERBOSE =
   process.env.VERBOSE === "1" || process.argv.includes("--verbose");
 
 // Parse admin email from command line argument
 // Usage: npm run sync -- admin@domain.com
-const ADMIN_EMAIL = process.argv.slice(2).find((arg) => arg.includes("@"));
+const ADMIN_EMAIL =
+  process.argv.slice(2).find((arg) => arg.includes("@")) || ADMIN;
 
 const DISABLE_MISSING = true;
 
@@ -479,7 +482,8 @@ async function runSync() {
   await syncUserRoles(usersService, ADMIN_EMAIL);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Only run if this file is executed directly (not imported)
+if (fileURLToPath(import.meta.url) === process.argv[1]) {
   runSync()
     .then(() => {
       process.exit(0);

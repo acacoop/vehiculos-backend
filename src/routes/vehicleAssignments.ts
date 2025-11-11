@@ -1,13 +1,8 @@
 import express from "express";
 import { createAssignmentsController } from "@/controllers/assignmentsController";
 import { validateUUIDParam } from "@/middleware/validation";
-import {
-  requireRole,
-  requireVehiclePermissionWith,
-} from "@/middleware/permission";
+import { requireRole } from "@/middleware/permission";
 import { UserRoleEnum } from "@/enums/UserRoleEnum";
-import { PermissionType } from "@/enums/PermissionType";
-import { vehicleIdFromAssignment } from "@/middleware/vehicleIdMappers";
 
 const router = express.Router();
 const controller = createAssignmentsController();
@@ -17,7 +12,9 @@ router.get("/", requireRole(UserRoleEnum.ADMIN), controller.getAll);
 router.get(
   "/:id",
   validateUUIDParam("id"),
-  requireVehiclePermissionWith(PermissionType.READ, vehicleIdFromAssignment),
+  // TODO: Implement proper vehicle permission checking for assignments
+  // Currently using admin-only access until vehicle permission logic is implemented
+  requireRole(UserRoleEnum.ADMIN),
   controller.getById,
 );
 
