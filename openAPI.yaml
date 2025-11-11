@@ -3341,14 +3341,143 @@ components:
           type: string
           format: uuid
           example: "c50e8400-e29b-41d4-a716-446655440007"
-        assignedMaintenanceId:
-          type: string
-          format: uuid
-          example: "b50e8400-e29b-41d4-a716-446655440006"
-        userId:
-          type: string
-          format: uuid
-          example: "550e8400-e29b-41d4-a716-446655440000"
+        user:
+          $ref: "#/components/schemas/User"
+        assignedMaintenance:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: "b50e8400-e29b-41d4-a716-446655440006"
+            vehicle:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  example: "650e8400-e29b-41d4-a716-446655440001"
+                licensePlate:
+                  type: string
+                  example: "ABC123"
+                year:
+                  type: integer
+                  example: 2020
+                chassisNumber:
+                  type: string
+                  nullable: true
+                  example: "CHASSIS123"
+                engineNumber:
+                  type: string
+                  nullable: true
+                  example: "ENGINE123"
+                transmission:
+                  type: string
+                  nullable: true
+                  example: "Manual"
+                fuelType:
+                  type: string
+                  nullable: true
+                  example: "Gasoline"
+                model:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      example: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+                    name:
+                      type: string
+                      example: "Corolla"
+                    vehicleType:
+                      type: string
+                      nullable: true
+                      example: "Sedan"
+                    brand:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          example: "11111111-2222-3333-4444-555555555555"
+                        name:
+                          type: string
+                          example: "Toyota"
+                      required:
+                        - id
+                        - name
+                  required:
+                    - id
+                    - name
+                    - brand
+              required:
+                - id
+                - licensePlate
+                - year
+                - model
+            maintenance:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                  example: "a50e8400-e29b-41d4-a716-446655440005"
+                categoryId:
+                  type: string
+                  format: uuid
+                  example: "950e8400-e29b-41d4-a716-446655440004"
+                category:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      example: "Engine Maintenance"
+                  required:
+                    - name
+                name:
+                  type: string
+                  example: "Oil Change"
+                kilometersFrequency:
+                  type: integer
+                  nullable: true
+                  example: 10000
+                daysFrequency:
+                  type: integer
+                  nullable: true
+                  example: 90
+                observations:
+                  type: string
+                  nullable: true
+                  example: "Use synthetic oil"
+                instructions:
+                  type: string
+                  nullable: true
+                  example: "Change filter and check cap"
+              required:
+                - id
+                - categoryId
+                - category
+                - name
+            kilometersFrequency:
+              type: integer
+              nullable: true
+              example: 10000
+            daysFrequency:
+              type: integer
+              nullable: true
+              example: 90
+            observations:
+              type: string
+              nullable: true
+              example: "Additional observations for this assignment"
+            instructions:
+              type: string
+              nullable: true
+              example: "Specific instructions for this vehicle"
+          required:
+            - id
+            - vehicle
+            - maintenance
         date:
           type: string
           format: date-time
@@ -3359,10 +3488,12 @@ components:
           example: 75000
         notes:
           type: string
+          nullable: true
           example: "Mantenimiento realizado según especificaciones del fabricante"
       required:
-        - assignedMaintenanceId
-        - userId
+        - id
+        - user
+        - assignedMaintenance
         - date
         - kilometers
 

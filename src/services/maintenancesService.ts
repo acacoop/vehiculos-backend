@@ -19,7 +19,7 @@ import {
   validateVehicleExists,
 } from "@/utils/validation/entity";
 import type { Maintenance as MaintenanceSchemaType } from "@/schemas/maintenance";
-import type { MaintenanceRecord } from "@/schemas/maintenanceRecord";
+import type { MaintenanceRecordDTO } from "@/schemas/maintenanceRecord";
 import type { Vehicle as VehicleSchema } from "@/schemas/vehicle";
 import { Vehicle } from "@/entities/Vehicle";
 import { MaintenanceRecord as MaintenanceRecordEntity } from "@/entities/MaintenanceRecord";
@@ -35,6 +35,22 @@ export type MaintenanceDTO = MaintenanceSchemaType & {
   category?: { name: string };
 };
 
+export interface AssignedMaintenanceDTO {
+  id: string;
+  vehicle: VehicleSchema;
+  maintenance: (MaintenanceDTO & {
+    kilometersFrequency?: number;
+    daysFrequency?: number;
+    observations?: string;
+    instructions?: string;
+    category: { name: string };
+  }) & { id: string };
+  kilometersFrequency?: number;
+  daysFrequency?: number;
+  observations?: string;
+  instructions?: string;
+}
+
 export interface MaintenanceVehicleAssignment {
   id: string;
   vehicleId: string;
@@ -48,20 +64,6 @@ export interface MaintenanceVehicleAssignment {
     brand: { id: string; name: string };
   };
   year: number;
-}
-export interface AssignedMaintenanceDTO {
-  id: string;
-  vehicle: VehicleSchema;
-  maintenance: MaintenanceDTO & {
-    kilometersFrequency?: number;
-    daysFrequency?: number;
-    observations?: string;
-    instructions?: string;
-  };
-  kilometersFrequency?: number;
-  daysFrequency?: number;
-  observations?: string;
-  instructions?: string;
 }
 
 function map(m: Maintenance): MaintenanceDTO & {
@@ -352,28 +354,112 @@ export class MaintenanceRecordsService {
     private readonly assignedRepo: Repository<AssignedMaintenance>,
     private readonly userRepo: Repository<User>,
   ) {}
-  private mapEntity(mr: MaintenanceRecordEntity): MaintenanceRecord {
+  private mapEntity(mr: MaintenanceRecordEntity): MaintenanceRecordDTO {
+    // Defensive checks for relations that might be undefined
+    if (!mr.user) {
+      throw new Error(`MaintenanceRecord ${mr.id} has no associated user`);
+    }
+    if (!mr.assignedMaintenance) {
+      throw new Error(
+        `MaintenanceRecord ${mr.id} has no associated maintenance assignment`,
+      );
+    }
+
     return {
       id: mr.id,
-      assignedMaintenanceId: mr.assignedMaintenance.id,
-      userId: mr.user.id,
+      user: {
+        id: mr.user.id,
+        firstName: mr.user.firstName,
+        lastName: mr.user.lastName,
+        cuit: mr.user.cuit,
+        email: mr.user.email,
+        entraId: mr.user.entraId,
+        active: mr.user.active,
+      },
+      assignedMaintenance: this.mapAssignedMaintenance(mr.assignedMaintenance),
       date: new Date(mr.date),
       kilometers: mr.kilometers,
       notes: mr.notes ?? undefined,
     };
   }
-  async getAll(options?: RepositoryFindOptions<MaintenanceRecordFilters>) {
+
+  private mapAssignedMaintenance(
+    am: AssignedMaintenance,
+  ): AssignedMaintenanceDTO {
+    // Defensive checks for relations that might be undefined
+    if (!am.vehicle) {
+      throw new Error(`AssignedMaintenance ${am.id} has no associated vehicle`);
+    }
+    if (!am.maintenance) {
+      throw new Error(
+        `AssignedMaintenance ${am.id} has no associated maintenance`,
+      );
+    }
+    if (!am.vehicle.model) {
+      throw new Error(`Vehicle ${am.vehicle.id} has no associated model`);
+    }
+    if (!am.vehicle.model.brand) {
+      throw new Error(
+        `Vehicle model ${am.vehicle.model.id} has no associated brand`,
+      );
+    }
+    if (!am.maintenance.category) {
+      throw new Error(
+        `Maintenance ${am.maintenance.id} has no associated category`,
+      );
+    }
+
+    return {
+      id: am.id,
+      vehicle: {
+        id: am.vehicle.id,
+        licensePlate: am.vehicle.licensePlate,
+        year: am.vehicle.year,
+        chassisNumber: am.vehicle.chassisNumber,
+        engineNumber: am.vehicle.engineNumber,
+        transmission: am.vehicle.transmission,
+        fuelType: am.vehicle.fuelType,
+        model: {
+          id: am.vehicle.model.id,
+          name: am.vehicle.model.name,
+          vehicleType: am.vehicle.model.vehicleType ?? undefined,
+          brand: {
+            id: am.vehicle.model.brand.id,
+            name: am.vehicle.model.brand.name,
+          },
+        },
+      },
+      maintenance: {
+        id: am.maintenance.id,
+        categoryId: am.maintenance.category.id,
+        category: { name: am.maintenance.category.name },
+        name: am.maintenance.name,
+        kilometersFrequency: am.maintenance.kilometersFrequency ?? undefined,
+        daysFrequency: am.maintenance.daysFrequency ?? undefined,
+        observations: am.maintenance.observations ?? undefined,
+        instructions: am.maintenance.instructions ?? undefined,
+      },
+      kilometersFrequency: am.kilometersFrequency ?? undefined,
+      daysFrequency: am.daysFrequency ?? undefined,
+      observations: am.observations ?? undefined,
+      instructions: am.instructions ?? undefined,
+    };
+  }
+
+  async getAll(
+    options?: RepositoryFindOptions<MaintenanceRecordFilters>,
+  ): Promise<{ items: MaintenanceRecordDTO[]; total: number }> {
     const [rows, total] = await this.recordRepo.findAndCount(options);
     return {
       items: rows.map((r) => this.mapEntity(r as MaintenanceRecordEntity)),
       total,
     };
   }
-  async getByVehicle(vehicleId: string) {
+  async getByVehicle(vehicleId: string): Promise<MaintenanceRecordDTO[]> {
     const list = await this.recordRepo.findByVehicle(vehicleId);
     return list.map((r) => this.mapEntity(r as MaintenanceRecordEntity));
   }
-  async getById(id: string) {
+  async getById(id: string): Promise<MaintenanceRecordDTO | null> {
     const found = await this.recordRepo.findOne(id);
     return found ? this.mapEntity(found as MaintenanceRecordEntity) : null;
   }
@@ -383,7 +469,7 @@ export class MaintenanceRecordsService {
     date: Date;
     kilometers: number;
     notes?: string;
-  }) {
+  }): Promise<MaintenanceRecordDTO | null> {
     const assigned = await this.assignedRepo.findOne({
       where: { id: data.assignedMaintenanceId },
     });
@@ -399,7 +485,9 @@ export class MaintenanceRecordsService {
     const saved = await this.maintenanceRecordRepo.save(created);
     return this.mapEntity(saved);
   }
-  async getByAssignedMaintenance(assignedMaintenanceId: string) {
+  async getByAssignedMaintenance(
+    assignedMaintenanceId: string,
+  ): Promise<MaintenanceRecordDTO[]> {
     const list = await this.recordRepo.findByAssignedMaintenance(
       assignedMaintenanceId,
     );

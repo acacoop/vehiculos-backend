@@ -32,6 +32,7 @@ export class MaintenanceRecordRepository
       .leftJoinAndSelect("v.model", "model")
       .leftJoinAndSelect("model.brand", "brand")
       .leftJoinAndSelect("am.maintenance", "m")
+      .leftJoinAndSelect("m.category", "mc")
       .leftJoinAndSelect("mr.user", "u")
       .orderBy("mr.date", "DESC");
 
@@ -66,7 +67,16 @@ export class MaintenanceRecordRepository
   }
 
   findOne(id: string) {
-    return this.repo.findOne({ where: { id } });
+    return this.qb()
+      .leftJoinAndSelect("mr.assignedMaintenance", "am")
+      .leftJoinAndSelect("am.vehicle", "v")
+      .leftJoinAndSelect("v.model", "model")
+      .leftJoinAndSelect("model.brand", "brand")
+      .leftJoinAndSelect("am.maintenance", "m")
+      .leftJoinAndSelect("m.category", "mc")
+      .leftJoinAndSelect("mr.user", "u")
+      .where("mr.id = :id", { id })
+      .getOne();
   }
   findByVehicle(vehicleId: string) {
     return this.qb()
@@ -75,6 +85,7 @@ export class MaintenanceRecordRepository
       .leftJoinAndSelect("v.model", "model")
       .leftJoinAndSelect("model.brand", "brand")
       .leftJoinAndSelect("am.maintenance", "m")
+      .leftJoinAndSelect("m.category", "mc")
       .leftJoinAndSelect("mr.user", "u")
       .where("v.id = :vehicleId", { vehicleId })
       .orderBy("mr.date", "DESC")
@@ -87,9 +98,16 @@ export class MaintenanceRecordRepository
     return this.repo.save(entity);
   }
   findByAssignedMaintenance(assignedMaintenanceId: string) {
-    return this.repo.find({
-      where: { assignedMaintenance: { id: assignedMaintenanceId } },
-      order: { date: "DESC" },
-    });
+    return this.qb()
+      .leftJoinAndSelect("mr.assignedMaintenance", "am")
+      .leftJoinAndSelect("am.vehicle", "v")
+      .leftJoinAndSelect("v.model", "model")
+      .leftJoinAndSelect("model.brand", "brand")
+      .leftJoinAndSelect("am.maintenance", "m")
+      .leftJoinAndSelect("m.category", "mc")
+      .leftJoinAndSelect("mr.user", "u")
+      .where("am.id = :assignedMaintenanceId", { assignedMaintenanceId })
+      .orderBy("mr.date", "DESC")
+      .getMany();
   }
 }
