@@ -2,26 +2,26 @@ import { BaseController } from "@/controllers/baseController";
 import { type MaintenanceCategory } from "@/schemas/maintenanceCategory";
 import { MaintenanceCategoriesService } from "@/services/maintenanceCategoriesService";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { MaintenanceCategoryFilters } from "@/repositories/interfaces/IMaintenanceCategoryRepository";
 
 /**
  * MaintenanceCategoriesController - Manages maintenance categories
  * Uses simplified BaseController architecture
  */
-export class MaintenanceCategoriesController extends BaseController {
+export class MaintenanceCategoriesController extends BaseController<MaintenanceCategoryFilters> {
   constructor(private readonly service: MaintenanceCategoriesService) {
     super({
       resourceName: "MaintenanceCategory",
-      allowedFilters: [],
+      allowedFilters: ["name"],
     });
   }
 
   // Implement abstract methods from BaseController
   protected async getAllService(
-    _options: RepositoryFindOptions<Record<string, string>>,
+    options: RepositoryFindOptions<Partial<MaintenanceCategoryFilters>>,
   ) {
-    // Maintenance categories don't typically need pagination, but we'll adapt the response
-    const categories = await this.service.getAll();
-    return { items: categories, total: categories.length };
+    // Now maintenance categories support pagination and search
+    return this.service.getAll(options);
   }
 
   protected async getByIdService(id: string) {

@@ -6,14 +6,27 @@ import {
   requireRole,
   requireVehiclePermissionFromParam,
   requireVehiclePermissionFromBody,
+  requireEntityVehiclePermission,
 } from "@/middleware/permission";
 import { UserRoleEnum } from "@/enums/UserRoleEnum";
 import { PermissionType } from "@/enums/PermissionType";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { AppDataSource } from "@/db";
 
 const router = express.Router();
 const controller = createReservationsController();
 
 router.get("/", requireRole(UserRoleEnum.ADMIN), controller.getAll);
+
+router.get(
+  "/:id",
+  validateUUIDParam("id"),
+  requireEntityVehiclePermission(
+    new ServiceFactory(AppDataSource).createReservationsService(),
+    PermissionType.READ,
+  ),
+  controller.getById,
+);
 
 router.get(
   "/user/:id",

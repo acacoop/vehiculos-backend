@@ -3,11 +3,12 @@ import { createAssignmentsController } from "@/controllers/assignmentsController
 import { validateUUIDParam } from "@/middleware/validation";
 import {
   requireRole,
-  requireVehiclePermissionWith,
+  requireEntityVehiclePermission,
 } from "@/middleware/permission";
 import { UserRoleEnum } from "@/enums/UserRoleEnum";
 import { PermissionType } from "@/enums/PermissionType";
-import { vehicleIdFromAssignment } from "@/middleware/vehicleIdMappers";
+import { ServiceFactory } from "@/factories/serviceFactory";
+import { AppDataSource } from "@/db";
 
 const router = express.Router();
 const controller = createAssignmentsController();
@@ -17,7 +18,11 @@ router.get("/", requireRole(UserRoleEnum.ADMIN), controller.getAll);
 router.get(
   "/:id",
   validateUUIDParam("id"),
-  requireVehiclePermissionWith(PermissionType.READ, vehicleIdFromAssignment),
+  requireEntityVehiclePermission(
+    new ServiceFactory(AppDataSource).createAssignmentsService(),
+    PermissionType.READ,
+    "getWithDetailsById",
+  ),
   controller.getById,
 );
 

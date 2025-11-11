@@ -1,6 +1,14 @@
 import { DataSource, Repository } from "typeorm";
 import { MaintenanceCategory } from "@/entities/MaintenanceCategory";
-import { IMaintenanceCategoryRepository } from "@/repositories/interfaces/IMaintenanceCategoryRepository";
+import {
+  IMaintenanceCategoryRepository,
+  MaintenanceCategoryFilters,
+} from "@/repositories/interfaces/IMaintenanceCategoryRepository";
+import {
+  RepositoryFindOptions,
+  resolvePagination,
+} from "@/repositories/interfaces/common";
+import { applySearchFilter, applyFilters } from "@/utils/index";
 
 export class MaintenanceCategoryRepository
   implements IMaintenanceCategoryRepository
@@ -9,6 +17,31 @@ export class MaintenanceCategoryRepository
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(MaintenanceCategory);
   }
+
+  async findAndCount(
+    options?: RepositoryFindOptions<MaintenanceCategoryFilters>,
+  ): Promise<[MaintenanceCategory[], number]> {
+    const { filters, search, pagination } = options || {};
+    const qb = this.repo.createQueryBuilder("mc").orderBy("mc.name", "ASC");
+
+    // Apply search filter
+    if (search) {
+      applySearchFilter(qb, search, ["mc.name"]);
+    }
+
+    // Apply individual filters
+    applyFilters(qb, filters, {
+      name: { field: "mc.name", operator: "LIKE" },
+    });
+
+    // Pagination
+    const { limit, offset } = resolvePagination(pagination);
+    qb.take(limit);
+    qb.skip(offset);
+
+    return qb.getManyAndCount();
+  }
+
   findAll() {
     return this.repo.find({ order: { name: "ASC" } });
   }

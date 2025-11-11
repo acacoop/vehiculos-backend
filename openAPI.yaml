@@ -647,8 +647,24 @@ paths:
   # MAINTENANCE CATEGORIES
   /maintenance/categories:
     get:
-      summary: Get all maintenance categories
+      summary: Get all maintenance categories with optional filters
+      description: |
+        Get all maintenance categories with optional search and filters.
+
+        **Search:** `search` - Search by category name
+
+        **Filters:**
+        - `name` - Partial match by category name
       tags: [Maintenance]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+        - name: name
+          in: query
+          schema:
+            type: string
+          description: Filter by category name
       responses:
         "200":
           description: List of maintenance categories retrieved successfully
@@ -759,8 +775,31 @@ paths:
   # MAINTENANCE POSIBLES
   /maintenance/posibles:
     get:
-      summary: Get all possible maintenance types
+      summary: Get all possible maintenance types with optional filters
+      description: |
+        Get all possible maintenance types with optional search and filters.
+
+        **Search:** `search` - Search across maintenance name and category name
+
+        **Filters:**
+        - `name` - Partial match by maintenance name
+        - `categoryId` - Filter by maintenance category ID
       tags: [Maintenance]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+        - name: name
+          in: query
+          schema:
+            type: string
+          description: Filter by maintenance name
+        - name: categoryId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by maintenance category ID
       responses:
         "200":
           description: List of possible maintenance types retrieved successfully
@@ -922,6 +961,42 @@ paths:
 
   # MAINTENANCE ASSIGNMENTS
   /maintenance/assignments:
+    get:
+      summary: Get all maintenance assignments with optional filters
+      description: |
+        Get all maintenance assignments with optional search and filters.
+
+        **Search:** `search` - Search across vehicle licensePlate, maintenance name, and category name
+
+        **Filters:**
+        - `vehicleId` - Filter by vehicle ID
+        - `maintenanceId` - Filter by maintenance type ID
+      tags: [Maintenance]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+        - name: vehicleId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by vehicle ID
+        - name: maintenanceId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by maintenance type ID
+      responses:
+        "200":
+          description: List of maintenance assignments retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignedMaintenanceListResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     post:
       summary: Assign maintenance to a vehicle
       tags: [Maintenance]
@@ -943,7 +1018,7 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-  /maintenance/assignments/{vehicleId}:
+  /maintenance/assignments/vehicle/{vehicleId}:
     get:
       summary: Get all maintenance assignments for a specific vehicle
       tags: [Maintenance]
@@ -961,6 +1036,55 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AssignedMaintenanceListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /maintenance/assignments/maintenance/{maintenanceId}:
+    get:
+      summary: Get all maintenance assignments for a specific maintenance type
+      tags: [Maintenance]
+      parameters:
+        - name: maintenanceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Maintenance type assignments retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignedMaintenanceListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /maintenance/assignments/{assignedMaintenanceId}:
+    get:
+      summary: Get maintenance assignment by ID
+      tags: [Maintenance]
+      parameters:
+        - name: assignedMaintenanceId
+          in: path
+          required: true
+          description: UUID of the maintenance assignment to retrieve
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Maintenance assignment retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignedMaintenanceResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
         "400":
           $ref: "#/components/responses/BadRequest"
         "500":
@@ -3001,51 +3125,32 @@ components:
           type: string
           format: uuid
           example: "b50e8400-e29b-41d4-a716-446655440006"
-        vehicleId:
-          type: string
-          format: uuid
-          example: "650e8400-e29b-41d4-a716-446655440001"
-        maintenanceId:
-          type: string
-          format: uuid
-          example: "a50e8400-e29b-41d4-a716-446655440005"
+        vehicle:
+          $ref: "#/components/schemas/Vehicle"
+        maintenance:
+          $ref: "#/components/schemas/Maintenance"
         kilometersFrequency:
           type: integer
           minimum: 0
+          nullable: true
           example: 10000
         daysFrequency:
           type: integer
           minimum: 0
+          nullable: true
           example: 90
-        maintenance:
-          type: object
-          description: "Maintenance details"
-          properties:
-            name:
-              type: string
-              example: "Cambio de aceite"
-            category:
-              type: object
-              description: "Maintenance category"
-              properties:
-                name:
-                  type: string
-                  example: "Motor"
-              required:
-                - name
-            observations:
-              type: string
-              nullable: true
-              example: "Usar aceite sintético"
-            instructions:
-              type: string
-              nullable: true
-              example: "Cambiar filtro y revisar tapa"
-          required:
-            - name
+        observations:
+          type: string
+          nullable: true
+          example: "Additional observations for this assignment"
+        instructions:
+          type: string
+          nullable: true
+          example: "Specific instructions for this vehicle"
       required:
-        - vehicleId
-        - maintenanceId
+        - id
+        - vehicle
+        - maintenance
 
     AssignedMaintenanceInput:
       type: object

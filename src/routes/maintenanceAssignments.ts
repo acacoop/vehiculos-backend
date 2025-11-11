@@ -16,10 +16,31 @@ import { PermissionType } from "@/enums/PermissionType";
 const router = express.Router();
 
 router.get(
-  "/:vehicleId",
+  "/",
+  requireRole(UserRoleEnum.ADMIN),
+  maintenanceAssignmentsController.getAll,
+);
+
+router.get(
+  "/:assignedMaintenanceId",
+  validateUUIDParam("assignedMaintenanceId"),
+  // TODO: Adjust permissions as needed
+  requireRole(UserRoleEnum.ADMIN),
+  maintenanceAssignmentsController.getById,
+);
+
+router.get(
+  "/vehicle/:vehicleId",
   validateUUIDParam("vehicleId"),
   requireVehiclePermissionFromParam(PermissionType.READ, "vehicleId"),
   maintenanceAssignmentsController.getByVehicle,
+);
+
+router.get(
+  "/maintenance/:maintenanceId",
+  validateUUIDParam("maintenanceId"),
+  requireRole(UserRoleEnum.ADMIN),
+  maintenanceAssignmentsController.getByMaintenance,
 );
 
 router.post(

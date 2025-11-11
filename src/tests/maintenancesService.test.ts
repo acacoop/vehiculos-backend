@@ -18,6 +18,7 @@ describe("MaintenancesService", () => {
   beforeEach(() => {
     mockRepo = {
       findAll: jest.fn(),
+      findAndCount: jest.fn(),
       findOne: jest.fn(),
       create: jest.fn(),
       save: jest.fn(),
@@ -56,12 +57,13 @@ describe("MaintenancesService", () => {
   describe("getAll", () => {
     it("should return all maintenances", async () => {
       const mockMaintenances = [createMockMaintenance()];
-      mockRepo.findAll.mockResolvedValue(mockMaintenances);
+      mockRepo.findAndCount.mockResolvedValue([mockMaintenances, 1]);
 
       const result = await service.getAll();
 
-      expect(result).toHaveLength(1);
-      expect(result[0].name).toBe("Oil Change");
+      expect(result.items).toHaveLength(1);
+      expect(result.total).toBe(1);
+      expect(result.items[0].name).toBe("Oil Change");
     });
   });
 

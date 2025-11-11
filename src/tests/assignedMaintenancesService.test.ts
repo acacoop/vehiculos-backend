@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, jest } from "@jest/globals";
 import { AssignedMaintenancesService } from "@/services/maintenancesService";
-import { IAssignedMaintenanceRepository } from "@/repositories/interfaces/IAssignedMaintenanceRepository";
+import {
+  IAssignedMaintenanceRepository,
+  AssignedMaintenanceFilters,
+} from "@/repositories/interfaces/IAssignedMaintenanceRepository";
 import { AssignedMaintenance } from "@/entities/AssignedMaintenance";
 import { Vehicle } from "@/entities/Vehicle";
 import { Maintenance } from "@/entities/Maintenance";
@@ -8,6 +11,7 @@ import { MaintenanceCategory } from "@/entities/MaintenanceCategory";
 import { VehicleModel } from "@/entities/VehicleModel";
 import { VehicleBrand } from "@/entities/VehicleBrand";
 import { Repository, DeleteResult } from "typeorm";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import * as validators from "@/utils/validation/entity";
 
 jest.mock("../utils/validation/entity");
@@ -17,6 +21,13 @@ class MockAssignedMaintenanceRepository
 {
   private assignedMaintenances: AssignedMaintenance[] = [];
   private idCounter = 1;
+
+  async findAndCount(
+    _options?: RepositoryFindOptions<AssignedMaintenanceFilters>,
+  ): Promise<[AssignedMaintenance[], number]> {
+    const items = [...this.assignedMaintenances];
+    return [items, items.length];
+  }
 
   async findByVehicle(vehicleId: string): Promise<AssignedMaintenance[]> {
     return this.assignedMaintenances.filter(
@@ -174,8 +185,8 @@ describe("AssignedMaintenancesService", () => {
       const result = await service.getByVehicle("v1");
 
       expect(result).toHaveLength(2);
-      expect(result[0].vehicleId).toBe("v1");
-      expect(result[0].maintenanceId).toBe("m1");
+      expect(result[0].vehicle.id).toBe("v1");
+      expect(result[0].maintenance.id).toBe("m1");
       expect(result[0].maintenance.name).toBe("Oil Change");
       expect(result[0].maintenance.category?.name).toBe("Engine");
     });
@@ -199,7 +210,7 @@ describe("AssignedMaintenancesService", () => {
       const result = await service.getByVehicle("v1");
 
       expect(result).toHaveLength(1);
-      expect(result[0].vehicleId).toBe("v1");
+      expect(result[0].vehicle.id).toBe("v1");
     });
   });
 
@@ -215,8 +226,8 @@ describe("AssignedMaintenancesService", () => {
 
       expect(result).not.toBeNull();
       expect(result?.id).toBe("am1");
-      expect(result?.vehicleId).toBe("v1");
-      expect(result?.maintenanceId).toBe("m1");
+      expect(result?.vehicle.id).toBe("v1");
+      expect(result?.maintenance.id).toBe("m1");
       expect(result?.kilometersFrequency).toBe(10000);
       expect(result?.daysFrequency).toBe(180);
     });
@@ -272,8 +283,8 @@ describe("AssignedMaintenancesService", () => {
       });
 
       expect(result).not.toBeNull();
-      expect(result?.vehicleId).toBe("v1");
-      expect(result?.maintenanceId).toBe("m1");
+      expect(result?.vehicle.id).toBe("v1");
+      expect(result?.maintenance.id).toBe("m1");
       expect(result?.kilometersFrequency).toBe(5000);
       expect(result?.daysFrequency).toBe(90);
       expect(result?.observations).toBe("Custom observation");

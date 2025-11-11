@@ -1,8 +1,12 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
 import { MaintenanceCategoriesService } from "@/services/maintenanceCategoriesService";
-import { IMaintenanceCategoryRepository } from "@/repositories/interfaces/IMaintenanceCategoryRepository";
+import {
+  IMaintenanceCategoryRepository,
+  MaintenanceCategoryFilters,
+} from "@/repositories/interfaces/IMaintenanceCategoryRepository";
 import { MaintenanceCategory } from "@/entities/MaintenanceCategory";
 import { DeleteResult } from "typeorm";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 class MockMaintenanceCategoryRepository
   implements IMaintenanceCategoryRepository
@@ -12,6 +16,14 @@ class MockMaintenanceCategoryRepository
 
   async findAll(): Promise<MaintenanceCategory[]> {
     return [...this.categories];
+  }
+
+  async findAndCount(
+    _options?: RepositoryFindOptions<MaintenanceCategoryFilters>,
+  ): Promise<[MaintenanceCategory[], number]> {
+    // Simple mock implementation - in real tests you'd implement proper filtering/pagination
+    const items = [...this.categories];
+    return [items, items.length];
   }
 
   async findOne(id: string): Promise<MaintenanceCategory | null> {
@@ -68,7 +80,8 @@ describe("MaintenanceCategoriesService", () => {
   describe("getAll", () => {
     it("should return empty array when no categories exist", async () => {
       const result = await service.getAll();
-      expect(result).toEqual([]);
+      expect(result.items).toEqual([]);
+      expect(result.total).toBe(0);
     });
 
     it("should return all categories", async () => {
@@ -82,8 +95,9 @@ describe("MaintenanceCategoriesService", () => {
 
       const result = await service.getAll();
 
-      expect(result).toHaveLength(2);
-      expect(result[0].name).toBe("Oil Change");
+      expect(result.items).toHaveLength(2);
+      expect(result.total).toBe(2);
+      expect(result.items[0].name).toBe("Oil Change");
     });
   });
 
