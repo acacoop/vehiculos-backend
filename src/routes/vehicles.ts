@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { createVehiclesController } from "@/controllers/vehiclesController";
-import vehicleKilometersRoutes from "@/routes/vehicleKilometers";
 import { validateSchema } from "@/middleware/errorHandler";
 import { validateUUIDParam } from "@/middleware/validation";
 import { VehicleInputSchema, VehicleUpdateSchema } from "@/schemas/vehicle";
@@ -45,7 +44,5 @@ router.delete(
   validateUUIDParam("id"),
   vehiclesController.delete,
 );
-
-router.use("/:id/kilometers", vehicleKilometersRoutes);
 
 export default router;

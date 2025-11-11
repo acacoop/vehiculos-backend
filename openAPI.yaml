@@ -412,13 +412,126 @@ paths:
         "404":
           description: Vehicle not found
 
-  /vehicles/{id}/kilometers:
+  # VEHICLE KILOMETERS LOGS
+  /vehicle-kilometersLogs:
     get:
-      summary: Get all kilometer logs for a vehicle
+      summary: Get all vehicle kilometers logs with pagination and search
       description: |
-        Returns the chronological list of kilometer readings for a given vehicle.
-        Useful for tracking usage and validating new entries.
-      tags: [Vehicles]
+        Get all kilometer logs across all vehicles with optional search and filters.
+
+        **Search:** `search` - Search across vehicle licensePlate, chassisNumber, user firstName, lastName, email
+
+        **Filters:**
+        - `vehicleId` - Filter by specific vehicle UUID
+        - `userId` - Filter by specific user UUID
+        - `fromDate` - Filter logs from this date onwards (ISO 8601)
+        - `toDate` - Filter logs up to this date (ISO 8601)
+        - `minKilometers` - Filter logs with kilometers >= this value
+        - `maxKilometers` - Filter logs with kilometers <= this value
+      tags: [Vehicle Kilometers Logs]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+        - name: vehicleId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by vehicle ID
+        - name: userId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by user ID
+        - name: fromDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter logs from this date onwards
+        - name: toDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter logs up to this date
+        - name: minKilometers
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+          description: Filter logs with kilometers greater than or equal to this value
+        - name: maxKilometers
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+          description: Filter logs with kilometers less than or equal to this value
+      responses:
+        "200":
+          description: List of kilometer logs retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleKilometersLogListResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      summary: Create a new kilometer log
+      description: |
+        Create a new kilometer log entry. The kilometers value must be chronologically valid:
+        - Must be >= the previous reading (if exists)
+        - Must be <= the next reading (if exists)
+
+        Returns 422 if the kilometers value violates chronological order.
+      tags: [Vehicle Kilometers Logs]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VehicleKilometersLogCreateInput"
+            examples:
+              valid:
+                summary: Valid log entry
+                value:
+                  vehicleId: "650e8400-e29b-41d4-a716-446655440001"
+                  userId: "550e8400-e29b-41d4-a716-446655440000"
+                  date: "2025-02-05T09:00:00Z"
+                  kilometers: 48500
+              invalid:
+                summary: Invalid log (km less than previous)
+                value:
+                  vehicleId: "650e8400-e29b-41d4-a716-446655440001"
+                  userId: "550e8400-e29b-41d4-a716-446655440000"
+                  date: "2025-02-05T09:00:00Z"
+                  kilometers: 40000
+      responses:
+        "201":
+          description: Kilometer log created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleKilometersLogResponse"
+        "422":
+          description: Invalid kilometers value (out of chronological order)
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          description: Vehicle or User not found
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /vehicle-kilometersLogs/{id}:
+    get:
+      summary: Get kilometer log by ID
+      tags: [Vehicle Kilometers Logs]
       parameters:
         - name: id
           in: path
@@ -428,21 +541,22 @@ paths:
             format: uuid
       responses:
         "200":
-          description: List of kilometer logs for the vehicle
+          description: Kilometer log found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/VehicleKilometersLogListResponse"
+                $ref: "#/components/schemas/VehicleKilometersLogResponse"
         "404":
           $ref: "#/components/responses/NotFound"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-    post:
-      summary: Add a new kilometer log for a vehicle
+    patch:
+      summary: Update kilometer log
       description: |
-        Adds a new kilometer reading for a vehicle. The kilometers value must be greater than or equal to the previous reading and less than or equal to the next reading (if inserting out-of-order).
-        Returns error 422 if the value is out of range.
-      tags: [Vehicles]
+        Update an existing kilometer log. The updated kilometers value must maintain chronological order:
+        - Must be >= the previous reading (excluding this record)
+        - Must be <= the next reading (excluding this record)
+
+        Returns 422 if the new kilometers value violates chronological order.
+      tags: [Vehicle Kilometers Logs]
       parameters:
         - name: id
           in: path
@@ -455,37 +569,39 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/VehicleKilometersLogCreateInput"
-            examples:
-              valid:
-                summary: Valid log
-                value:
-                  userId: "550e8400-e29b-41d4-a716-446655440000"
-                  date: "2025-02-05T09:00:00Z"
-                  kilometers: 48500
-              invalid:
-                summary: Invalid log (km less than previous)
-                value:
-                  userId: "550e8400-e29b-41d4-a716-446655440000"
-                  date: "2025-02-05T09:00:00Z"
-                  kilometers: 40000
+              $ref: "#/components/schemas/VehicleKilometersLogUpdateInput"
       responses:
-        "201":
-          description: Kilometer log created successfully
+        "200":
+          description: Kilometer log updated successfully
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/VehicleKilometersLogResponse"
         "422":
-          description: Invalid kilometers value (out of range)
+          description: Invalid kilometers value (out of chronological order)
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
         "400":
           $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      summary: Delete kilometer log
+      tags: [Vehicle Kilometers Logs]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Kilometer log deleted successfully
+        "404":
+          description: Kilometer log not found
 
   # RESERVATIONS
   /reservations:
@@ -2085,19 +2201,49 @@ components:
     VehicleKilometersLogCreateInput:
       type: object
       properties:
+        vehicleId:
+          type: string
+          format: uuid
+          description: UUID of the vehicle
         userId:
           type: string
           format: uuid
+          description: UUID of the user recording the kilometers
         date:
           type: string
           format: date-time
+          description: Date and time when the reading was taken
         kilometers:
           type: integer
           minimum: 0
+          description: Kilometers reading (must maintain chronological order)
       required:
+        - vehicleId
         - userId
         - date
         - kilometers
+
+    VehicleKilometersLogUpdateInput:
+      type: object
+      properties:
+        vehicleId:
+          type: string
+          format: uuid
+          description: UUID of the vehicle (optional)
+        userId:
+          type: string
+          format: uuid
+          description: UUID of the user (optional)
+        date:
+          type: string
+          format: date-time
+          description: Date and time when the reading was taken (optional)
+        kilometers:
+          type: integer
+          minimum: 0
+          description: Kilometers reading (must maintain chronological order)
+      minProperties: 1
+      description: At least one field must be provided for update
 
     VehicleKilometersLogResponse:
       allOf:
