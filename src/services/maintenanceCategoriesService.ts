@@ -1,6 +1,10 @@
 import { MaintenanceCategory as MaintenanceCategoryEntity } from "@/entities/MaintenanceCategory";
-import { IMaintenanceCategoryRepository } from "@/repositories/interfaces/IMaintenanceCategoryRepository";
+import {
+  IMaintenanceCategoryRepository,
+  MaintenanceCategoryFilters,
+} from "@/repositories/interfaces/IMaintenanceCategoryRepository";
 import type { MaintenanceCategory } from "@/schemas/maintenanceCategory";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 
 function map(e: MaintenanceCategoryEntity): MaintenanceCategory {
   return { id: e.id, name: e.name };
@@ -8,9 +12,11 @@ function map(e: MaintenanceCategoryEntity): MaintenanceCategory {
 
 export class MaintenanceCategoriesService {
   constructor(private readonly repo: IMaintenanceCategoryRepository) {}
-  async getAll(): Promise<MaintenanceCategory[]> {
-    const list = await this.repo.findAll();
-    return list.map(map);
+  async getAll(
+    options?: RepositoryFindOptions<MaintenanceCategoryFilters>,
+  ): Promise<{ items: MaintenanceCategory[]; total: number }> {
+    const [entities, total] = await this.repo.findAndCount(options);
+    return { items: entities.map(map), total };
   }
   async getById(id: string): Promise<MaintenanceCategory | null> {
     const found = await this.repo.findOne(id);

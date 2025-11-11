@@ -5,22 +5,95 @@ import {
   UpdateAssignedMaintenanceSchema,
 } from "@/schemas/assignMaintance";
 import type { AssignedMaintenance } from "@/schemas/assignMaintance";
-import { AssignedMaintenancesService } from "@/services/maintenancesService";
+import {
+  AssignedMaintenancesService,
+  AssignedMaintenanceDTO,
+} from "@/services/maintenancesService";
 import { ApiResponse } from "@/controllers/baseController";
 import { ServiceFactory } from "@/factories/serviceFactory";
 import { AppDataSource } from "@/db";
+import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { AssignedMaintenanceFilters } from "@/repositories/interfaces/IAssignedMaintenanceRepository";
+import {
+  parsePaginationQuery,
+  extractFilters,
+  extractSearch,
+} from "@/utils/index";
 
-export class MaintenanceAssignmentsController {
+export class AssignedMaintenancesController {
   constructor(private readonly service: AssignedMaintenancesService) {}
+
+  getAll = asyncHandler(async (req: Request, res: Response) => {
+    const { page, limit, offset } = parsePaginationQuery(req.query);
+    const search = extractSearch(req.query);
+    const filters = extractFilters<AssignedMaintenanceFilters>(req.query);
+
+    const options: RepositoryFindOptions<AssignedMaintenanceFilters> = {
+      pagination: { limit, offset },
+      filters,
+      search,
+    };
+
+    const { items, total } = await this.service.getAll(options);
+
+    const response: ApiResponse<AssignedMaintenanceDTO[]> = {
+      status: "success",
+      data: items,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    };
+
+    res.status(200).json(response);
+  });
 
   getByVehicle = asyncHandler(async (req: Request, res: Response) => {
     const vehicleId = req.params.vehicleId;
 
     const maintenanceRecords = await this.service.getByVehicle(vehicleId);
 
-    const response: ApiResponse<AssignedMaintenance[]> = {
+    const response: ApiResponse<AssignedMaintenanceDTO[]> = {
       status: "success",
       data: maintenanceRecords,
+    };
+
+    res.status(200).json(response);
+  });
+
+  getByMaintenance = asyncHandler(async (req: Request, res: Response) => {
+    const maintenanceId = req.params.maintenanceId;
+
+    const assignedMaintenances =
+      await this.service.getByMaintenance(maintenanceId);
+
+    const response: ApiResponse<AssignedMaintenanceDTO[]> = {
+      status: "success",
+      data: assignedMaintenances,
+    };
+
+    res.status(200).json(response);
+  });
+
+  getById = asyncHandler(async (req: Request, res: Response) => {
+    const id = req.params.assignedMaintenanceId;
+
+    const assignedMaintenance = await this.service.getById(id);
+
+    if (!assignedMaintenance) {
+      const response: ApiResponse<null> = {
+        status: "error",
+        message: `Maintenance assignment with ID ${id} was not found`,
+      };
+      res.status(404).json(response);
+      return;
+    }
+
+    const response: ApiResponse<AssignedMaintenanceDTO> = {
+      status: "success",
+      data: assignedMaintenance,
     };
 
     res.status(200).json(response);
@@ -117,14 +190,14 @@ export class MaintenanceAssignmentsController {
   });
 }
 
-export const createMaintenanceAssignmentsController = (
+export const createAssignedMaintenancesController = (
   service?: AssignedMaintenancesService,
 ) => {
   const svc =
     service ??
     new ServiceFactory(AppDataSource).createAssignedMaintenancesService();
-  return new MaintenanceAssignmentsController(svc);
+  return new AssignedMaintenancesController(svc);
 };
 
-export const maintenanceAssignmentsController =
-  createMaintenanceAssignmentsController();
+export const assignedMaintenancesController =
+  createAssignedMaintenancesController();

@@ -27,10 +27,42 @@ describe("MaintenanceRecordsService", () => {
     entraId: "entra-123",
   };
 
+  const mockVehicle: Vehicle = {
+    id: "vehicle-1",
+    licensePlate: "ABC123",
+    year: 2020,
+    chassisNumber: "CHASSIS123",
+    engineNumber: "ENGINE123",
+    transmission: "Manual",
+    fuelType: "Gasoline",
+    model: {
+      id: "model-1",
+      name: "Model X",
+      vehicleType: "Sedan",
+      brand: {
+        id: "brand-1",
+        name: "Brand Y",
+      },
+    },
+  };
+
+  const mockMaintenance: Maintenance = {
+    id: "maintenance-1",
+    name: "Oil Change",
+    kilometersFrequency: 10000,
+    daysFrequency: null,
+    observations: null,
+    instructions: null,
+    category: {
+      id: "category-1",
+      name: "Engine Maintenance",
+    },
+  };
+
   const mockAssignedMaintenance: AssignedMaintenance = {
     id: "assigned-1",
-    vehicle: {} as Vehicle,
-    maintenance: {} as Maintenance,
+    vehicle: mockVehicle,
+    maintenance: mockMaintenance,
     kilometersFrequency: 10000,
     daysFrequency: null,
     observations: null,

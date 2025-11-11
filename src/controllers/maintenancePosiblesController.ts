@@ -9,24 +9,24 @@ import { asyncHandler, AppError } from "@/middleware/errorHandler";
 import { ServiceFactory } from "@/factories/serviceFactory";
 import { AppDataSource } from "@/db";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { MaintenanceFilters } from "@/repositories/interfaces/IMaintenanceRepository";
 
 /**
  * MaintenancePosiblesController - Manages possible maintenances
  * Uses simplified BaseController architecture
  */
-export class MaintenancePosiblesController extends BaseController {
+export class MaintenancePosiblesController extends BaseController<MaintenanceFilters> {
   constructor(private readonly service: MaintenancesService) {
     super({
       resourceName: "Maintenance",
-      allowedFilters: [],
+      allowedFilters: ["name", "categoryId"],
     });
   }
 
   protected async getAllService(
-    _options: RepositoryFindOptions<Record<string, string>>,
+    options: RepositoryFindOptions<Partial<MaintenanceFilters>>,
   ) {
-    const maintenances = await this.service.getAll();
-    return { items: maintenances, total: maintenances.length };
+    return this.service.getAll(options);
   }
 
   protected async getByIdService(id: string) {

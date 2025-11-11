@@ -46,6 +46,20 @@ export class ReservationsController extends BaseController<ReservationFilters> {
     );
   }
 
+  public getById = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const data = await this.getByIdService(id);
+    if (!data) {
+      throw new AppError(
+        "Reservation not found",
+        404,
+        "https://example.com/problems/not-found",
+        "Not Found",
+      );
+    }
+    this.sendResponse(res, data, "Reservation found");
+  });
+
   public getByUser = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     const data = await this.service.getByUserId(id);

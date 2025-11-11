@@ -9,9 +9,12 @@ import { applyOverlapCheck } from "@/utils/query/helpers";
 
 export interface UserRoleDTO {
   id: string;
-  userId: string;
-  userEmail: string;
-  userName: string;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
   role: UserRoleEnum;
   startTime: Date;
   endTime?: Date;
@@ -32,9 +35,12 @@ export class UserRolesService {
 
     return {
       id: userRole.id,
-      userId: userRole.user.id,
-      userEmail: userRole.user.email || "",
-      userName: `${userRole.user.firstName} ${userRole.user.lastName}`.trim(),
+      user: {
+        id: userRole.user.id,
+        firstName: userRole.user.firstName,
+        lastName: userRole.user.lastName,
+        email: userRole.user.email,
+      },
       role: userRole.role,
       startTime: userRole.startTime,
       endTime: userRole.endTime,
