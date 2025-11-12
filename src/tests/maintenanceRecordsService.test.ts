@@ -6,6 +6,14 @@ import { User } from "@/entities/User";
 import { Vehicle } from "@/entities/Vehicle";
 import { Maintenance } from "@/entities/Maintenance";
 import { Repository } from "typeorm";
+import { AppDataSource } from "@/db";
+
+// Mock AppDataSource
+jest.mock("@/db", () => ({
+  AppDataSource: {
+    getRepository: jest.fn(),
+  },
+}));
 
 describe("MaintenanceRecordsService", () => {
   let service: MaintenanceRecordsService;
@@ -97,6 +105,17 @@ describe("MaintenanceRecordsService", () => {
     mockUserRepo = {
       findOne: jest.fn(),
     } as unknown as jest.Mocked<Repository<User>>;
+
+    // Mock AppDataSource.getRepository for validators
+    (AppDataSource.getRepository as jest.Mock).mockImplementation(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (entity: any) => {
+        if (entity === Maintenance) return mockMaintenanceRepo;
+        if (entity === Vehicle) return mockVehicleRepo;
+        if (entity === User) return mockUserRepo;
+        return {};
+      },
+    );
 
     service = new MaintenanceRecordsService(
       mockRecordRepo as unknown as IMaintenanceRecordRepository,
@@ -224,9 +243,9 @@ describe("MaintenanceRecordsService", () => {
         kilometers: 5000,
       };
 
-      const result = await service.create(input);
-
-      expect(result).toBeNull();
+      await expect(service.create(input)).rejects.toThrow(
+        "Maintenance with ID invalid does not exist",
+      );
     });
 
     it("should return null when vehicle not found", async () => {
@@ -241,9 +260,9 @@ describe("MaintenanceRecordsService", () => {
         kilometers: 5000,
       };
 
-      const result = await service.create(input);
-
-      expect(result).toBeNull();
+      await expect(service.create(input)).rejects.toThrow(
+        "Vehicle with ID invalid does not exist",
+      );
     });
 
     it("should return null when user not found", async () => {
