@@ -30,21 +30,6 @@ export type MaintenanceDTO = MaintenanceSchemaType & {
   category?: { name: string };
 };
 
-export interface MaintenanceVehicleAssignment {
-  id: string;
-  vehicleId: string;
-  maintenanceId: string;
-  kilometersFrequency?: number;
-  daysFrequency?: number;
-  licensePlate: string;
-  model: {
-    id: string;
-    name: string;
-    brand: { id: string; name: string };
-  };
-  year: number;
-}
-
 function map(m: Maintenance): MaintenanceDTO & {
   kilometersFrequency?: number;
   daysFrequency?: number;
@@ -154,28 +139,6 @@ export class MaintenancesService {
   async delete(id: string): Promise<boolean> {
     const res = await this.repo.delete(id);
     return res.affected === 1;
-  }
-  async getVehicles(
-    maintenanceId: string,
-  ): Promise<MaintenanceVehicleAssignment[]> {
-    const list = await this.requirementRepo.findByMaintenance(maintenanceId);
-    return list.map((mr) => ({
-      id: mr.id,
-      vehicleId: mr.vehicle.id,
-      maintenanceId: mr.maintenance.id,
-      kilometersFrequency: mr.kilometersFrequency ?? undefined,
-      daysFrequency: mr.daysFrequency ?? undefined,
-      licensePlate: mr.vehicle.licensePlate,
-      model: {
-        id: mr.vehicle.model.id,
-        name: mr.vehicle.model.name,
-        brand: {
-          id: mr.vehicle.model.brand.id,
-          name: mr.vehicle.model.brand.name,
-        },
-      },
-      year: mr.vehicle.year,
-    }));
   }
 }
 

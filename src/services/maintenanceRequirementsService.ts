@@ -5,11 +5,11 @@ import {
 } from "@/repositories/interfaces/IMaintenanceRequirementRepository";
 import {
   validateMaintenanceExists,
-  validateVehicleExists,
+  validateVehicleModelExists,
 } from "@/utils/validation/entity";
-import type { Vehicle as VehicleSchema } from "@/schemas/vehicle";
+import type { VehicleModelType } from "@/schemas/vehicleModel";
 import type { Maintenance as MaintenanceSchemaType } from "@/schemas/maintenance";
-import { Vehicle } from "@/entities/Vehicle";
+import { VehicleModel } from "@/entities/VehicleModel";
 import { Maintenance } from "@/entities/Maintenance";
 import { Repository } from "typeorm";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
@@ -17,7 +17,7 @@ import { AppError } from "@/middleware/errorHandler";
 
 export interface MaintenanceRequirementDTO {
   id: string;
-  vehicle: VehicleSchema;
+  model: VehicleModelType;
   maintenance: MaintenanceSchemaType & {
     kilometersFrequency?: number;
     daysFrequency?: number;
@@ -36,22 +36,37 @@ export interface MaintenanceRequirementDTO {
 export class MaintenanceRequirementsService {
   constructor(
     private readonly repo: IMaintenanceRequirementRepository,
-    private readonly vehicleRepo: Repository<Vehicle>,
+    private readonly vehicleModelRepo: Repository<VehicleModel>,
     private readonly maintenanceRepo: Repository<Maintenance>,
   ) {}
 
   async getAll(
     options?: RepositoryFindOptions<MaintenanceRequirementFilters>,
   ): Promise<{ items: MaintenanceRequirementDTO[]; total: number }> {
-    const [entities, total] = await this.repo.findAndCount(options);
-    return { items: entities.map((e) => this.map(e)), total };
+    const [entities, _total] = await this.repo.findAndCount(options);
+    // Filter out invalid entities (those without required relations)
+    const validEntities = entities.filter(
+      (e) =>
+        e.model && e.maintenance && e.model.brand && e.maintenance.category,
+    );
+
+    if (validEntities.length < entities.length) {
+      console.warn(
+        `Found ${entities.length - validEntities.length} maintenance requirements with missing relations`,
+      );
+    }
+
+    return {
+      items: validEntities.map((e) => this.map(e)),
+      total: validEntities.length,
+    };
   }
 
   map(mr: MaintenanceRequirementEntity): MaintenanceRequirementDTO {
     // Defensive checks for relations that might be undefined
-    if (!mr.vehicle) {
+    if (!mr.model) {
       throw new Error(
-        `MaintenanceRequirement ${mr.id} has no associated vehicle`,
+        `MaintenanceRequirement ${mr.id} has no associated model`,
       );
     }
     if (!mr.maintenance) {
@@ -59,13 +74,8 @@ export class MaintenanceRequirementsService {
         `MaintenanceRequirement ${mr.id} has no associated maintenance`,
       );
     }
-    if (!mr.vehicle.model) {
-      throw new Error(`Vehicle ${mr.vehicle.id} has no associated model`);
-    }
-    if (!mr.vehicle.model.brand) {
-      throw new Error(
-        `Vehicle model ${mr.vehicle.model.id} has no associated brand`,
-      );
+    if (!mr.model.brand) {
+      throw new Error(`Vehicle model ${mr.model.id} has no associated brand`);
     }
     if (!mr.maintenance.category) {
       throw new Error(
@@ -75,22 +85,13 @@ export class MaintenanceRequirementsService {
 
     return {
       id: mr.id,
-      vehicle: {
-        id: mr.vehicle.id,
-        licensePlate: mr.vehicle.licensePlate,
-        year: mr.vehicle.year,
-        chassisNumber: mr.vehicle.chassisNumber ?? undefined,
-        engineNumber: mr.vehicle.engineNumber ?? undefined,
-        transmission: mr.vehicle.transmission ?? undefined,
-        fuelType: mr.vehicle.fuelType ?? undefined,
-        model: {
-          id: mr.vehicle.model.id,
-          name: mr.vehicle.model.name,
-          vehicleType: mr.vehicle.model.vehicleType ?? undefined,
-          brand: {
-            id: mr.vehicle.model.brand.id,
-            name: mr.vehicle.model.brand.name,
-          },
+      model: {
+        id: mr.model.id,
+        name: mr.model.name,
+        vehicleType: mr.model.vehicleType ?? undefined,
+        brand: {
+          id: mr.model.brand.id,
+          name: mr.model.brand.name,
         },
       },
       maintenance: {
@@ -118,7 +119,7 @@ export class MaintenanceRequirementsService {
   }
 
   async create(data: {
-    vehicleId: string;
+    modelId: string;
     maintenanceId: string;
     kilometersFrequency?: number;
     daysFrequency?: number;
@@ -127,15 +128,15 @@ export class MaintenanceRequirementsService {
     startDate: string;
     endDate?: string | null;
   }): Promise<MaintenanceRequirementDTO> {
-    const { vehicleId, maintenanceId, startDate, endDate } = data;
+    const { modelId, maintenanceId, startDate, endDate } = data;
 
-    // Validate vehicle and maintenance exist
-    await validateVehicleExists(vehicleId);
+    // Validate model and maintenance exist
+    await validateVehicleModelExists(modelId);
     await validateMaintenanceExists(maintenanceId);
 
     // Check for overlapping requirements
     const overlapping = await this.repo.findOverlapping(
-      vehicleId,
+      modelId,
       maintenanceId,
       startDate,
       endDate ?? null,
@@ -143,25 +144,25 @@ export class MaintenanceRequirementsService {
 
     if (overlapping.length > 0) {
       throw new AppError(
-        `A maintenance requirement for this vehicle and maintenance already exists with overlapping dates`,
+        `A maintenance requirement for this model and maintenance already exists with overlapping dates`,
         409,
         "https://example.com/problems/overlapping-requirement",
         "Overlapping Requirement",
       );
     }
 
-    const vehicle = await this.vehicleRepo.findOne({
-      where: { id: vehicleId },
-      relations: ["model", "model.brand"],
+    const model = await this.vehicleModelRepo.findOne({
+      where: { id: modelId },
+      relations: ["brand"],
     });
     const maintenance = await this.maintenanceRepo.findOne({
       where: { id: maintenanceId },
       relations: ["category"],
     });
 
-    if (!vehicle || !maintenance) {
+    if (!model || !maintenance) {
       throw new AppError(
-        "Vehicle or Maintenance not found",
+        "Vehicle Model or Maintenance not found",
         404,
         "https://example.com/problems/not-found",
         "Not Found",
@@ -169,7 +170,7 @@ export class MaintenanceRequirementsService {
     }
 
     const created = this.repo.create({
-      vehicle,
+      model,
       maintenance,
       kilometersFrequency: data.kilometersFrequency ?? null,
       daysFrequency: data.daysFrequency ?? null,
@@ -203,7 +204,7 @@ export class MaintenanceRequirementsService {
       patch.endDate !== undefined ? patch.endDate : existing.endDate;
 
     const overlapping = await this.repo.findOverlapping(
-      existing.vehicle.id,
+      existing.model.id,
       existing.maintenance.id,
       newStartDate,
       newEndDate,

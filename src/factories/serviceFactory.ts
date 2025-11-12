@@ -112,11 +112,11 @@ export class ServiceFactory {
     const requirementRepo = new MaintenanceRequirementRepository(
       this.dataSource,
     );
-    const vehicleRepo = this.dataSource.getRepository(Vehicle);
+    const vehicleModelRepo = this.dataSource.getRepository(VehicleModel);
     const maintenanceRepo = this.dataSource.getRepository(Maintenance);
     return new MaintenanceRequirementsService(
       requirementRepo,
-      vehicleRepo,
+      vehicleModelRepo,
       maintenanceRepo,
     );
   }

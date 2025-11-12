@@ -42,23 +42,49 @@ type SampleDataStats = {
 
 async function clearSampleData(): Promise<void> {
   // Use DELETE with 1=1 condition to delete all records but respect foreign keys
+  // Order matters! Delete child records before parents
+
+  // 1. Delete records that depend on vehicles, maintenances, and users
   await AppDataSource.query("DELETE FROM maintenance_records WHERE 1=1");
   await AppDataSource.query("DELETE FROM vehicle_kilometers WHERE 1=1");
   await AppDataSource.query("DELETE FROM reservations WHERE 1=1");
-  await AppDataSource.query("DELETE FROM assignments WHERE 1=1");
   await AppDataSource.query("DELETE FROM vehicle_responsibles WHERE 1=1");
+  await AppDataSource.query("DELETE FROM vehicle_acl WHERE 1=1");
+
+  // 2. Delete assignments only for sample users or sample vehicles
+  await AppDataSource.query(`
+    DELETE FROM assignments 
+    WHERE user_id IN (
+      SELECT id FROM users 
+      WHERE entra_id LIKE 'SAMPLE_%' OR email LIKE '%@sample.test'
+    )
+    OR vehicle_id IN (
+      SELECT id FROM vehicles WHERE 1=1
+    )
+  `);
+
+  // 3. Delete maintenance requirements (depends on vehicles and maintenances)
   await AppDataSource.query("DELETE FROM maintenances_requirements WHERE 1=1");
+
+  // 4. Delete maintenances and categories
   await AppDataSource.query("DELETE FROM maintenances WHERE 1=1");
   await AppDataSource.query("DELETE FROM maintenance_categories WHERE 1=1");
+
+  // 5. Delete vehicles and their related data
   await AppDataSource.query("DELETE FROM vehicles WHERE 1=1");
   await AppDataSource.query("DELETE FROM vehicle_models WHERE 1=1");
   await AppDataSource.query("DELETE FROM vehicle_brands WHERE 1=1");
 
-  // Authorization data (order matters for FKs)
-  await AppDataSource.query("DELETE FROM vehicle_acl WHERE 1=1");
-  await AppDataSource.query("DELETE FROM user_roles WHERE 1=1");
+  // 6. Delete user roles only for sample users (those with SAMPLE_ prefix or @sample.test domain)
+  await AppDataSource.query(`
+    DELETE FROM user_roles 
+    WHERE user_id IN (
+      SELECT id FROM users 
+      WHERE entra_id LIKE 'SAMPLE_%' OR email LIKE '%@sample.test'
+    )
+  `);
 
-  // Only delete sample users (those with SAMPLE_ prefix in entraId or @sample.test domain)
+  // 7. Only delete sample users (those with SAMPLE_ prefix in entraId or @sample.test domain)
   // This preserves all real users from Entra sync
   const userRepo = AppDataSource.getRepository(User);
   const result = await userRepo
@@ -882,21 +908,20 @@ async function createAssignments(
 }
 
 async function createMaintenanceRequirements(
-  vehicles: Vehicle[],
+  models: VehicleModel[],
   maintenances: Maintenance[],
 ): Promise<MaintenanceRequirement[]> {
   const requirementRepo = AppDataSource.getRepository(MaintenanceRequirement);
 
   // Helper functions
-  const findVehicle = (licensePlate: string) =>
-    vehicles.find((v) => v.licensePlate === licensePlate)!;
+  const findModel = (name: string) => models.find((m) => m.name === name)!;
   const findMaintenance = (name: string) =>
     maintenances.find((m) => m.name === name)!;
 
   const requirementsData = [
-    // Oil changes for key vehicles
+    // Oil changes for sedan models (Civic, Corolla, Sentra)
     {
-      vehicle: findVehicle("ABC123"),
+      model: findModel("Civic"),
       maintenance: findMaintenance("Oil Change"),
       startDate: "2024-01-01",
       endDate: null,
@@ -904,7 +929,7 @@ async function createMaintenanceRequirements(
       daysFrequency: 90,
     },
     {
-      vehicle: findVehicle("DEF456"),
+      model: findModel("Corolla"),
       maintenance: findMaintenance("Oil Change"),
       startDate: "2024-01-01",
       endDate: null,
@@ -912,7 +937,7 @@ async function createMaintenanceRequirements(
       daysFrequency: 90,
     },
     {
-      vehicle: findVehicle("MNO345"),
+      model: findModel("Sentra"),
       maintenance: findMaintenance("Oil Change"),
       startDate: "2024-01-01",
       endDate: null,
@@ -920,9 +945,9 @@ async function createMaintenanceRequirements(
       daysFrequency: 90,
     },
 
-    // Tire rotations
+    // Tire rotations for SUV models
     {
-      vehicle: findVehicle("ABC123"),
+      model: findModel("CR-V"),
       maintenance: findMaintenance("Tire Rotation"),
       startDate: "2024-01-01",
       endDate: null,
@@ -930,7 +955,7 @@ async function createMaintenanceRequirements(
       daysFrequency: 180,
     },
     {
-      vehicle: findVehicle("DEF456"),
+      model: findModel("RAV4"),
       maintenance: findMaintenance("Tire Rotation"),
       startDate: "2024-01-01",
       endDate: null,
@@ -938,9 +963,9 @@ async function createMaintenanceRequirements(
       daysFrequency: 180,
     },
 
-    // Brake inspections
+    // Brake inspections for compact models
     {
-      vehicle: findVehicle("ABC123"),
+      model: findModel("Civic"),
       maintenance: findMaintenance("Brake Inspection"),
       startDate: "2024-01-01",
       endDate: null,
@@ -948,7 +973,7 @@ async function createMaintenanceRequirements(
       daysFrequency: 365,
     },
     {
-      vehicle: findVehicle("MNO345"),
+      model: findModel("Golf"),
       maintenance: findMaintenance("Brake Inspection"),
       startDate: "2024-01-01",
       endDate: null,
@@ -956,9 +981,9 @@ async function createMaintenanceRequirements(
       daysFrequency: 365,
     },
 
-    // Annual safety inspections for all vehicles
+    // Annual safety inspections for various models
     {
-      vehicle: findVehicle("ABC123"),
+      model: findModel("Civic"),
       maintenance: findMaintenance("Annual Safety Inspection"),
       startDate: "2024-01-01",
       endDate: null,
@@ -966,7 +991,7 @@ async function createMaintenanceRequirements(
       daysFrequency: 365,
     },
     {
-      vehicle: findVehicle("DEF456"),
+      model: findModel("Corolla"),
       maintenance: findMaintenance("Annual Safety Inspection"),
       startDate: "2024-01-01",
       endDate: null,
@@ -974,7 +999,7 @@ async function createMaintenanceRequirements(
       daysFrequency: 365,
     },
     {
-      vehicle: findVehicle("MNO345"),
+      model: findModel("CR-V"),
       maintenance: findMaintenance("Annual Safety Inspection"),
       startDate: "2024-01-01",
       endDate: null,
@@ -982,7 +1007,7 @@ async function createMaintenanceRequirements(
       daysFrequency: 365,
     },
     {
-      vehicle: findVehicle("QRS345"),
+      model: findModel("Model 3"),
       maintenance: findMaintenance("Annual Safety Inspection"),
       startDate: "2024-01-01",
       endDate: null,
@@ -1321,7 +1346,7 @@ export async function loadSampleData(): Promise<SampleDataStats> {
   const { categories, maintenances } = await createMaintenanceData();
   const assignments = await createAssignments(users, vehicles);
   const maintenanceRequirements = await createMaintenanceRequirements(
-    vehicles,
+    models,
     maintenances,
   );
   const reservations = await createSampleReservations(users, vehicles);

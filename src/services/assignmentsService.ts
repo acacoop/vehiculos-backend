@@ -6,6 +6,7 @@ import { Assignment as AssignmentEntity } from "@/entities/Assignment";
 import { User as UserEntity } from "@/entities/User";
 import { Vehicle as VehicleEntity } from "@/entities/Vehicle";
 import type { Assignment } from "@/schemas/assignment";
+import { AppError } from "@/middleware/errorHandler";
 import {
   validateUserExists,
   validateVehicleExists,
@@ -125,23 +126,31 @@ export class AssignmentsService {
       validateEndDateAfterStartDate(startDate, endDate);
     }
 
-    // Check for overlapping assignments
     const finalStartDate = startDate || new Date().toISOString().split("T")[0];
+
+    // Check for overlapping assignments for the SAME user + vehicle combination
     const overlapQuery = this.repo.qb();
+
+    // Use vehicle as primary entity and add user as additional filter
     applyOverlapCheck(overlapQuery, {
       entityId: vehicleId,
       entityField: "a.vehicle.id",
       startDate: finalStartDate,
       endDate: endDate ?? null,
       excludeId: undefined,
+      additionalFilters: {
+        "a.user.id": userId, // This ensures we check for SAME user + SAME vehicle
+      },
       startField: "a.startDate",
       endField: "a.endDate",
       idField: "a.id",
     });
+
     const overlap = await overlapQuery.getOne();
     if (overlap) {
-      throw new Error(
-        `Vehicle already has an assignment overlapping (${overlap.startDate} to ${overlap.endDate || "present"})`,
+      throw new AppError(
+        `This user already has an assignment for this vehicle overlapping (${overlap.startDate} to ${overlap.endDate || "present"})`,
+        409,
       );
     }
 
@@ -172,6 +181,7 @@ export class AssignmentsService {
   ): Promise<AssignmentWithDetails | null> {
     const entity = await this.repo.findOne(id);
     if (!entity) return null;
+
     if (patch.userId) {
       await validateUserExists(patch.userId);
       const user = await this.userRepo.findOne({
@@ -197,6 +207,41 @@ export class AssignmentsService {
     if (entity.endDate && entity.startDate) {
       validateEndDateAfterStartDate(entity.startDate, entity.endDate);
     }
+
+    // Check for overlapping assignments for the SAME user + vehicle combination
+    // (only if user, vehicle, or dates changed)
+    if (
+      patch.userId ||
+      patch.vehicleId ||
+      patch.startDate !== undefined ||
+      patch.endDate !== undefined
+    ) {
+      const overlapQuery = this.repo.qb();
+
+      // Use vehicle as primary entity and add user as additional filter
+      applyOverlapCheck(overlapQuery, {
+        entityId: entity.vehicle.id,
+        entityField: "a.vehicle.id",
+        startDate: entity.startDate,
+        endDate: entity.endDate,
+        excludeId: id,
+        additionalFilters: {
+          "a.user.id": entity.user.id, // This ensures we check for SAME user + SAME vehicle
+        },
+        startField: "a.startDate",
+        endField: "a.endDate",
+        idField: "a.id",
+      });
+
+      const overlap = await overlapQuery.getOne();
+      if (overlap) {
+        throw new AppError(
+          `This user already has an assignment for this vehicle overlapping (${overlap.startDate} to ${overlap.endDate || "present"})`,
+          409,
+        );
+      }
+    }
+
     const saved = await this.repo.save(entity);
     return mapEntityToDetails(saved);
   }

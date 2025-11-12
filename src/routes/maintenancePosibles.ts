@@ -37,10 +37,4 @@ router.delete(
   controller.delete,
 );
 
-router.get(
-  "/:id/vehicles",
-  validateUUIDParam("id"),
-  controller.getVehiclesByMaintenance,
-);
-
 export default router;

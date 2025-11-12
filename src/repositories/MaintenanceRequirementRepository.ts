@@ -24,23 +24,22 @@ export class MaintenanceRequirementRepository
     const { filters, search, pagination } = options || {};
     const qb = this.repo
       .createQueryBuilder("mr")
-      .leftJoinAndSelect("mr.vehicle", "v")
-      .leftJoinAndSelect("v.model", "vm")
+      .leftJoinAndSelect("mr.model", "vm")
       .leftJoinAndSelect("vm.brand", "b")
       .leftJoinAndSelect("mr.maintenance", "m")
       .leftJoinAndSelect("m.category", "c")
-      .orderBy("v.licensePlate", "ASC")
+      .orderBy("vm.name", "ASC")
       .addOrderBy("m.name", "ASC")
       .addOrderBy("mr.startDate", "DESC");
 
     // Apply search filter across multiple fields
     if (search) {
-      applySearchFilter(qb, search, ["v.licensePlate", "m.name", "c.name"]);
+      applySearchFilter(qb, search, ["vm.name", "b.name", "m.name", "c.name"]);
     }
 
     // Apply individual filters
     const filterConfig: Record<string, { field: string; operator?: string }> = {
-      vehicleId: { field: "v.id" },
+      modelId: { field: "vm.id" },
       maintenanceId: { field: "m.id" },
     };
 
@@ -70,9 +69,8 @@ export class MaintenanceRequirementRepository
     return this.repo.find({
       where: { maintenance: { id: maintenanceId } },
       relations: [
-        "vehicle",
-        "vehicle.model",
-        "vehicle.model.brand",
+        "model",
+        "model.brand",
         "maintenance",
         "maintenance.category",
       ],
@@ -80,13 +78,12 @@ export class MaintenanceRequirementRepository
     });
   }
 
-  findByVehicle(vehicleId: string) {
+  findByModel(modelId: string) {
     return this.repo.find({
-      where: { vehicle: { id: vehicleId } },
+      where: { model: { id: modelId } },
       relations: [
-        "vehicle",
-        "vehicle.model",
-        "vehicle.model.brand",
+        "model",
+        "model.brand",
         "maintenance",
         "maintenance.category",
       ],
@@ -98,9 +95,8 @@ export class MaintenanceRequirementRepository
     return this.repo.findOne({
       where: { id },
       relations: [
-        "vehicle",
-        "vehicle.model",
-        "vehicle.model.brand",
+        "model",
+        "model.brand",
         "maintenance",
         "maintenance.category",
       ],
@@ -108,7 +104,7 @@ export class MaintenanceRequirementRepository
   }
 
   async findOverlapping(
-    vehicleId: string,
+    modelId: string,
     maintenanceId: string,
     startDate: string,
     endDate: string | null,
@@ -116,7 +112,7 @@ export class MaintenanceRequirementRepository
   ): Promise<MaintenanceRequirement[]> {
     const qb = this.repo
       .createQueryBuilder("mr")
-      .where("mr.vehicle.id = :vehicleId", { vehicleId })
+      .where("mr.model.id = :modelId", { modelId })
       .andWhere("mr.maintenance.id = :maintenanceId", { maintenanceId });
 
     // Overlap logic:

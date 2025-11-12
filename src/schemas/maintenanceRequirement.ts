@@ -4,7 +4,7 @@ import { z } from "zod";
 export const MaintenanceRequirementSchema = z
   .object({
     id: z.string().uuid().optional(), // UUID, optional for creation
-    vehicleId: z.string().uuid(),
+    modelId: z.string().uuid(),
     maintenanceId: z.string().uuid(),
     kilometersFrequency: z.number().positive().optional(),
     daysFrequency: z.number().positive().optional(),
@@ -21,6 +21,21 @@ export const MaintenanceRequirementSchema = z
       .optional()
       .nullable(),
   })
+  .refine(
+    (data) => {
+      // At least one frequency must be provided and be a valid positive value
+      const hasKilometers =
+        data.kilometersFrequency !== undefined && data.kilometersFrequency > 0;
+      const hasDays =
+        data.daysFrequency !== undefined && data.daysFrequency > 0;
+      return hasKilometers || hasDays;
+    },
+    {
+      message:
+        "At least one frequency (kilometers or days) must be specified with a value greater than 0",
+      path: ["kilometersFrequency"],
+    },
+  )
   .refine(
     (data) => {
       // If endDate is provided, it must be >= startDate
@@ -70,6 +85,26 @@ export const UpdateMaintenanceRequirementSchema = z
     },
     {
       message: "At least one field must be provided for update",
+    },
+  )
+  .refine(
+    (data) => {
+      // If updating frequencies, at least one must be positive
+      const isUpdatingKm = data.kilometersFrequency !== undefined;
+      const isUpdatingDays = data.daysFrequency !== undefined;
+
+      // If not updating any frequency, validation passes
+      if (!isUpdatingKm && !isUpdatingDays) return true;
+
+      // If updating, ensure at least one is positive (not null and > 0)
+      const kmValue = data.kilometersFrequency ?? 0;
+      const daysValue = data.daysFrequency ?? 0;
+      return kmValue > 0 || daysValue > 0;
+    },
+    {
+      message:
+        "At least one frequency (kilometers or days) must be greater than 0",
+      path: ["kilometersFrequency"],
     },
   );
 

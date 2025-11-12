@@ -6,7 +6,7 @@ import {
   JoinColumn,
   Check,
 } from "typeorm";
-import { Vehicle } from "@/entities/Vehicle";
+import { VehicleModel } from "@/entities/VehicleModel";
 import { Maintenance } from "@/entities/Maintenance";
 
 @Entity({ name: "maintenances_requirements" })
@@ -17,9 +17,9 @@ export class MaintenanceRequirement {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @ManyToOne(() => Vehicle, { eager: true, onDelete: "CASCADE" })
-  @JoinColumn({ name: "vehicle_id" })
-  vehicle!: Vehicle;
+  @ManyToOne(() => VehicleModel, { eager: true, onDelete: "CASCADE" })
+  @JoinColumn({ name: "model_id" })
+  model!: VehicleModel;
 
   @ManyToOne(() => Maintenance, { eager: true, onDelete: "CASCADE" })
   @JoinColumn({ name: "maintenance_id" })
