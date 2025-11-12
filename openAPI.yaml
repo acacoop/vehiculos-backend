@@ -1123,7 +1123,7 @@ paths:
       summary: Create a new maintenance requirement
       description: |
         Create a new maintenance requirement for a vehicle. 
-        
+
         **Overlap Validation:** The system prevents overlapping date ranges for the same vehicle-maintenance pair.
         If a requirement already exists with overlapping dates, the API will return a 409 Conflict error.
       tags: [Maintenance]
@@ -1180,7 +1180,7 @@ paths:
       summary: Update maintenance requirement
       description: |
         Update an existing maintenance requirement. 
-        
+
         **Overlap Validation:** When updating dates or vehicle/maintenance IDs, the system checks for overlapping periods.
         Returns 409 Conflict if the update would create an overlap with another requirement.
       tags: [Maintenance]
