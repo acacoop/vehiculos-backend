@@ -275,7 +275,9 @@ describe("AssignmentsService", () => {
           vehicleId: "v1",
           startDate: "2024-01-01",
         }),
-      ).rejects.toThrow("Vehicle already has an assignment overlapping");
+      ).rejects.toThrow(
+        "This user already has an assignment for this vehicle overlapping",
+      );
     });
   });
 
@@ -283,6 +285,20 @@ describe("AssignmentsService", () => {
     it("should update an assignment", async () => {
       const mockAssignment = createMockAssignment();
       const mockUser = { id: "u2", firstName: "Jane" } as User;
+
+      // Mock query builder for overlap check
+      const mockQb = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getOne: jest
+          .fn<() => Promise<Assignment | null>>()
+          .mockResolvedValue(null), // No overlap
+      } as jest.Mocked<
+        Pick<SelectQueryBuilder<Assignment>, "where" | "andWhere" | "getOne">
+      >;
+      mockAssignmentRepo.qb.mockReturnValue(
+        mockQb as unknown as SelectQueryBuilder<Assignment>,
+      );
 
       jest.spyOn(validators, "validateUserExists").mockResolvedValue(undefined);
       mockAssignmentRepo.findOne.mockResolvedValue(mockAssignment);
