@@ -18,18 +18,15 @@ import { VehicleResponsibleRepository } from "@/repositories/VehicleResponsibleR
 import { VehicleResponsible } from "@/entities/VehicleResponsible";
 import {
   MaintenancesService,
-  AssignedMaintenancesService,
   MaintenanceRecordsService,
 } from "@/services/maintenancesService";
-import {
-  MaintenanceRepository,
-  AssignedMaintenanceRepository,
-} from "@/repositories/MaintenanceRepository";
+import { MaintenanceRequirementsService } from "@/services/maintenanceRequirementsService";
+import { MaintenanceRepository } from "@/repositories/MaintenanceRepository";
+import { MaintenanceRequirementRepository } from "@/repositories/MaintenanceRequirementRepository";
 import { MaintenanceRecordRepository } from "@/repositories/MaintenanceRecordRepository";
 import { MaintenanceRecord } from "@/entities/MaintenanceRecord";
 import { MaintenanceCategory } from "@/entities/MaintenanceCategory";
 import { Maintenance } from "@/entities/Maintenance";
-import { AssignedMaintenance } from "@/entities/AssignedMaintenance";
 import { VehicleRepository } from "@/repositories/VehicleRepository";
 import { VehicleModel } from "@/entities/VehicleModel";
 import { VehiclesService } from "@/services/vehiclesService";
@@ -99,22 +96,26 @@ export class ServiceFactory {
 
   createMaintenancesService(): MaintenancesService {
     const maintenanceRepo = new MaintenanceRepository(this.dataSource);
-    const assignedRepo = new AssignedMaintenanceRepository(this.dataSource);
+    const requirementRepo = new MaintenanceRequirementRepository(
+      this.dataSource,
+    );
     const maintenanceCategoryRepo =
       this.dataSource.getRepository(MaintenanceCategory);
     return new MaintenancesService(
       maintenanceRepo,
-      assignedRepo,
+      requirementRepo,
       maintenanceCategoryRepo,
     );
   }
 
-  createAssignedMaintenancesService(): AssignedMaintenancesService {
-    const assignedRepo = new AssignedMaintenanceRepository(this.dataSource);
+  createMaintenanceRequirementsService(): MaintenanceRequirementsService {
+    const requirementRepo = new MaintenanceRequirementRepository(
+      this.dataSource,
+    );
     const vehicleRepo = this.dataSource.getRepository(Vehicle);
     const maintenanceRepo = this.dataSource.getRepository(Maintenance);
-    return new AssignedMaintenancesService(
-      assignedRepo,
+    return new MaintenanceRequirementsService(
+      requirementRepo,
       vehicleRepo,
       maintenanceRepo,
     );
@@ -124,13 +125,14 @@ export class ServiceFactory {
     const recordRepo = new MaintenanceRecordRepository(this.dataSource);
     const maintenanceRecordRepo =
       this.dataSource.getRepository(MaintenanceRecord);
-    const assignedMaintenanceRepo =
-      this.dataSource.getRepository(AssignedMaintenance);
+    const maintenanceRepo = this.dataSource.getRepository(Maintenance);
+    const vehicleRepo = this.dataSource.getRepository(Vehicle);
     const userRepo = this.dataSource.getRepository(User);
     return new MaintenanceRecordsService(
       recordRepo,
       maintenanceRecordRepo,
-      assignedMaintenanceRepo,
+      maintenanceRepo,
+      vehicleRepo,
       userRepo,
     );
   }

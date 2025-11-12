@@ -18,7 +18,7 @@ import { Reservation } from "@/entities/Reservation";
 import { VehicleKilometers } from "@/entities/VehicleKilometers";
 import { MaintenanceCategory } from "@/entities/MaintenanceCategory";
 import { Maintenance } from "@/entities/Maintenance";
-import { AssignedMaintenance } from "@/entities/AssignedMaintenance";
+import { MaintenanceRequirement } from "@/entities/MaintenanceRequirement";
 import { MaintenanceRecord } from "@/entities/MaintenanceRecord";
 import { VehicleResponsible } from "@/entities/VehicleResponsible";
 import { VehicleBrand } from "@/entities/VehicleBrand";
@@ -57,7 +57,7 @@ const createDataSourceConfig = () => {
     VehicleKilometers,
     MaintenanceCategory,
     Maintenance,
-    AssignedMaintenance,
+    MaintenanceRequirement,
     MaintenanceRecord,
     VehicleResponsible,
     VehicleACL,

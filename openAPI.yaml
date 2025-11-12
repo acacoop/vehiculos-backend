@@ -1075,18 +1075,19 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-  # MAINTENANCE ASSIGNMENTS
-  /maintenance/assignments:
+  # MAINTENANCE REQUIREMENTS
+  /maintenance/requirements:
     get:
-      summary: Get all maintenance assignments with optional filters
+      summary: Get all maintenance requirements with optional filters
       description: |
-        Get all maintenance assignments with optional search and filters.
+        Get all maintenance requirements (vehicle-maintenance temporal assignments) with optional search and filters.
 
         **Search:** `search` - Search across vehicle licensePlate, maintenance name, and category name
 
         **Filters:**
         - `vehicleId` - Filter by vehicle ID
         - `maintenanceId` - Filter by maintenance type ID
+        - `active` - Filter by active status (requirements currently active)
       tags: [Maintenance]
       parameters:
         - $ref: "#/components/parameters/PageParam"
@@ -1104,118 +1105,90 @@ paths:
             type: string
             format: uuid
           description: Filter by maintenance type ID
+        - name: active
+          in: query
+          schema:
+            type: boolean
+          description: Filter by active status
       responses:
         "200":
-          description: List of maintenance assignments retrieved successfully
+          description: List of maintenance requirements retrieved successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AssignedMaintenanceListResponse"
+                $ref: "#/components/schemas/MaintenanceRequirementListResponse"
         "500":
           $ref: "#/components/responses/InternalServerError"
     post:
-      summary: Assign maintenance to a vehicle
+      summary: Create a new maintenance requirement
+      description: |
+        Create a new maintenance requirement for a vehicle. 
+        
+        **Overlap Validation:** The system prevents overlapping date ranges for the same vehicle-maintenance pair.
+        If a requirement already exists with overlapping dates, the API will return a 409 Conflict error.
       tags: [Maintenance]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AssignedMaintenanceInput"
+              $ref: "#/components/schemas/MaintenanceRequirementInput"
       responses:
         "201":
-          description: Maintenance assigned successfully
+          description: Maintenance requirement created successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AssignedMaintenanceResponse"
+                $ref: "#/components/schemas/MaintenanceRequirementResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "409":
+          description: Overlapping requirement exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-  /maintenance/assignments/vehicle/{vehicleId}:
+  /maintenance/requirements/{id}:
     get:
-      summary: Get all maintenance assignments for a specific vehicle
+      summary: Get maintenance requirement by ID
       tags: [Maintenance]
       parameters:
-        - name: vehicleId
+        - name: id
           in: path
           required: true
+          description: UUID of the maintenance requirement to retrieve
           schema:
             type: string
             format: uuid
       responses:
         "200":
-          description: Vehicle maintenance assignments retrieved successfully
+          description: Maintenance requirement retrieved successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AssignedMaintenanceListResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
-  /maintenance/assignments/maintenance/{maintenanceId}:
-    get:
-      summary: Get all maintenance assignments for a specific maintenance type
-      tags: [Maintenance]
-      parameters:
-        - name: maintenanceId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "200":
-          description: Maintenance type assignments retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AssignedMaintenanceListResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
-  /maintenance/assignments/{assignedMaintenanceId}:
-    get:
-      summary: Get maintenance assignment by ID
-      tags: [Maintenance]
-      parameters:
-        - name: assignedMaintenanceId
-          in: path
-          required: true
-          description: UUID of the maintenance assignment to retrieve
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "200":
-          description: Maintenance assignment retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AssignedMaintenanceResponse"
+                $ref: "#/components/schemas/MaintenanceRequirementResponse"
         "404":
           $ref: "#/components/responses/NotFound"
         "400":
           $ref: "#/components/responses/BadRequest"
         "500":
           $ref: "#/components/responses/InternalServerError"
-
-  /maintenance/assignments/{id}:
     patch:
-      summary: Update maintenance assignment
-      description: Update frequency settings for an existing maintenance assignment
+      summary: Update maintenance requirement
+      description: |
+        Update an existing maintenance requirement. 
+        
+        **Overlap Validation:** When updating dates or vehicle/maintenance IDs, the system checks for overlapping periods.
+        Returns 409 Conflict if the update would create an overlap with another requirement.
       tags: [Maintenance]
       parameters:
         - name: id
           in: path
           required: true
-          description: UUID of the maintenance assignment to update
+          description: UUID of the maintenance requirement to update
           schema:
             type: string
             format: uuid
@@ -1224,73 +1197,49 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateAssignedMaintenanceInput"
+              $ref: "#/components/schemas/MaintenanceRequirementUpdateInput"
       responses:
         "200":
-          description: Maintenance assignment updated successfully
+          description: Maintenance requirement updated successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AssignedMaintenanceResponse"
-              example:
-                status: "success"
-                message: "Maintenance assignment updated successfully"
-                data:
-                  id: "550e8400-e29b-41d4-a716-446655440000"
-                  vehicleId: "550e8400-e29b-41d4-a716-446655440001"
-                  maintenanceId: "550e8400-e29b-41d4-a716-446655440002"
-                  kilometersFrequency: 10000
-                  daysFrequency: 90
+                $ref: "#/components/schemas/MaintenanceRequirementResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
         "404":
-          description: Maintenance assignment not found
+          description: Maintenance requirement not found
+        "409":
+          description: Overlapping requirement exists
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-              example:
-                status: "error"
-                message: "Maintenance assignment not found"
-                statusCode: 404
         "500":
           $ref: "#/components/responses/InternalServerError"
-
     delete:
-      summary: Delete maintenance assignment
-      description: Remove a maintenance assignment from a vehicle
+      summary: Delete maintenance requirement
+      description: Remove a maintenance requirement from a vehicle
       tags: [Maintenance]
       parameters:
         - name: id
           in: path
           required: true
-          description: UUID of the maintenance assignment to delete
+          description: UUID of the maintenance requirement to delete
           schema:
             type: string
             format: uuid
       responses:
         "200":
-          description: Maintenance assignment deleted successfully
+          description: Maintenance requirement deleted successfully
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiResponse"
-              example:
-                status: "success"
-                message: "Maintenance assignment deleted successfully"
-                data: null
         "400":
           $ref: "#/components/responses/BadRequest"
         "404":
-          description: Maintenance assignment not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-              example:
-                status: "error"
-                message: "Maintenance assignment not found"
-                statusCode: 404
+          description: Maintenance requirement not found
         "500":
           $ref: "#/components/responses/InternalServerError"
 
@@ -1307,7 +1256,6 @@ paths:
         - `userId` - Filter by specific user ID
         - `vehicleId` - Filter by specific vehicle ID
         - `maintenanceId` - Filter by maintenance type ID
-        - `assignedMaintenanceId` - Filter by assigned maintenance ID
       tags: [Maintenance]
       parameters:
         - $ref: "#/components/parameters/PageParam"
@@ -1331,12 +1279,6 @@ paths:
             type: string
             format: uuid
           description: Filter by maintenance type ID
-        - name: assignedMaintenanceId
-          in: query
-          schema:
-            type: string
-            format: uuid
-          description: Filter by assigned maintenance ID
       responses:
         "200":
           description: List of maintenance records retrieved successfully
@@ -3263,69 +3205,86 @@ components:
               items:
                 $ref: "#/components/schemas/Maintenance"
 
-    # ASSIGNED MAINTENANCE SCHEMAS
-    AssignedMaintenance:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: "b50e8400-e29b-41d4-a716-446655440006"
-        vehicle:
-          $ref: "#/components/schemas/Vehicle"
-        maintenance:
-          $ref: "#/components/schemas/Maintenance"
-        kilometersFrequency:
-          type: integer
-          minimum: 0
-          nullable: true
-          example: 10000
-        daysFrequency:
-          type: integer
-          minimum: 0
-          nullable: true
-          example: 90
-        observations:
-          type: string
-          nullable: true
-          example: "Additional observations for this assignment"
-        instructions:
-          type: string
-          nullable: true
-          example: "Specific instructions for this vehicle"
-      required:
-        - id
-        - vehicle
-        - maintenance
-
-    AssignedMaintenanceInput:
+    # MAINTENANCE REQUIREMENT SCHEMAS
+    MaintenanceRequirementInput:
       type: object
       properties:
         vehicleId:
           type: string
           format: uuid
+          description: UUID of the vehicle
         maintenanceId:
           type: string
           format: uuid
+          description: UUID of the maintenance type
+        startDate:
+          type: string
+          format: date
+          description: Start date of the requirement (YYYY-MM-DD)
+          example: "2024-01-01"
+        endDate:
+          type: string
+          format: date
+          nullable: true
+          description: End date of the requirement (YYYY-MM-DD). Null means ongoing.
+          example: "2025-12-31"
         kilometersFrequency:
           type: integer
           minimum: 0
+          nullable: true
+          description: Frequency in kilometers (can be null)
         daysFrequency:
           type: integer
           minimum: 0
+          nullable: true
+          description: Frequency in days (can be null)
       required:
         - vehicleId
         - maintenanceId
+        - startDate
 
-    AssignedMaintenanceResponse:
+    MaintenanceRequirement:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        vehicle:
+          $ref: "#/components/schemas/Vehicle"
+        maintenance:
+          $ref: "#/components/schemas/Maintenance"
+        startDate:
+          type: string
+          format: date
+          description: Start date of the requirement
+        endDate:
+          type: string
+          format: date
+          nullable: true
+          description: End date of the requirement (null means ongoing)
+        kilometersFrequency:
+          type: integer
+          nullable: true
+          minimum: 0
+        daysFrequency:
+          type: integer
+          nullable: true
+          minimum: 0
+      required:
+        - id
+        - vehicle
+        - maintenance
+        - startDate
+
+    MaintenanceRequirementResponse:
       allOf:
         - $ref: "#/components/schemas/ApiResponse"
         - type: object
           properties:
             data:
-              $ref: "#/components/schemas/AssignedMaintenance"
+              $ref: "#/components/schemas/MaintenanceRequirement"
 
-    AssignedMaintenanceListResponse:
+    MaintenanceRequirementListResponse:
       allOf:
         - $ref: "#/components/schemas/ApiResponse"
         - type: object
@@ -3333,24 +3292,32 @@ components:
             data:
               type: array
               items:
-                $ref: "#/components/schemas/AssignedMaintenance"
+                $ref: "#/components/schemas/MaintenanceRequirement"
 
-    UpdateAssignedMaintenanceInput:
+    MaintenanceRequirementUpdateInput:
       type: object
       properties:
+        startDate:
+          type: string
+          format: date
+          description: Start date of the requirement
+        endDate:
+          type: string
+          format: date
+          nullable: true
+          description: End date of the requirement (null means ongoing)
         kilometersFrequency:
           type: integer
           minimum: 0
-          description: "Frequency in kilometers for maintenance"
+          nullable: true
+          description: Frequency in kilometers
         daysFrequency:
           type: integer
           minimum: 0
-          description: "Frequency in days for maintenance"
+          nullable: true
+          description: Frequency in days
       minProperties: 1
       description: "At least one field must be provided for update"
-      example:
-        kilometersFrequency: 10000
-        daysFrequency: 90
 
     # MAINTENANCE VEHICLE ASSIGNMENT SCHEMAS
     MaintenanceVehicleAssignment:
@@ -3481,141 +3448,10 @@ components:
           example: "c50e8400-e29b-41d4-a716-446655440007"
         user:
           $ref: "#/components/schemas/User"
-        assignedMaintenance:
-          type: object
-          properties:
-            id:
-              type: string
-              format: uuid
-              example: "b50e8400-e29b-41d4-a716-446655440006"
-            vehicle:
-              type: object
-              properties:
-                id:
-                  type: string
-                  format: uuid
-                  example: "650e8400-e29b-41d4-a716-446655440001"
-                licensePlate:
-                  type: string
-                  example: "ABC123"
-                year:
-                  type: integer
-                  example: 2020
-                chassisNumber:
-                  type: string
-                  nullable: true
-                  example: "CHASSIS123"
-                engineNumber:
-                  type: string
-                  nullable: true
-                  example: "ENGINE123"
-                transmission:
-                  type: string
-                  nullable: true
-                  example: "Manual"
-                fuelType:
-                  type: string
-                  nullable: true
-                  example: "Gasoline"
-                model:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                      format: uuid
-                      example: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
-                    name:
-                      type: string
-                      example: "Corolla"
-                    vehicleType:
-                      type: string
-                      nullable: true
-                      example: "Sedan"
-                    brand:
-                      type: object
-                      properties:
-                        id:
-                          type: string
-                          format: uuid
-                          example: "11111111-2222-3333-4444-555555555555"
-                        name:
-                          type: string
-                          example: "Toyota"
-                      required:
-                        - id
-                        - name
-                  required:
-                    - id
-                    - name
-                    - brand
-              required:
-                - id
-                - licensePlate
-                - year
-                - model
-            maintenance:
-              type: object
-              properties:
-                id:
-                  type: string
-                  format: uuid
-                  example: "a50e8400-e29b-41d4-a716-446655440005"
-                categoryId:
-                  type: string
-                  format: uuid
-                  example: "950e8400-e29b-41d4-a716-446655440004"
-                category:
-                  type: object
-                  properties:
-                    name:
-                      type: string
-                      example: "Engine Maintenance"
-                  required:
-                    - name
-                name:
-                  type: string
-                  example: "Oil Change"
-                kilometersFrequency:
-                  type: integer
-                  nullable: true
-                  example: 10000
-                daysFrequency:
-                  type: integer
-                  nullable: true
-                  example: 90
-                observations:
-                  type: string
-                  nullable: true
-                  example: "Use synthetic oil"
-                instructions:
-                  type: string
-                  nullable: true
-                  example: "Change filter and check cap"
-              required:
-                - id
-                - categoryId
-                - category
-                - name
-            kilometersFrequency:
-              type: integer
-              nullable: true
-              example: 10000
-            daysFrequency:
-              type: integer
-              nullable: true
-              example: 90
-            observations:
-              type: string
-              nullable: true
-              example: "Additional observations for this assignment"
-            instructions:
-              type: string
-              nullable: true
-              example: "Specific instructions for this vehicle"
-          required:
-            - id
-            - vehicle
-            - maintenance
+        vehicle:
+          $ref: "#/components/schemas/Vehicle"
+        maintenance:
+          $ref: "#/components/schemas/Maintenance"
         date:
           type: string
           format: date-time
@@ -3631,14 +3467,18 @@ components:
       required:
         - id
         - user
-        - assignedMaintenance
+        - vehicle
+        - maintenance
         - date
         - kilometers
 
     MaintenanceRecordInput:
       type: object
       properties:
-        assignedMaintenanceId:
+        maintenanceId:
+          type: string
+          format: uuid
+        vehicleId:
           type: string
           format: uuid
         userId:
@@ -3653,7 +3493,8 @@ components:
         notes:
           type: string
       required:
-        - assignedMaintenanceId
+        - maintenanceId
+        - vehicleId
         - userId
         - date
         - kilometers

@@ -1,5 +1,4 @@
 import { AppDataSource } from "@/db";
-import { AssignedMaintenance } from "@/entities/AssignedMaintenance";
 import { MaintenanceRecord } from "@/entities/MaintenanceRecord";
 import { PermissionRequest } from "@/middleware/permission";
 
@@ -7,28 +6,6 @@ import { PermissionRequest } from "@/middleware/permission";
  * Collection of mapper functions to extract vehicleId from requests.
  * These are used with requireVehiclePermissionWith middleware.
  */
-
-/**
- * Extracts vehicleId by looking up an AssignedMaintenance entity.
- * Useful for maintenance records where the body contains assignedMaintenanceId.
- */
-export const vehicleIdFromAssignedMaintenance = async (
-  req: PermissionRequest,
-): Promise<string | null> => {
-  const assignedMaintenanceId = req.body?.assignedMaintenanceId;
-  if (!assignedMaintenanceId) {
-    return null;
-  }
-
-  const assignedMaintenanceRepo =
-    AppDataSource.getRepository(AssignedMaintenance);
-  const assignedMaintenance = await assignedMaintenanceRepo.findOne({
-    where: { id: assignedMaintenanceId },
-    relations: ["vehicle"],
-  });
-
-  return assignedMaintenance?.vehicle?.id ?? null;
-};
 
 /**
  * Extracts vehicleId from query parameters.
@@ -59,10 +36,10 @@ export const vehicleIdFromMaintenanceRecord = async (
   const repo = AppDataSource.getRepository(MaintenanceRecord);
   const record = await repo.findOne({
     where: { id: recordId },
-    relations: ["assignedMaintenance", "assignedMaintenance.vehicle"],
+    relations: ["vehicle"],
   });
 
-  return record?.assignedMaintenance?.vehicle?.id ?? null;
+  return record?.vehicle?.id ?? null;
 };
 
 /**
@@ -70,7 +47,7 @@ export const vehicleIdFromMaintenanceRecord = async (
  * Useful for maintenance record DTOs returned by the service.
  */
 export const vehicleIdFromMaintenanceRecordDTO = (
-  entity: { assignedMaintenance?: { vehicle?: { id?: string } } } | null,
+  entity: { vehicle?: { id?: string } } | null,
 ): string | null | undefined => {
-  return entity?.assignedMaintenance?.vehicle?.id ?? null;
+  return entity?.vehicle?.id ?? null;
 };

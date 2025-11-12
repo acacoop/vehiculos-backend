@@ -3,10 +3,11 @@ import { z } from "zod";
 // Define the schema for maintenance record object
 export const MaintenanceRecordSchema = z.object({
   id: z.string().uuid().optional(), // UUID, optional for creation
-  assignedMaintenanceId: z.string().uuid(),
+  maintenanceId: z.string().uuid(),
+  vehicleId: z.string().uuid(),
   userId: z.string().uuid(),
   date: z.coerce.date(),
-  kilometers: z.number().positive(),
+  kilometers: z.number().nonnegative(),
   notes: z.string().optional(),
 });
 
@@ -24,40 +25,33 @@ export interface MaintenanceRecordDTO {
     entraId: string;
     active: boolean;
   };
-  assignedMaintenance: {
+  maintenance: {
     id: string;
-    vehicle: {
-      id: string;
-      licensePlate: string;
-      year: number;
-      chassisNumber?: string | null;
-      engineNumber?: string | null;
-      transmission?: string | null;
-      fuelType?: string | null;
-      model: {
-        id: string;
-        name: string;
-        vehicleType?: string | null;
-        brand: {
-          id: string;
-          name: string;
-        };
-      };
-    };
-    maintenance: {
-      id: string;
-      categoryId: string;
-      category: { name: string };
-      name: string;
-      kilometersFrequency?: number;
-      daysFrequency?: number;
-      observations?: string;
-      instructions?: string;
-    };
+    categoryId: string;
+    category: { name: string };
+    name: string;
     kilometersFrequency?: number;
     daysFrequency?: number;
     observations?: string;
     instructions?: string;
+  };
+  vehicle: {
+    id: string;
+    licensePlate: string;
+    year: number;
+    chassisNumber?: string;
+    engineNumber?: string;
+    transmission?: string;
+    fuelType?: string;
+    model: {
+      id: string;
+      name: string;
+      vehicleType?: string;
+      brand: {
+        id: string;
+        name: string;
+      };
+    };
   };
   date: Date;
   kilometers: number;
