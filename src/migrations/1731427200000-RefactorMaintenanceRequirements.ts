@@ -9,7 +9,7 @@ export class RefactorMaintenanceRequirements1731427200000
     // 1. Crear tabla maintenances_requirements
     await queryRunner.query(`
       CREATE TABLE [maintenances_requirements] (
-        [id] uniqueidentifier NOT NULL,
+        [id] uniqueidentifier NOT NULL DEFAULT NEWID(),
         [vehicle_id] uniqueidentifier NOT NULL,
         [maintenance_id] uniqueidentifier NOT NULL,
         [kilometers_frequency] int NULL,
