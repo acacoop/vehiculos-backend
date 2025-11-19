@@ -16,6 +16,9 @@ export class MaintenanceChecklistItem {
   @JoinColumn({ name: "maintenance_checklist_id" })
   maintenanceChecklist!: MaintenanceChecklist;
 
+  @Column({ type: "nvarchar", length: 255 })
+  title!: string;
+
   @Column({ default: false })
   passed!: boolean;
 

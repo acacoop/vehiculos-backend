@@ -3822,6 +3822,9 @@ components:
             - year
             - quarter
             - intendedDeliveryDate
+        title:
+          type: string
+          example: "Check engine oil level"
         passed:
           type: boolean
           example: true
@@ -3831,6 +3834,7 @@ components:
       required:
         - id
         - maintenanceChecklist
+        - title
         - passed
         - observations
 
@@ -3841,6 +3845,9 @@ components:
           type: string
           format: uuid
           description: UUID of the maintenance checklist
+        title:
+          type: string
+          description: Title or description of the checklist item
         passed:
           type: boolean
           description: Whether the item passed inspection
@@ -3849,6 +3856,7 @@ components:
           description: Observations or notes about the item
       required:
         - maintenanceChecklistId
+        - title
         - passed
         - observations
 
@@ -3868,6 +3876,9 @@ components:
           items:
             type: object
             properties:
+              title:
+                type: string
+                description: Title or description of the checklist item
               passed:
                 type: boolean
                 description: Whether the item passed inspection
@@ -3875,6 +3886,7 @@ components:
                 type: string
                 description: Observations or notes about the item
             required:
+              - title
               - passed
               - observations
           description: Array of checklist items to create
@@ -3886,6 +3898,9 @@ components:
     MaintenanceChecklistItemUpdateInput:
       type: object
       properties:
+        title:
+          type: string
+          description: Title or description of the checklist item
         passed:
           type: boolean
           description: Whether the item passed inspection

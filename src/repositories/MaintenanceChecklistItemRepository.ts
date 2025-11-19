@@ -17,16 +17,14 @@ export class MaintenanceChecklistItemRepository
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(MaintenanceChecklistItem);
   }
-  qb() {
-    return this.repo.createQueryBuilder("mci");
-  }
 
   async findAndCount(
     options?: RepositoryFindOptions<MaintenanceChecklistItemFilters>,
   ): Promise<[MaintenanceChecklistItem[], number]> {
     const { filters, search, pagination } = options || {};
 
-    const qb = this.qb()
+    const qb = this.repo
+      .createQueryBuilder("mci")
       .leftJoinAndSelect("mci.maintenanceChecklist", "mc")
       .leftJoinAndSelect("mc.vehicle", "v")
       .leftJoinAndSelect("mc.filledBy", "u")
@@ -58,8 +56,9 @@ export class MaintenanceChecklistItemRepository
     return qb.getManyAndCount();
   }
 
-  async findOne(id: string): Promise<MaintenanceChecklistItem | null> {
-    return this.qb()
+  findOne(id: string) {
+    return this.repo
+      .createQueryBuilder("mci")
       .leftJoinAndSelect("mci.maintenanceChecklist", "mc")
       .leftJoinAndSelect("mc.vehicle", "v")
       .leftJoinAndSelect("mc.filledBy", "u")
@@ -67,30 +66,28 @@ export class MaintenanceChecklistItemRepository
       .getOne();
   }
 
-  create(data: Partial<MaintenanceChecklistItem>): MaintenanceChecklistItem {
+  create(data: Partial<MaintenanceChecklistItem>) {
     return this.repo.create(data);
   }
 
-  createMany(
-    data: Partial<MaintenanceChecklistItem>[],
-  ): MaintenanceChecklistItem[] {
+  createMany(data: Partial<MaintenanceChecklistItem>[]) {
     return this.repo.create(data);
   }
 
-  async save(
-    entity: MaintenanceChecklistItem,
-  ): Promise<MaintenanceChecklistItem> {
+  save(entity: MaintenanceChecklistItem) {
     return this.repo.save(entity);
   }
 
-  async saveMany(
-    entities: MaintenanceChecklistItem[],
-  ): Promise<MaintenanceChecklistItem[]> {
+  saveMany(entities: MaintenanceChecklistItem[]) {
     return this.repo.save(entities);
   }
 
   async delete(id: string): Promise<boolean> {
     const result = await this.repo.delete(id);
     return result.affected != null && result.affected > 0;
+  }
+
+  qb() {
+    return this.repo.createQueryBuilder("mci");
   }
 }

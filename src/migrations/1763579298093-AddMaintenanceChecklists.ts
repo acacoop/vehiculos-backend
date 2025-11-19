@@ -45,6 +45,7 @@ export class AddMaintenanceChecklists1763579298093
       CREATE TABLE [maintenance_checklist_items] (
         [id] uniqueidentifier NOT NULL DEFAULT NEWID(),
         [maintenance_checklist_id] uniqueidentifier NOT NULL,
+        [title] nvarchar(255) NOT NULL,
         [passed] bit NOT NULL DEFAULT ((0)),
         [observations] nvarchar(max) NOT NULL,
         CONSTRAINT [PK_maintenance_checklist_items] PRIMARY KEY ([id]),
