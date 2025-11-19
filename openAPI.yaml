@@ -1306,7 +1306,7 @@ paths:
           $ref: "#/components/responses/InternalServerError"
 
   # MAINTENANCE CHECKLISTS
-  /maintenance-checklists:
+  /maintenance/checklists:
     get:
       summary: Get all maintenance checklists with optional filters
       description: |
@@ -1388,7 +1388,7 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-  /maintenance-checklists/{id}:
+  /maintenance/checklists/{id}:
     get:
       summary: Get maintenance checklist by ID
       tags: [Maintenance]
@@ -1466,7 +1466,7 @@ paths:
           $ref: "#/components/responses/InternalServerError"
 
   # MAINTENANCE CHECKLIST ITEMS
-  /maintenance-checklist-items:
+  /maintenance/checklist-items:
     get:
       summary: Get all maintenance checklist items with optional filters
       description: |
@@ -1524,7 +1524,7 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-  /maintenance-checklist-items/{id}:
+  /maintenance/checklist-items/{id}:
     get:
       summary: Get maintenance checklist item by ID
       tags: [Maintenance]

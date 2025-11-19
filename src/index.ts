@@ -92,8 +92,8 @@ app.use("/maintenance/categories", maintenanceCategoriesRoutes);
 app.use("/maintenance/posibles", maintenanceRoutes);
 app.use("/maintenance/requirements", maintenanceRequirementsRoutes);
 app.use("/maintenance/records", maintenanceRecordsRoutes);
-app.use("/maintenance-checklists", maintenanceChecklistsRoutes);
-app.use("/maintenance-checklist-items", maintenanceChecklistItemsRoutes);
+app.use("/maintenance/checklists", maintenanceChecklistsRoutes);
+app.use("/maintenance/checklist-items", maintenanceChecklistItemsRoutes);
 
 // 404 handler
 app.use("*", (req: Request, res: Response) => {
