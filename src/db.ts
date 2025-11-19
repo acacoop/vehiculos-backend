@@ -18,7 +18,7 @@ import { Reservation } from "@/entities/Reservation";
 import { VehicleKilometers } from "@/entities/VehicleKilometers";
 import { MaintenanceCategory } from "@/entities/MaintenanceCategory";
 import { Maintenance } from "@/entities/Maintenance";
-import { AssignedMaintenance } from "@/entities/AssignedMaintenance";
+import { MaintenanceRequirement } from "@/entities/MaintenanceRequirement";
 import { MaintenanceRecord } from "@/entities/MaintenanceRecord";
 import { VehicleResponsible } from "@/entities/VehicleResponsible";
 import { VehicleBrand } from "@/entities/VehicleBrand";
@@ -57,7 +57,7 @@ const createDataSourceConfig = () => {
     VehicleKilometers,
     MaintenanceCategory,
     Maintenance,
-    AssignedMaintenance,
+    MaintenanceRequirement,
     MaintenanceRecord,
     VehicleResponsible,
     VehicleACL,
@@ -132,11 +132,11 @@ async function ensureDatabase(retries = 3, delayMs = 2000) {
         .query<{ name: string }>("SELECT name FROM sys.databases;");
       const exists = dbs.recordset.some((r) => r.name === DB_NAME);
       if (!exists) {
-        console.log(`ℹ️  Creating database '${DB_NAME}' (attempt ${attempt})`);
+        console.log(`ℹ️ Creating database '${DB_NAME}' (attempt ${attempt})`);
         await pool.request().query(`CREATE DATABASE [${DB_NAME}]`);
         console.log(`✅ Database '${DB_NAME}' created`);
       } else if (attempt === 1) {
-        console.log(`ℹ️  Database '${DB_NAME}' already exists`);
+        console.log(`ℹ️ Database '${DB_NAME}' already exists`);
       }
       await pool.close();
       return;

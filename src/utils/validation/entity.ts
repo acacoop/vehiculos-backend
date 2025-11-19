@@ -1,6 +1,7 @@
 import { AppDataSource } from "@/db";
 import { AppError } from "@/middleware/errorHandler";
 import { Vehicle } from "@/entities/Vehicle";
+import { VehicleModel } from "@/entities/VehicleModel";
 import { User } from "@/entities/User";
 import { MaintenanceCategory } from "@/entities/MaintenanceCategory";
 import { Maintenance } from "@/entities/Maintenance";
@@ -19,6 +20,24 @@ export const validateVehicleExists = async (
       404,
       "https://example.com/problems/vehicle-not-found",
       "Vehicle Not Found",
+    );
+  }
+};
+
+export const validateVehicleModelExists = async (
+  modelId: string,
+): Promise<void> => {
+  const modelExists = await AppDataSource.getRepository(VehicleModel).findOne({
+    where: { id: modelId },
+    select: ["id"],
+  });
+
+  if (!modelExists) {
+    throw new AppError(
+      `Vehicle Model with ID ${modelId} does not exist`,
+      404,
+      "https://example.com/problems/vehicle-model-not-found",
+      "Vehicle Model Not Found",
     );
   }
 };

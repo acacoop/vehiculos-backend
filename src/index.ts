@@ -23,7 +23,7 @@ import vehicleResponsiblesRoutes from "@/routes/vehicleResponsibles";
 import userRolesRoutes from "@/routes/userRoles";
 import maintenanceCategoriesRoutes from "@/routes/maintenanceCategories";
 import maintenanceRoutes from "@/routes/maintenancePosibles";
-import assignedMaintenanceRoutes from "@/routes/assignedMaintenances";
+import maintenanceRequirementsRoutes from "@/routes/maintenanceRequirements";
 import maintenanceRecordsRoutes from "@/routes/maintenanceRecords";
 import vehicleBrandsRoutes from "@/routes/vehicleBrands";
 import vehicleModelsRoutes from "@/routes/vehicleModels";
@@ -88,7 +88,7 @@ app.use("/vehicle-models", vehicleModelsRoutes);
 app.use("/vehicle-acl", vehicleACLRoutes);
 app.use("/maintenance/categories", maintenanceCategoriesRoutes);
 app.use("/maintenance/posibles", maintenanceRoutes);
-app.use("/maintenance/assignments", assignedMaintenanceRoutes);
+app.use("/maintenance/requirements", maintenanceRequirementsRoutes);
 app.use("/maintenance/records", maintenanceRecordsRoutes);
 
 // 404 handler

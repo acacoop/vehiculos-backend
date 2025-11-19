@@ -1,7 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 import { MaintenancesService } from "@/services/maintenancesService";
 import { IMaintenanceRepository } from "@/repositories/interfaces/IMaintenanceRepository";
-import { IAssignedMaintenanceRepository } from "@/repositories/interfaces/IAssignedMaintenanceRepository";
+import { IMaintenanceRequirementRepository } from "@/repositories/interfaces/IMaintenanceRequirementRepository";
 import { Maintenance } from "@/entities/Maintenance";
 import { MaintenanceCategory } from "@/entities/MaintenanceCategory";
 import { Repository } from "typeorm";
@@ -13,7 +13,7 @@ describe("MaintenancesService", () => {
   let service: MaintenancesService;
   let mockRepo: jest.Mocked<IMaintenanceRepository>;
   let mockMaintenanceCategoryRepo: jest.Mocked<Repository<MaintenanceCategory>>;
-  let mockAssignedRepo: jest.Mocked<IAssignedMaintenanceRepository>;
+  let mockRequirementRepo: jest.Mocked<IMaintenanceRequirementRepository>;
 
   beforeEach(() => {
     mockRepo = {
@@ -29,13 +29,20 @@ describe("MaintenancesService", () => {
       findOne: jest.fn(),
     } as unknown as jest.Mocked<Repository<MaintenanceCategory>>;
 
-    mockAssignedRepo = {
+    mockRequirementRepo = {
       findByMaintenance: jest.fn(),
-    } as unknown as jest.Mocked<IAssignedMaintenanceRepository>;
+      findByVehicle: jest.fn(),
+      findAndCount: jest.fn(),
+      findOne: jest.fn(),
+      findOverlapping: jest.fn(),
+      create: jest.fn(),
+      save: jest.fn(),
+      delete: jest.fn(),
+    } as unknown as jest.Mocked<IMaintenanceRequirementRepository>;
 
     service = new MaintenancesService(
       mockRepo,
-      mockAssignedRepo,
+      mockRequirementRepo,
       mockMaintenanceCategoryRepo,
     );
   });

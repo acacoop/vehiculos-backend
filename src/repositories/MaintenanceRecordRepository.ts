@@ -27,12 +27,11 @@ export class MaintenanceRecordRepository
     const { filters, search, pagination } = options || {};
 
     const qb = this.qb()
-      .leftJoinAndSelect("mr.assignedMaintenance", "am")
-      .leftJoinAndSelect("am.vehicle", "v")
+      .leftJoinAndSelect("mr.maintenance", "m")
+      .leftJoinAndSelect("m.category", "mc")
+      .leftJoinAndSelect("mr.vehicle", "v")
       .leftJoinAndSelect("v.model", "model")
       .leftJoinAndSelect("model.brand", "brand")
-      .leftJoinAndSelect("am.maintenance", "m")
-      .leftJoinAndSelect("m.category", "mc")
       .leftJoinAndSelect("mr.user", "u")
       .orderBy("mr.date", "DESC");
 
@@ -55,7 +54,6 @@ export class MaintenanceRecordRepository
       userId: { field: "u.id" },
       vehicleId: { field: "v.id" },
       maintenanceId: { field: "m.id" },
-      assignedMaintenanceId: { field: "am.id" },
     });
 
     // Pagination
@@ -68,46 +66,47 @@ export class MaintenanceRecordRepository
 
   findOne(id: string) {
     return this.qb()
-      .leftJoinAndSelect("mr.assignedMaintenance", "am")
-      .leftJoinAndSelect("am.vehicle", "v")
+      .leftJoinAndSelect("mr.maintenance", "m")
+      .leftJoinAndSelect("m.category", "mc")
+      .leftJoinAndSelect("mr.vehicle", "v")
       .leftJoinAndSelect("v.model", "model")
       .leftJoinAndSelect("model.brand", "brand")
-      .leftJoinAndSelect("am.maintenance", "m")
-      .leftJoinAndSelect("m.category", "mc")
       .leftJoinAndSelect("mr.user", "u")
       .where("mr.id = :id", { id })
       .getOne();
   }
+
   findByVehicle(vehicleId: string) {
     return this.qb()
-      .leftJoinAndSelect("mr.assignedMaintenance", "am")
-      .leftJoinAndSelect("am.vehicle", "v")
+      .leftJoinAndSelect("mr.maintenance", "m")
+      .leftJoinAndSelect("m.category", "mc")
+      .leftJoinAndSelect("mr.vehicle", "v")
       .leftJoinAndSelect("v.model", "model")
       .leftJoinAndSelect("model.brand", "brand")
-      .leftJoinAndSelect("am.maintenance", "m")
-      .leftJoinAndSelect("m.category", "mc")
       .leftJoinAndSelect("mr.user", "u")
       .where("v.id = :vehicleId", { vehicleId })
       .orderBy("mr.date", "DESC")
       .getMany();
   }
+
+  findByMaintenance(maintenanceId: string) {
+    return this.qb()
+      .leftJoinAndSelect("mr.maintenance", "m")
+      .leftJoinAndSelect("m.category", "mc")
+      .leftJoinAndSelect("mr.vehicle", "v")
+      .leftJoinAndSelect("v.model", "model")
+      .leftJoinAndSelect("model.brand", "brand")
+      .leftJoinAndSelect("mr.user", "u")
+      .where("m.id = :maintenanceId", { maintenanceId })
+      .orderBy("mr.date", "DESC")
+      .getMany();
+  }
+
   create(data: Partial<MaintenanceRecord>) {
     return this.repo.create(data);
   }
+
   save(entity: MaintenanceRecord) {
     return this.repo.save(entity);
-  }
-  findByAssignedMaintenance(assignedMaintenanceId: string) {
-    return this.qb()
-      .leftJoinAndSelect("mr.assignedMaintenance", "am")
-      .leftJoinAndSelect("am.vehicle", "v")
-      .leftJoinAndSelect("v.model", "model")
-      .leftJoinAndSelect("model.brand", "brand")
-      .leftJoinAndSelect("am.maintenance", "m")
-      .leftJoinAndSelect("m.category", "mc")
-      .leftJoinAndSelect("mr.user", "u")
-      .where("am.id = :assignedMaintenanceId", { assignedMaintenanceId })
-      .orderBy("mr.date", "DESC")
-      .getMany();
   }
 }

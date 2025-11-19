@@ -1,7 +1,10 @@
-export function parsePaginationQuery(query: { page?: string; limit?: string }) {
-  const page = query.page ? parseInt(query.page) : 1;
+export function parsePaginationQuery(query: {
+  offset?: string;
+  limit?: string;
+}) {
+  const offset = query.offset ? parseInt(query.offset) : 0;
   const limit = query.limit ? parseInt(query.limit) : 10;
-  const offset = (page - 1) * limit;
+  const page = limit > 0 ? Math.floor(offset / limit) + 1 : 1;
 
   return { page, limit, offset };
 }

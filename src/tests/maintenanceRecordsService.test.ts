@@ -2,11 +2,18 @@ import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 import { MaintenanceRecordsService } from "@/services/maintenancesService";
 import { IMaintenanceRecordRepository } from "@/repositories/interfaces/IMaintenanceRecordRepository";
 import { MaintenanceRecord as MaintenanceRecordEntity } from "@/entities/MaintenanceRecord";
-import { AssignedMaintenance } from "@/entities/AssignedMaintenance";
 import { User } from "@/entities/User";
 import { Vehicle } from "@/entities/Vehicle";
 import { Maintenance } from "@/entities/Maintenance";
 import { Repository } from "typeorm";
+import { AppDataSource } from "@/db";
+
+// Mock AppDataSource
+jest.mock("@/db", () => ({
+  AppDataSource: {
+    getRepository: jest.fn(),
+  },
+}));
 
 describe("MaintenanceRecordsService", () => {
   let service: MaintenanceRecordsService;
@@ -14,7 +21,8 @@ describe("MaintenanceRecordsService", () => {
   let mockMaintenanceRecordEntityRepo: jest.Mocked<
     Repository<MaintenanceRecordEntity>
   >;
-  let mockAssignedRepo: jest.Mocked<Repository<AssignedMaintenance>>;
+  let mockMaintenanceRepo: jest.Mocked<Repository<Maintenance>>;
+  let mockVehicleRepo: jest.Mocked<Repository<Vehicle>>;
   let mockUserRepo: jest.Mocked<Repository<User>>;
 
   const mockUser: User = {
@@ -59,19 +67,10 @@ describe("MaintenanceRecordsService", () => {
     },
   };
 
-  const mockAssignedMaintenance: AssignedMaintenance = {
-    id: "assigned-1",
-    vehicle: mockVehicle,
-    maintenance: mockMaintenance,
-    kilometersFrequency: 10000,
-    daysFrequency: null,
-    observations: null,
-    instructions: null,
-  };
-
   const mockRecord: MaintenanceRecordEntity = {
     id: "record-1",
-    assignedMaintenance: mockAssignedMaintenance,
+    maintenance: mockMaintenance,
+    vehicle: mockVehicle,
     user: mockUser,
     date: "2024-01-15",
     kilometers: 5000,
@@ -84,9 +83,9 @@ describe("MaintenanceRecordsService", () => {
       findAndCount: jest.fn(),
       findOne: jest.fn(),
       findByVehicle: jest.fn(),
+      findByMaintenance: jest.fn(),
       create: jest.fn(),
       save: jest.fn(),
-      findByAssignedMaintenance: jest.fn(),
     } as jest.Mocked<IMaintenanceRecordRepository>;
 
     mockMaintenanceRecordEntityRepo = {
@@ -95,18 +94,34 @@ describe("MaintenanceRecordsService", () => {
       create: jest.fn(),
     } as unknown as jest.Mocked<Repository<MaintenanceRecordEntity>>;
 
-    mockAssignedRepo = {
+    mockMaintenanceRepo = {
       findOne: jest.fn(),
-    } as unknown as jest.Mocked<Repository<AssignedMaintenance>>;
+    } as unknown as jest.Mocked<Repository<Maintenance>>;
+
+    mockVehicleRepo = {
+      findOne: jest.fn(),
+    } as unknown as jest.Mocked<Repository<Vehicle>>;
 
     mockUserRepo = {
       findOne: jest.fn(),
     } as unknown as jest.Mocked<Repository<User>>;
 
+    // Mock AppDataSource.getRepository for validators
+    (AppDataSource.getRepository as jest.Mock).mockImplementation(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (entity: any) => {
+        if (entity === Maintenance) return mockMaintenanceRepo;
+        if (entity === Vehicle) return mockVehicleRepo;
+        if (entity === User) return mockUserRepo;
+        return {};
+      },
+    );
+
     service = new MaintenanceRecordsService(
       mockRecordRepo as unknown as IMaintenanceRecordRepository,
       mockMaintenanceRecordEntityRepo,
-      mockAssignedRepo,
+      mockMaintenanceRepo,
+      mockVehicleRepo,
       mockUserRepo,
     );
   });
@@ -196,12 +211,14 @@ describe("MaintenanceRecordsService", () => {
 
   describe("create", () => {
     it("should create a new maintenance record", async () => {
-      mockAssignedRepo.findOne.mockResolvedValue(mockAssignedMaintenance);
+      mockMaintenanceRepo.findOne.mockResolvedValue(mockMaintenance);
+      mockVehicleRepo.findOne.mockResolvedValue(mockVehicle);
       mockUserRepo.findOne.mockResolvedValue(mockUser);
       mockMaintenanceRecordEntityRepo.save.mockResolvedValue(mockRecord);
 
       const input = {
-        assignedMaintenanceId: "assigned-1",
+        maintenanceId: "maintenance-1",
+        vehicleId: "vehicle-1",
         userId: "user-1",
         date: new Date("2024-01-15"),
         kilometers: 5000,
@@ -215,27 +232,47 @@ describe("MaintenanceRecordsService", () => {
       expect(mockMaintenanceRecordEntityRepo.save).toHaveBeenCalled();
     });
 
-    it("should return null when assigned maintenance not found", async () => {
-      mockAssignedRepo.findOne.mockResolvedValue(null);
+    it("should return null when maintenance not found", async () => {
+      mockMaintenanceRepo.findOne.mockResolvedValue(null);
 
       const input = {
-        assignedMaintenanceId: "invalid",
+        maintenanceId: "invalid",
+        vehicleId: "vehicle-1",
         userId: "user-1",
         date: new Date("2024-01-15"),
         kilometers: 5000,
       };
 
-      const result = await service.create(input);
+      await expect(service.create(input)).rejects.toThrow(
+        "Maintenance with ID invalid does not exist",
+      );
+    });
 
-      expect(result).toBeNull();
+    it("should return null when vehicle not found", async () => {
+      mockMaintenanceRepo.findOne.mockResolvedValue(mockMaintenance);
+      mockVehicleRepo.findOne.mockResolvedValue(null);
+
+      const input = {
+        maintenanceId: "maintenance-1",
+        vehicleId: "invalid",
+        userId: "user-1",
+        date: new Date("2024-01-15"),
+        kilometers: 5000,
+      };
+
+      await expect(service.create(input)).rejects.toThrow(
+        "Vehicle with ID invalid does not exist",
+      );
     });
 
     it("should return null when user not found", async () => {
-      mockAssignedRepo.findOne.mockResolvedValue(mockAssignedMaintenance);
+      mockMaintenanceRepo.findOne.mockResolvedValue(mockMaintenance);
+      mockVehicleRepo.findOne.mockResolvedValue(mockVehicle);
       mockUserRepo.findOne.mockResolvedValue(null);
 
       const input = {
-        assignedMaintenanceId: "assigned-1",
+        maintenanceId: "maintenance-1",
+        vehicleId: "vehicle-1",
         userId: "invalid",
         date: new Date("2024-01-15"),
         kilometers: 5000,
