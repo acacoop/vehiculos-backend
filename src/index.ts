@@ -29,6 +29,8 @@ import vehicleBrandsRoutes from "@/routes/vehicleBrands";
 import vehicleModelsRoutes from "@/routes/vehicleModels";
 import vehicleACLRoutes from "@/routes/vehicleACL";
 import vehicleKilometersLogsRoutes from "@/routes/vehicleKilometersLogs";
+import maintenanceChecklistsRoutes from "@/routes/maintenanceChecklists";
+import maintenanceChecklistItemsRoutes from "@/routes/maintenanceChecklistItems";
 
 import { SERVER_PORT } from "@/config/env.config";
 import { AppDataSource, initializeDatabase } from "@/db";
@@ -90,6 +92,8 @@ app.use("/maintenance/categories", maintenanceCategoriesRoutes);
 app.use("/maintenance/posibles", maintenanceRoutes);
 app.use("/maintenance/requirements", maintenanceRequirementsRoutes);
 app.use("/maintenance/records", maintenanceRecordsRoutes);
+app.use("/maintenance-checklists", maintenanceChecklistsRoutes);
+app.use("/maintenance-checklist-items", maintenanceChecklistItemsRoutes);
 
 // 404 handler
 app.use("*", (req: Request, res: Response) => {

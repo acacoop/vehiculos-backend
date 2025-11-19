@@ -25,6 +25,8 @@ import { VehicleBrand } from "@/entities/VehicleBrand";
 import { VehicleModel } from "@/entities/VehicleModel";
 import { VehicleACL } from "@/entities/VehicleACL";
 import { UserRole } from "@/entities/UserRole";
+import { MaintenanceChecklist } from "@/entities/MaintenanceChecklist";
+import { MaintenanceChecklistItem } from "@/entities/MaintenanceChecklistItem";
 
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
 
@@ -62,6 +64,8 @@ const createDataSourceConfig = () => {
     VehicleResponsible,
     VehicleACL,
     UserRole,
+    MaintenanceChecklist,
+    MaintenanceChecklistItem,
   ];
 
   const baseConfig = {
