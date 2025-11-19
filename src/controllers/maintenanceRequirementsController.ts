@@ -1,34 +1,34 @@
 import { Request, Response } from "express";
 import { asyncHandler, AppError } from "@/middleware/errorHandler";
 import {
-  AssignedMaintenanceSchema,
-  UpdateAssignedMaintenanceSchema,
-} from "@/schemas/assignMaintance";
-import type { AssignedMaintenance } from "@/schemas/assignMaintance";
+  MaintenanceRequirementSchema,
+  UpdateMaintenanceRequirementSchema,
+} from "@/schemas/maintenanceRequirement";
+import type { MaintenanceRequirement } from "@/schemas/maintenanceRequirement";
 import {
-  AssignedMaintenancesService,
-  AssignedMaintenanceDTO,
-} from "@/services/maintenancesService";
+  MaintenanceRequirementsService,
+  MaintenanceRequirementDTO,
+} from "@/services/maintenanceRequirementsService";
 import { ApiResponse } from "@/controllers/baseController";
 import { ServiceFactory } from "@/factories/serviceFactory";
 import { AppDataSource } from "@/db";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
-import { AssignedMaintenanceFilters } from "@/repositories/interfaces/IAssignedMaintenanceRepository";
+import { MaintenanceRequirementFilters } from "@/repositories/interfaces/IMaintenanceRequirementRepository";
 import {
   parsePaginationQuery,
   extractFilters,
   extractSearch,
 } from "@/utils/index";
 
-export class AssignedMaintenancesController {
-  constructor(private readonly service: AssignedMaintenancesService) {}
+export class MaintenanceRequirementsController {
+  constructor(private readonly service: MaintenanceRequirementsService) {}
 
   getAll = asyncHandler(async (req: Request, res: Response) => {
     const { page, limit, offset } = parsePaginationQuery(req.query);
     const search = extractSearch(req.query);
-    const filters = extractFilters<AssignedMaintenanceFilters>(req.query);
+    const filters = extractFilters<MaintenanceRequirementFilters>(req.query);
 
-    const options: RepositoryFindOptions<AssignedMaintenanceFilters> = {
+    const options: RepositoryFindOptions<MaintenanceRequirementFilters> = {
       pagination: { limit, offset },
       filters,
       search,
@@ -36,7 +36,7 @@ export class AssignedMaintenancesController {
 
     const { items, total } = await this.service.getAll(options);
 
-    const response: ApiResponse<AssignedMaintenanceDTO[]> = {
+    const response: ApiResponse<MaintenanceRequirementDTO[]> = {
       status: "success",
       data: items,
       pagination: {
@@ -50,79 +50,46 @@ export class AssignedMaintenancesController {
     res.status(200).json(response);
   });
 
-  getByVehicle = asyncHandler(async (req: Request, res: Response) => {
-    const vehicleId = req.params.vehicleId;
-
-    const maintenanceRecords = await this.service.getByVehicle(vehicleId);
-
-    const response: ApiResponse<AssignedMaintenanceDTO[]> = {
-      status: "success",
-      data: maintenanceRecords,
-    };
-
-    res.status(200).json(response);
-  });
-
-  getByMaintenance = asyncHandler(async (req: Request, res: Response) => {
-    const maintenanceId = req.params.maintenanceId;
-
-    const assignedMaintenances =
-      await this.service.getByMaintenance(maintenanceId);
-
-    const response: ApiResponse<AssignedMaintenanceDTO[]> = {
-      status: "success",
-      data: assignedMaintenances,
-    };
-
-    res.status(200).json(response);
-  });
-
   getById = asyncHandler(async (req: Request, res: Response) => {
-    const id = req.params.assignedMaintenanceId;
+    const id = req.params.maintenanceRequirementId;
 
-    const assignedMaintenance = await this.service.getById(id);
+    const maintenanceRequirement = await this.service.getById(id);
 
-    if (!assignedMaintenance) {
+    if (!maintenanceRequirement) {
       const response: ApiResponse<null> = {
         status: "error",
-        message: `Maintenance assignment with ID ${id} was not found`,
+        message: `Maintenance requirement with ID ${id} was not found`,
       };
       res.status(404).json(response);
       return;
     }
 
-    const response: ApiResponse<AssignedMaintenanceDTO> = {
+    const response: ApiResponse<MaintenanceRequirementDTO> = {
       status: "success",
-      data: assignedMaintenance,
+      data: maintenanceRequirement,
     };
 
     res.status(200).json(response);
   });
 
   create = asyncHandler(async (req: Request, res: Response) => {
-    const assignedMaintenance: AssignedMaintenance =
-      AssignedMaintenanceSchema.parse(req.body);
+    const maintenanceRequirement: MaintenanceRequirement =
+      MaintenanceRequirementSchema.parse(req.body);
 
     try {
-      const result = await this.service.create(assignedMaintenance);
-
-      if (!result) {
-        const response: ApiResponse<null> = {
-          status: "error",
-          message: "Failed to create maintenance assignment",
-        };
-        res.status(400).json(response);
-        return;
-      }
+      const result = await this.service.create(maintenanceRequirement);
 
       const response: ApiResponse<typeof result> = {
         status: "success",
         data: result,
-        message: "Maintenance assignment created successfully",
+        message: "Maintenance requirement created successfully",
       };
 
       res.status(201).json(response);
     } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
       if (error instanceof Error && error.message.includes("does not exist")) {
         const response: ApiResponse<null> = {
           status: "error",
@@ -137,14 +104,14 @@ export class AssignedMaintenancesController {
 
   update = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id;
-    const updateData = UpdateAssignedMaintenanceSchema.parse(req.body);
+    const updateData = UpdateMaintenanceRequirementSchema.parse(req.body);
 
     try {
       const result = await this.service.update(id, updateData);
       if (!result) {
         const response: ApiResponse<null> = {
           status: "error",
-          message: `Maintenance assignment with ID ${id} was not found`,
+          message: `Maintenance requirement with ID ${id} was not found`,
         };
         res.status(404).json(response);
         return;
@@ -152,7 +119,7 @@ export class AssignedMaintenancesController {
       const response: ApiResponse<typeof result> = {
         status: "success",
         data: result,
-        message: "Maintenance assignment updated successfully",
+        message: "Maintenance requirement updated successfully",
       };
       res.status(200).json(response);
     } catch (error) {
@@ -176,7 +143,7 @@ export class AssignedMaintenancesController {
     if (!success) {
       const response: ApiResponse<null> = {
         status: "error",
-        message: `Maintenance assignment with ID ${id} was not found`,
+        message: `Maintenance requirement with ID ${id} was not found`,
       };
       res.status(404).json(response);
       return;
@@ -184,20 +151,20 @@ export class AssignedMaintenancesController {
     const response: ApiResponse<null> = {
       status: "success",
       data: null,
-      message: "Maintenance assignment deleted successfully",
+      message: "Maintenance requirement deleted successfully",
     };
     res.status(200).json(response);
   });
 }
 
-export const createAssignedMaintenancesController = (
-  service?: AssignedMaintenancesService,
+export const createMaintenanceRequirementsController = (
+  service?: MaintenanceRequirementsService,
 ) => {
   const svc =
     service ??
-    new ServiceFactory(AppDataSource).createAssignedMaintenancesService();
-  return new AssignedMaintenancesController(svc);
+    new ServiceFactory(AppDataSource).createMaintenanceRequirementsService();
+  return new MaintenanceRequirementsController(svc);
 };
 
-export const assignedMaintenancesController =
-  createAssignedMaintenancesController();
+export const maintenanceRequirementsController =
+  createMaintenanceRequirementsController();

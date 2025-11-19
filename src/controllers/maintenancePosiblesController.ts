@@ -4,8 +4,7 @@ import {
   MaintenanceUpdateSchema,
 } from "@/schemas/maintenance";
 import { MaintenancesService } from "@/services/maintenancesService";
-import { Request, Response } from "express";
-import { asyncHandler, AppError } from "@/middleware/errorHandler";
+import { AppError } from "@/middleware/errorHandler";
 import { ServiceFactory } from "@/factories/serviceFactory";
 import { AppDataSource } from "@/db";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
@@ -76,45 +75,6 @@ export class MaintenancePosiblesController extends BaseController<MaintenanceFil
   protected async deleteService(id: string) {
     return await this.service.delete(id);
   }
-
-  public getVehiclesByMaintenance = asyncHandler(
-    async (req: Request, res: Response) => {
-      const maintenanceId = req.params.id;
-
-      try {
-        const maintenance = await this.service.getById(maintenanceId);
-        if (!maintenance) {
-          throw new AppError(
-            `Maintenance with ID ${maintenanceId} not found`,
-            404,
-            "https://example.com/problems/maintenance-not-found",
-            "Maintenance Not Found",
-          );
-        }
-
-        const vehicles = await this.service.getVehicles(maintenanceId);
-
-        res.status(200).json({
-          status: "success",
-          data: vehicles,
-          message:
-            vehicles.length > 0
-              ? `Found ${vehicles.length} vehicle(s) assigned to maintenance`
-              : "No vehicles assigned to this maintenance",
-        });
-      } catch (error) {
-        if (error instanceof AppError) {
-          throw error;
-        }
-        throw new AppError(
-          "Failed to retrieve vehicles for maintenance",
-          500,
-          "https://example.com/problems/database-error",
-          "Database Error",
-        );
-      }
-    },
-  );
 }
 
 export const createMaintenancePosiblesController = (

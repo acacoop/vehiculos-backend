@@ -12,12 +12,7 @@ export class MaintenanceRecordsController extends BaseController<MaintenanceReco
   constructor(private readonly service: MaintenanceRecordsService) {
     super({
       resourceName: "MaintenanceRecord",
-      allowedFilters: [
-        "userId",
-        "vehicleId",
-        "maintenanceId",
-        "assignedMaintenanceId",
-      ],
+      allowedFilters: ["userId", "vehicleId", "maintenanceId"],
     });
   }
 
