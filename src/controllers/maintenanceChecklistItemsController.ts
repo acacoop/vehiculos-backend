@@ -16,6 +16,7 @@ const BulkCreateSchema = z.object({
   maintenanceChecklistId: z.string().uuid(),
   maintenanceChecklistItems: z.array(
     z.object({
+      title: z.string(),
       passed: z.boolean(),
       observations: z.string(),
     }),

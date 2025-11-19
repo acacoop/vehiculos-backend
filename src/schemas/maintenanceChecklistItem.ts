@@ -4,6 +4,7 @@ import { z } from "zod";
 export const MaintenanceChecklistItemSchema = z.object({
   id: z.string().uuid().optional(), // UUID, optional for creation
   maintenanceChecklistId: z.string().uuid(),
+  title: z.string(),
   passed: z.boolean(),
   observations: z.string(),
 });
@@ -31,6 +32,7 @@ export interface MaintenanceChecklistItemDTO {
     };
     filledAt?: string;
   };
+  title: string;
   passed: boolean;
   observations: string;
 }

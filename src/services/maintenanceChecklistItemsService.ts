@@ -28,6 +28,7 @@ function map(mci: MaintenanceChecklistItem): MaintenanceChecklistItemDTO {
         : undefined,
       filledAt: mci.maintenanceChecklist.filledAt ?? undefined,
     },
+    title: mci.title,
     passed: mci.passed,
     observations: mci.observations,
   };
