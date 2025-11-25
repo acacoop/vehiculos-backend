@@ -70,7 +70,7 @@ const createDataSourceConfig = () => {
 
   const baseConfig = {
     type: "mssql" as const,
-    synchronize: !isProd,
+    synchronize: false,
     logging: DB_LOGGING,
     entities,
     migrations: ["dist/migrations/*.js"],
