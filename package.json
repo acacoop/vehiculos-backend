@@ -15,6 +15,7 @@
     "test:permissions": "jest permissions.test.ts",
     "sync:users": "node --env-file=.env dist/scripts/syncEntraUsers.js",
     "sample-data": "node --env-file=.env dist/scripts/loadSampleData.js",
+    "generate-checklists": "tsx --env-file=.env src/scripts/generateQuarterlyChecklists.ts",
     "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json}\"",
     "migration:generate": "tsx node_modules/typeorm/cli.js migration:generate -d dist/db.js src/migrations/$NAME",
     "migration:create": "tsx node_modules/typeorm/cli.js migration:create -d dist/db.js src/migrations/$NAME",

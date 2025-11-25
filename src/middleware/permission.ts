@@ -7,7 +7,7 @@ import { DataSource } from "typeorm";
 import { VehicleACLRepository } from "@/repositories/VehicleACLRepository";
 import { VehicleResponsibleRepository } from "@/repositories/VehicleResponsibleRepository";
 import { UserRoleRepository } from "@/repositories/UserRoleRepository";
-import { UserRoleEnum } from "@/enums/UserRoleEnum";
+import { UserRoleEnum, USER_ROLES_WEIGHT } from "@/enums/UserRoleEnum";
 import { AppDataSource } from "@/db";
 import { AssignmentRepository } from "@/repositories/AssignmentRepository";
 
@@ -105,10 +105,22 @@ export class PermissionChecker {
     userId: string,
     role: UserRoleEnum,
   ): Promise<boolean> {
-    const [userRoles, _] = await this.userRoleRepo.findAndCount({
-      filters: { userId, role: role as UserRoleEnum },
-    });
-    return userRoles.length > 0;
+    const requiredWeight = USER_ROLES_WEIGHT[role];
+
+    // Check all roles to see if user has one with equal or higher weight
+    for (const [roleKey, roleWeight] of Object.entries(USER_ROLES_WEIGHT)) {
+      if (roleWeight >= requiredWeight) {
+        const hasRole = await this.userRoleRepo.hasActiveRole(
+          userId,
+          roleKey as UserRoleEnum,
+        );
+        if (hasRole) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   async checkUserPermission(

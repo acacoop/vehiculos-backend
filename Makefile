@@ -10,7 +10,7 @@ include .env
 export $(shell sed -nE 's/^([A-Za-z_][A-Za-z0-9_]*)=.*/\1/p' .env)
 endif
 
-.PHONY: up down dev sample-data sync test clean migration-generate migration-run migration-revert help
+.PHONY: up down dev sample-data sync test clean migration-generate migration-run migration-revert prepare-webjobs help
 
 WAIT_RETRIES?=5
 MSSQL_SA_PASSWORD?=Your_password123
@@ -88,6 +88,15 @@ clean:
 	@docker image prune -f >/dev/null 2>&1 || true
 	@echo "Done. Run 'npm ci' to reinstall dependencies."
 
+prepare-webjobs:
+	@echo "Preparing WebJobs for deployment..."
+	@mkdir -p webjobs-deploy
+	@cd webjobs/quarterly-checklists && chmod +x run.sh && zip -r ../../webjobs-deploy/quarterly-checklists.zip . && cd ../..
+	@cd webjobs/sync-entra-users && chmod +x run.sh && zip -r ../../webjobs-deploy/sync-entra-users.zip . && cd ../..
+	@echo "WebJobs packaged in webjobs-deploy/ directory"
+	@echo "  - quarterly-checklists.zip"
+	@echo "  - sync-entra-users.zip"
+
 help:
 	@echo "Available targets:"; \
 	echo "  up              Build and start containers (API + DB)"; \
@@ -99,5 +108,6 @@ help:
 	echo "  migration-generate NAME  Generate new migration from entity changes"; \
 	echo "  migration-run            Apply pending migrations to database"; \
 	echo "  migration-revert         Revert last applied migration"; \
+	echo "  prepare-webjobs          Package WebJobs into zip files in webjobs-deploy/"; \
 	echo "  clean           Remove build artifacts and prune dangling images"; \
 	echo "  help            Show this help message";
