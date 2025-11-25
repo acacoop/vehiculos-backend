@@ -10,7 +10,7 @@ include .env
 export $(shell sed -nE 's/^([A-Za-z_][A-Za-z0-9_]*)=.*/\1/p' .env)
 endif
 
-.PHONY: up down dev sample-data sync test clean migration-generate migration-run migration-revert help
+.PHONY: up down dev sample-data sync test clean migration-generate migration-run migration-revert deploy-webjob deploy-webjobs help
 
 WAIT_RETRIES?=5
 MSSQL_SA_PASSWORD?=Your_password123
@@ -88,6 +88,26 @@ clean:
 	@docker image prune -f >/dev/null 2>&1 || true
 	@echo "Done. Run 'npm ci' to reinstall dependencies."
 
+deploy-webjob:
+	@if [ -z "$(NAME)" ]; then echo "Error: NAME is required. Usage: make deploy-webjob NAME=quarterly-checklists ENV=test"; exit 1; fi
+	@if [ -z "$(ENV)" ]; then echo "Error: ENV is required (test or prod). Usage: make deploy-webjob NAME=quarterly-checklists ENV=test"; exit 1; fi
+	@echo "Deploying WebJob: $(NAME) to environment: $(ENV)..."
+	@cd webjobs/$(NAME) && chmod +x run.sh && zip -r ../../$(NAME).zip . && cd ../..
+	@az webapp deployment source config-zip \
+		-g RSG_FlotaVehiculos \
+		-n app-vehiculos-api-$(ENV) \
+		--src $(NAME).zip \
+		--timeout 300
+	@rm $(NAME).zip
+	@echo "WebJob $(NAME) deployed successfully to $(ENV)"
+
+deploy-webjobs:
+	@if [ -z "$(ENV)" ]; then echo "Error: ENV is required (test or prod). Usage: make deploy-webjobs ENV=test"; exit 1; fi
+	@echo "Deploying all WebJobs to environment: $(ENV)..."
+	@$(MAKE) deploy-webjob NAME=quarterly-checklists ENV=$(ENV)
+	@$(MAKE) deploy-webjob NAME=sync-entra-users ENV=$(ENV)
+	@echo "All WebJobs deployed successfully to $(ENV)"
+
 help:
 	@echo "Available targets:"; \
 	echo "  up              Build and start containers (API + DB)"; \
@@ -99,5 +119,7 @@ help:
 	echo "  migration-generate NAME  Generate new migration from entity changes"; \
 	echo "  migration-run            Apply pending migrations to database"; \
 	echo "  migration-revert         Revert last applied migration"; \
+	echo "  deploy-webjob NAME ENV   Deploy specific WebJob (e.g., make deploy-webjob NAME=quarterly-checklists ENV=test)"; \
+	echo "  deploy-webjobs ENV       Deploy all WebJobs (e.g., make deploy-webjobs ENV=prod)"; \
 	echo "  clean           Remove build artifacts and prune dangling images"; \
 	echo "  help            Show this help message";
