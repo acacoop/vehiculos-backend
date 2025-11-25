@@ -162,7 +162,12 @@ export class ServiceFactory {
     const repo = new MaintenanceChecklistRepository(this.dataSource);
     const userRepo = this.dataSource.getRepository(User);
     const vehicleRepo = this.dataSource.getRepository(Vehicle);
-    return new MaintenanceChecklistsService(repo, userRepo, vehicleRepo);
+    return new MaintenanceChecklistsService(
+      repo,
+      userRepo,
+      vehicleRepo,
+      this.dataSource,
+    );
   }
 
   createMaintenanceChecklistItemsService(): MaintenanceChecklistItemsService {

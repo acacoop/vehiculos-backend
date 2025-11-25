@@ -25,12 +25,6 @@ router.post(
   maintenanceChecklistItemsController.create,
 );
 
-router.post(
-  "/bulk",
-  requireRole(UserRoleEnum.USER), // Permissive for bulk creation
-  maintenanceChecklistItemsController.createBulk,
-);
-
 router.patch(
   "/:id",
   validateUUIDParam("id"),

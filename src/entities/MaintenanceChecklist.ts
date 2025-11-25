@@ -4,10 +4,12 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  OneToMany,
   Check,
 } from "typeorm";
 import { Vehicle } from "@/entities/Vehicle";
 import { User } from "@/entities/User";
+import { MaintenanceChecklistItem } from "@/entities/MaintenanceChecklistItem";
 
 @Entity({ name: "maintenance_checklists" })
 @Check("quarter IN (1,2,3,4)")
@@ -34,4 +36,10 @@ export class MaintenanceChecklist {
 
   @Column({ name: "filled_at", type: "date", nullable: true })
   filledAt!: string | null;
+
+  @OneToMany(
+    () => MaintenanceChecklistItem,
+    (item) => item.maintenanceChecklist,
+  )
+  items!: MaintenanceChecklistItem[];
 }

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MaintenanceChecklistItemStatus } from "@/enums/MaintenanceChecklistItemStatusEnum";
 
 // Define the schema for maintenance checklist object
 export const MaintenanceChecklistSchema = z.object({
@@ -47,6 +48,10 @@ export interface MaintenanceChecklistDTO {
     active: boolean;
   };
   filledAt?: string;
-  itemCount: number;
-  passedCount: number;
+  items: {
+    id: string;
+    title: string;
+    status: MaintenanceChecklistItemStatus;
+    observations: string;
+  }[];
 }

@@ -6,30 +6,14 @@ import {
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import type { MaintenanceChecklistItemDTO } from "@/schemas/maintenanceChecklistItem";
 import { MaintenanceChecklistsService } from "@/services/maintenanceChecklistsService";
+import { MaintenanceChecklistItemStatus } from "@/enums/MaintenanceChecklistItemStatusEnum";
 
 function map(mci: MaintenanceChecklistItem): MaintenanceChecklistItemDTO {
   return {
     id: mci.id,
-    maintenanceChecklist: {
-      id: mci.maintenanceChecklist.id,
-      vehicle: {
-        id: mci.maintenanceChecklist.vehicle.id,
-        licensePlate: mci.maintenanceChecklist.vehicle.licensePlate,
-      },
-      year: mci.maintenanceChecklist.year,
-      quarter: mci.maintenanceChecklist.quarter,
-      intendedDeliveryDate: mci.maintenanceChecklist.intendedDeliveryDate,
-      filledBy: mci.maintenanceChecklist.filledBy
-        ? {
-            id: mci.maintenanceChecklist.filledBy.id,
-            firstName: mci.maintenanceChecklist.filledBy.firstName,
-            lastName: mci.maintenanceChecklist.filledBy.lastName,
-          }
-        : undefined,
-      filledAt: mci.maintenanceChecklist.filledAt ?? undefined,
-    },
+    maintenanceChecklistId: mci.maintenanceChecklist.id,
     title: mci.title,
-    passed: mci.passed,
+    status: mci.status,
     observations: mci.observations,
   };
 }
@@ -63,23 +47,33 @@ export class MaintenanceChecklistItemsService {
 
   async createMany(
     checklistId: string,
-    items: { passed: boolean; observations: string }[],
+    items: {
+      title: string;
+      status: MaintenanceChecklistItemStatus;
+      observations: string;
+    }[],
   ): Promise<MaintenanceChecklistItemDTO[]> {
     const entities = this.repository.createMany(
       items.map((item) => ({
         maintenanceChecklistId: checklistId,
-        passed: item.passed,
+        title: item.title,
+        status: item.status,
         observations: item.observations,
       })),
     );
-    const saved = await this.repository.saveMany(entities);
-    return saved.map(map);
+    const savedEntities = await this.repository.saveMany(entities);
+
+    return savedEntities.map(map);
   }
 
   async fillChecklist(
     userId: string,
     checklistId: string,
-    items: { passed: boolean; observations: string }[],
+    items: {
+      title: string;
+      status: MaintenanceChecklistItemStatus;
+      observations: string;
+    }[],
   ): Promise<MaintenanceChecklistItemDTO[]> {
     // Check if checklist exists and is not filled
     const checklist = await this.checklistService.getById(checklistId);

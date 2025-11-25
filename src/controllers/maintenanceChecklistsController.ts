@@ -7,6 +7,41 @@ import { ServiceFactory } from "@/factories/serviceFactory";
 import { AppDataSource } from "@/db";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import { MaintenanceChecklistFilters } from "@/repositories/interfaces/IMaintenanceChecklistRepository";
+import { Request, Response } from "express";
+import { asyncHandler } from "@/middleware/errorHandler";
+import { z } from "zod";
+import { MaintenanceChecklistItemStatus } from "@/enums/MaintenanceChecklistItemStatusEnum";
+
+const CreateChecklistWithItemsSchema = z.object({
+  vehicleId: z.string().uuid(),
+  year: z.number().int().min(2000).max(2100),
+  quarter: z.number().int().min(1).max(4),
+  intendedDeliveryDate: z.string(),
+  items: z.array(
+    z.object({
+      title: z.string(),
+      status: z.nativeEnum(MaintenanceChecklistItemStatus),
+      observations: z.string(),
+    }),
+  ),
+});
+
+const PatchChecklistWithItemsSchema = z.object({
+  year: z.number().int().min(2000).max(2100).optional(),
+  quarter: z.number().int().min(1).max(4).optional(),
+  intendedDeliveryDate: z.string().optional(),
+  filledBy: z.string().uuid().optional(),
+  filledAt: z.string().optional(),
+  items: z
+    .array(
+      z.object({
+        id: z.string().uuid(),
+        status: z.nativeEnum(MaintenanceChecklistItemStatus).optional(),
+        observations: z.string().optional(),
+      }),
+    )
+    .optional(),
+});
 
 export class MaintenanceChecklistsController extends BaseController<MaintenanceChecklistFilters> {
   constructor(private readonly service: MaintenanceChecklistsService) {
@@ -71,6 +106,63 @@ export class MaintenanceChecklistsController extends BaseController<MaintenanceC
   protected async deleteService(id: string): Promise<boolean> {
     return this.service.delete(id);
   }
+
+  // Create checklist with items (admin only)
+  public createWithItems = asyncHandler(async (req: Request, res: Response) => {
+    const data = CreateChecklistWithItemsSchema.parse(req.body);
+    try {
+      const result = await this.service.createWithItems(data);
+      this.sendResponse(
+        res,
+        result,
+        "Checklist with items created successfully",
+        201,
+      );
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new AppError(
+          error.message,
+          400,
+          "https://example.com/problems/validation-error",
+          "Validation Error",
+        );
+      }
+      throw error;
+    }
+  });
+
+  // Patch checklist with items
+  public patchWithItems = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const data = PatchChecklistWithItemsSchema.parse(req.body);
+    try {
+      const result = await this.service.patchWithItems(id, data);
+      if (!result) {
+        throw new AppError(
+          "Checklist not found",
+          404,
+          "https://example.com/problems/not-found",
+          "Not Found",
+        );
+      }
+      this.sendResponse(
+        res,
+        result,
+        "Checklist with items updated successfully",
+        200,
+      );
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new AppError(
+          error.message,
+          400,
+          "https://example.com/problems/validation-error",
+          "Validation Error",
+        );
+      }
+      throw error;
+    }
+  });
 }
 
 export function createMaintenanceChecklistsController() {

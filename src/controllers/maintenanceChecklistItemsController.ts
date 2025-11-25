@@ -17,7 +17,7 @@ const BulkCreateSchema = z.object({
   maintenanceChecklistItems: z.array(
     z.object({
       title: z.string(),
-      passed: z.boolean(),
+      status: z.string(),
       observations: z.string(),
     }),
   ),
@@ -27,7 +27,7 @@ export class MaintenanceChecklistItemsController extends BaseController<Maintena
   constructor(private readonly service: MaintenanceChecklistItemsService) {
     super({
       resourceName: "MaintenanceChecklistItem",
-      allowedFilters: ["maintenanceChecklistId", "passed"],
+      allowedFilters: ["maintenanceChecklistId", "status"],
     });
   }
 
@@ -80,35 +80,6 @@ export class MaintenanceChecklistItemsController extends BaseController<Maintena
   protected async deleteService(id: string): Promise<boolean> {
     return this.service.delete(id);
   }
-
-  // Custom method for bulk creation
-  public createBulk = asyncHandler(async (req: Request, res: Response) => {
-    const { userId, maintenanceChecklistId, maintenanceChecklistItems } =
-      BulkCreateSchema.parse(req.body);
-    try {
-      const createdItems = await this.service.fillChecklist(
-        userId,
-        maintenanceChecklistId,
-        maintenanceChecklistItems,
-      );
-      this.sendResponse(
-        res,
-        createdItems,
-        "Checklist filled successfully",
-        201,
-      );
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new AppError(
-          error.message,
-          400,
-          "https://example.com/problems/validation-error",
-          "Validation Error",
-        );
-      }
-      throw error;
-    }
-  });
 }
 
 export function createMaintenanceChecklistItemsController() {

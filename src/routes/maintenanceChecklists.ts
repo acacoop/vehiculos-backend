@@ -25,11 +25,24 @@ router.post(
   maintenanceChecklistsController.create,
 );
 
+router.post(
+  "/with-items",
+  requireRole(UserRoleEnum.ADMIN),
+  maintenanceChecklistsController.createWithItems,
+);
+
 router.patch(
   "/:id",
   validateUUIDParam("id"),
   requireRole(UserRoleEnum.ADMIN),
   maintenanceChecklistsController.update,
+);
+
+router.patch(
+  "/:id/with-items",
+  validateUUIDParam("id"),
+  requireRole(UserRoleEnum.USER),
+  maintenanceChecklistsController.patchWithItems,
 );
 
 router.delete(

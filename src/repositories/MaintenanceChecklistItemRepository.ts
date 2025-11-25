@@ -44,7 +44,7 @@ export class MaintenanceChecklistItemRepository
     if (filters) {
       applyFilters(qb, filters, {
         maintenanceChecklistId: { field: "mc.id" },
-        passed: { field: "mci.passed" },
+        status: { field: "mci.status" },
       });
     }
 

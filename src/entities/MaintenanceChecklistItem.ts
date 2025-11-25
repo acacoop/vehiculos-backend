@@ -6,6 +6,7 @@ import {
   JoinColumn,
 } from "typeorm";
 import { MaintenanceChecklist } from "@/entities/MaintenanceChecklist";
+import { MaintenanceChecklistItemStatus } from "@/enums/MaintenanceChecklistItemStatusEnum";
 
 @Entity({ name: "maintenance_checklist_items" })
 export class MaintenanceChecklistItem {
@@ -19,8 +20,12 @@ export class MaintenanceChecklistItem {
   @Column({ type: "nvarchar", length: 255 })
   title!: string;
 
-  @Column({ default: false })
-  passed!: boolean;
+  @Column({
+    type: "nvarchar",
+    length: 50,
+    default: MaintenanceChecklistItemStatus.PENDIENTE,
+  })
+  status!: MaintenanceChecklistItemStatus;
 
   @Column({ type: "text" })
   observations!: string;

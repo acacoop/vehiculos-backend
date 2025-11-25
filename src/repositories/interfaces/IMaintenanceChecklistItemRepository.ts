@@ -1,10 +1,11 @@
 import { MaintenanceChecklistItem } from "@/entities/MaintenanceChecklistItem";
 import { SelectQueryBuilder } from "typeorm";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { MaintenanceChecklistItemStatus } from "@/enums/MaintenanceChecklistItemStatusEnum";
 
 export interface MaintenanceChecklistItemFilters {
   maintenanceChecklistId?: string;
-  passed?: boolean;
+  status?: MaintenanceChecklistItemStatus;
 }
 
 export interface IMaintenanceChecklistItemRepository {

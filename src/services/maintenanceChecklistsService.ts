@@ -11,7 +11,9 @@ import type {
 import { validateVehicleExists } from "@/utils/validation/entity";
 import { User } from "@/entities/User";
 import { Vehicle } from "@/entities/Vehicle";
-import { Repository } from "typeorm";
+import { Repository, DataSource } from "typeorm";
+import { MaintenanceChecklistItemStatus } from "@/enums/MaintenanceChecklistItemStatusEnum";
+import { MaintenanceChecklistItem } from "@/entities/MaintenanceChecklistItem";
 
 function map(mc: MaintenanceChecklist): MaintenanceChecklistDTO {
   return {
@@ -49,8 +51,12 @@ function map(mc: MaintenanceChecklist): MaintenanceChecklistDTO {
         }
       : undefined,
     filledAt: mc.filledAt ?? undefined,
-    itemCount: (mc as any).itemCount || 0,
-    passedCount: (mc as any).passedCount || 0,
+    items: (mc.items || []).map((item) => ({
+      id: item.id,
+      title: item.title,
+      status: item.status,
+      observations: item.observations,
+    })),
   };
 }
 
@@ -59,6 +65,7 @@ export class MaintenanceChecklistsService {
     private readonly repository: IMaintenanceChecklistRepository,
     private readonly userRepo: Repository<User>,
     private readonly vehicleRepo: Repository<Vehicle>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async getAll(
@@ -138,5 +145,143 @@ export class MaintenanceChecklistsService {
 
   async delete(id: string): Promise<boolean> {
     return this.repository.delete(id);
+  }
+
+  async createWithItems(data: {
+    vehicleId: string;
+    year: number;
+    quarter: number;
+    intendedDeliveryDate: string;
+    items: {
+      title: string;
+      status: MaintenanceChecklistItemStatus;
+      observations: string;
+    }[];
+  }): Promise<MaintenanceChecklistDTO> {
+    await validateVehicleExists(data.vehicleId);
+
+    const vehicle = await this.vehicleRepo.findOne({
+      where: { id: data.vehicleId },
+      relations: ["model", "model.brand"],
+    });
+    if (!vehicle) throw new Error("Vehicle not found");
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Create checklist
+      const checklistData: Partial<MaintenanceChecklist> = {
+        vehicle,
+        year: data.year,
+        quarter: data.quarter,
+        intendedDeliveryDate: data.intendedDeliveryDate,
+      };
+
+      const checklist = queryRunner.manager.create(
+        MaintenanceChecklist,
+        checklistData,
+      );
+      const savedChecklist = await queryRunner.manager.save(checklist);
+
+      // Create items
+      if (data.items && data.items.length > 0) {
+        const items = data.items.map((item) =>
+          queryRunner.manager.create(MaintenanceChecklistItem, {
+            maintenanceChecklist: savedChecklist,
+            title: item.title,
+            status: item.status,
+            observations: item.observations,
+          }),
+        );
+        await queryRunner.manager.save(items);
+      }
+
+      await queryRunner.commitTransaction();
+
+      // Fetch the complete entity with relations
+      const complete = await this.repository.findOne(savedChecklist.id);
+      if (!complete) throw new Error("Failed to fetch created checklist");
+
+      return map(complete);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async patchWithItems(
+    id: string,
+    data: {
+      year?: number;
+      quarter?: number;
+      intendedDeliveryDate?: string;
+      filledBy?: string;
+      filledAt?: string;
+      items?: {
+        id: string;
+        status?: MaintenanceChecklistItemStatus;
+        observations?: string;
+      }[];
+    },
+  ): Promise<MaintenanceChecklistDTO | null> {
+    const existing = await this.repository.findOne(id);
+    if (!existing) return null;
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Update checklist
+      if (data.year !== undefined) existing.year = data.year;
+      if (data.quarter !== undefined) existing.quarter = data.quarter;
+      if (data.intendedDeliveryDate)
+        existing.intendedDeliveryDate = data.intendedDeliveryDate;
+
+      if (data.filledBy !== undefined) {
+        existing.filledBy = data.filledBy
+          ? (await this.userRepo.findOne({ where: { id: data.filledBy } })) ||
+            null
+          : null;
+      }
+
+      if (data.filledAt !== undefined) existing.filledAt = data.filledAt;
+
+      await queryRunner.manager.save(existing);
+
+      // Update items if provided
+      if (data.items && data.items.length > 0) {
+        for (const itemUpdate of data.items) {
+          const item = await queryRunner.manager.findOne(
+            MaintenanceChecklistItem,
+            { where: { id: itemUpdate.id } },
+          );
+          if (item) {
+            if (itemUpdate.status !== undefined)
+              item.status = itemUpdate.status;
+            if (itemUpdate.observations !== undefined)
+              item.observations = itemUpdate.observations;
+            await queryRunner.manager.save(item);
+          }
+        }
+      }
+
+      await queryRunner.commitTransaction();
+
+      // Fetch the complete entity with relations
+      const complete = await this.repository.findOne(id);
+      if (!complete) return null;
+
+      return map(complete);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

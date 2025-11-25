@@ -29,6 +29,7 @@ export class MaintenanceChecklistRepository
       .leftJoinAndSelect("v.model", "model")
       .leftJoinAndSelect("model.brand", "brand")
       .leftJoinAndSelect("mc.filledBy", "u")
+      .leftJoinAndSelect("mc.items", "items")
       .orderBy("mc.year", "DESC")
       .addOrderBy("mc.quarter", "DESC");
 
@@ -69,6 +70,7 @@ export class MaintenanceChecklistRepository
       .leftJoinAndSelect("v.model", "model")
       .leftJoinAndSelect("model.brand", "brand")
       .leftJoinAndSelect("mc.filledBy", "u")
+      .leftJoinAndSelect("mc.items", "items")
       .where("mc.id = :id", { id })
       .getOne();
   }
