@@ -17,6 +17,9 @@ export class MaintenanceChecklistItem {
   @JoinColumn({ name: "maintenance_checklist_id" })
   maintenanceChecklist!: MaintenanceChecklist;
 
+  @Column({ type: "nvarchar", length: 100 })
+  category!: string;
+
   @Column({ type: "nvarchar", length: 255 })
   title!: string;
 

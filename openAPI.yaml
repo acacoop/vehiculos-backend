@@ -3648,6 +3648,8 @@ components:
               id:
                 type: string
                 format: uuid
+              category:
+                type: string
               title:
                 type: string
               status:
@@ -3826,6 +3828,9 @@ components:
           type: string
           format: uuid
           example: "d50e8400-e29b-41d4-a716-446655440008"
+        category:
+          type: string
+          example: "Motor y Fluidos"
         title:
           type: string
           example: "Check engine oil level"
@@ -3837,6 +3842,7 @@ components:
       required:
         - id
         - maintenanceChecklistId
+        - category
         - title
         - status
         - observations
@@ -3847,6 +3853,8 @@ components:
         maintenanceChecklistId:
           type: string
           format: uuid
+        category:
+          type: string
         title:
           type: string
         status:
@@ -3855,6 +3863,7 @@ components:
           type: string
       required:
         - maintenanceChecklistId
+        - category
         - title
         - status
         - observations

@@ -5,6 +5,7 @@ import { MaintenanceChecklistItemStatus } from "@/enums/MaintenanceChecklistItem
 export const MaintenanceChecklistItemSchema = z.object({
   id: z.string().uuid().optional(), // UUID, optional for creation
   maintenanceChecklistId: z.string().uuid(),
+  category: z.string(),
   title: z.string(),
   status: z.nativeEnum(MaintenanceChecklistItemStatus),
   observations: z.string(),
@@ -18,6 +19,7 @@ export type MaintenanceChecklistItem = z.infer<
 export interface MaintenanceChecklistItemDTO {
   id: string;
   maintenanceChecklistId: string;
+  category: string;
   title: string;
   status: MaintenanceChecklistItemStatus;
   observations: string;

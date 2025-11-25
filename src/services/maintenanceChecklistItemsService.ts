@@ -12,6 +12,7 @@ function map(mci: MaintenanceChecklistItem): MaintenanceChecklistItemDTO {
   return {
     id: mci.id,
     maintenanceChecklistId: mci.maintenanceChecklist.id,
+    category: mci.category,
     title: mci.title,
     status: mci.status,
     observations: mci.observations,

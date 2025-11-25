@@ -53,6 +53,7 @@ function map(mc: MaintenanceChecklist): MaintenanceChecklistDTO {
     filledAt: mc.filledAt ?? undefined,
     items: (mc.items || []).map((item) => ({
       id: item.id,
+      category: item.category,
       title: item.title,
       status: item.status,
       observations: item.observations,
