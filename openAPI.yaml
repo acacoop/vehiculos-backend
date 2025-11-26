@@ -3766,23 +3766,6 @@ components:
     MaintenanceChecklistPatchWithItemsInput:
       type: object
       properties:
-        year:
-          type: integer
-          minimum: 2000
-          maximum: 2100
-        quarter:
-          type: integer
-          minimum: 1
-          maximum: 4
-        intendedDeliveryDate:
-          type: string
-          format: date
-        filledBy:
-          type: string
-          format: uuid
-        filledAt:
-          type: string
-          format: date
         items:
           type: array
           items:
@@ -3791,12 +3774,17 @@ components:
               id:
                 type: string
                 format: uuid
+                description: UUID of the item to update
               status:
                 $ref: "#/components/schemas/MaintenanceChecklistItemStatus"
               observations:
                 type: string
             required:
               - id
+              - status
+              - observations
+      required:
+        - items
 
     MaintenanceChecklistResponse:
       allOf:

@@ -19,7 +19,7 @@ export class Maintenance {
   @JoinColumn({ name: "category_id" })
   category!: MaintenanceCategory;
 
-  @Column({ length: 200 })
+  @Column({ type: "varchar", length: 200 })
   name!: string;
 
   @Column({ name: "kilometers_frequency", type: "int", nullable: true })

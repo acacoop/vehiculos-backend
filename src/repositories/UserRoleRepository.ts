@@ -49,12 +49,7 @@ export class UserRoleRepository implements IUserRoleRepository {
 
     // Apply active filter
     if (filters?.active) {
-      applyActiveFilter(
-        qb,
-        new Date().toISOString().split("T")[0],
-        "ur.startTime",
-        "ur.endTime",
-      );
+      applyActiveFilter(qb, undefined, "ur.startTime", "ur.endTime");
     }
 
     qb.take(limit);
@@ -100,12 +95,7 @@ export class UserRoleRepository implements IUserRoleRepository {
       .createQueryBuilder("ur")
       .where("ur.user.id = :userId", { userId })
       .andWhere("ur.role = :role", { role });
-    applyActiveFilter(
-      qb,
-      new Date().toISOString().split("T")[0],
-      "ur.startTime",
-      "ur.endTime",
-    );
+    applyActiveFilter(qb, undefined, "ur.startTime", "ur.endTime");
     const count = await qb.getCount();
     return count > 0;
   }

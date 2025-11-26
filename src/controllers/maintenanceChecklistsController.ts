@@ -27,20 +27,13 @@ const CreateChecklistWithItemsSchema = z.object({
 });
 
 const PatchChecklistWithItemsSchema = z.object({
-  year: z.number().int().min(2000).max(2100).optional(),
-  quarter: z.number().int().min(1).max(4).optional(),
-  intendedDeliveryDate: z.string().optional(),
-  filledBy: z.string().uuid().optional(),
-  filledAt: z.string().optional(),
-  items: z
-    .array(
-      z.object({
-        id: z.string().uuid(),
-        status: z.nativeEnum(MaintenanceChecklistItemStatus).optional(),
-        observations: z.string().optional(),
-      }),
-    )
-    .optional(),
+  items: z.array(
+    z.object({
+      id: z.string().uuid(),
+      status: z.nativeEnum(MaintenanceChecklistItemStatus),
+      observations: z.string(),
+    }),
+  ),
 });
 
 export class MaintenanceChecklistsController extends BaseController<MaintenanceChecklistFilters> {

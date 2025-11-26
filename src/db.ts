@@ -1,5 +1,7 @@
 import { DataSource } from "typeorm";
 import sql from "mssql";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
 import {
   DB_HOST,
   DB_PORT,
@@ -28,7 +30,10 @@ import { UserRole } from "@/entities/UserRole";
 import { MaintenanceChecklist } from "@/entities/MaintenanceChecklist";
 import { MaintenanceChecklistItem } from "@/entities/MaintenanceChecklistItem";
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
+const isRunningFromDist =
+  __dirname.includes("/dist") || __dirname.includes("\\dist");
 
 function parseConnectionString(connStr: string) {
   const params: Record<string, string> = {};
@@ -49,31 +54,32 @@ function parseConnectionString(connStr: string) {
 }
 
 const createDataSourceConfig = () => {
-  const entities = [
-    Vehicle,
-    VehicleBrand,
-    VehicleModel,
-    User,
-    Assignment,
-    Reservation,
-    VehicleKilometers,
-    MaintenanceCategory,
-    Maintenance,
-    MaintenanceRequirement,
-    MaintenanceRecord,
-    VehicleResponsible,
-    VehicleACL,
-    UserRole,
-    MaintenanceChecklist,
-    MaintenanceChecklistItem,
-  ];
-
   const baseConfig = {
     type: "mssql" as const,
-    synchronize: false,
     logging: DB_LOGGING,
-    entities,
-    migrations: ["dist/migrations/*.js"],
+    entities: [
+      Vehicle,
+      User,
+      Assignment,
+      Reservation,
+      VehicleKilometers,
+      MaintenanceCategory,
+      Maintenance,
+      MaintenanceRequirement,
+      MaintenanceRecord,
+      VehicleResponsible,
+      VehicleBrand,
+      VehicleModel,
+      VehicleACL,
+      UserRole,
+      MaintenanceChecklist,
+      MaintenanceChecklistItem,
+    ],
+    migrations: isRunningFromDist
+      ? ["dist/migrations/*.js"]
+      : ["src/migrations/*.ts"],
+    migrationsRun: true,
+    synchronize: false,
     migrationsTableName: "migrations",
   };
 
