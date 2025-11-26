@@ -1,5 +1,7 @@
 import { DataSource } from "typeorm";
 import sql from "mssql";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
 import {
   DB_HOST,
   DB_PORT,
@@ -10,7 +12,28 @@ import {
   SQL_AAD_CONNECTION_STRING,
 } from "@/config/env.config";
 
+// Entities will be added here progressively
+import { Vehicle } from "@/entities/Vehicle";
+import { User } from "@/entities/User";
+import { Assignment } from "@/entities/Assignment";
+import { Reservation } from "@/entities/Reservation";
+import { VehicleKilometers } from "@/entities/VehicleKilometers";
+import { MaintenanceCategory } from "@/entities/MaintenanceCategory";
+import { Maintenance } from "@/entities/Maintenance";
+import { MaintenanceRequirement } from "@/entities/MaintenanceRequirement";
+import { MaintenanceRecord } from "@/entities/MaintenanceRecord";
+import { VehicleResponsible } from "@/entities/VehicleResponsible";
+import { VehicleBrand } from "@/entities/VehicleBrand";
+import { VehicleModel } from "@/entities/VehicleModel";
+import { VehicleACL } from "@/entities/VehicleACL";
+import { UserRole } from "@/entities/UserRole";
+import { MaintenanceChecklist } from "@/entities/MaintenanceChecklist";
+import { MaintenanceChecklistItem } from "@/entities/MaintenanceChecklistItem";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
+const isRunningFromDist =
+  __dirname.includes("/dist") || __dirname.includes("\\dist");
 
 function parseConnectionString(connStr: string) {
   const params: Record<string, string> = {};
@@ -34,8 +57,27 @@ const createDataSourceConfig = () => {
   const baseConfig = {
     type: "mssql" as const,
     logging: DB_LOGGING,
-    entities: isProd ? ["dist/entities/*.js"] : ["src/entities/*.ts"],
-    migrations: isProd ? ["dist/migrations/*.js"] : ["src/migrations/*.ts"],
+    entities: [
+      Vehicle,
+      User,
+      Assignment,
+      Reservation,
+      VehicleKilometers,
+      MaintenanceCategory,
+      Maintenance,
+      MaintenanceRequirement,
+      MaintenanceRecord,
+      VehicleResponsible,
+      VehicleBrand,
+      VehicleModel,
+      VehicleACL,
+      UserRole,
+      MaintenanceChecklist,
+      MaintenanceChecklistItem,
+    ],
+    migrations: isRunningFromDist
+      ? ["dist/migrations/*.js"]
+      : ["src/migrations/*.ts"],
     migrationsRun: true,
     synchronize: false,
     migrationsTableName: "migrations",

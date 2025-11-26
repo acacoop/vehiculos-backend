@@ -54,12 +54,7 @@ export class AssignmentRepository implements IAssignmentRepository {
 
     // Apply active filter
     if (filters?.active) {
-      applyActiveFilter(
-        qb,
-        new Date().toISOString().split("T")[0],
-        "a.startDate",
-        "a.endDate",
-      );
+      applyActiveFilter(qb, undefined, "a.startDate", "a.endDate");
     }
 
     // Pagination
