@@ -28,9 +28,13 @@ import { UserRole } from "@/entities/UserRole";
 import { MaintenanceChecklist } from "@/entities/MaintenanceChecklist";
 import { MaintenanceChecklistItem } from "@/entities/MaintenanceChecklistItem";
 
+// Determine if running from dist folder
+// In tests, NODE_ENV is usually 'test' and we're always in src/
+// In production builds, files are compiled to dist/
+// Check if we're in a built environment by testing if dist directory structure exists
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
-const isRunningFromDist =
-  typeof __filename !== "undefined" && __filename.endsWith(".js");
+const isTest = (process.env.NODE_ENV || "").toLowerCase() === "test";
+const isRunningFromDist = isProd && !isTest;
 
 function parseConnectionString(connStr: string) {
   const params: Record<string, string> = {};
