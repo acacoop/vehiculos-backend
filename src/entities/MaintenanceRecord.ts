@@ -28,12 +28,12 @@ export class MaintenanceRecord {
   @JoinColumn({ name: "user_id" })
   user!: User;
 
-  @Column({ type: "date" })
+  @Column({ name: "date", type: "date" })
   date!: string;
 
-  @Column({ type: "int" })
+  @Column({ name: "kilometers", type: "int" })
   kilometers!: number;
 
-  @Column({ type: "text", nullable: true })
+  @Column({ name: "notes", type: "text", nullable: true })
   notes!: string | null;
 }

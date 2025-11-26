@@ -50,6 +50,7 @@ export interface MaintenanceChecklistDTO {
   filledAt?: string;
   items: {
     id: string;
+    category: string;
     title: string;
     status: MaintenanceChecklistItemStatus;
     observations: string;

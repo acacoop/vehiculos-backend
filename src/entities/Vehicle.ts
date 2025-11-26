@@ -14,18 +14,18 @@ export class Vehicle {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ name: "license_plate", type: "varchar", unique: true, length: 10 })
+  @Column({ name: "license_plate", type: "nvarchar", unique: true, length: 10 })
   licensePlate!: string;
 
   @ManyToOne(() => VehicleModel, { eager: true, onDelete: "SET NULL" })
   model!: VehicleModel;
 
-  @Column({ type: "int" })
+  @Column({ name: "year", type: "int" })
   year!: number;
 
   @Column({
     name: "chassis_number",
-    type: "varchar",
+    type: "nvarchar",
     nullable: true,
     length: 50,
   })
@@ -33,7 +33,7 @@ export class Vehicle {
 
   @Column({
     name: "engine_number",
-    type: "varchar",
+    type: "nvarchar",
     nullable: true,
     length: 50,
   })
@@ -42,9 +42,14 @@ export class Vehicle {
   @Column({ name: "vehicle_type", type: "varchar", length: 50, nullable: true })
   vehicleType?: string;
 
-  @Column({ type: "varchar", nullable: true, length: 50 })
+  @Column({
+    name: "transmission",
+    type: "nvarchar",
+    nullable: true,
+    length: 50,
+  })
   transmission?: string;
 
-  @Column({ name: "fuel_type", type: "varchar", nullable: true, length: 50 })
+  @Column({ name: "fuel_type", type: "nvarchar", nullable: true, length: 50 })
   fuelType?: string;
 }

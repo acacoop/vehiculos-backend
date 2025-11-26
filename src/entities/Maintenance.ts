@@ -19,7 +19,7 @@ export class Maintenance {
   @JoinColumn({ name: "category_id" })
   category!: MaintenanceCategory;
 
-  @Column({ type: "varchar", length: 200 })
+  @Column({ name: "name", type: "nvarchar", length: 200 })
   name!: string;
 
   @Column({ name: "kilometers_frequency", type: "int", nullable: true })
@@ -28,9 +28,9 @@ export class Maintenance {
   @Column({ name: "days_frequency", type: "int", nullable: true })
   daysFrequency!: number | null;
 
-  @Column({ type: "text", nullable: true })
+  @Column({ name: "observations", type: "text", nullable: true })
   observations!: string | null;
 
-  @Column({ type: "text", nullable: true })
+  @Column({ name: "instructions", type: "text", nullable: true })
   instructions!: string | null;
 }

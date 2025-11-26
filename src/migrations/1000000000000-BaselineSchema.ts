@@ -8,12 +8,12 @@ export class BaselineSchema1000000000000 implements MigrationInterface {
     await queryRunner.query(`
       CREATE TABLE [users] (
         [id] uniqueidentifier NOT NULL DEFAULT newsequentialid(),
-        [first_name] nvarchar(200) NOT NULL,
-        [last_name] nvarchar(200) NOT NULL,
-        [cuit] nvarchar(28) NOT NULL,
-        [email] nvarchar(510) NOT NULL,
+        [first_name] nvarchar(100) NOT NULL,
+        [last_name] nvarchar(100) NOT NULL,
+        [cuit] nvarchar(14) NOT NULL,
+        [email] nvarchar(255) NOT NULL,
         [active] bit NOT NULL DEFAULT ((1)),
-        [entra_id] nvarchar(510) NOT NULL DEFAULT (''),
+        [entra_id] nvarchar(255) NOT NULL DEFAULT (''),
         CONSTRAINT [PK_a3ffb1c0c8416b9fc6f907b7433] PRIMARY KEY ([id])
       )
     `);
@@ -28,7 +28,7 @@ export class BaselineSchema1000000000000 implements MigrationInterface {
     await queryRunner.query(`
       CREATE TABLE [vehicle_brands] (
         [id] uniqueidentifier NOT NULL DEFAULT newsequentialid(),
-        [name] nvarchar(200) NOT NULL,
+        [name] nvarchar(100) NOT NULL,
         CONSTRAINT [PK_3ede5be03b371734e1d8aa257c9] PRIMARY KEY ([id])
       )
     `);
@@ -37,7 +37,7 @@ export class BaselineSchema1000000000000 implements MigrationInterface {
     await queryRunner.query(`
       CREATE TABLE [maintenance_categories] (
         [id] uniqueidentifier NOT NULL DEFAULT newsequentialid(),
-        [name] nvarchar(200) NOT NULL,
+        [name] nvarchar(100) NOT NULL,
         CONSTRAINT [PK_ab736076431643cc769f720171a] PRIMARY KEY ([id])
       )
     `);
@@ -46,8 +46,8 @@ export class BaselineSchema1000000000000 implements MigrationInterface {
     await queryRunner.query(`
       CREATE TABLE [vehicle_models] (
         [id] uniqueidentifier NOT NULL DEFAULT newsequentialid(),
-        [name] nvarchar(200) NOT NULL,
-        [vehicle_type] nvarchar(510) NULL,
+        [name] nvarchar(100) NOT NULL,
+        [vehicle_type] nvarchar(255) NULL,
         [brand_id] uniqueidentifier NULL,
         CONSTRAINT [PK_1c01752184334fdbcae9bbaa67f] PRIMARY KEY ([id]),
         CONSTRAINT [FK_e71c84a17f9c006260e2d487c01] FOREIGN KEY ([brand_id]) REFERENCES [vehicle_brands]([id]) ON DELETE CASCADE
@@ -58,13 +58,13 @@ export class BaselineSchema1000000000000 implements MigrationInterface {
     await queryRunner.query(`
       CREATE TABLE [vehicles] (
         [id] uniqueidentifier NOT NULL DEFAULT newsequentialid(),
-        [license_plate] nvarchar(20) NOT NULL,
+        [license_plate] nvarchar(10) NOT NULL,
         [year] int NOT NULL,
-        [chassis_number] nvarchar(100) NULL,
-        [engine_number] nvarchar(100) NULL,
+        [chassis_number] nvarchar(50) NULL,
+        [engine_number] nvarchar(50) NULL,
         [vehicle_type] varchar(50) NULL,
-        [transmission] nvarchar(100) NULL,
-        [fuel_type] nvarchar(100) NULL,
+        [transmission] nvarchar(50) NULL,
+        [fuel_type] nvarchar(50) NULL,
         [modelId] uniqueidentifier NULL,
         CONSTRAINT [PK_18d8646b59304dce4af3a9e35b6] PRIMARY KEY ([id]),
         CONSTRAINT [FK_5fe3e38b9bf4649e65fdfb04bdf] FOREIGN KEY ([modelId]) REFERENCES [vehicle_models]([id]) ON DELETE SET NULL
@@ -78,7 +78,7 @@ export class BaselineSchema1000000000000 implements MigrationInterface {
     await queryRunner.query(`
       CREATE TABLE [maintenances] (
         [id] uniqueidentifier NOT NULL DEFAULT newsequentialid(),
-        [name] nvarchar(400) NOT NULL,
+        [name] nvarchar(200) NOT NULL,
         [kilometers_frequency] int NULL,
         [days_frequency] int NULL,
         [observations] text NULL,
@@ -224,7 +224,7 @@ export class BaselineSchema1000000000000 implements MigrationInterface {
     await queryRunner.query(`
       CREATE TABLE [vehicle_responsibles] (
         [id] uniqueidentifier NOT NULL DEFAULT newsequentialid(),
-        [ceco] nvarchar(16) NOT NULL DEFAULT ('99999999'),
+        [ceco] nvarchar(8) NOT NULL DEFAULT ('99999999'),
         [start_date] date NOT NULL DEFAULT (getdate()),
         [end_date] date NULL,
         [created_at] datetime NOT NULL DEFAULT (getdate()),

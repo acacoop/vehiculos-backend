@@ -17,19 +17,20 @@ export class MaintenanceChecklistItem {
   @JoinColumn({ name: "maintenance_checklist_id" })
   maintenanceChecklist!: MaintenanceChecklist;
 
-  @Column({ type: "nvarchar", length: 100 })
+  @Column({ name: "category", type: "nvarchar", length: 100 })
   category!: string;
 
-  @Column({ type: "nvarchar", length: 255 })
+  @Column({ name: "title", type: "nvarchar", length: 255 })
   title!: string;
 
   @Column({
+    name: "status",
     type: "nvarchar",
     length: 50,
     default: MaintenanceChecklistItemStatus.PENDIENTE,
   })
   status!: MaintenanceChecklistItemStatus;
 
-  @Column({ type: "text" })
+  @Column({ name: "observations", type: "text" })
   observations!: string;
 }

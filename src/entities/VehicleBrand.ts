@@ -5,6 +5,6 @@ export class VehicleBrand {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ name: "name", type: "varchar", unique: true, length: 100 })
+  @Column({ name: "name", type: "nvarchar", unique: true, length: 100 })
   name!: string;
 }
