@@ -217,15 +217,10 @@ export class MaintenanceChecklistsService {
   async patchWithItems(
     id: string,
     data: {
-      year?: number;
-      quarter?: number;
-      intendedDeliveryDate?: string;
-      filledBy?: string;
-      filledAt?: string;
-      items?: {
+      items: {
         id: string;
-        status?: MaintenanceChecklistItemStatus;
-        observations?: string;
+        status: MaintenanceChecklistItemStatus;
+        observations: string;
       }[];
     },
   ): Promise<MaintenanceChecklistDTO | null> {
@@ -237,37 +232,37 @@ export class MaintenanceChecklistsService {
     await queryRunner.startTransaction();
 
     try {
-      // Update checklist
-      if (data.year !== undefined) existing.year = data.year;
-      if (data.quarter !== undefined) existing.quarter = data.quarter;
-      if (data.intendedDeliveryDate)
-        existing.intendedDeliveryDate = data.intendedDeliveryDate;
+      // Validate that all items belong to this checklist
+      for (const itemUpdate of data.items) {
+        const item = await queryRunner.manager.findOne(
+          MaintenanceChecklistItem,
+          {
+            where: { id: itemUpdate.id },
+            relations: ["maintenanceChecklist"],
+          },
+        );
 
-      if (data.filledBy !== undefined) {
-        existing.filledBy = data.filledBy
-          ? (await this.userRepo.findOne({ where: { id: data.filledBy } })) ||
-            null
-          : null;
+        if (!item) {
+          throw new Error(`Item with id ${itemUpdate.id} not found`);
+        }
+
+        if (item.maintenanceChecklist.id !== id) {
+          throw new Error(
+            `Item with id ${itemUpdate.id} does not belong to this checklist`,
+          );
+        }
       }
 
-      if (data.filledAt !== undefined) existing.filledAt = data.filledAt;
-
-      await queryRunner.manager.save(existing);
-
-      // Update items if provided
-      if (data.items && data.items.length > 0) {
-        for (const itemUpdate of data.items) {
-          const item = await queryRunner.manager.findOne(
-            MaintenanceChecklistItem,
-            { where: { id: itemUpdate.id } },
-          );
-          if (item) {
-            if (itemUpdate.status !== undefined)
-              item.status = itemUpdate.status;
-            if (itemUpdate.observations !== undefined)
-              item.observations = itemUpdate.observations;
-            await queryRunner.manager.save(item);
-          }
+      // Update items
+      for (const itemUpdate of data.items) {
+        const item = await queryRunner.manager.findOne(
+          MaintenanceChecklistItem,
+          { where: { id: itemUpdate.id } },
+        );
+        if (item) {
+          item.status = itemUpdate.status;
+          item.observations = itemUpdate.observations;
+          await queryRunner.manager.save(item);
         }
       }
 
