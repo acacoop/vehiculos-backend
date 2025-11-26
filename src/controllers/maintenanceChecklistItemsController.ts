@@ -7,21 +7,6 @@ import { ServiceFactory } from "@/factories/serviceFactory";
 import { AppDataSource } from "@/db";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import { MaintenanceChecklistItemFilters } from "@/repositories/interfaces/IMaintenanceChecklistItemRepository";
-import { Request, Response } from "express";
-import { asyncHandler } from "@/middleware/errorHandler";
-import { z } from "zod";
-
-const BulkCreateSchema = z.object({
-  userId: z.string().uuid(),
-  maintenanceChecklistId: z.string().uuid(),
-  maintenanceChecklistItems: z.array(
-    z.object({
-      title: z.string(),
-      status: z.string(),
-      observations: z.string(),
-    }),
-  ),
-});
 
 export class MaintenanceChecklistItemsController extends BaseController<MaintenanceChecklistItemFilters> {
   constructor(private readonly service: MaintenanceChecklistItemsService) {
