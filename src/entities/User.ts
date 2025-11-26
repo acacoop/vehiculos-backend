@@ -7,21 +7,21 @@ export class User {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ name: "first_name", type: "varchar", length: 100 })
+  @Column({ name: "first_name", type: "nvarchar", length: 100 })
   firstName!: string;
 
-  @Column({ name: "last_name", type: "varchar", length: 100 })
+  @Column({ name: "last_name", type: "nvarchar", length: 100 })
   lastName!: string;
 
-  @Column({ name: "cuit", type: "varchar", unique: true, length: 14 })
+  @Column({ name: "cuit", type: "nvarchar", unique: true, length: 14 })
   cuit!: string;
 
-  @Column({ type: "varchar", unique: true, length: 255 })
+  @Column({ name: "email", type: "nvarchar", unique: true, length: 255 })
   email!: string;
 
-  @Column({ type: "bit", default: true })
+  @Column({ name: "active", type: "bit", default: true })
   active!: boolean;
 
-  @Column({ name: "entra_id", type: "varchar", default: "" })
+  @Column({ name: "entra_id", type: "nvarchar", length: 255, default: "" })
   entraId!: string;
 }

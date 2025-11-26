@@ -25,7 +25,7 @@ export class VehicleResponsible {
   @JoinColumn({ name: "user_id" })
   user!: User;
 
-  @Column({ name: "ceco", type: "varchar", length: 8, default: DEFAULT_CECO })
+  @Column({ name: "ceco", type: "nvarchar", length: 8, default: DEFAULT_CECO })
   ceco!: string;
 
   @Column({ name: "start_date", type: "date", default: () => "GETDATE()" })

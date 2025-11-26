@@ -21,10 +21,10 @@ export class MaintenanceChecklist {
   @JoinColumn({ name: "vehicle_id" })
   vehicle!: Vehicle;
 
-  @Column({ type: "int" })
+  @Column({ name: "year", type: "int" })
   year!: number;
 
-  @Column({ type: "int" })
+  @Column({ name: "quarter", type: "int" })
   quarter!: number;
 
   @Column({ name: "intended_delivery_date", type: "date" })

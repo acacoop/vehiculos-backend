@@ -5,6 +5,6 @@ export class MaintenanceCategory {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ type: "varchar", length: 100 })
+  @Column({ name: "name", type: "nvarchar", length: 100 })
   name!: string;
 }
