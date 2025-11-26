@@ -1,7 +1,5 @@
 import { DataSource } from "typeorm";
 import sql from "mssql";
-import { fileURLToPath } from "node:url";
-import { dirname } from "node:path";
 import {
   DB_HOST,
   DB_PORT,
@@ -30,10 +28,9 @@ import { UserRole } from "@/entities/UserRole";
 import { MaintenanceChecklist } from "@/entities/MaintenanceChecklist";
 import { MaintenanceChecklistItem } from "@/entities/MaintenanceChecklistItem";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
 const isRunningFromDist =
-  __dirname.includes("/dist") || __dirname.includes("\\dist");
+  typeof __filename !== "undefined" && __filename.endsWith(".js");
 
 function parseConnectionString(connStr: string) {
   const params: Record<string, string> = {};
