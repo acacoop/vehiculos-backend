@@ -16,9 +16,9 @@ export class VehicleModel {
   @JoinColumn({ name: "brand_id" })
   brand!: VehicleBrand;
 
-  @Column({ name: "name", unique: true, length: 100 })
+  @Column({ name: "name", type: "varchar", unique: true, length: 100 })
   name!: string;
 
-  @Column({ name: "vehicle_type", nullable: true })
+  @Column({ name: "vehicle_type", type: "varchar", nullable: true })
   vehicleType?: string;
 }

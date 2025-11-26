@@ -5,7 +5,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from "typeorm";
-import { MaintenanceChecklist } from "@/entities/MaintenanceChecklist";
+import type { MaintenanceChecklist } from "@/entities/MaintenanceChecklist";
 import { MaintenanceChecklistItemStatus } from "@/enums/MaintenanceChecklistItemStatusEnum";
 
 @Entity({ name: "maintenance_checklist_items" })
@@ -13,7 +13,7 @@ export class MaintenanceChecklistItem {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @ManyToOne(() => MaintenanceChecklist, { onDelete: "CASCADE" })
+  @ManyToOne("MaintenanceChecklist", { onDelete: "CASCADE" })
   @JoinColumn({ name: "maintenance_checklist_id" })
   maintenanceChecklist!: MaintenanceChecklist;
 

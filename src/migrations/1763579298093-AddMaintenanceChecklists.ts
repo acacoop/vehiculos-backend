@@ -9,7 +9,7 @@ export class AddMaintenanceChecklists1763579298093
     // Create maintenance_checklists table
     await queryRunner.query(`
       CREATE TABLE [maintenance_checklists] (
-        [id] uniqueidentifier NOT NULL DEFAULT NEWID(),
+        [id] uniqueidentifier NOT NULL DEFAULT newsequentialid(),
         [vehicle_id] uniqueidentifier NOT NULL,
         [year] int NOT NULL,
         [quarter] int NOT NULL,
@@ -43,7 +43,7 @@ export class AddMaintenanceChecklists1763579298093
     // Create maintenance_checklist_items table
     await queryRunner.query(`
       CREATE TABLE [maintenance_checklist_items] (
-        [id] uniqueidentifier NOT NULL DEFAULT NEWID(),
+        [id] uniqueidentifier NOT NULL DEFAULT newsequentialid(),
         [maintenance_checklist_id] uniqueidentifier NOT NULL,
         [title] nvarchar(255) NOT NULL,
         [passed] bit NOT NULL DEFAULT ((0)),

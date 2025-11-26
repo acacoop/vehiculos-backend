@@ -17,10 +17,10 @@
     "sample-data": "node --env-file=.env dist/scripts/loadSampleData.js",
     "generate-checklists": "tsx --env-file=.env src/scripts/generateQuarterlyChecklists.ts",
     "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json}\"",
-    "migration:generate": "tsx node_modules/typeorm/cli.js migration:generate -d dist/db.js src/migrations/$NAME",
-    "migration:create": "tsx node_modules/typeorm/cli.js migration:create -d dist/db.js src/migrations/$NAME",
-    "migration:run": "tsx node_modules/typeorm/cli.js migration:run -d dist/db.js",
-    "migration:revert": "tsx node_modules/typeorm/cli.js migration:revert -d dist/db.js",
+    "migration:generate": "tsx --env-file=.env node_modules/typeorm/cli.js migration:generate -d src/db.ts src/migrations/$NAME",
+    "migration:create": "tsx --env-file=.env node_modules/typeorm/cli.js migration:create src/migrations/$NAME",
+    "migration:run": "tsx --env-file=.env node_modules/typeorm/cli.js migration:run -d src/db.ts",
+    "migration:revert": "tsx --env-file=.env node_modules/typeorm/cli.js migration:revert -d src/db.ts",
     "prepare": "husky"
   },
   "engines": {
