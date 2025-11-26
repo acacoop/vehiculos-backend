@@ -19,11 +19,10 @@ export default {
       {
         useESM: true,
         tsconfig: {
+          module: "esnext",
           target: "ES2022",
-          module: "ES2022",
           moduleResolution: "node",
         },
-        isolatedModules: false,
       },
     ],
   },
