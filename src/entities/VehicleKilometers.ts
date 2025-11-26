@@ -27,10 +27,10 @@ export class VehicleKilometers {
   @JoinColumn({ name: "user_id" })
   user!: User;
 
-  @Column({ type: "datetime", name: "date" })
+  @Column({ name: "date", type: "datetime" })
   date!: Date;
 
-  @Column({ type: "int" })
+  @Column({ name: "kilometers", type: "int" })
   kilometers!: number;
 
   @Column({ name: "created_at", type: "datetime", default: () => "GETDATE()" })

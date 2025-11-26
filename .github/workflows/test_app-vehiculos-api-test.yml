@@ -53,4 +53,5 @@ jobs:
           app-name: "app-vehiculos-api-test"
           slot-name: "Production"
           package: .
+          clean: true
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_6B21143A7E694390A61BF1BD5F811795 }}

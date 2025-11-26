@@ -432,15 +432,28 @@ async function syncUserRoles(usersService: UsersService, adminEmail?: string) {
         );
       }
     } else if (existingRole.role !== targetRole) {
-      // Update role if it changed
-      await userRolesService.update(existingRole.id, {
-        role: targetRole,
-      });
-      rolesUpdated++;
-      if (VERBOSE) {
-        console.log(
-          `ok:role_update userId=${user.id} email=${user.email} old=${existingRole.role} new=${targetRole}`,
-        );
+      // Don't downgrade ADMIN to USER - only upgrade USER to ADMIN
+      if (
+        existingRole.role === UserRoleEnum.ADMIN &&
+        targetRole === UserRoleEnum.USER
+      ) {
+        rolesSkipped++;
+        if (VERBOSE) {
+          console.log(
+            `skip:role userId=${user.id} email=${user.email} role=${existingRole.role} (preserving ADMIN)`,
+          );
+        }
+      } else {
+        // Update role (USER -> ADMIN)
+        await userRolesService.update(existingRole.id, {
+          role: targetRole,
+        });
+        rolesUpdated++;
+        if (VERBOSE) {
+          console.log(
+            `ok:role_update userId=${user.id} email=${user.email} old=${existingRole.role} new=${targetRole}`,
+          );
+        }
       }
     } else {
       rolesSkipped++;

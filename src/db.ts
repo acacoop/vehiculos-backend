@@ -25,8 +25,16 @@ import { VehicleBrand } from "@/entities/VehicleBrand";
 import { VehicleModel } from "@/entities/VehicleModel";
 import { VehicleACL } from "@/entities/VehicleACL";
 import { UserRole } from "@/entities/UserRole";
+import { MaintenanceChecklist } from "@/entities/MaintenanceChecklist";
+import { MaintenanceChecklistItem } from "@/entities/MaintenanceChecklistItem";
 
+// Determine if running from dist folder
+// In tests, NODE_ENV is usually 'test' and we're always in src/
+// In production builds, files are compiled to dist/
+// Check if we're in a built environment by testing if dist directory structure exists
 const isProd = (process.env.NODE_ENV || "").toLowerCase() === "production";
+const isTest = (process.env.NODE_ENV || "").toLowerCase() === "test";
+const isRunningFromDist = isProd && !isTest;
 
 function parseConnectionString(connStr: string) {
   const params: Record<string, string> = {};
@@ -47,29 +55,32 @@ function parseConnectionString(connStr: string) {
 }
 
 const createDataSourceConfig = () => {
-  const entities = [
-    Vehicle,
-    VehicleBrand,
-    VehicleModel,
-    User,
-    Assignment,
-    Reservation,
-    VehicleKilometers,
-    MaintenanceCategory,
-    Maintenance,
-    MaintenanceRequirement,
-    MaintenanceRecord,
-    VehicleResponsible,
-    VehicleACL,
-    UserRole,
-  ];
-
   const baseConfig = {
     type: "mssql" as const,
-    synchronize: !isProd,
     logging: DB_LOGGING,
-    entities,
-    migrations: ["dist/migrations/*.js"],
+    entities: [
+      Vehicle,
+      User,
+      Assignment,
+      Reservation,
+      VehicleKilometers,
+      MaintenanceCategory,
+      Maintenance,
+      MaintenanceRequirement,
+      MaintenanceRecord,
+      VehicleResponsible,
+      VehicleBrand,
+      VehicleModel,
+      VehicleACL,
+      UserRole,
+      MaintenanceChecklist,
+      MaintenanceChecklistItem,
+    ],
+    migrations: isRunningFromDist
+      ? ["dist/migrations/*.js"]
+      : ["src/migrations/*.ts"],
+    migrationsRun: true,
+    synchronize: false,
     migrationsTableName: "migrations",
   };
 

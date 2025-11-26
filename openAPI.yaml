@@ -1305,6 +1305,262 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  # MAINTENANCE CHECKLISTS
+  /maintenance/checklists:
+    get:
+      summary: Get all maintenance checklists with pagination and search
+      description: |
+        Get maintenance checklists with optional search and filters.
+
+        **Search:** `search` - Search across vehicle license plate, user names, etc.
+
+        **Filters:**
+        - `vehicleId` - Filter by vehicle UUID
+        - `year` - Filter by year
+        - `quarter` - Filter by quarter (1-4)
+        - `filledBy` - Filter by user UUID who filled the checklist
+      tags: [Maintenance]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+        - name: vehicleId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: year
+          in: query
+          schema:
+            type: integer
+        - name: quarter
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4
+        - name: filledBy
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of maintenance checklists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceChecklistListResponse"
+    post:
+      summary: Create a new maintenance checklist
+      tags: [Maintenance]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceChecklistInput"
+      responses:
+        "201":
+          description: Checklist created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceChecklistResponse"
+
+  /maintenance/checklists/with-items:
+    post:
+      summary: Create a maintenance checklist with items (Admin only)
+      description: Creates a checklist and its items in a single transaction
+      tags: [Maintenance]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceChecklistWithItemsInput"
+      responses:
+        "201":
+          description: Checklist with items created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceChecklistResponse"
+
+  /maintenance/checklists/{id}:
+    get:
+      summary: Get maintenance checklist by ID
+      tags: [Maintenance]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Checklist found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceChecklistResponse"
+    patch:
+      summary: Update maintenance checklist
+      tags: [Maintenance]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceChecklistUpdateInput"
+      responses:
+        "200":
+          description: Checklist updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceChecklistResponse"
+    delete:
+      summary: Delete maintenance checklist
+      tags: [Maintenance]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Checklist deleted successfully
+
+  /maintenance/checklists/{id}/with-items:
+    patch:
+      summary: Update maintenance checklist with items
+      description: Updates checklist and its items in a single transaction
+      tags: [Maintenance]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceChecklistPatchWithItemsInput"
+      responses:
+        "200":
+          description: Checklist with items updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceChecklistResponse"
+
+  # MAINTENANCE CHECKLIST ITEMS
+  /maintenance/checklist-items:
+    get:
+      summary: Get all maintenance checklist items
+      tags: [Maintenance]
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SearchParam"
+        - name: maintenanceChecklistId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PENDIENTE, APROBADO, RECHAZADO]
+      responses:
+        "200":
+          description: List of checklist items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceChecklistItemListResponse"
+
+  /maintenance/checklist-items/{id}:
+    get:
+      summary: Get checklist item by ID
+      tags: [Maintenance]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Item found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceChecklistItemResponse"
+    patch:
+      summary: Update checklist item
+      tags: [Maintenance]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceChecklistItemUpdateInput"
+      responses:
+        "200":
+          description: Item updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceChecklistItemResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      summary: Delete maintenance checklist item
+      description: Admin only. Delete a maintenance checklist item.
+      tags: [Maintenance]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Maintenance checklist item deleted successfully
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
   # VEHICLE RESPONSIBLES
   /vehicle-responsibles:
     get:
@@ -3345,6 +3601,286 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/MaintenanceRecord"
+
+    # MAINTENANCE CHECKLIST SCHEMAS
+    MaintenanceChecklistItemStatus:
+      type: string
+      enum:
+        - PENDIENTE
+        - APROBADO
+        - RECHAZADO
+
+    MaintenanceChecklist:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "d50e8400-e29b-41d4-a716-446655440008"
+        vehicle:
+          $ref: "#/components/schemas/Vehicle"
+        year:
+          type: integer
+          example: 2025
+        quarter:
+          type: integer
+          minimum: 1
+          maximum: 4
+          example: 1
+        intendedDeliveryDate:
+          type: string
+          format: date
+          example: "2025-03-31"
+        filledBy:
+          allOf:
+            - $ref: "#/components/schemas/User"
+            - nullable: true
+        filledAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2025-01-15T14:30:00Z"
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              category:
+                type: string
+              title:
+                type: string
+              status:
+                $ref: "#/components/schemas/MaintenanceChecklistItemStatus"
+              observations:
+                type: string
+      required:
+        - id
+        - vehicle
+        - year
+        - quarter
+        - intendedDeliveryDate
+        - items
+
+    MaintenanceChecklistInput:
+      type: object
+      properties:
+        vehicleId:
+          type: string
+          format: uuid
+          description: UUID of the vehicle
+        year:
+          type: integer
+          minimum: 2000
+          maximum: 2100
+          description: Year of the checklist
+        quarter:
+          type: integer
+          minimum: 1
+          maximum: 4
+          description: Quarter of the year (1-4)
+        intendedDeliveryDate:
+          type: string
+          format: date
+          description: Intended delivery date (YYYY-MM-DD)
+        filledBy:
+          type: string
+          format: uuid
+          nullable: true
+          description: UUID of the user who filled the checklist (optional)
+        filledAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date and time when the checklist was filled (optional)
+      required:
+        - vehicleId
+        - year
+        - quarter
+        - intendedDeliveryDate
+
+    MaintenanceChecklistUpdateInput:
+      type: object
+      properties:
+        year:
+          type: integer
+          minimum: 2000
+          maximum: 2100
+        quarter:
+          type: integer
+          minimum: 1
+          maximum: 4
+        intendedDeliveryDate:
+          type: string
+          format: date
+        filledBy:
+          type: string
+          format: uuid
+          nullable: true
+        filledAt:
+          type: string
+          format: date
+          nullable: true
+
+    MaintenanceChecklistWithItemsInput:
+      type: object
+      properties:
+        vehicleId:
+          type: string
+          format: uuid
+        year:
+          type: integer
+          minimum: 2000
+          maximum: 2100
+        quarter:
+          type: integer
+          minimum: 1
+          maximum: 4
+        intendedDeliveryDate:
+          type: string
+          format: date
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+              status:
+                $ref: "#/components/schemas/MaintenanceChecklistItemStatus"
+              observations:
+                type: string
+            required:
+              - title
+              - status
+              - observations
+      required:
+        - vehicleId
+        - year
+        - quarter
+        - intendedDeliveryDate
+        - items
+
+    MaintenanceChecklistPatchWithItemsInput:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                description: UUID of the item to update
+              status:
+                $ref: "#/components/schemas/MaintenanceChecklistItemStatus"
+              observations:
+                type: string
+            required:
+              - id
+              - status
+              - observations
+      required:
+        - items
+
+    MaintenanceChecklistResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/MaintenanceChecklist"
+
+    MaintenanceChecklistListResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/MaintenanceChecklist"
+
+    # MAINTENANCE CHECKLIST ITEM SCHEMAS
+    MaintenanceChecklistItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "e50e8400-e29b-41d4-a716-446655440009"
+        maintenanceChecklistId:
+          type: string
+          format: uuid
+          example: "d50e8400-e29b-41d4-a716-446655440008"
+        category:
+          type: string
+          example: "Motor y Fluidos"
+        title:
+          type: string
+          example: "Check engine oil level"
+        status:
+          $ref: "#/components/schemas/MaintenanceChecklistItemStatus"
+        observations:
+          type: string
+          example: "Everything looks good"
+      required:
+        - id
+        - maintenanceChecklistId
+        - category
+        - title
+        - status
+        - observations
+
+    MaintenanceChecklistItemInput:
+      type: object
+      properties:
+        maintenanceChecklistId:
+          type: string
+          format: uuid
+        category:
+          type: string
+        title:
+          type: string
+        status:
+          $ref: "#/components/schemas/MaintenanceChecklistItemStatus"
+        observations:
+          type: string
+      required:
+        - maintenanceChecklistId
+        - category
+        - title
+        - status
+        - observations
+
+    MaintenanceChecklistItemUpdateInput:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/MaintenanceChecklistItemStatus"
+        observations:
+          type: string
+
+    MaintenanceChecklistItemResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/MaintenanceChecklistItem"
+
+    MaintenanceChecklistItemListResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/MaintenanceChecklistItem"
 
   responses:
     # Common error responses using RFC 7807

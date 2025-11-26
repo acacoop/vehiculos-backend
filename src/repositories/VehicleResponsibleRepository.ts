@@ -75,12 +75,7 @@ export class VehicleResponsibleRepository
 
     // Apply active filter for date filtering
     if (filters?.active) {
-      applyActiveFilter(
-        qb,
-        new Date().toISOString().split("T")[0],
-        "vr.startDate",
-        "vr.endDate",
-      );
+      applyActiveFilter(qb, undefined, "vr.startDate", "vr.endDate");
     }
 
     // Pagination
@@ -93,22 +88,12 @@ export class VehicleResponsibleRepository
 
   findCurrentByVehicle(vehicleId: string) {
     const qb = this.baseQuery().where("vehicle.id = :vehicleId", { vehicleId });
-    applyActiveFilter(
-      qb,
-      new Date().toISOString().split("T")[0],
-      "vr.startDate",
-      "vr.endDate",
-    );
+    applyActiveFilter(qb, undefined, "vr.startDate", "vr.endDate");
     return qb.getOne();
   }
   findCurrentForUser(userId: string) {
     const qb = this.baseQuery().where("user.id = :userId", { userId });
-    applyActiveFilter(
-      qb,
-      new Date().toISOString().split("T")[0],
-      "vr.startDate",
-      "vr.endDate",
-    );
+    applyActiveFilter(qb, undefined, "vr.startDate", "vr.endDate");
     return qb.orderBy("vr.startDate", "DESC").getMany();
   }
   findVehiclesForUserOnDate(userId: string, date: string) {

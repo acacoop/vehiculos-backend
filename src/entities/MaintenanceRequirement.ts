@@ -31,10 +31,10 @@ export class MaintenanceRequirement {
   @Column({ name: "days_frequency", type: "int", nullable: true })
   daysFrequency!: number | null;
 
-  @Column({ type: "text", nullable: true })
+  @Column({ name: "observations", type: "text", nullable: true })
   observations!: string | null;
 
-  @Column({ type: "text", nullable: true })
+  @Column({ name: "instructions", type: "text", nullable: true })
   instructions!: string | null;
 
   @Column({ name: "start_date", type: "date" })
