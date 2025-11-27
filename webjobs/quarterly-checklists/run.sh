@@ -1,5 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+cd "/home/site/wwwroot"
+
 echo "Starting quarterly checklist generation WebJob..."
-npm run generate-checklists
+
+node dist/scripts/generateQuarterlyChecklists.js

@@ -8,30 +8,38 @@ Este directorio contiene los WebJobs que se ejecutan en Azure App Service.
 Genera checklists de mantenimiento trimestrales para todos los vehículos activos.
 
 - **Frecuencia**: Trimestral (1 de enero, abril, julio, octubre a las 00:00 UTC)
-- **Cron**: `0 0 1 1,4,7,10 *`
-- **Script**: `npm run generate-checklists`
+- **Cron**: `0 0 0 1 1,4,7,10 *`
+- **Script**: `node dist/scripts/generateQuarterlyChecklists.js`
 
 ### 2. sync-entra-users
 Sincroniza usuarios de Microsoft Entra ID (Azure AD) con la base de datos local.
 
 - **Frecuencia**: Diaria (02:00 UTC)
-- **Cron**: `0 2 * * *`
-- **Script**: `npm run sync`
+- **Cron**: `0 0 2 * * *`
+- **Script**: `node dist/scripts/syncEntraUsers.js`
 
 ## Despliegue
 
-### Desplegar todos los WebJobs
+Los WebJobs se despliegan como archivos `.sh` individuales que ejecutan el código JavaScript compilado.
+
+### Preparar WebJobs
 ```bash
-make deploy-webjobs ENV=test
-# o
-make deploy-webjobs ENV=prod
+make prepare-webjobs
 ```
 
-### Desplegar un WebJob específico
+Esto copia los scripts a `webjobs-deploy/` con los permisos correctos:
+- `quarterly-checklists.sh`
+- `sync-entra-users.sh`
+
+### Desplegar manualmente con Azure CLI
+
 ```bash
-make deploy-webjob NAME=quarterly-checklists ENV=test
-# o
-make deploy-webjob NAME=sync-entra-users ENV=prod
+# Subir WebJob triggered (scheduled)
+az webapp deployment source config-zip \
+  --resource-group RSG_FlotaVehiculos \
+  --name app-vehiculos-api-test \
+  --src webjobs-deploy/sync-entra-users.zip \
+  --target "site/wwwroot/App_Data/jobs/triggered/sync-entra-users"
 ```
 
 ## Estructura de un WebJob
@@ -42,14 +50,19 @@ Cada WebJob debe tener:
 
 ## Formato Cron
 
+Azure WebJobs usa **NCRONTAB** (6 campos):
+
 ```
-* * * * *
-│ │ │ │ │
-│ │ │ │ └─── Día de la semana (0-7, 0 y 7 = domingo)
-│ │ │ └───── Mes (1-12)
-│ │ └─────── Día del mes (1-31)
-│ └───────── Hora (0-23)
-└─────────── Minuto (0-59)
+{second} {minute} {hour} {day} {month} {day-of-week}
+
+* * * * * *
+│ │ │ │ │ │
+│ │ │ │ │ └─── Día de la semana (0-6, 0 = domingo)
+│ │ │ │ └───── Mes (1-12)
+│ │ │ └─────── Día del mes (1-31)
+│ │ └───────── Hora (0-23)
+│ └─────────── Minuto (0-59)
+└───────────── Segundo (0-59)
 ```
 
 ## Ejecución manual
