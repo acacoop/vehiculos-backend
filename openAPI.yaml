@@ -659,8 +659,75 @@ paths:
                 $ref: "#/components/schemas/ReservationResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
         "500":
           $ref: "#/components/responses/InternalServerError"
+
+  /reservations/{id}:
+    get:
+      summary: Get reservation by ID
+      tags: [Reservations]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Reservation found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      summary: Update reservation
+      tags: [Reservations]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReservationUpdateInput"
+      responses:
+        "200":
+          description: Reservation updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      summary: Delete reservation
+      tags: [Reservations]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Reservation deleted successfully
+        "404":
+          description: Reservation not found
 
   # ASSIGNMENTS
   /assignments:
@@ -3011,6 +3078,24 @@ components:
         - userId
         - startDate
         - endDate
+
+    ReservationUpdateInput:
+      type: object
+      properties:
+        vehicleId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+      minProperties: 1
+      description: "At least one field must be provided for update"
 
     ReservationResponse:
       allOf:
