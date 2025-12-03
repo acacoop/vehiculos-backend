@@ -3,6 +3,6 @@ set -euo pipefail
 
 cd "/home/site/wwwroot"
 
-echo "Starting quarterly checklist generation WebJob..."
+echo "Starting quarterly control generation WebJob..."
 
-node dist/scripts/generateQuarterlyChecklists.js
+node dist/scripts/generateQuarterlyControls.js

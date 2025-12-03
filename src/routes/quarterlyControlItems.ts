@@ -1,6 +1,6 @@
 import express from "express";
 import { validateUUIDParam } from "@/middleware/validation";
-import { maintenanceChecklistItemsController } from "@/controllers/maintenanceChecklistItemsController";
+import { quarterlyControlItemsController } from "@/controllers/quarterlyControlItemsController";
 import { requireRole } from "@/middleware/permission";
 import { UserRoleEnum } from "@/enums/UserRoleEnum";
 
@@ -9,34 +9,34 @@ const router = express.Router();
 router.get(
   "/",
   requireRole(UserRoleEnum.USER), // Permissive for viewing
-  maintenanceChecklistItemsController.getAll,
+  quarterlyControlItemsController.getAll,
 );
 
 router.get(
   "/:id",
   validateUUIDParam("id"),
   requireRole(UserRoleEnum.USER), // Permissive for viewing
-  maintenanceChecklistItemsController.getById,
+  quarterlyControlItemsController.getById,
 );
 
 router.post(
   "/",
   requireRole(UserRoleEnum.USER), // Permissive for creating items
-  maintenanceChecklistItemsController.create,
+  quarterlyControlItemsController.create,
 );
 
 router.patch(
   "/:id",
   validateUUIDParam("id"),
   requireRole(UserRoleEnum.USER), // Permissive for updating
-  maintenanceChecklistItemsController.update,
+  quarterlyControlItemsController.update,
 );
 
 router.delete(
   "/:id",
   validateUUIDParam("id"),
   requireRole(UserRoleEnum.ADMIN),
-  maintenanceChecklistItemsController.delete,
+  quarterlyControlItemsController.delete,
 );
 
 export default router;

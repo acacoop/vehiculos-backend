@@ -9,11 +9,11 @@ import {
 } from "typeorm";
 import { Vehicle } from "@/entities/Vehicle";
 import { User } from "@/entities/User";
-import type { MaintenanceChecklistItem } from "@/entities/MaintenanceChecklistItem";
+import type { QuarterlyControlItem } from "@/entities/QuarterlyControlItem";
 
-@Entity({ name: "maintenance_checklists" })
+@Entity({ name: "quarterly_controls" })
 @Check("quarter IN (1,2,3,4)")
-export class MaintenanceChecklist {
+export class QuarterlyControl {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
@@ -37,6 +37,6 @@ export class MaintenanceChecklist {
   @Column({ name: "filled_at", type: "date", nullable: true })
   filledAt!: string | null;
 
-  @OneToMany("MaintenanceChecklistItem", "maintenanceChecklist")
-  items!: MaintenanceChecklistItem[];
+  @OneToMany("QuarterlyControlItem", "quarterlyControl")
+  items!: QuarterlyControlItem[];
 }
