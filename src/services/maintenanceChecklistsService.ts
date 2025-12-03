@@ -223,6 +223,7 @@ export class MaintenanceChecklistsService {
         observations: string;
       }[];
     },
+    userId?: string,
   ): Promise<MaintenanceChecklistDTO | null> {
     const existing = await this.repository.findOne(id);
     if (!existing) return null;
@@ -232,6 +233,16 @@ export class MaintenanceChecklistsService {
     await queryRunner.startTransaction();
 
     try {
+      // Update filledBy and filledAt
+      if (userId) {
+        const user = await this.userRepo.findOne({ where: { id: userId } });
+        if (user) {
+          existing.filledBy = user;
+          existing.filledAt = new Date().toISOString();
+          await queryRunner.manager.save(existing);
+        }
+      }
+
       // Validate that all items belong to this checklist
       for (const itemUpdate of data.items) {
         const item = await queryRunner.manager.findOne(

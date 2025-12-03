@@ -128,8 +128,9 @@ export class MaintenanceChecklistsController extends BaseController<MaintenanceC
   public patchWithItems = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     const data = PatchChecklistWithItemsSchema.parse(req.body);
+    const userId = (req as any).user?.id;
     try {
-      const result = await this.service.patchWithItems(id, data);
+      const result = await this.service.patchWithItems(id, data, userId);
       if (!result) {
         throw new AppError(
           "Checklist not found",
