@@ -7,8 +7,9 @@ import { ServiceFactory } from "@/factories/serviceFactory";
 import { AppDataSource } from "@/db";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import { MaintenanceChecklistFilters } from "@/repositories/interfaces/IMaintenanceChecklistRepository";
-import { Request, Response } from "express";
+import { Response } from "express";
 import { asyncHandler } from "@/middleware/errorHandler";
+import { AuthenticatedRequest } from "@/middleware/auth";
 import { z } from "zod";
 import { MaintenanceChecklistItemStatus } from "@/enums/MaintenanceChecklistItemStatusEnum";
 
@@ -27,6 +28,7 @@ const CreateChecklistWithItemsSchema = z.object({
 });
 
 const PatchChecklistWithItemsSchema = z.object({
+  kilometers: z.number().nonnegative(),
   items: z.array(
     z.object({
       id: z.string().uuid(),
@@ -101,61 +103,77 @@ export class MaintenanceChecklistsController extends BaseController<MaintenanceC
   }
 
   // Create checklist with items (admin only)
-  public createWithItems = asyncHandler(async (req: Request, res: Response) => {
-    const data = CreateChecklistWithItemsSchema.parse(req.body);
-    try {
-      const result = await this.service.createWithItems(data);
-      this.sendResponse(
-        res,
-        result,
-        "Checklist with items created successfully",
-        201,
-      );
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new AppError(
-          error.message,
-          400,
-          "https://example.com/problems/validation-error",
-          "Validation Error",
+  public createWithItems = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
+      const data = CreateChecklistWithItemsSchema.parse(req.body);
+      try {
+        const result = await this.service.createWithItems(data);
+        this.sendResponse(
+          res,
+          result,
+          "Checklist with items created successfully",
+          201,
         );
+      } catch (error) {
+        if (error instanceof Error) {
+          throw new AppError(
+            error.message,
+            400,
+            "https://example.com/problems/validation-error",
+            "Validation Error",
+          );
+        }
+        throw error;
       }
-      throw error;
-    }
-  });
+    },
+  );
 
   // Patch checklist with items
-  public patchWithItems = asyncHandler(async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const data = PatchChecklistWithItemsSchema.parse(req.body);
-    try {
-      const result = await this.service.patchWithItems(id, data);
-      if (!result) {
+  public patchWithItems = asyncHandler(
+    async (req: AuthenticatedRequest, res: Response) => {
+      const { id } = req.params;
+      const data = PatchChecklistWithItemsSchema.parse(req.body);
+      const userId = req.user?.id;
+      if (!userId) {
         throw new AppError(
-          "Checklist not found",
-          404,
-          "https://example.com/problems/not-found",
-          "Not Found",
+          "User not authenticated",
+          401,
+          "https://example.com/problems/unauthorized",
+          "Unauthorized",
         );
       }
-      this.sendResponse(
-        res,
-        result,
-        "Checklist with items updated successfully",
-        200,
-      );
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new AppError(
-          error.message,
-          400,
-          "https://example.com/problems/validation-error",
-          "Validation Error",
+      try {
+        const result = await this.service.patchWithItems(id, {
+          ...data,
+          userId,
+        });
+        if (!result) {
+          throw new AppError(
+            "Checklist not found",
+            404,
+            "https://example.com/problems/not-found",
+            "Not Found",
+          );
+        }
+        this.sendResponse(
+          res,
+          result,
+          "Checklist with items updated successfully",
+          200,
         );
+      } catch (error) {
+        if (error instanceof Error) {
+          throw new AppError(
+            error.message,
+            400,
+            "https://example.com/problems/validation-error",
+            "Validation Error",
+          );
+        }
+        throw error;
       }
-      throw error;
-    }
-  });
+    },
+  );
 }
 
 export function createMaintenanceChecklistsController() {

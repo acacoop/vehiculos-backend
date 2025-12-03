@@ -36,6 +36,7 @@ import { MaintenanceChecklistRepository } from "@/repositories/MaintenanceCheckl
 import { MaintenanceChecklistItemRepository } from "@/repositories/MaintenanceChecklistItemRepository";
 import { MaintenanceChecklistsService } from "@/services/maintenanceChecklistsService";
 import { MaintenanceChecklistItemsService } from "@/services/maintenanceChecklistItemsService";
+import { VehicleKilometersService } from "@/services/vehicleKilometersService";
 
 /**
  * Service Factory - Centralizes creation of service instances
@@ -132,12 +133,15 @@ export class ServiceFactory {
     const maintenanceRepo = this.dataSource.getRepository(Maintenance);
     const vehicleRepo = this.dataSource.getRepository(Vehicle);
     const userRepo = this.dataSource.getRepository(User);
+    const vehicleKilometersService = new VehicleKilometersService();
     return new MaintenanceRecordsService(
       recordRepo,
       maintenanceRecordRepo,
       maintenanceRepo,
       vehicleRepo,
       userRepo,
+      this.dataSource,
+      vehicleKilometersService,
     );
   }
 
@@ -162,11 +166,13 @@ export class ServiceFactory {
     const repo = new MaintenanceChecklistRepository(this.dataSource);
     const userRepo = this.dataSource.getRepository(User);
     const vehicleRepo = this.dataSource.getRepository(Vehicle);
+    const vehicleKilometersService = new VehicleKilometersService();
     return new MaintenanceChecklistsService(
       repo,
       userRepo,
       vehicleRepo,
       this.dataSource,
+      vehicleKilometersService,
     );
   }
 

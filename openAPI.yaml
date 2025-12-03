@@ -485,6 +485,9 @@ paths:
         - Must be >= the previous reading (if exists)
         - Must be <= the next reading (if exists)
 
+        **Note:** The unique constraint is per vehicle per datetime (not just date), 
+        allowing multiple readings per day for the same vehicle.
+
         Returns 422 if the kilometers value violates chronological order.
       tags: [Vehicle Kilometers Logs]
       requestBody:
@@ -3541,10 +3544,23 @@ components:
           type: string
           format: date-time
           example: "2025-01-10T14:30:00Z"
-        kilometers:
-          type: integer
-          minimum: 0
-          example: 75000
+        kilometersLog:
+          type: object
+          description: "Reference to the kilometer log entry created for this maintenance"
+          properties:
+            id:
+              type: string
+              format: uuid
+            kilometers:
+              type: integer
+              minimum: 0
+            date:
+              type: string
+              format: date-time
+          required:
+            - id
+            - kilometers
+            - date
         notes:
           type: string
           nullable: true
@@ -3555,7 +3571,7 @@ components:
         - vehicle
         - maintenance
         - date
-        - kilometers
+        - kilometersLog
 
     MaintenanceRecordInput:
       type: object
@@ -3575,6 +3591,7 @@ components:
         kilometers:
           type: integer
           minimum: 0
+          description: "Kilometers reading - a new kilometer log entry will be created automatically"
         notes:
           type: string
       required:
@@ -3640,6 +3657,24 @@ components:
           format: date-time
           nullable: true
           example: "2025-01-15T14:30:00Z"
+        kilometersLog:
+          type: object
+          nullable: true
+          description: "Reference to the kilometer log entry created when checklist was filled"
+          properties:
+            id:
+              type: string
+              format: uuid
+            kilometers:
+              type: integer
+              minimum: 0
+            date:
+              type: string
+              format: date-time
+          required:
+            - id
+            - kilometers
+            - date
         items:
           type: array
           items:
@@ -3766,6 +3801,10 @@ components:
     MaintenanceChecklistPatchWithItemsInput:
       type: object
       properties:
+        kilometers:
+          type: integer
+          minimum: 0
+          description: "Kilometers reading at time of checklist completion - a new kilometer log entry will be created automatically"
         items:
           type: array
           items:
@@ -3784,6 +3823,7 @@ components:
               - status
               - observations
       required:
+        - kilometers
         - items
 
     MaintenanceChecklistResponse:

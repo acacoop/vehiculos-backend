@@ -18,9 +18,11 @@ import type { Maintenance as MaintenanceSchemaType } from "@/schemas/maintenance
 import type { MaintenanceRecordDTO } from "@/schemas/maintenanceRecord";
 import { Vehicle } from "@/entities/Vehicle";
 import { MaintenanceRecord as MaintenanceRecordEntity } from "@/entities/MaintenanceRecord";
-import { Repository } from "typeorm";
+import { VehicleKilometers } from "@/entities/VehicleKilometers";
+import { Repository, DataSource } from "typeorm";
 import { User } from "@/entities/User";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { VehicleKilometersService } from "@/services/vehicleKilometersService";
 
 export type MaintenanceDTO = MaintenanceSchemaType & {
   kilometersFrequency?: number;
@@ -149,6 +151,8 @@ export class MaintenanceRecordsService {
     private readonly maintenanceRepo: Repository<Maintenance>,
     private readonly vehicleRepo: Repository<Vehicle>,
     private readonly userRepo: Repository<User>,
+    private readonly dataSource: DataSource,
+    private readonly vehicleKilometersService: VehicleKilometersService,
   ) {}
 
   private mapEntity(mr: MaintenanceRecordEntity): MaintenanceRecordDTO {
@@ -163,6 +167,11 @@ export class MaintenanceRecordsService {
     }
     if (!mr.vehicle) {
       throw new Error(`MaintenanceRecord ${mr.id} has no associated vehicle`);
+    }
+    if (!mr.kilometersLog) {
+      throw new Error(
+        `MaintenanceRecord ${mr.id} has no associated kilometers log`,
+      );
     }
 
     return {
@@ -205,7 +214,11 @@ export class MaintenanceRecordsService {
         },
       },
       date: new Date(mr.date),
-      kilometers: mr.kilometers,
+      kilometersLog: {
+        id: mr.kilometersLog.id,
+        kilometers: mr.kilometersLog.kilometers,
+        date: mr.kilometersLog.date,
+      },
       notes: mr.notes ?? undefined,
     };
   }
@@ -280,16 +293,62 @@ export class MaintenanceRecordsService {
 
     if (!maintenance || !vehicle || !user) return null;
 
-    const created = this.maintenanceRecordRepo.create({
-      maintenance,
-      vehicle,
-      user,
-      date: data.date.toISOString().split("T")[0],
-      kilometers: data.kilometers,
-      notes: data.notes ?? null,
-    });
-    const saved = await this.maintenanceRecordRepo.save(created);
-    return this.mapEntity(saved);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Create kilometer log first inside transaction
+      const kilometersLogEntity = queryRunner.manager.create(
+        VehicleKilometers,
+        {
+          vehicle,
+          user,
+          date: data.date,
+          kilometers: data.kilometers,
+        },
+      );
+      const savedKilometersLog = await queryRunner.manager.save(
+        VehicleKilometers,
+        kilometersLogEntity,
+      );
+
+      // Create maintenance record with reference to kilometer log
+      const created = this.maintenanceRecordRepo.create({
+        maintenance,
+        vehicle,
+        user,
+        date: data.date.toISOString().split("T")[0],
+        kilometersLog: savedKilometersLog,
+        notes: data.notes ?? null,
+      });
+      const saved = await queryRunner.manager.save(created);
+
+      await queryRunner.commitTransaction();
+
+      // Fetch complete entity with all relations
+      const complete = await this.maintenanceRecordRepo.findOne({
+        where: { id: saved.id },
+        relations: [
+          "maintenance",
+          "maintenance.category",
+          "vehicle",
+          "vehicle.model",
+          "vehicle.model.brand",
+          "user",
+          "kilometersLog",
+          "kilometersLog.user",
+          "kilometersLog.vehicle",
+        ],
+      });
+
+      return complete ? this.mapEntity(complete) : null;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async getByMaintenance(

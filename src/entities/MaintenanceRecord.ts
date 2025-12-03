@@ -4,14 +4,13 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
-  Check,
 } from "typeorm";
 import { User } from "@/entities/User";
 import { Maintenance } from "./Maintenance";
 import { Vehicle } from "./Vehicle";
+import { VehicleKilometers } from "./VehicleKilometers";
 
 @Entity({ name: "maintenance_records" })
-@Check("kilometers >= 0")
 export class MaintenanceRecord {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
@@ -31,8 +30,9 @@ export class MaintenanceRecord {
   @Column({ name: "date", type: "date" })
   date!: string;
 
-  @Column({ name: "kilometers", type: "int" })
-  kilometers!: number;
+  @ManyToOne(() => VehicleKilometers, { eager: true, onDelete: "RESTRICT" })
+  @JoinColumn({ name: "kilometers_log_id" })
+  kilometersLog!: VehicleKilometers;
 
   @Column({ name: "notes", type: "text", nullable: true })
   notes!: string | null;

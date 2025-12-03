@@ -7,7 +7,7 @@ export const MaintenanceRecordSchema = z.object({
   vehicleId: z.string().uuid(),
   userId: z.string().uuid(),
   date: z.coerce.date(),
-  kilometers: z.number().nonnegative(),
+  kilometers: z.number().nonnegative(), // This will be used to create a kilometer log
   notes: z.string().optional(),
 });
 
@@ -54,6 +54,10 @@ export interface MaintenanceRecordDTO {
     };
   };
   date: Date;
-  kilometers: number;
+  kilometersLog: {
+    id: string;
+    kilometers: number;
+    date: Date;
+  };
   notes?: string;
 }

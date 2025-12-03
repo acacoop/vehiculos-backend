@@ -11,9 +11,11 @@ import type {
 import { validateVehicleExists } from "@/utils/validation/entity";
 import { User } from "@/entities/User";
 import { Vehicle } from "@/entities/Vehicle";
+import { VehicleKilometers } from "@/entities/VehicleKilometers";
 import { Repository, DataSource } from "typeorm";
 import { MaintenanceChecklistItemStatus } from "@/enums/MaintenanceChecklistItemStatusEnum";
 import { MaintenanceChecklistItem } from "@/entities/MaintenanceChecklistItem";
+import { VehicleKilometersService } from "@/services/vehicleKilometersService";
 
 function map(mc: MaintenanceChecklist): MaintenanceChecklistDTO {
   return {
@@ -51,6 +53,13 @@ function map(mc: MaintenanceChecklist): MaintenanceChecklistDTO {
         }
       : undefined,
     filledAt: mc.filledAt ?? undefined,
+    kilometersLog: mc.kilometersLog
+      ? {
+          id: mc.kilometersLog.id,
+          kilometers: mc.kilometersLog.kilometers,
+          date: mc.kilometersLog.date,
+        }
+      : undefined,
     items: (mc.items || []).map((item) => ({
       id: item.id,
       category: item.category,
@@ -67,6 +76,7 @@ export class MaintenanceChecklistsService {
     private readonly userRepo: Repository<User>,
     private readonly vehicleRepo: Repository<Vehicle>,
     private readonly dataSource: DataSource,
+    private readonly vehicleKilometersService: VehicleKilometersService,
   ) {}
 
   async getAll(
@@ -217,6 +227,8 @@ export class MaintenanceChecklistsService {
   async patchWithItems(
     id: string,
     data: {
+      userId: string;
+      kilometers: number;
       items: {
         id: string;
         status: MaintenanceChecklistItemStatus;
@@ -252,6 +264,36 @@ export class MaintenanceChecklistsService {
           );
         }
       }
+
+      // Create kilometer log inside transaction
+      const user = await queryRunner.manager.findOne(User, {
+        where: { id: data.userId },
+      });
+      if (!user) throw new Error("User not found");
+
+      const vehicle = await queryRunner.manager.findOne(Vehicle, {
+        where: { id: existing.vehicle.id },
+        relations: ["model", "model.brand"],
+      });
+      if (!vehicle) throw new Error("Vehicle not found");
+
+      const kilometersLogEntity = queryRunner.manager.create(
+        VehicleKilometers,
+        {
+          vehicle,
+          user,
+          date: new Date(),
+          kilometers: data.kilometers,
+        },
+      );
+      const savedKilometersLog = await queryRunner.manager.save(
+        VehicleKilometers,
+        kilometersLogEntity,
+      );
+
+      // Update checklist with kilometer log reference
+      existing.kilometersLog = savedKilometersLog;
+      await queryRunner.manager.save(existing);
 
       // Update items
       for (const itemUpdate of data.items) {
