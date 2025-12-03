@@ -1,18 +1,19 @@
 import { BaseController } from "@/controllers/baseController";
 import { AppError } from "@/middleware/errorHandler";
-import { MaintenanceChecklistSchema } from "@/schemas/maintenanceChecklist";
-import { MaintenanceChecklistsService } from "@/services/maintenanceChecklistsService";
-import type { MaintenanceChecklist } from "@/schemas/maintenanceChecklist";
+import { QuarterlyControlSchema } from "@/schemas/quarterlyControl";
+import { QuarterlyControlsService } from "@/services/quarterlyControlsService";
+import type { QuarterlyControl } from "@/schemas/quarterlyControl";
 import { ServiceFactory } from "@/factories/serviceFactory";
 import { AppDataSource } from "@/db";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
-import { MaintenanceChecklistFilters } from "@/repositories/interfaces/IMaintenanceChecklistRepository";
+import { QuarterlyControlFilters } from "@/repositories/interfaces/IQuarterlyControlRepository";
 import { Request, Response } from "express";
 import { asyncHandler } from "@/middleware/errorHandler";
+import { AuthenticatedRequest } from "@/middleware/auth";
 import { z } from "zod";
-import { MaintenanceChecklistItemStatus } from "@/enums/MaintenanceChecklistItemStatusEnum";
+import { QuarterlyControlItemStatus } from "@/enums/QuarterlyControlItemStatusEnum";
 
-const CreateChecklistWithItemsSchema = z.object({
+const CreateControlWithItemsSchema = z.object({
   vehicleId: z.string().uuid(),
   year: z.number().int().min(2000).max(2100),
   quarter: z.number().int().min(1).max(4),
@@ -20,26 +21,26 @@ const CreateChecklistWithItemsSchema = z.object({
   items: z.array(
     z.object({
       title: z.string(),
-      status: z.nativeEnum(MaintenanceChecklistItemStatus),
+      status: z.nativeEnum(QuarterlyControlItemStatus),
       observations: z.string(),
     }),
   ),
 });
 
-const PatchChecklistWithItemsSchema = z.object({
+const PatchControlWithItemsSchema = z.object({
   items: z.array(
     z.object({
       id: z.string().uuid(),
-      status: z.nativeEnum(MaintenanceChecklistItemStatus),
+      status: z.nativeEnum(QuarterlyControlItemStatus),
       observations: z.string(),
     }),
   ),
 });
 
-export class MaintenanceChecklistsController extends BaseController<MaintenanceChecklistFilters> {
-  constructor(private readonly service: MaintenanceChecklistsService) {
+export class QuarterlyControlsController extends BaseController<QuarterlyControlFilters> {
+  constructor(private readonly service: QuarterlyControlsService) {
     super({
-      resourceName: "MaintenanceChecklist",
+      resourceName: "QuarterlyControl",
       allowedFilters: [
         "vehicleId",
         "year",
@@ -51,7 +52,7 @@ export class MaintenanceChecklistsController extends BaseController<MaintenanceC
   }
 
   protected async getAllService(
-    options: RepositoryFindOptions<Partial<MaintenanceChecklistFilters>>,
+    options: RepositoryFindOptions<Partial<QuarterlyControlFilters>>,
   ) {
     return this.service.getAll(options);
   }
@@ -61,11 +62,9 @@ export class MaintenanceChecklistsController extends BaseController<MaintenanceC
   }
 
   protected async createService(data: unknown) {
-    const maintenanceChecklist = MaintenanceChecklistSchema.parse(data);
+    const quarterlyControl = QuarterlyControlSchema.parse(data);
     try {
-      return await this.service.create(
-        maintenanceChecklist as MaintenanceChecklist,
-      );
+      return await this.service.create(quarterlyControl as QuarterlyControl);
     } catch (error) {
       if (error instanceof Error) {
         throw new AppError(
@@ -80,7 +79,7 @@ export class MaintenanceChecklistsController extends BaseController<MaintenanceC
   }
 
   protected async updateService(id: string, data: unknown) {
-    const parsed = MaintenanceChecklistSchema.partial().parse(data);
+    const parsed = QuarterlyControlSchema.partial().parse(data);
     try {
       return await this.service.update(id, parsed);
     } catch (error) {
@@ -100,15 +99,15 @@ export class MaintenanceChecklistsController extends BaseController<MaintenanceC
     return this.service.delete(id);
   }
 
-  // Create checklist with items (admin only)
+  // Create control with items (admin only)
   public createWithItems = asyncHandler(async (req: Request, res: Response) => {
-    const data = CreateChecklistWithItemsSchema.parse(req.body);
+    const data = CreateControlWithItemsSchema.parse(req.body);
     try {
       const result = await this.service.createWithItems(data);
       this.sendResponse(
         res,
         result,
-        "Checklist with items created successfully",
+        "Control with items created successfully",
         201,
       );
     } catch (error) {
@@ -124,15 +123,17 @@ export class MaintenanceChecklistsController extends BaseController<MaintenanceC
     }
   });
 
-  // Patch checklist with items
+  // Patch control with items
   public patchWithItems = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const data = PatchChecklistWithItemsSchema.parse(req.body);
+    const data = PatchControlWithItemsSchema.parse(req.body);
+    const { user } = req as AuthenticatedRequest;
+    const userId = user?.id;
     try {
-      const result = await this.service.patchWithItems(id, data);
+      const result = await this.service.patchWithItems(id, data, userId);
       if (!result) {
         throw new AppError(
-          "Checklist not found",
+          "Control not found",
           404,
           "https://example.com/problems/not-found",
           "Not Found",
@@ -141,7 +142,7 @@ export class MaintenanceChecklistsController extends BaseController<MaintenanceC
       this.sendResponse(
         res,
         result,
-        "Checklist with items updated successfully",
+        "Control with items updated successfully",
         200,
       );
     } catch (error) {
@@ -158,11 +159,10 @@ export class MaintenanceChecklistsController extends BaseController<MaintenanceC
   });
 }
 
-export function createMaintenanceChecklistsController() {
+export function createQuarterlyControlsController() {
   const serviceFactory = new ServiceFactory(AppDataSource);
-  const service = serviceFactory.createMaintenanceChecklistsService();
-  return new MaintenanceChecklistsController(service);
+  const service = serviceFactory.createQuarterlyControlsService();
+  return new QuarterlyControlsController(service);
 }
 
-export const maintenanceChecklistsController =
-  createMaintenanceChecklistsController();
+export const quarterlyControlsController = createQuarterlyControlsController();

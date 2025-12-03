@@ -29,21 +29,17 @@ export class ReservationsController extends BaseController<ReservationFilters> {
     const parsed = ReservationSchema.parse(data) as Reservation;
     return this.service.create(parsed);
   }
-  protected async updateService(): Promise<unknown | null> {
-    throw new AppError(
-      "Update not supported for reservations.",
-      405,
-      "https://example.com/problems/method-not-allowed",
-      "Method Not Allowed",
-    );
+  protected async updateService(
+    id: string,
+    data: unknown,
+  ): Promise<unknown | null> {
+    const parsed = ReservationSchema.partial().parse(
+      data,
+    ) as Partial<Reservation>;
+    return this.service.update(id, parsed);
   }
-  protected async deleteService(): Promise<boolean> {
-    throw new AppError(
-      "Delete not supported for reservations.",
-      405,
-      "https://example.com/problems/method-not-allowed",
-      "Method Not Allowed",
-    );
+  protected async deleteService(id: string): Promise<boolean> {
+    return this.service.delete(id);
   }
 
   public getById = asyncHandler(async (req: Request, res: Response) => {

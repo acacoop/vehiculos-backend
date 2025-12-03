@@ -1,20 +1,20 @@
 /*
-  Script to generate quarterly maintenance checklists for all active vehicles.
-  This script creates a checklist for each active vehicle with predefined items.
+  Script to generate quarterly controls for all active vehicles.
+  This script creates a control for each active vehicle with predefined items.
 
-  Usage: npm run generate-checklists
-  Or: tsx --env-file=.env src/scripts/generateQuarterlyChecklists.ts
+  Usage: npm run generate-quarterly-controls
+  Or: tsx --env-file=.env src/scripts/generateQuarterlyControls.ts
 */
 
 import { fileURLToPath } from "node:url";
 import { AppDataSource } from "@/db";
 import { Vehicle } from "@/entities/Vehicle";
-import { MaintenanceChecklist } from "@/entities/MaintenanceChecklist";
-import { MaintenanceChecklistItem } from "@/entities/MaintenanceChecklistItem";
-import { MaintenanceChecklistItemStatus } from "@/enums/MaintenanceChecklistItemStatusEnum";
+import { QuarterlyControl } from "@/entities/QuarterlyControl";
+import { QuarterlyControlItem } from "@/entities/QuarterlyControlItem";
+import { QuarterlyControlItemStatus } from "@/enums/QuarterlyControlItemStatusEnum";
 
-// Predefined checklist items organized by category
-const CHECKLIST_CATEGORIES = {
+// Predefined control items organized by category
+const CONTROL_CATEGORIES = {
   "Motor y Fluidos": [
     "Nivel de aceite",
     "Nivel de refrigerante",
@@ -45,7 +45,7 @@ const CHECKLIST_CATEGORIES = {
 };
 
 // Flatten categories into template format
-const CHECKLIST_ITEMS_TEMPLATE = Object.entries(CHECKLIST_CATEGORIES).flatMap(
+const CONTROL_ITEMS_TEMPLATE = Object.entries(CONTROL_CATEGORIES).flatMap(
   ([category, items]) => items.map((title) => ({ category, title })),
 );
 
@@ -69,25 +69,25 @@ function getIntendedDeliveryDate(): string {
 }
 
 /**
- * Check if a checklist already exists for a vehicle in the current quarter
+ * Check if a control already exists for a vehicle in the current quarter
  */
-async function checklistExists(
+async function controlExists(
   vehicleId: string,
   year: number,
   quarter: number,
 ): Promise<boolean> {
-  const checklistRepo = AppDataSource.getRepository(MaintenanceChecklist);
-  const existing = await checklistRepo.findOne({
+  const controlRepo = AppDataSource.getRepository(QuarterlyControl);
+  const existing = await controlRepo.findOne({
     where: { vehicle: { id: vehicleId }, year, quarter },
   });
   return existing !== null;
 }
 
 /**
- * Main function to generate checklists
+ * Main function to generate controls
  */
-async function generateQuarterlyChecklists(): Promise<void> {
-  console.log("🚀 Starting quarterly checklist generation...\n");
+async function generateQuarterlyControls(): Promise<void> {
+  console.log("🚀 Starting quarterly control generation...\n");
 
   const year = new Date().getFullYear();
   const quarter = getCurrentQuarter();
@@ -110,19 +110,19 @@ async function generateQuarterlyChecklists(): Promise<void> {
 
   for (const vehicle of vehicles) {
     try {
-      // Check if checklist already exists
-      const exists = await checklistExists(vehicle.id, year, quarter);
+      // Check if control already exists
+      const exists = await controlExists(vehicle.id, year, quarter);
       if (exists) {
         console.log(
-          `⏭️  Skipped ${vehicle.licensePlate} - checklist already exists`,
+          `⏭️  Skipped ${vehicle.licensePlate} - control already exists`,
         );
         skipped++;
         continue;
       }
 
-      // Create checklist
-      const checklistRepo = AppDataSource.getRepository(MaintenanceChecklist);
-      const checklist = checklistRepo.create({
+      // Create control
+      const controlRepo = AppDataSource.getRepository(QuarterlyControl);
+      const control = controlRepo.create({
         vehicle,
         year,
         quarter,
@@ -130,38 +130,38 @@ async function generateQuarterlyChecklists(): Promise<void> {
         filledBy: null,
         filledAt: null,
       });
-      const savedChecklist = await checklistRepo.save(checklist);
+      const savedControl = await controlRepo.save(control);
 
-      // Create checklist items
-      const itemRepo = AppDataSource.getRepository(MaintenanceChecklistItem);
-      const items = CHECKLIST_ITEMS_TEMPLATE.map((template) => {
+      // Create control items
+      const itemRepo = AppDataSource.getRepository(QuarterlyControlItem);
+      const items = CONTROL_ITEMS_TEMPLATE.map((template) => {
         return itemRepo.create({
-          maintenanceChecklist: savedChecklist,
+          quarterlyControl: savedControl,
           category: template.category,
           title: template.title,
-          status: MaintenanceChecklistItemStatus.PENDIENTE,
+          status: QuarterlyControlItemStatus.PENDIENTE,
           observations: "", // Empty by default
         });
       });
       await itemRepo.save(items);
 
       console.log(
-        `✅ Created checklist for ${vehicle.licensePlate} (${vehicle.model.brand.name} ${vehicle.model.name}) with ${items.length} items`,
+        `✅ Created control for ${vehicle.licensePlate} (${vehicle.model.brand.name} ${vehicle.model.name}) with ${items.length} items`,
       );
       created++;
     } catch (error) {
       console.error(
-        `❌ Error creating checklist for ${vehicle.licensePlate}:`,
+        `❌ Error creating control for ${vehicle.licensePlate}:`,
         error,
       );
     }
   }
 
   console.log(`\n📊 Summary:`);
-  console.log(`   ✅ Created: ${created} checklists`);
+  console.log(`   ✅ Created: ${created} controls`);
   console.log(`   ⏭️ Skipped: ${skipped} (already exist)`);
   console.log(
-    `   📝 Total items per checklist: ${CHECKLIST_ITEMS_TEMPLATE.length}`,
+    `   📝 Total items per control: ${CONTROL_ITEMS_TEMPLATE.length}`,
   );
 }
 
@@ -175,7 +175,7 @@ async function main() {
     await AppDataSource.initialize();
     console.log("✅ Database connected\n");
 
-    await generateQuarterlyChecklists();
+    await generateQuarterlyControls();
 
     console.log("\n✨ Script completed successfully!");
   } catch (error) {
@@ -193,4 +193,4 @@ if (isMain) {
   main();
 }
 
-export { generateQuarterlyChecklists };
+export { generateQuarterlyControls };

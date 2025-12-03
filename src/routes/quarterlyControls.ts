@@ -1,6 +1,6 @@
 import express from "express";
 import { validateUUIDParam } from "@/middleware/validation";
-import { maintenanceChecklistsController } from "@/controllers/maintenanceChecklistsController";
+import { quarterlyControlsController } from "@/controllers/quarterlyControlsController";
 import { requireRole } from "@/middleware/permission";
 import { UserRoleEnum } from "@/enums/UserRoleEnum";
 
@@ -9,47 +9,47 @@ const router = express.Router();
 router.get(
   "/",
   requireRole(UserRoleEnum.USER), // Permissive for viewing
-  maintenanceChecklistsController.getAll,
+  quarterlyControlsController.getAll,
 );
 
 router.get(
   "/:id",
   validateUUIDParam("id"),
   requireRole(UserRoleEnum.USER), // Permissive for viewing
-  maintenanceChecklistsController.getById,
+  quarterlyControlsController.getById,
 );
 
 router.post(
   "/",
   requireRole(UserRoleEnum.ADMIN),
-  maintenanceChecklistsController.create,
+  quarterlyControlsController.create,
 );
 
 router.post(
   "/with-items",
   requireRole(UserRoleEnum.ADMIN),
-  maintenanceChecklistsController.createWithItems,
+  quarterlyControlsController.createWithItems,
 );
 
 router.patch(
   "/:id",
   validateUUIDParam("id"),
   requireRole(UserRoleEnum.ADMIN),
-  maintenanceChecklistsController.update,
+  quarterlyControlsController.update,
 );
 
 router.patch(
   "/:id/with-items",
   validateUUIDParam("id"),
   requireRole(UserRoleEnum.USER),
-  maintenanceChecklistsController.patchWithItems,
+  quarterlyControlsController.patchWithItems,
 );
 
 router.delete(
   "/:id",
   validateUUIDParam("id"),
   requireRole(UserRoleEnum.ADMIN),
-  maintenanceChecklistsController.delete,
+  quarterlyControlsController.delete,
 );
 
 export default router;
