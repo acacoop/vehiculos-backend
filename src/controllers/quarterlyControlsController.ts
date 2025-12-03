@@ -9,6 +9,7 @@ import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import { QuarterlyControlFilters } from "@/repositories/interfaces/IQuarterlyControlRepository";
 import { Request, Response } from "express";
 import { asyncHandler } from "@/middleware/errorHandler";
+import { AuthenticatedRequest } from "@/middleware/auth";
 import { z } from "zod";
 import { QuarterlyControlItemStatus } from "@/enums/QuarterlyControlItemStatusEnum";
 
@@ -126,7 +127,8 @@ export class QuarterlyControlsController extends BaseController<QuarterlyControl
   public patchWithItems = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     const data = PatchControlWithItemsSchema.parse(req.body);
-    const userId = (req as any).user?.id;
+    const { user } = req as AuthenticatedRequest;
+    const userId = user?.id;
     try {
       const result = await this.service.patchWithItems(id, data, userId);
       if (!result) {
