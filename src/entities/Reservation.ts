@@ -25,9 +25,9 @@ export class Reservation {
   @JoinColumn({ name: "vehicle_id" })
   vehicle!: Vehicle;
 
-  @Column({ name: "start_date", type: "date" })
+  @Column({ name: "start_date", type: "datetime" })
   startDate!: string;
 
-  @Column({ name: "end_date", type: "date" })
+  @Column({ name: "end_date", type: "datetime" })
   endDate!: string;
 }

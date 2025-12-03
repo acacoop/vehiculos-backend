@@ -59,4 +59,23 @@ router.post(
   controller.create,
 );
 
+router.patch(
+  "/:id",
+  validateUUIDParam("id"),
+  // TODO: Implement proper vehicle permission checking for reservations
+  // Currently using admin-only access until vehicle permission logic is implemented
+  requireRole(UserRoleEnum.ADMIN),
+  validateBody(ReservationSchema.partial()),
+  controller.update,
+);
+
+router.delete(
+  "/:id",
+  validateUUIDParam("id"),
+  // TODO: Implement proper vehicle permission checking for reservations
+  // Currently using admin-only access until vehicle permission logic is implemented
+  requireRole(UserRoleEnum.ADMIN),
+  controller.delete,
+);
+
 export default router;
