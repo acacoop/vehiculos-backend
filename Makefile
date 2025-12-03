@@ -105,11 +105,12 @@ clean:
 prepare-webjobs:
 	@echo "Preparing WebJobs for deployment..."
 	@mkdir -p webjobs-deploy
-	@cd webjobs/quarterly-checklists && chmod +x run.sh && zip -r ../../webjobs-deploy/quarterly-checklists.zip . && cd ../..
-	@cd webjobs/sync-entra-users && chmod +x run.sh && zip -r ../../webjobs-deploy/sync-entra-users.zip . && cd ../..
-	@echo "WebJobs packaged in webjobs-deploy/ directory"
-	@echo "  - quarterly-checklists.zip"
-	@echo "  - sync-entra-users.zip"
+	@cp webjobs/quarterly-checklists/run.sh webjobs-deploy/quarterly-checklists.sh
+	@cp webjobs/sync-entra-users/run.sh webjobs-deploy/sync-entra-users.sh
+	@chmod +x webjobs-deploy/*.sh
+	@echo "WebJobs prepared in webjobs-deploy/ directory"
+	@echo "  - quarterly-checklists.sh"
+	@echo "  - sync-entra-users.sh"
 
 help:
 	@echo "Available targets:"; \
@@ -124,6 +125,6 @@ help:
 	echo "  migration-run            Apply pending migrations to database"; \
 	echo "  migration-revert         Revert last applied migration"; \
 	echo "  reset-db                 Stop containers, remove volumes (DB data), and restart DB"; \
-	echo "  prepare-webjobs          Package WebJobs into zip files in webjobs-deploy/"; \
+	echo "  prepare-webjobs          Package WebJobs into .sh files in webjobs-deploy/"; \
 	echo "  clean                    Remove build artifacts and prune dangling images"; \
 	echo "  help                     Show this help message";
