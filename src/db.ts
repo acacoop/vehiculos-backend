@@ -25,8 +25,8 @@ import { VehicleBrand } from "@/entities/VehicleBrand";
 import { VehicleModel } from "@/entities/VehicleModel";
 import { VehicleACL } from "@/entities/VehicleACL";
 import { UserRole } from "@/entities/UserRole";
-import { MaintenanceChecklist } from "@/entities/MaintenanceChecklist";
-import { MaintenanceChecklistItem } from "@/entities/MaintenanceChecklistItem";
+import { QuarterlyControl } from "@/entities/QuarterlyControl";
+import { QuarterlyControlItem } from "@/entities/QuarterlyControlItem";
 
 // Determine if running from dist folder
 // In tests, NODE_ENV is usually 'test' and we're always in src/
@@ -73,8 +73,8 @@ const createDataSourceConfig = () => {
       VehicleModel,
       VehicleACL,
       UserRole,
-      MaintenanceChecklist,
-      MaintenanceChecklistItem,
+      QuarterlyControl,
+      QuarterlyControlItem,
     ],
     migrations: isRunningFromDist
       ? ["dist/migrations/*.js"]

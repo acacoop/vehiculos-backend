@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { MaintenanceChecklistItemStatus } from "@/enums/MaintenanceChecklistItemStatusEnum";
+import { QuarterlyControlItemStatus } from "@/enums/QuarterlyControlItemStatusEnum";
 
-// Define the schema for maintenance checklist object
-export const MaintenanceChecklistSchema = z.object({
+// Define the schema for quarterly control object
+export const QuarterlyControlSchema = z.object({
   id: z.string().uuid().optional(), // UUID, optional for creation
   vehicleId: z.string().uuid(),
   year: z.number().int().min(2000).max(2100),
@@ -12,10 +12,10 @@ export const MaintenanceChecklistSchema = z.object({
   filledAt: z.string().optional(),
 });
 
-export type MaintenanceChecklist = z.infer<typeof MaintenanceChecklistSchema>;
+export type QuarterlyControl = z.infer<typeof QuarterlyControlSchema>;
 
-// DTO for maintenance checklist with full nested objects
-export interface MaintenanceChecklistDTO {
+// DTO for quarterly control with full nested objects
+export interface QuarterlyControlDTO {
   id: string;
   vehicle: {
     id: string;
@@ -52,7 +52,7 @@ export interface MaintenanceChecklistDTO {
     id: string;
     category: string;
     title: string;
-    status: MaintenanceChecklistItemStatus;
+    status: QuarterlyControlItemStatus;
     observations: string;
   }[];
 }

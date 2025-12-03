@@ -1,37 +1,35 @@
 import { DataSource, Repository } from "typeorm";
-import { MaintenanceChecklist } from "@/entities/MaintenanceChecklist";
+import { QuarterlyControl } from "@/entities/QuarterlyControl";
 import {
-  IMaintenanceChecklistRepository,
-  MaintenanceChecklistFilters,
-} from "@/repositories/interfaces/IMaintenanceChecklistRepository";
+  IQuarterlyControlRepository,
+  QuarterlyControlFilters,
+} from "@/repositories/interfaces/IQuarterlyControlRepository";
 import {
   RepositoryFindOptions,
   resolvePagination,
 } from "@/repositories/interfaces/common";
 import { applySearchFilter, applyFilters } from "@/utils/index";
 
-export class MaintenanceChecklistRepository
-  implements IMaintenanceChecklistRepository
-{
-  private readonly repo: Repository<MaintenanceChecklist>;
+export class QuarterlyControlRepository implements IQuarterlyControlRepository {
+  private readonly repo: Repository<QuarterlyControl>;
   constructor(ds: DataSource) {
-    this.repo = ds.getRepository(MaintenanceChecklist);
+    this.repo = ds.getRepository(QuarterlyControl);
   }
 
   async findAndCount(
-    options?: RepositoryFindOptions<MaintenanceChecklistFilters>,
-  ): Promise<[MaintenanceChecklist[], number]> {
+    options?: RepositoryFindOptions<QuarterlyControlFilters>,
+  ): Promise<[QuarterlyControl[], number]> {
     const { filters, search, pagination } = options || {};
 
     const qb = this.repo
-      .createQueryBuilder("mc")
-      .leftJoinAndSelect("mc.vehicle", "v")
+      .createQueryBuilder("qc")
+      .leftJoinAndSelect("qc.vehicle", "v")
       .leftJoinAndSelect("v.model", "model")
       .leftJoinAndSelect("model.brand", "brand")
-      .leftJoinAndSelect("mc.filledBy", "u")
-      .leftJoinAndSelect("mc.items", "items")
-      .orderBy("mc.year", "DESC")
-      .addOrderBy("mc.quarter", "DESC");
+      .leftJoinAndSelect("qc.filledBy", "u")
+      .leftJoinAndSelect("qc.items", "items")
+      .orderBy("qc.year", "DESC")
+      .addOrderBy("qc.quarter", "DESC");
 
     // Apply search filter
     if (search) {
@@ -49,8 +47,8 @@ export class MaintenanceChecklistRepository
     if (filters) {
       applyFilters(qb, filters, {
         vehicleId: { field: "v.id" },
-        year: { field: "mc.year" },
-        quarter: { field: "mc.quarter" },
+        year: { field: "qc.year" },
+        quarter: { field: "qc.quarter" },
         filledBy: { field: "u.id" },
       });
     }
@@ -65,21 +63,21 @@ export class MaintenanceChecklistRepository
 
   findOne(id: string) {
     return this.repo
-      .createQueryBuilder("mc")
-      .leftJoinAndSelect("mc.vehicle", "v")
+      .createQueryBuilder("qc")
+      .leftJoinAndSelect("qc.vehicle", "v")
       .leftJoinAndSelect("v.model", "model")
       .leftJoinAndSelect("model.brand", "brand")
-      .leftJoinAndSelect("mc.filledBy", "u")
-      .leftJoinAndSelect("mc.items", "items")
-      .where("mc.id = :id", { id })
+      .leftJoinAndSelect("qc.filledBy", "u")
+      .leftJoinAndSelect("qc.items", "items")
+      .where("qc.id = :id", { id })
       .getOne();
   }
 
-  create(data: Partial<MaintenanceChecklist>) {
+  create(data: Partial<QuarterlyControl>) {
     return this.repo.create(data);
   }
 
-  save(entity: MaintenanceChecklist) {
+  save(entity: QuarterlyControl) {
     return this.repo.save(entity);
   }
 
@@ -89,6 +87,6 @@ export class MaintenanceChecklistRepository
   }
 
   qb() {
-    return this.repo.createQueryBuilder("mc");
+    return this.repo.createQueryBuilder("qc");
   }
 }

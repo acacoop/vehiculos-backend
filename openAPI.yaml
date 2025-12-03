@@ -1372,12 +1372,12 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-  # MAINTENANCE CHECKLISTS
-  /maintenance/checklists:
+  # QUARTERLY CONTROLS
+  /quarterly-controls:
     get:
-      summary: Get all maintenance checklists with pagination and search
+      summary: Get all quarterly controls with pagination and search
       description: |
-        Get maintenance checklists with optional search and filters.
+        Get quarterly controls with optional search and filters.
 
         **Search:** `search` - Search across vehicle license plate, user names, etc.
 
@@ -1385,7 +1385,7 @@ paths:
         - `vehicleId` - Filter by vehicle UUID
         - `year` - Filter by year
         - `quarter` - Filter by quarter (1-4)
-        - `filledBy` - Filter by user UUID who filled the checklist
+        - `filledBy` - Filter by user UUID who filled the control
       tags: [Maintenance]
       parameters:
         - $ref: "#/components/parameters/PageParam"
@@ -1413,50 +1413,50 @@ paths:
             format: uuid
       responses:
         "200":
-          description: List of maintenance checklists
+          description: List of quarterly controls
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MaintenanceChecklistListResponse"
+                $ref: "#/components/schemas/QuarterlyControlListResponse"
     post:
-      summary: Create a new maintenance checklist
+      summary: Create a new quarterly control
       tags: [Maintenance]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/MaintenanceChecklistInput"
+              $ref: "#/components/schemas/QuarterlyControlInput"
       responses:
         "201":
-          description: Checklist created successfully
+          description: Quarterly control created successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MaintenanceChecklistResponse"
+                $ref: "#/components/schemas/QuarterlyControlResponse"
 
-  /maintenance/checklists/with-items:
+  /quarterly-controls/with-items:
     post:
-      summary: Create a maintenance checklist with items (Admin only)
-      description: Creates a checklist and its items in a single transaction
+      summary: Create a quarterly control with items (Admin only)
+      description: Creates a quarterly control and its items in a single transaction
       tags: [Maintenance]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/MaintenanceChecklistWithItemsInput"
+              $ref: "#/components/schemas/QuarterlyControlWithItemsInput"
       responses:
         "201":
-          description: Checklist with items created successfully
+          description: Quarterly control with items created successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MaintenanceChecklistResponse"
+                $ref: "#/components/schemas/QuarterlyControlResponse"
 
-  /maintenance/checklists/{id}:
+  /quarterly-controls/{id}:
     get:
-      summary: Get maintenance checklist by ID
+      summary: Get quarterly control by ID
       tags: [Maintenance]
       parameters:
         - name: id
@@ -1467,13 +1467,13 @@ paths:
             format: uuid
       responses:
         "200":
-          description: Checklist found
+          description: Quarterly control found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MaintenanceChecklistResponse"
+                $ref: "#/components/schemas/QuarterlyControlResponse"
     patch:
-      summary: Update maintenance checklist
+      summary: Update quarterly control
       tags: [Maintenance]
       parameters:
         - name: id
@@ -1487,16 +1487,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/MaintenanceChecklistUpdateInput"
+              $ref: "#/components/schemas/QuarterlyControlUpdateInput"
       responses:
         "200":
-          description: Checklist updated successfully
+          description: Quarterly control updated successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MaintenanceChecklistResponse"
+                $ref: "#/components/schemas/QuarterlyControlResponse"
     delete:
-      summary: Delete maintenance checklist
+      summary: Delete quarterly control
       tags: [Maintenance]
       parameters:
         - name: id
@@ -1507,12 +1507,12 @@ paths:
             format: uuid
       responses:
         "204":
-          description: Checklist deleted successfully
+          description: Quarterly control deleted successfully
 
-  /maintenance/checklists/{id}/with-items:
+  /quarterly-controls/{id}/with-items:
     patch:
-      summary: Update maintenance checklist with items
-      description: Updates checklist and its items in a single transaction
+      summary: Update quarterly control with items
+      description: Updates quarterly control and its items in a single transaction
       tags: [Maintenance]
       parameters:
         - name: id
@@ -1526,25 +1526,25 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/MaintenanceChecklistPatchWithItemsInput"
+              $ref: "#/components/schemas/QuarterlyControlPatchWithItemsInput"
       responses:
         "200":
-          description: Checklist with items updated successfully
+          description: Quarterly control with items updated successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MaintenanceChecklistResponse"
+                $ref: "#/components/schemas/QuarterlyControlResponse"
 
-  # MAINTENANCE CHECKLIST ITEMS
-  /maintenance/checklist-items:
+  # QUARTERLY CONTROL ITEMS
+  /quarterly-control-items:
     get:
-      summary: Get all maintenance checklist items
+      summary: Get all quarterly control items
       tags: [Maintenance]
       parameters:
         - $ref: "#/components/parameters/PageParam"
         - $ref: "#/components/parameters/LimitParam"
         - $ref: "#/components/parameters/SearchParam"
-        - name: maintenanceChecklistId
+        - name: quarterlyControlId
           in: query
           schema:
             type: string
@@ -1556,15 +1556,15 @@ paths:
             enum: [PENDIENTE, APROBADO, RECHAZADO]
       responses:
         "200":
-          description: List of checklist items
+          description: List of quarterly control items
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MaintenanceChecklistItemListResponse"
+                $ref: "#/components/schemas/QuarterlyControlItemListResponse"
 
-  /maintenance/checklist-items/{id}:
+  /quarterly-control-items/{id}:
     get:
-      summary: Get checklist item by ID
+      summary: Get quarterly control item by ID
       tags: [Maintenance]
       parameters:
         - name: id
@@ -1579,9 +1579,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MaintenanceChecklistItemResponse"
+                $ref: "#/components/schemas/QuarterlyControlItemResponse"
     patch:
-      summary: Update checklist item
+      summary: Update quarterly control item
       tags: [Maintenance]
       parameters:
         - name: id
@@ -1595,21 +1595,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/MaintenanceChecklistItemUpdateInput"
+              $ref: "#/components/schemas/QuarterlyControlItemUpdateInput"
       responses:
         "200":
           description: Item updated successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MaintenanceChecklistItemResponse"
+                $ref: "#/components/schemas/QuarterlyControlItemResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
         "500":
           $ref: "#/components/responses/InternalServerError"
     delete:
-      summary: Delete maintenance checklist item
-      description: Admin only. Delete a maintenance checklist item.
+      summary: Delete quarterly control item
+      description: Admin only. Delete a quarterly control item.
       tags: [Maintenance]
       parameters:
         - name: id
@@ -1620,7 +1620,7 @@ paths:
             format: uuid
       responses:
         "204":
-          description: Maintenance checklist item deleted successfully
+          description: Quarterly control item deleted successfully
         "404":
           $ref: "#/components/responses/NotFound"
         "403":
@@ -3687,15 +3687,15 @@ components:
               items:
                 $ref: "#/components/schemas/MaintenanceRecord"
 
-    # MAINTENANCE CHECKLIST SCHEMAS
-    MaintenanceChecklistItemStatus:
+    # QUARTERLY CONTROL SCHEMAS
+    QuarterlyControlItemStatus:
       type: string
       enum:
         - PENDIENTE
         - APROBADO
         - RECHAZADO
 
-    MaintenanceChecklist:
+    QuarterlyControl:
       type: object
       properties:
         id:
@@ -3738,7 +3738,7 @@ components:
               title:
                 type: string
               status:
-                $ref: "#/components/schemas/MaintenanceChecklistItemStatus"
+                $ref: "#/components/schemas/QuarterlyControlItemStatus"
               observations:
                 type: string
       required:
@@ -3749,7 +3749,7 @@ components:
         - intendedDeliveryDate
         - items
 
-    MaintenanceChecklistInput:
+    QuarterlyControlInput:
       type: object
       properties:
         vehicleId:
@@ -3760,7 +3760,7 @@ components:
           type: integer
           minimum: 2000
           maximum: 2100
-          description: Year of the checklist
+          description: Year of the quarterly control
         quarter:
           type: integer
           minimum: 1
@@ -3774,19 +3774,19 @@ components:
           type: string
           format: uuid
           nullable: true
-          description: UUID of the user who filled the checklist (optional)
+          description: UUID of the user who filled the quarterly control (optional)
         filledAt:
           type: string
           format: date-time
           nullable: true
-          description: Date and time when the checklist was filled (optional)
+          description: Date and time when the quarterly control was filled (optional)
       required:
         - vehicleId
         - year
         - quarter
         - intendedDeliveryDate
 
-    MaintenanceChecklistUpdateInput:
+    QuarterlyControlUpdateInput:
       type: object
       properties:
         year:
@@ -3809,7 +3809,7 @@ components:
           format: date
           nullable: true
 
-    MaintenanceChecklistWithItemsInput:
+    QuarterlyControlWithItemsInput:
       type: object
       properties:
         vehicleId:
@@ -3834,7 +3834,7 @@ components:
               title:
                 type: string
               status:
-                $ref: "#/components/schemas/MaintenanceChecklistItemStatus"
+                $ref: "#/components/schemas/QuarterlyControlItemStatus"
               observations:
                 type: string
             required:
@@ -3848,7 +3848,7 @@ components:
         - intendedDeliveryDate
         - items
 
-    MaintenanceChecklistPatchWithItemsInput:
+    QuarterlyControlPatchWithItemsInput:
       type: object
       properties:
         items:
@@ -3861,7 +3861,7 @@ components:
                 format: uuid
                 description: UUID of the item to update
               status:
-                $ref: "#/components/schemas/MaintenanceChecklistItemStatus"
+                $ref: "#/components/schemas/QuarterlyControlItemStatus"
               observations:
                 type: string
             required:
@@ -3871,15 +3871,15 @@ components:
       required:
         - items
 
-    MaintenanceChecklistResponse:
+    QuarterlyControlResponse:
       allOf:
         - $ref: "#/components/schemas/ApiResponse"
         - type: object
           properties:
             data:
-              $ref: "#/components/schemas/MaintenanceChecklist"
+              $ref: "#/components/schemas/QuarterlyControl"
 
-    MaintenanceChecklistListResponse:
+    QuarterlyControlListResponse:
       allOf:
         - $ref: "#/components/schemas/ApiResponse"
         - type: object
@@ -3887,17 +3887,17 @@ components:
             data:
               type: array
               items:
-                $ref: "#/components/schemas/MaintenanceChecklist"
+                $ref: "#/components/schemas/QuarterlyControl"
 
-    # MAINTENANCE CHECKLIST ITEM SCHEMAS
-    MaintenanceChecklistItem:
+    # QUARTERLY CONTROL ITEM SCHEMAS
+    QuarterlyControlItem:
       type: object
       properties:
         id:
           type: string
           format: uuid
           example: "e50e8400-e29b-41d4-a716-446655440009"
-        maintenanceChecklistId:
+        quarterlyControlId:
           type: string
           format: uuid
           example: "d50e8400-e29b-41d4-a716-446655440008"
@@ -3908,22 +3908,22 @@ components:
           type: string
           example: "Check engine oil level"
         status:
-          $ref: "#/components/schemas/MaintenanceChecklistItemStatus"
+          $ref: "#/components/schemas/QuarterlyControlItemStatus"
         observations:
           type: string
           example: "Everything looks good"
       required:
         - id
-        - maintenanceChecklistId
+        - quarterlyControlId
         - category
         - title
         - status
         - observations
 
-    MaintenanceChecklistItemInput:
+    QuarterlyControlItemInput:
       type: object
       properties:
-        maintenanceChecklistId:
+        quarterlyControlId:
           type: string
           format: uuid
         category:
@@ -3931,33 +3931,33 @@ components:
         title:
           type: string
         status:
-          $ref: "#/components/schemas/MaintenanceChecklistItemStatus"
+          $ref: "#/components/schemas/QuarterlyControlItemStatus"
         observations:
           type: string
       required:
-        - maintenanceChecklistId
+        - quarterlyControlId
         - category
         - title
         - status
         - observations
 
-    MaintenanceChecklistItemUpdateInput:
+    QuarterlyControlItemUpdateInput:
       type: object
       properties:
         status:
-          $ref: "#/components/schemas/MaintenanceChecklistItemStatus"
+          $ref: "#/components/schemas/QuarterlyControlItemStatus"
         observations:
           type: string
 
-    MaintenanceChecklistItemResponse:
+    QuarterlyControlItemResponse:
       allOf:
         - $ref: "#/components/schemas/ApiResponse"
         - type: object
           properties:
             data:
-              $ref: "#/components/schemas/MaintenanceChecklistItem"
+              $ref: "#/components/schemas/QuarterlyControlItem"
 
-    MaintenanceChecklistItemListResponse:
+    QuarterlyControlItemListResponse:
       allOf:
         - $ref: "#/components/schemas/ApiResponse"
         - type: object
@@ -3965,7 +3965,7 @@ components:
             data:
               type: array
               items:
-                $ref: "#/components/schemas/MaintenanceChecklistItem"
+                $ref: "#/components/schemas/QuarterlyControlItem"
 
   responses:
     # Common error responses using RFC 7807
