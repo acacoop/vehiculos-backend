@@ -4,12 +4,12 @@ Este directorio contiene los WebJobs que se ejecutan en Azure App Service.
 
 ## WebJobs disponibles
 
-### 1. quarterly-checklists
-Genera checklists de mantenimiento trimestrales para todos los vehículos activos.
+### 1. quarterly-controls
+Genera controles trimestrales para todos los vehículos activos.
 
 - **Frecuencia**: Trimestral (1 de enero, abril, julio, octubre a las 00:00 UTC)
 - **Cron**: `0 0 0 1 1,4,7,10 *`
-- **Script**: `node dist/scripts/generateQuarterlyChecklists.js`
+- **Script**: `node dist/scripts/generateQuarterlyControls.js`
 
 ### 2. sync-entra-users
 Sincroniza usuarios de Microsoft Entra ID (Azure AD) con la base de datos local.
@@ -28,7 +28,7 @@ make prepare-webjobs
 ```
 
 Esto copia los scripts a `webjobs-deploy/` con los permisos correctos:
-- `quarterly-checklists.sh`
+- `quarterly-controls.sh`
 - `sync-entra-users.sh`
 
 ### Desplegar manualmente con Azure CLI
@@ -69,7 +69,7 @@ Azure WebJobs usa **NCRONTAB** (6 campos):
 
 Para ejecutar localmente:
 ```bash
-cd webjobs/quarterly-checklists
+cd webjobs/quarterly-controls
 bash run.sh
 ```
 
