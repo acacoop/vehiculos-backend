@@ -30,6 +30,11 @@ jobs:
           npx eslint . --max-warnings 0
           npm run test --if-present
 
+      - name: Make WebJob scripts executable
+        run: |
+          chmod -R +x app_data/jobs/continuous/*/run.sh || true
+          chmod -R +x app_data/jobs/triggered/*/run.sh || true
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
