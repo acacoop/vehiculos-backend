@@ -10,7 +10,17 @@ export class VehiclesController extends BaseController<VehicleFilters> {
   constructor(private readonly service: VehiclesService) {
     super({
       resourceName: "Vehicle",
-      allowedFilters: ["licensePlate", "brandId", "modelId", "year"],
+      allowedFilters: [
+        "licensePlate",
+        "brandId",
+        "modelId",
+        "year",
+        "minYear",
+        "maxYear",
+        "fuelType",
+        "minKilometers",
+        "maxKilometers",
+      ],
     });
   }
 
