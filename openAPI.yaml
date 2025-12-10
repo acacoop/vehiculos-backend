@@ -278,8 +278,6 @@ paths:
         - `licensePlate` - Exact match by license plate
         - `brandId` - Exact match by brand UUID
         - `modelId` - Exact match by model UUID
-        - `brand` - Partial match by brand name
-        - `model` - Partial match by model name
         - `year` - Exact match by year
       tags: [Vehicles]
       parameters:
