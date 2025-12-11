@@ -348,33 +348,15 @@ export class MetricsRepository {
     });
   }
 
-  /**
-   * Get driver assignments by month
-   */
   async getDriverAssignmentsByMonth(
     months: number = 12,
   ): Promise<TimelineItem[]> {
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - months);
-    startDate.setDate(1);
-    startDate.setHours(0, 0, 0, 0);
-
     const assignments = await this.assignmentRepo.find({
-      where: {
-        startDate: MoreThanOrEqual(startDate.toISOString().split("T")[0]),
-      },
-      select: ["startDate"],
+      select: ["startDate", "endDate"],
     });
-
-    return this.groupByMonth(
-      assignments.map((a) => new Date(a.startDate)),
-      months,
-    );
+    return this.countActiveByMonth(assignments, months);
   }
 
-  /**
-   * Get current active vehicle responsibles count
-   */
   async getActiveResponsiblesCount(): Promise<number> {
     const now = new Date();
     return this.vehicleResponsibleRepo.count({
@@ -385,31 +367,36 @@ export class MetricsRepository {
     });
   }
 
-  /**
-   * Get vehicle responsibles by month
-   */
   async getResponsiblesByMonth(months: number = 12): Promise<TimelineItem[]> {
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - months);
-    startDate.setDate(1);
-    startDate.setHours(0, 0, 0, 0);
-
     const responsibles = await this.vehicleResponsibleRepo.find({
-      where: {
-        startDate: MoreThanOrEqual(startDate.toISOString().split("T")[0]),
-      },
-      select: ["startDate"],
+      select: ["startDate", "endDate"],
     });
-
-    return this.groupByMonth(
-      responsibles.map((r) => new Date(r.startDate)),
-      months,
-    );
+    return this.countActiveByMonth(responsibles, months);
   }
 
-  // ============================================
-  // Helper Methods
-  // ============================================
+  private countActiveByMonth(
+    items: { startDate: Date | string; endDate: Date | string | null }[],
+    months: number,
+  ): TimelineItem[] {
+    const now = new Date();
+    const timeline: TimelineItem[] = [];
+
+    for (let i = months - 1; i >= 0; i--) {
+      const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+      const key = `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, "0")}`;
+
+      const count = items.filter((item) => {
+        const start = new Date(item.startDate);
+        const end = item.endDate ? new Date(item.endDate) : null;
+        return start <= monthEnd && (!end || end >= monthStart);
+      }).length;
+
+      timeline.push({ month: key, count });
+    }
+
+    return timeline;
+  }
 
   /**
    * Group dates by month and return timeline
