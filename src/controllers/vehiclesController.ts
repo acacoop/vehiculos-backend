@@ -12,11 +12,14 @@ export class VehiclesController extends BaseController<VehicleFilters> {
       resourceName: "Vehicle",
       allowedFilters: [
         "licensePlate",
-        "brand",
-        "model",
         "brandId",
         "modelId",
         "year",
+        "minYear",
+        "maxYear",
+        "fuelType",
+        "minKilometers",
+        "maxKilometers",
       ],
     });
   }
