@@ -327,8 +327,8 @@ export class MetricsRepository {
       }
     }
 
-    // Return only the requested number of periods
-    return Array.from(grouped.values()).slice(0, periods);
+    // Return only the requested number of periods, ordered from oldest to newest
+    return Array.from(grouped.values()).slice(0, periods).reverse();
   }
 
   // ============================================
