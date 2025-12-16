@@ -295,7 +295,7 @@ export class MetricsRepository {
     const grouped = new Map<string, QuarterlyControlMetric>();
 
     for (const control of controls) {
-      const key = `${control.year}-Q${control.quarter}`;
+      const key = `${control.year}Q ${control.quarter}`;
       const isOverdue =
         new Date(control.intendedDeliveryDate) < new Date() &&
         !control.filledAt;
