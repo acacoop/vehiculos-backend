@@ -1930,6 +1930,72 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
+  # RISK INDICATORS
+  /risk/summary:
+    get:
+      summary: Get risk indicators summary
+      description: Returns aggregated counts of all risk indicators. Admin only.
+      tags: [Risk]
+      responses:
+        "200":
+          $ref: "#/components/responses/RiskSummaryResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /risk/vehicles-without-responsible:
+    get:
+      summary: Get vehicles without current responsible
+      description: Returns vehicles that have no active responsible assignment. Admin only.
+      tags: [Risk]
+      responses:
+        "200":
+          $ref: "#/components/responses/VehiclesWithoutResponsibleResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /risk/overdue-maintenance:
+    get:
+      summary: Get overdue maintenance items
+      description: Returns maintenance requirements that are overdue (by days or kilometers). Admin only.
+      tags: [Risk]
+      responses:
+        "200":
+          $ref: "#/components/responses/OverdueMaintenanceResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /risk/overdue-quarterly-controls:
+    get:
+      summary: Get overdue quarterly controls
+      description: Returns quarterly controls past their intended delivery date that haven't been filled. Admin only.
+      tags: [Risk]
+      responses:
+        "200":
+          $ref: "#/components/responses/OverdueQuarterlyControlsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /risk/quarterly-controls-with-errors:
+    get:
+      summary: Get quarterly controls with rejected items
+      description: Returns quarterly controls that have items with RECHAZADO status. Admin only.
+      tags: [Risk]
+      responses:
+        "200":
+          $ref: "#/components/responses/QuarterlyControlsWithErrorsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
   # VEHICLE RESPONSIBLES
   /vehicle-responsibles:
     get:
@@ -4368,6 +4434,123 @@ components:
           items:
             $ref: "#/components/schemas/TimelineItem"
 
+    RiskSummary:
+      type: object
+      properties:
+        category:
+          type: string
+          description: Risk category name
+          example: "Vehículos sin responsable"
+        count:
+          type: integer
+          description: Number of items in this risk category
+          example: 5
+        severity:
+          type: string
+          enum: [low, medium, high]
+          description: Risk severity level
+          example: "high"
+
+    VehicleWithoutResponsible:
+      type: object
+      properties:
+        vehicleId:
+          type: string
+          format: uuid
+        vehicleLicensePlate:
+          type: string
+          example: "ABC123"
+        lastResponsibleEndDate:
+          type: string
+          format: date
+          nullable: true
+
+    OverdueMaintenanceItem:
+      type: object
+      properties:
+        vehicleId:
+          type: string
+          format: uuid
+        vehicleLicensePlate:
+          type: string
+          example: "ABC123"
+        maintenanceId:
+          type: string
+          format: uuid
+        maintenanceName:
+          type: string
+          example: "Cambio de aceite"
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        dueKilometers:
+          type: integer
+          nullable: true
+          example: 50000
+        currentKilometers:
+          type: integer
+          example: 52000
+        daysOverdue:
+          type: integer
+          nullable: true
+          example: 30
+        kilometersOverdue:
+          type: integer
+          nullable: true
+          example: 2000
+
+    OverdueQuarterlyControl:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        vehicleId:
+          type: string
+          format: uuid
+        vehicleLicensePlate:
+          type: string
+          example: "ABC123"
+        year:
+          type: integer
+          example: 2024
+        quarter:
+          type: integer
+          minimum: 1
+          maximum: 4
+          example: 2
+        intendedDeliveryDate:
+          type: string
+          format: date
+        daysOverdue:
+          type: integer
+          example: 15
+
+    QuarterlyControlWithErrors:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        vehicleId:
+          type: string
+          format: uuid
+        vehicleLicensePlate:
+          type: string
+          example: "ABC123"
+        year:
+          type: integer
+          example: 2024
+        quarter:
+          type: integer
+          minimum: 1
+          maximum: 4
+          example: 2
+        rejectedItemsCount:
+          type: integer
+          example: 3
+
   responses:
     # Common error responses using RFC 7807
     BadRequest:
@@ -4514,6 +4697,81 @@ components:
                 example: "success"
               data:
                 $ref: "#/components/schemas/PersonnelMetric"
+
+    RiskSummaryResponse:
+      description: Risk indicators summary
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              data:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RiskSummary"
+
+    VehiclesWithoutResponsibleResponse:
+      description: Vehicles without current responsible
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              data:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VehicleWithoutResponsible"
+
+    OverdueMaintenanceResponse:
+      description: Overdue maintenance items
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              data:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OverdueMaintenanceItem"
+
+    OverdueQuarterlyControlsResponse:
+      description: Overdue quarterly controls
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              data:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OverdueQuarterlyControl"
+
+    QuarterlyControlsWithErrorsResponse:
+      description: Quarterly controls with rejected items
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              data:
+                type: array
+                items:
+                  $ref: "#/components/schemas/QuarterlyControlWithErrors"
 
   securitySchemes:
     BearerAuth:
