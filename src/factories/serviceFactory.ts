@@ -36,6 +36,8 @@ import { QuarterlyControlRepository } from "@/repositories/QuarterlyControlRepos
 import { QuarterlyControlItemRepository } from "@/repositories/QuarterlyControlItemRepository";
 import { QuarterlyControlsService } from "@/services/quarterlyControlsService";
 import { QuarterlyControlItemsService } from "@/services/quarterlyControlItemsService";
+import { MetricsRepository } from "@/repositories/MetricsRepository";
+import { MetricsService } from "@/services/metricsService";
 
 /**
  * Service Factory - Centralizes creation of service instances
@@ -174,6 +176,11 @@ export class ServiceFactory {
     const repo = new QuarterlyControlItemRepository(this.dataSource);
     const controlService = this.createQuarterlyControlsService();
     return new QuarterlyControlItemsService(repo, controlService);
+  }
+
+  createMetricsService(): MetricsService {
+    const metricsRepo = new MetricsRepository(this.dataSource);
+    return new MetricsService(metricsRepo);
   }
 
   // Add more service factory methods here as we refactor them

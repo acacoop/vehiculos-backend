@@ -278,9 +278,12 @@ paths:
         - `licensePlate` - Exact match by license plate
         - `brandId` - Exact match by brand UUID
         - `modelId` - Exact match by model UUID
-        - `brand` - Partial match by brand name
-        - `model` - Partial match by model name
         - `year` - Exact match by year
+        - `minYear` - Minimum year (inclusive) for year range filter
+        - `maxYear` - Maximum year (inclusive) for year range filter
+        - `fuelType` - Exact match by fuel type
+        - `minKilometers` - Minimum kilometers (inclusive) based on latest kilometers log
+        - `maxKilometers` - Maximum kilometers (exclusive) based on latest kilometers log
       tags: [Vehicles]
       parameters:
         - $ref: "#/components/parameters/PageParam"
@@ -304,16 +307,6 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: brand
-          in: query
-          description: Partial match by brand name
-          schema:
-            type: string
-        - name: model
-          in: query
-          description: Partial match by model name
-          schema:
-            type: string
         - name: year
           in: query
           description: Exact match by year
@@ -321,6 +314,37 @@ paths:
             type: integer
             minimum: 1900
             maximum: 2030
+        - name: minYear
+          in: query
+          description: Minimum year (inclusive) for filtering by age range
+          schema:
+            type: integer
+            minimum: 1900
+            maximum: 2030
+        - name: maxYear
+          in: query
+          description: Maximum year (inclusive) for filtering by age range
+          schema:
+            type: integer
+            minimum: 1900
+            maximum: 2030
+        - name: fuelType
+          in: query
+          description: Exact match by fuel type (e.g., Nafta, Diésel, Híbrido, Eléctrico)
+          schema:
+            type: string
+        - name: minKilometers
+          in: query
+          description: Minimum kilometers (inclusive) based on latest kilometers log
+          schema:
+            type: integer
+            minimum: 0
+        - name: maxKilometers
+          in: query
+          description: Maximum kilometers (exclusive) based on latest kilometers log
+          schema:
+            type: integer
+            minimum: 0
       responses:
         "200":
           description: List of vehicles
@@ -1627,6 +1651,284 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "500":
           $ref: "#/components/responses/InternalServerError"
+
+  # METRICS ENDPOINTS
+  /metrics/vehicles/count:
+    get:
+      summary: Get total vehicle count
+      description: Returns the total number of vehicles in the system. Admin only.
+      tags: [Metrics]
+      responses:
+        "200":
+          $ref: "#/components/responses/VehicleCountResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /metrics/vehicles/kilometers:
+    get:
+      summary: Get vehicles by kilometer buckets
+      description: |
+        Returns vehicle count grouped by dynamic kilometer buckets.
+        Bucket size is configurable. Admin only.
+
+        **Drill-down:** Use `GET /vehicles` with appropriate filters.
+      tags: [Metrics]
+      parameters:
+        - name: bucketSize
+          in: query
+          schema:
+            type: integer
+            default: 20000
+            minimum: 1000
+          description: Size of each bucket in kilometers (default 20,000 km)
+        - name: maxBuckets
+          in: query
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 20
+          description: Maximum number of buckets to return
+        - name: minBucketsToShow
+          in: query
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+            maximum: 20
+          description: Minimum number of buckets to display (fills with empty if needed)
+      responses:
+        "200":
+          $ref: "#/components/responses/BucketListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /metrics/vehicles/age:
+    get:
+      summary: Get vehicles by age buckets
+      description: |
+        Returns vehicle count grouped by dynamic age buckets (years).
+        Bucket size is configurable. Admin only.
+
+        **Drill-down:** Use `GET /vehicles` with year filter.
+      tags: [Metrics]
+      parameters:
+        - name: bucketSize
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          description: Size of each bucket in years (default 1 year)
+        - name: maxBuckets
+          in: query
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 20
+          description: Maximum number of buckets to return
+        - name: minBucketsToShow
+          in: query
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+            maximum: 20
+          description: Minimum number of buckets to display (fills with empty if needed)
+      responses:
+        "200":
+          $ref: "#/components/responses/BucketListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /metrics/vehicles/fuel-type:
+    get:
+      summary: Get vehicles by fuel type
+      description: |
+        Returns vehicle count grouped by fuel type.
+        Admin only.
+
+        **Drill-down:** Use `GET /vehicles` with fuelType filter (to be added).
+      tags: [Metrics]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+          description: Optional limit for top N results
+      responses:
+        "200":
+          $ref: "#/components/responses/DistributionListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /metrics/vehicles/brand:
+    get:
+      summary: Get vehicles by brand
+      description: |
+        Returns vehicle count grouped by brand.
+        Response includes brandId for drill-down queries.
+        Admin only.
+
+        **Drill-down:** Use `GET /vehicles?brandId={id}` to get vehicles of a specific brand.
+      tags: [Metrics]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+          description: Optional limit for top N results
+      responses:
+        "200":
+          $ref: "#/components/responses/DistributionListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /metrics/reservations:
+    get:
+      summary: Get reservations timeline
+      description: |
+        Returns reservation count grouped by month.
+        Admin only.
+
+        **Drill-down:** Use `GET /reservations` with date filters.
+      tags: [Metrics]
+      parameters:
+        - name: months
+          in: query
+          schema:
+            type: integer
+            default: 12
+            minimum: 1
+            maximum: 36
+          description: Number of months to include in timeline
+      responses:
+        "200":
+          $ref: "#/components/responses/TimelineResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /metrics/maintenance-records:
+    get:
+      summary: Get maintenance records timeline
+      description: |
+        Returns maintenance record count grouped by month.
+        Admin only.
+
+        **Drill-down:** Use `GET /maintenance/records` with date filters.
+      tags: [Metrics]
+      parameters:
+        - name: months
+          in: query
+          schema:
+            type: integer
+            default: 12
+            minimum: 1
+            maximum: 36
+          description: Number of months to include in timeline
+      responses:
+        "200":
+          $ref: "#/components/responses/TimelineResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /metrics/quarterly-controls:
+    get:
+      summary: Get quarterly controls by status
+      description: |
+        Returns quarterly control aggregation by status per quarter.
+        Results ordered from most recent to oldest.
+        Admin only.
+
+        **Drill-down:** Use `GET /quarterly-controls` with year/quarter filters.
+      tags: [Metrics]
+      parameters:
+        - name: periods
+          in: query
+          schema:
+            type: integer
+            default: 8
+            minimum: 1
+            maximum: 20
+          description: Number of quarters to return (default 8 = 2 years)
+      responses:
+        "200":
+          $ref: "#/components/responses/QuarterlyControlMetricsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /metrics/drivers:
+    get:
+      summary: Get driver assignments metrics
+      description: |
+        Returns current active driver count and assignments timeline by month.
+        Admin only.
+
+        **Drill-down:** Use `GET /assignments` with date filters.
+      tags: [Metrics]
+      parameters:
+        - name: months
+          in: query
+          schema:
+            type: integer
+            default: 12
+            minimum: 1
+            maximum: 36
+          description: Number of months for timeline
+      responses:
+        "200":
+          $ref: "#/components/responses/PersonnelMetricsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /metrics/responsibles:
+    get:
+      summary: Get vehicle responsibles metrics
+      description: |
+        Returns current active responsibles count and assignments timeline by month.
+        Admin only.
+
+        **Drill-down:** Use `GET /vehicle-responsibles` with date filters.
+      tags: [Metrics]
+      parameters:
+        - name: months
+          in: query
+          schema:
+            type: integer
+            default: 12
+            minimum: 1
+            maximum: 36
+          description: Number of months for timeline
+      responses:
+        "200":
+          $ref: "#/components/responses/PersonnelMetricsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   # VEHICLE RESPONSIBLES
   /vehicle-responsibles:
@@ -3967,6 +4269,105 @@ components:
               items:
                 $ref: "#/components/schemas/QuarterlyControlItem"
 
+    # Metrics Schemas
+    Bucket:
+      type: object
+      properties:
+        label:
+          type: string
+          description: Human-readable label for the bucket
+          example: "0k-20k km"
+        min:
+          type: integer
+          description: Minimum value (inclusive)
+          example: 0
+        max:
+          type: integer
+          nullable: true
+          description: Maximum value (exclusive), null for "X or more" bucket
+          example: 20000
+        count:
+          type: integer
+          description: Number of items in this bucket
+          example: 15
+
+    DistributionItem:
+      type: object
+      properties:
+        id:
+          type: string
+          nullable: true
+          description: ID for drill-down queries (e.g., brandId)
+          example: "uuid-1234"
+        name:
+          type: string
+          description: Display name
+          example: "Toyota"
+        count:
+          type: integer
+          description: Number of items
+          example: 25
+
+    TimelineItem:
+      type: object
+      properties:
+        month:
+          type: string
+          description: Month in YYYY-MM format
+          example: "2025-01"
+        count:
+          type: integer
+          description: Count for this month
+          example: 45
+
+    QuarterlyControlMetric:
+      type: object
+      properties:
+        year:
+          type: integer
+          example: 2025
+        quarter:
+          type: integer
+          minimum: 1
+          maximum: 4
+          example: 1
+        label:
+          type: string
+          description: Quarter in format YYYY-QN
+          example: "2025-Q1"
+        total:
+          type: integer
+          description: Total controls in this quarter
+          example: 80
+        aprobados:
+          type: integer
+          description: Controls with all items approved
+          example: 50
+        pendientes:
+          type: integer
+          description: Controls with pending items
+          example: 20
+        rechazados:
+          type: integer
+          description: Controls with rejected items
+          example: 5
+        vencidos:
+          type: integer
+          description: Overdue controls (past intended date, not filled)
+          example: 5
+
+    PersonnelMetric:
+      type: object
+      properties:
+        totalActual:
+          type: integer
+          description: Current active count
+          example: 35
+        timeline:
+          type: array
+          items:
+            $ref: "#/components/schemas/TimelineItem"
+
   responses:
     # Common error responses using RFC 7807
     BadRequest:
@@ -3975,6 +4376,13 @@ components:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/ValidationProblemDetails"
+
+    Unauthorized:
+      description: Unauthorized - Authentication required
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
 
     NotFound:
       description: Resource not found
@@ -4003,6 +4411,109 @@ components:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/ProblemDetails"
+
+    # Metrics Response Schemas
+    VehicleCountResponse:
+      description: Vehicle count response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              data:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    example: 80
+
+    BucketListResponse:
+      description: Bucket list response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              data:
+                type: object
+                properties:
+                  buckets:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Bucket"
+
+    DistributionListResponse:
+      description: Distribution list response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              data:
+                type: object
+                properties:
+                  distribution:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DistributionItem"
+
+    TimelineResponse:
+      description: Timeline response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              data:
+                type: object
+                properties:
+                  timeline:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TimelineItem"
+
+    QuarterlyControlMetricsResponse:
+      description: Quarterly control metrics response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              data:
+                type: object
+                properties:
+                  metrics:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/QuarterlyControlMetric"
+
+    PersonnelMetricsResponse:
+      description: Personnel metrics response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              data:
+                $ref: "#/components/schemas/PersonnelMetric"
 
   securitySchemes:
     BearerAuth:
