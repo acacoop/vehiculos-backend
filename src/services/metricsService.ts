@@ -35,6 +35,7 @@ export class MetricsService {
     const buckets = await this.metricsRepo.getVehiclesByKilometerBuckets(
       query.bucketSize,
       query.maxBuckets,
+      query.minBucketsToShow,
     );
     return { buckets };
   }
@@ -48,6 +49,7 @@ export class MetricsService {
     const buckets = await this.metricsRepo.getVehiclesByAgeBuckets(
       query.bucketSize,
       query.maxBuckets,
+      query.minBucketsToShow,
     );
     return { buckets };
   }
@@ -55,16 +57,20 @@ export class MetricsService {
   /**
    * Get vehicles by fuel type distribution
    */
-  async getVehiclesByFuelType(): Promise<{ distribution: DistributionItem[] }> {
-    const distribution = await this.metricsRepo.getVehiclesByFuelType();
+  async getVehiclesByFuelType(
+    limit?: number,
+  ): Promise<{ distribution: DistributionItem[] }> {
+    const distribution = await this.metricsRepo.getVehiclesByFuelType(limit);
     return { distribution };
   }
 
   /**
    * Get vehicles by brand distribution
    */
-  async getVehiclesByBrand(): Promise<{ distribution: DistributionItem[] }> {
-    const distribution = await this.metricsRepo.getVehiclesByBrand();
+  async getVehiclesByBrand(
+    limit?: number,
+  ): Promise<{ distribution: DistributionItem[] }> {
+    const distribution = await this.metricsRepo.getVehiclesByBrand(limit);
     return { distribution };
   }
 

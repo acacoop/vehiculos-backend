@@ -57,6 +57,7 @@ export class MetricsRepository {
   async getVehiclesByKilometerBuckets(
     bucketSize: number = 20000,
     maxBuckets: number = 10,
+    minBucketsToShow: number = 5,
   ): Promise<Bucket[]> {
     // Get latest kilometers for each vehicle using raw SQL for MSSQL compatibility
     const latestKilometers = await this.vehicleKilometersRepo
@@ -96,8 +97,8 @@ export class MetricsRepository {
         ? kmValues.filter((km) => km >= min).length
         : kmValues.filter((km) => km >= min && km < max).length;
 
-      if (count > 0 || i < 5) {
-        // Always show first 5 buckets
+      // Include bucket if has data OR we need more buckets to reach minBucketsToShow
+      if (count > 0 || buckets.length < minBucketsToShow) {
         buckets.push({
           label: isLast
             ? `${(min / 1000).toFixed(0)}k+ km`
@@ -128,6 +129,7 @@ export class MetricsRepository {
   async getVehiclesByAgeBuckets(
     bucketSize: number = 1,
     maxBuckets: number = 10,
+    minBucketsToShow: number = 5,
   ): Promise<Bucket[]> {
     const currentYear = new Date().getFullYear();
 
@@ -145,8 +147,8 @@ export class MetricsRepository {
         ? ages.filter((age) => age >= min).length
         : ages.filter((age) => age >= min && age < max).length;
 
-      if (count > 0 || i < 5) {
-        // Always show first 5 buckets
+      // Include bucket if has data OR we need more buckets to reach minBucketsToShow
+      if (count > 0 || buckets.length < minBucketsToShow) {
         const label =
           bucketSize === 1
             ? isLast
@@ -171,14 +173,19 @@ export class MetricsRepository {
   /**
    * Get vehicles by fuel type distribution
    */
-  async getVehiclesByFuelType(): Promise<DistributionItem[]> {
-    const result = await this.vehicleRepo
+  async getVehiclesByFuelType(limit?: number): Promise<DistributionItem[]> {
+    const qb = this.vehicleRepo
       .createQueryBuilder("v")
       .select("v.fuelType", "fuelType")
       .addSelect("COUNT(*)", "count")
       .groupBy("v.fuelType")
-      .orderBy("count", "DESC")
-      .getRawMany();
+      .orderBy("count", "DESC");
+
+    if (limit) {
+      qb.limit(limit);
+    }
+
+    const result = await qb.getRawMany();
 
     return result.map((row) => ({
       id: row.fuelType || null,
@@ -190,8 +197,8 @@ export class MetricsRepository {
   /**
    * Get vehicles by brand distribution
    */
-  async getVehiclesByBrand(): Promise<DistributionItem[]> {
-    const result = await this.vehicleRepo
+  async getVehiclesByBrand(limit?: number): Promise<DistributionItem[]> {
+    const qb = this.vehicleRepo
       .createQueryBuilder("v")
       .leftJoin("v.model", "m")
       .leftJoin("m.brand", "b")
@@ -200,8 +207,13 @@ export class MetricsRepository {
       .addSelect("COUNT(*)", "count")
       .groupBy("b.id")
       .addGroupBy("b.name")
-      .orderBy("count", "DESC")
-      .getRawMany();
+      .orderBy("count", "DESC");
+
+    if (limit) {
+      qb.limit(limit);
+    }
+
+    const result = await qb.getRawMany();
 
     return result.map((row) => ({
       id: row.brandId || null,

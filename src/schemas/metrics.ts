@@ -8,6 +8,7 @@ import { z } from "zod";
 export const BucketConfigSchema = z.object({
   bucketSize: z.coerce.number().min(1).optional(),
   maxBuckets: z.coerce.number().min(1).max(20).default(10),
+  minBucketsToShow: z.coerce.number().min(1).max(20).default(5), // Minimum buckets to display (fills with empty if needed)
 });
 
 // Kilometers metrics query
@@ -28,6 +29,11 @@ export const TimelineMetricsQuerySchema = z.object({
 // Quarterly control status query
 export const QuarterlyControlMetricsQuerySchema = z.object({
   periods: z.coerce.number().min(1).max(20).default(8), // Default: last 8 quarters (2 years)
+});
+
+// Distribution metrics query (for fuel type, brand, etc.)
+export const DistributionMetricsQuerySchema = z.object({
+  limit: z.coerce.number().min(1).max(50).optional(), // Optional limit for top N results
 });
 
 // ============================================

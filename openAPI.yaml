@@ -1691,6 +1691,14 @@ paths:
             minimum: 1
             maximum: 20
           description: Maximum number of buckets to return
+        - name: minBucketsToShow
+          in: query
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+            maximum: 20
+          description: Minimum number of buckets to display (fills with empty if needed)
       responses:
         "200":
           $ref: "#/components/responses/BucketListResponse"
@@ -1724,6 +1732,14 @@ paths:
             minimum: 1
             maximum: 20
           description: Maximum number of buckets to return
+        - name: minBucketsToShow
+          in: query
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+            maximum: 20
+          description: Minimum number of buckets to display (fills with empty if needed)
       responses:
         "200":
           $ref: "#/components/responses/BucketListResponse"
@@ -1741,6 +1757,14 @@ paths:
 
         **Drill-down:** Use `GET /vehicles` with fuelType filter (to be added).
       tags: [Metrics]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+          description: Optional limit for top N results
       responses:
         "200":
           $ref: "#/components/responses/DistributionListResponse"
@@ -1759,6 +1783,14 @@ paths:
 
         **Drill-down:** Use `GET /vehicles?brandId={id}` to get vehicles of a specific brand.
       tags: [Metrics]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+          description: Optional limit for top N results
       responses:
         "200":
           $ref: "#/components/responses/DistributionListResponse"

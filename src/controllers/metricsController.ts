@@ -8,6 +8,7 @@ import {
   AgeMetricsQuerySchema,
   TimelineMetricsQuerySchema,
   QuarterlyControlMetricsQuerySchema,
+  DistributionMetricsQuerySchema,
 } from "@/schemas/metrics";
 
 export class MetricsController {
@@ -59,8 +60,9 @@ export class MetricsController {
    * GET /metrics/vehicles/fuel-type
    * Returns vehicles by fuel type distribution
    */
-  getVehiclesByFuelType = asyncHandler(async (_req: Request, res: Response) => {
-    const result = await this.service.getVehiclesByFuelType();
+  getVehiclesByFuelType = asyncHandler(async (req: Request, res: Response) => {
+    const query = DistributionMetricsQuerySchema.parse(req.query);
+    const result = await this.service.getVehiclesByFuelType(query.limit);
     this.sendResponse(res, result);
   });
 
@@ -68,8 +70,9 @@ export class MetricsController {
    * GET /metrics/vehicles/brand
    * Returns vehicles by brand distribution
    */
-  getVehiclesByBrand = asyncHandler(async (_req: Request, res: Response) => {
-    const result = await this.service.getVehiclesByBrand();
+  getVehiclesByBrand = asyncHandler(async (req: Request, res: Response) => {
+    const query = DistributionMetricsQuerySchema.parse(req.query);
+    const result = await this.service.getVehiclesByBrand(query.limit);
     this.sendResponse(res, result);
   });
 
