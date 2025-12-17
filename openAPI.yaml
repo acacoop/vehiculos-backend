@@ -639,6 +639,8 @@ paths:
         **Filters:**
         - `userId` - Filter by specific user ID
         - `vehicleId` - Filter by specific vehicle ID
+        - `startDate` - Filter reservations starting from this date (inclusive)
+        - `endDate` - Filter reservations ending until this date (inclusive)
       tags: [Reservations]
       parameters:
         - $ref: "#/components/parameters/PageParam"
@@ -656,6 +658,18 @@ paths:
             type: string
             format: uuid
           description: Filter by vehicle ID
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter reservations starting from this date (YYYY-MM-DD)
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter reservations ending until this date (YYYY-MM-DD)
       responses:
         "200":
           description: List of reservations retrieved successfully

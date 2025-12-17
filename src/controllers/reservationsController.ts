@@ -13,7 +13,7 @@ export class ReservationsController extends BaseController<ReservationFilters> {
   constructor(private readonly service: ReservationsService) {
     super({
       resourceName: "Reservation",
-      allowedFilters: ["userId", "vehicleId"],
+      allowedFilters: ["userId", "vehicleId", "startDate", "endDate"],
     });
   }
 
