@@ -47,8 +47,8 @@ export class ReservationRepository implements IReservationRepository {
     applyFilters(qb, filters, {
       userId: { field: "u.id" },
       vehicleId: { field: "v.id" },
-      startDate: { field: "r.startDate", operator: ">=" },
-      endDate: { field: "r.endDate", operator: "<=" },
+      startDate: { field: "r.endDate", operator: ">=" },
+      endDate: { field: "r.startDate", operator: "<=" },
     });
 
     // Pagination defaults (limit and offset optional)
