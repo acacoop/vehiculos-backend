@@ -115,6 +115,8 @@ export interface OverdueQuarterlyControl {
   quarter: number;
   intendedDeliveryDate: string;
   daysOverdue: number;
+  pendingItemsCount: number;
+  totalItemsCount: number;
 }
 
 // Quarterly control with errors

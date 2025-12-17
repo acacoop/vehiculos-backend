@@ -203,13 +203,15 @@ export class RisksRepository {
     toleranceDate.setDate(toleranceDate.getDate() - toleranceDays);
     const toleranceDateStr = toleranceDate.toISOString().split("T")[0];
 
+    // Query con subquery para contar ítems pendientes y totales
+    // Un control está vencido si: fecha vencida Y (no enviado O tiene ítems pendientes)
     const queryBuilder = this.quarterlyControlRepo
       .createQueryBuilder("qc")
       .leftJoinAndSelect("qc.vehicle", "v")
+      .leftJoinAndSelect("qc.items", "qci")
       .where("qc.intended_delivery_date < :toleranceDate", {
         toleranceDate: toleranceDateStr,
-      })
-      .andWhere("qc.filled_at IS NULL");
+      });
 
     // Apply optional filters
     if (filters.year) {
@@ -226,17 +228,26 @@ export class RisksRepository {
       });
     }
 
-    const [overdueControls, total] = await queryBuilder
+    const controls = await queryBuilder
       .orderBy("qc.intended_delivery_date", "ASC")
-      .skip(offset)
-      .take(limit)
-      .getManyAndCount();
+      .getMany();
 
-    const items = overdueControls.map((qc) => {
+    // Filtrar: sin filledAt O con ítems pendientes
+    const overdueControls = controls.filter((qc) => {
+      const pendingCount = qc.items.filter(
+        (item) => item.status === QuarterlyControlItemStatus.PENDIENTE,
+      ).length;
+      return qc.filledAt === null || pendingCount > 0;
+    });
+
+    const allItems = overdueControls.map((qc) => {
       const intendedDate = new Date(qc.intendedDeliveryDate);
       const daysOverdue = Math.floor(
         (today.getTime() - intendedDate.getTime()) / (1000 * 60 * 60 * 24),
       );
+      const pendingItemsCount = qc.items.filter(
+        (item) => item.status === QuarterlyControlItemStatus.PENDIENTE,
+      ).length;
 
       return {
         id: qc.id,
@@ -246,8 +257,13 @@ export class RisksRepository {
         quarter: qc.quarter,
         intendedDeliveryDate: qc.intendedDeliveryDate,
         daysOverdue,
+        pendingItemsCount,
+        totalItemsCount: qc.items.length,
       };
     });
+
+    const total = allItems.length;
+    const items = allItems.slice(offset, offset + limit);
 
     return { items, total };
   }
@@ -255,18 +271,13 @@ export class RisksRepository {
   async getOverdueQuarterlyControlsCount(
     filters: OverdueQuarterlyControlsFilters,
   ): Promise<number> {
-    const toleranceDays = filters.toleranceDays ?? 0;
-    const today = new Date();
-    const toleranceDate = new Date(today);
-    toleranceDate.setDate(toleranceDate.getDate() - toleranceDays);
-    const toleranceDateStr = toleranceDate.toISOString().split("T")[0];
-
-    return this.quarterlyControlRepo.count({
-      where: {
-        intendedDeliveryDate: LessThan(toleranceDateStr),
-        filledAt: IsNull(),
-      },
+    // Reutilizamos la lógica de getOverdueQuarterlyControls para mantener consistencia
+    const { total } = await this.getOverdueQuarterlyControls({
+      ...filters,
+      limit: 99999,
+      offset: 0,
     });
+    return total;
   }
 
   /**
