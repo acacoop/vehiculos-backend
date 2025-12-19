@@ -73,7 +73,7 @@ export class RisksRepository {
       }),
       this.getOverdueMaintenanceCount({
         toleranceDays: filters.toleranceDays,
-        limit: 99999,
+        limit: 1,
         offset: 0,
       }),
       this.getVehiclesWithoutRecentKilometersCount({
