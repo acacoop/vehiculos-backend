@@ -4,7 +4,6 @@ import {
   VehicleWithoutResponsible,
   OverdueQuarterlyControl,
   QuarterlyControlWithErrors,
-  OverdueMaintenanceRequirement,
   OverdueMaintenanceVehicleFlat,
   VehicleWithoutRecentKilometers,
   RisksSummaryFilters,
@@ -31,12 +30,6 @@ export class RisksService {
     filters: VehiclesWithoutResponsibleFilters,
   ): Promise<PaginatedResult<VehicleWithoutResponsible>> {
     return this.risksRepo.getVehiclesWithoutResponsible(filters);
-  }
-
-  async getOverdueMaintenance(
-    filters: OverdueMaintenanceFilters,
-  ): Promise<PaginatedResult<OverdueMaintenanceRequirement>> {
-    return this.risksRepo.getOverdueMaintenance(filters);
   }
 
   async getOverdueMaintenanceVehicles(

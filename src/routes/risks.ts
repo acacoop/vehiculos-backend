@@ -15,8 +15,6 @@ router.get(
   risksController.getVehiclesWithoutResponsible,
 );
 
-router.get("/overdue-maintenance", risksController.getOverdueMaintenance);
-
 router.get(
   "/overdue-maintenance-vehicles",
   risksController.getOverdueMaintenanceVehicles,

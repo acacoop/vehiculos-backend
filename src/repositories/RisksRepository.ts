@@ -1,4 +1,4 @@
-import { DataSource, Repository, IsNull, LessThan } from "typeorm";
+import { DataSource, Repository } from "typeorm";
 import { Vehicle } from "@/entities/Vehicle";
 import { VehicleResponsible } from "@/entities/VehicleResponsible";
 import { QuarterlyControl } from "@/entities/QuarterlyControl";
@@ -11,8 +11,6 @@ import {
   VehicleWithoutResponsible,
   OverdueQuarterlyControl,
   QuarterlyControlWithErrors,
-  OverdueMaintenanceRequirement,
-  OverdueMaintenanceVehicle,
   OverdueMaintenanceVehicleFlat,
   VehicleWithoutRecentKilometers,
   OverdueMaintenanceFilters,
@@ -357,217 +355,12 @@ export class RisksRepository {
     return total;
   }
 
-  /**
-   * Get overdue maintenance requirements grouped by requirement
-   * Compares last maintenance record vs requirement frequency (by km or days)
-   */
-  async getOverdueMaintenance(
-    filters: OverdueMaintenanceFilters,
-  ): Promise<PaginatedResult<OverdueMaintenanceRequirement>> {
-    const toleranceDays = filters.toleranceDays ?? 0;
-    const { limit, offset, search } = filters;
-    const today = new Date();
-    const todayStr = today.toISOString().split("T")[0];
-
-    // Build requirements query with optional filters
-    const reqQueryBuilder = this.maintenanceRequirementRepo
-      .createQueryBuilder("mr")
-      .leftJoinAndSelect("mr.maintenance", "m")
-      .leftJoinAndSelect("mr.model", "model")
-      .leftJoinAndSelect("model.brand", "brand")
-      .where("mr.start_date <= :today", { today: todayStr })
-      .andWhere("(mr.end_date IS NULL OR mr.end_date >= :today)", {
-        today: todayStr,
-      });
-
-    if (filters.maintenanceId) {
-      reqQueryBuilder.andWhere("mr.maintenance_id = :maintenanceId", {
-        maintenanceId: filters.maintenanceId,
-      });
-    }
-    if (filters.modelId) {
-      reqQueryBuilder.andWhere("mr.model_id = :modelId", {
-        modelId: filters.modelId,
-      });
-    }
-
-    const requirements = await reqQueryBuilder.getMany();
-
-    // Get all vehicles with their models and current km
-    const vehicles = await this.vehicleRepo
-      .createQueryBuilder("v")
-      .leftJoinAndSelect("v.model", "model")
-      .getMany();
-
-    // Get current km for each vehicle
-    const vehicleKms = await this.vehicleKilometersRepo
-      .createQueryBuilder("vk")
-      .select("vk.vehicle_id", "vehicleId")
-      .addSelect("vk.kilometers", "kilometers")
-      .where((qb) => {
-        const subQuery = qb
-          .subQuery()
-          .select("MAX(vk2.date)")
-          .from(VehicleKilometers, "vk2")
-          .where("vk2.vehicle_id = vk.vehicle_id")
-          .getQuery();
-        return `vk.date = ${subQuery}`;
-      })
-      .getRawMany();
-
-    const kmByVehicle = new Map(
-      vehicleKms.map((v) => [v.vehicleId, v.kilometers]),
-    );
-
-    // Group overdue vehicles by requirement
-    const requirementMap = new Map<string, OverdueMaintenanceRequirement>();
-
-    for (const req of requirements) {
-      // Find vehicles for this model
-      const vehiclesForModel = vehicles.filter(
-        (v) => v.model?.id === req.model.id,
-      );
-
-      const overdueVehicles: OverdueMaintenanceVehicle[] = [];
-
-      for (const vehicle of vehiclesForModel) {
-        // Get last maintenance record for this vehicle and maintenance type
-        const lastRecord = await this.maintenanceRecordRepo
-          .createQueryBuilder("rec")
-          .where("rec.vehicle_id = :vehicleId", { vehicleId: vehicle.id })
-          .andWhere("rec.maintenance_id = :maintenanceId", {
-            maintenanceId: req.maintenance.id,
-          })
-          .orderBy("rec.date", "DESC")
-          .getOne();
-
-        const currentKm = kmByVehicle.get(vehicle.id) || 0;
-        let isOverdue = false;
-        let daysOverdue: number | undefined;
-        let kilometersOverdue: number | undefined;
-        let dueDate: string | undefined;
-        let dueKilometers: number | undefined;
-
-        if (lastRecord) {
-          // Check by days
-          if (req.daysFrequency) {
-            const lastDate = new Date(lastRecord.date);
-            const nextDueDate = new Date(lastDate);
-            nextDueDate.setDate(nextDueDate.getDate() + req.daysFrequency);
-            dueDate = nextDueDate.toISOString().split("T")[0];
-
-            // Add tolerance days
-            const toleranceNextDueDate = new Date(nextDueDate);
-            toleranceNextDueDate.setDate(
-              toleranceNextDueDate.getDate() + toleranceDays,
-            );
-
-            if (today > toleranceNextDueDate) {
-              isOverdue = true;
-              daysOverdue = Math.floor(
-                (today.getTime() - nextDueDate.getTime()) /
-                  (1000 * 60 * 60 * 24),
-              );
-            }
-          }
-
-          // Check by km
-          if (req.kilometersFrequency) {
-            dueKilometers = lastRecord.kilometers + req.kilometersFrequency;
-            if (currentKm > dueKilometers) {
-              isOverdue = true;
-              kilometersOverdue = currentKm - dueKilometers;
-            }
-          }
-        } else {
-          // No record at all - use vehicle registration date as base if available
-          if (req.daysFrequency && vehicle.registrationDate) {
-            const regDate = new Date(vehicle.registrationDate);
-            const nextDueDate = new Date(regDate);
-            nextDueDate.setDate(nextDueDate.getDate() + req.daysFrequency);
-            dueDate = nextDueDate.toISOString().split("T")[0];
-
-            // Add tolerance days
-            const toleranceNextDueDate = new Date(nextDueDate);
-            toleranceNextDueDate.setDate(
-              toleranceNextDueDate.getDate() + toleranceDays,
-            );
-
-            if (today > toleranceNextDueDate) {
-              isOverdue = true;
-              daysOverdue = Math.floor(
-                (today.getTime() - nextDueDate.getTime()) /
-                  (1000 * 60 * 60 * 24),
-              );
-            }
-          }
-
-          // Check by km - if no record, first maintenance is due at kilometersFrequency
-          if (req.kilometersFrequency) {
-            dueKilometers = req.kilometersFrequency;
-            if (currentKm > dueKilometers) {
-              isOverdue = true;
-              kilometersOverdue = currentKm - dueKilometers;
-            }
-          }
-        }
-
-        if (isOverdue) {
-          overdueVehicles.push({
-            vehicleId: vehicle.id,
-            vehicleLicensePlate: vehicle.licensePlate,
-            dueDate,
-            dueKilometers,
-            currentKilometers: currentKm,
-            daysOverdue,
-            kilometersOverdue,
-          });
-        }
-      }
-
-      // Only add requirement if it has overdue vehicles
-      if (overdueVehicles.length > 0) {
-        requirementMap.set(req.id, {
-          id: req.id,
-          maintenanceRequirementId: req.id,
-          maintenanceId: req.maintenance.id,
-          maintenanceName: req.maintenance.name,
-          modelId: req.model.id,
-          modelName: req.model.name,
-          brandName: req.model.brand?.name || "Sin marca",
-          daysFrequency: req.daysFrequency || undefined,
-          kilometersFrequency: req.kilometersFrequency || undefined,
-          affectedVehiclesCount: overdueVehicles.length,
-          vehicles: overdueVehicles,
-        });
-      }
-    }
-
-    let allResults = Array.from(requirementMap.values());
-
-    // Apply search filter on maintenance name
-    if (search) {
-      const searchLower = search.toLowerCase();
-      allResults = allResults.filter(
-        (r) =>
-          r.maintenanceName.toLowerCase().includes(searchLower) ||
-          r.modelName.toLowerCase().includes(searchLower) ||
-          r.brandName.toLowerCase().includes(searchLower),
-      );
-    }
-
-    const total = allResults.length;
-    const items = allResults.slice(offset, offset + limit);
-
-    return { items, total };
-  }
-
   async getOverdueMaintenanceCount(
     filters: OverdueMaintenanceFilters,
   ): Promise<number> {
-    const { total } = await this.getOverdueMaintenance({
+    const { total } = await this.getOverdueMaintenanceVehicles({
       ...filters,
-      limit: 99999,
+      limit: 1,
       offset: 0,
     });
     return total;
@@ -575,7 +368,6 @@ export class RisksRepository {
 
   /**
    * Get overdue maintenance vehicles (flat, one row per vehicle-requirement pair)
-   * Returns individual vehicles instead of grouping by requirement
    */
   async getOverdueMaintenanceVehicles(
     filters: OverdueMaintenanceFilters,
