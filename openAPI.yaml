@@ -641,7 +641,7 @@ paths:
         - `vehicleId` - Filter by specific vehicle ID
         - `startDate` - Filter reservations active on or after this date (reservations that haven't ended before this date)
         - `endDate` - Filter reservations active on or before this date (reservations that haven't started after this date)
-        
+
         **Date Range Overlap:** When both `startDate` and `endDate` are provided, returns reservations that overlap with the date range [startDate, endDate]. A reservation overlaps if it hasn't ended before the filter's startDate AND hasn't started after the filter's endDate.
       tags: [Reservations]
       parameters:
