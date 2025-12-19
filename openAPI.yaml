@@ -1945,11 +1945,11 @@ paths:
           $ref: "#/components/responses/Forbidden"
 
   # RISK INDICATORS
-  /risk/summary:
+  /risks/summary:
     get:
       summary: Get risk indicators summary
       description: Returns aggregated counts of all risk indicators. Admin only.
-      tags: [Risk]
+      tags: [Risks]
       responses:
         "200":
           $ref: "#/components/responses/RiskSummaryResponse"
@@ -1958,11 +1958,11 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
-  /risk/vehicles-without-responsible:
+  /risks/vehicles-without-responsible:
     get:
       summary: Get vehicles without current responsible
       description: Returns vehicles that have no active responsible assignment. Admin only.
-      tags: [Risk]
+      tags: [Risks]
       responses:
         "200":
           $ref: "#/components/responses/VehiclesWithoutResponsibleResponse"
@@ -1971,11 +1971,11 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
-  /risk/overdue-maintenance:
+  /risks/overdue-maintenance-vehicles:
     get:
-      summary: Get overdue maintenance items
-      description: Returns maintenance requirements that are overdue (by days or kilometers). Admin only.
-      tags: [Risk]
+      summary: Get vehicles with overdue maintenance
+      description: Returns vehicles that have at least one overdue maintenance requirement (by days or kilometers). Admin only.
+      tags: [Risks]
       responses:
         "200":
           $ref: "#/components/responses/OverdueMaintenanceResponse"
@@ -1984,11 +1984,11 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
-  /risk/overdue-quarterly-controls:
+  /risks/overdue-quarterly-controls:
     get:
       summary: Get overdue quarterly controls
       description: Returns quarterly controls past their intended delivery date that haven't been filled. Admin only.
-      tags: [Risk]
+      tags: [Risks]
       responses:
         "200":
           $ref: "#/components/responses/OverdueQuarterlyControlsResponse"
@@ -1997,14 +1997,27 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
-  /risk/quarterly-controls-with-errors:
+  /risks/quarterly-controls-with-errors:
     get:
       summary: Get quarterly controls with rejected items
       description: Returns quarterly controls that have items with RECHAZADO status. Admin only.
-      tags: [Risk]
+      tags: [Risks]
       responses:
         "200":
           $ref: "#/components/responses/QuarterlyControlsWithErrorsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /risks/vehicles-without-recent-kilometers:
+    get:
+      summary: Get vehicles without recent kilometer readings
+      description: Returns vehicles that have not reported kilometer readings in the configured recent period. Admin only.
+      tags: [Risks]
+      responses:
+        "200":
+          $ref: "#/components/responses/VehiclesWithoutRecentKilometersResponse"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -4467,9 +4480,13 @@ components:
     RiskSummary:
       type: object
       properties:
-        category:
+        key:
           type: string
-          description: Risk category name
+          description: Machine-readable risk category key
+          example: "vehicles-without-responsible"
+        label:
+          type: string
+          description: Human-readable risk category label
           example: "Vehículos sin responsable"
         count:
           type: integer
@@ -4580,6 +4597,31 @@ components:
         rejectedItemsCount:
           type: integer
           example: 3
+
+    VehicleWithoutRecentKilometers:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        vehicleId:
+          type: string
+          format: uuid
+        vehicleLicensePlate:
+          type: string
+          example: "ABC123"
+        lastKilometerDate:
+          type: string
+          format: date
+          nullable: true
+        lastKilometers:
+          type: integer
+          nullable: true
+          example: 45000
+        daysSinceLastUpdate:
+          type: integer
+          description: Days since last kilometer update, -1 if never updated
+          example: 45
 
   responses:
     # Common error responses using RFC 7807
@@ -4802,6 +4844,21 @@ components:
                 type: array
                 items:
                   $ref: "#/components/schemas/QuarterlyControlWithErrors"
+
+    VehiclesWithoutRecentKilometersResponse:
+      description: Vehicles without recent kilometer readings
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              data:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VehicleWithoutRecentKilometers"
 
   securitySchemes:
     BearerAuth:
