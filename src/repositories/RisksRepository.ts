@@ -132,67 +132,87 @@ export class RisksRepository {
     const today = new Date().toISOString().split("T")[0];
     const { limit, offset, search } = filters;
 
-    // Get all vehicles (optionally filtered by search)
-    const vehicleQb = this.vehicleRepo
-      .createQueryBuilder("v")
-      .select(["v.id", "v.licensePlate"]);
+    // Base query builder factory for reuse in count and data queries
+    const createBaseQuery = () =>
+      this.vehicleRepo
+        .createQueryBuilder("v")
+        .leftJoin(
+          (qb) =>
+            qb
+              .select("vr.vehicle_id", "vehicle_id")
+              .from(VehicleResponsible, "vr")
+              .where("vr.start_date <= :today", { today })
+              .andWhere("(vr.end_date IS NULL OR vr.end_date >= :today)", {
+                today,
+              })
+              .groupBy("vr.vehicle_id"),
+          "active_resp",
+          "active_resp.vehicle_id = v.id",
+        )
+        .where("active_resp.vehicle_id IS NULL");
+
+    // Count query - no need for last_resp join
+    const countQuery = createBaseQuery();
+    if (search) {
+      countQuery.andWhere("v.licensePlate LIKE :search", {
+        search: `%${search}%`,
+      });
+    }
+    const total = await countQuery.getCount();
+
+    if (total === 0) {
+      return { items: [], total: 0 };
+    }
+
+    // Data query with pagination - includes last_resp for lastResponsibleEndDate
+    const dataQuery = createBaseQuery()
+      .leftJoin(
+        (qb) =>
+          qb
+            .select("vr2.vehicle_id", "vehicle_id")
+            .addSelect("MAX(vr2.end_date)", "last_end_date")
+            .from(VehicleResponsible, "vr2")
+            .groupBy("vr2.vehicle_id"),
+        "last_resp",
+        "last_resp.vehicle_id = v.id",
+      )
+      .select("v.id", "id")
+      .addSelect("v.id", "vehicleId")
+      .addSelect("v.licensePlate", "vehicleLicensePlate")
+      .addSelect("last_resp.last_end_date", "lastResponsibleEndDate");
 
     if (search) {
-      vehicleQb.where("v.licensePlate LIKE :search", {
+      dataQuery.andWhere("v.licensePlate LIKE :search", {
         search: `%${search}%`,
       });
     }
 
-    const allVehicles = await vehicleQb.getMany();
-
-    // Get vehicles with active responsibles
-    const vehiclesWithResponsible = await this.vehicleResponsibleRepo
-      .createQueryBuilder("vr")
-      .select("DISTINCT vr.vehicle_id", "vehicleId")
-      .where("vr.start_date <= :today", { today })
-      .andWhere("(vr.end_date IS NULL OR vr.end_date >= :today)", { today })
-      .getRawMany();
-
-    const vehicleIdsWithResponsible = new Set(
-      vehiclesWithResponsible.map((v) => v.vehicleId),
-    );
-
-    // Filter vehicles without responsible
-    const vehiclesWithout = allVehicles.filter(
-      (v) => !vehicleIdsWithResponsible.has(v.id),
-    );
-
-    // Get last responsible end date for each vehicle without current responsible
-    const allResults: VehicleWithoutResponsible[] = [];
-    for (const vehicle of vehiclesWithout) {
-      const lastResponsible = await this.vehicleResponsibleRepo
-        .createQueryBuilder("vr")
-        .select("vr.end_date", "endDate")
-        .where("vr.vehicle_id = :vehicleId", { vehicleId: vehicle.id })
-        .orderBy("vr.end_date", "DESC")
-        .getRawOne();
-
-      allResults.push({
-        id: vehicle.id,
-        vehicleId: vehicle.id,
-        vehicleLicensePlate: vehicle.licensePlate,
-        lastResponsibleEndDate: lastResponsible?.endDate || undefined,
-      });
-    }
-
-    const total = allResults.length;
-    const items = allResults.slice(offset, offset + limit);
+    const items = await dataQuery.offset(offset).limit(limit).getRawMany();
 
     return { items, total };
   }
 
   async getVehiclesWithoutResponsibleCount(): Promise<number> {
-    // Llamar sin paginación para obtener el count real
-    const { total } = await this.getVehiclesWithoutResponsible({
-      limit: 1,
-      offset: 0,
-    });
-    return total;
+    const today = new Date().toISOString().split("T")[0];
+
+    // Optimized count-only query without the last_resp join
+    return this.vehicleRepo
+      .createQueryBuilder("v")
+      .leftJoin(
+        (qb) =>
+          qb
+            .select("vr.vehicle_id", "vehicle_id")
+            .from(VehicleResponsible, "vr")
+            .where("vr.start_date <= :today", { today })
+            .andWhere("(vr.end_date IS NULL OR vr.end_date >= :today)", {
+              today,
+            })
+            .groupBy("vr.vehicle_id"),
+        "active_resp",
+        "active_resp.vehicle_id = v.id",
+      )
+      .where("active_resp.vehicle_id IS NULL")
+      .getCount();
   }
 
   /**
@@ -277,9 +297,10 @@ export class RisksRepository {
     filters: OverdueQuarterlyControlsFilters,
   ): Promise<number> {
     // Reutilizamos la lógica de getOverdueQuarterlyControls para mantener consistencia
+    // limit: 1 is sufficient since total is calculated before the slice
     const { total } = await this.getOverdueQuarterlyControls({
       ...filters,
-      limit: 99999,
+      limit: 1,
       offset: 0,
     });
     return total;
@@ -433,6 +454,34 @@ export class RisksRepository {
       vehicleKms.map((v) => [v.vehicleId, v.kilometers]),
     );
 
+    // Batch fetch last maintenance records for all (vehicle, maintenance) pairs
+    // Using a subquery to get the latest record per vehicle-maintenance pair
+    const lastRecordsRaw = await this.maintenanceRecordRepo
+      .createQueryBuilder("rec")
+      .select("rec.vehicle_id", "vehicleId")
+      .addSelect("rec.maintenance_id", "maintenanceId")
+      .addSelect("rec.date", "date")
+      .addSelect("rec.kilometers", "kilometers")
+      .where((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select("MAX(rec2.date)")
+          .from(MaintenanceRecord, "rec2")
+          .where("rec2.vehicle_id = rec.vehicle_id")
+          .andWhere("rec2.maintenance_id = rec.maintenance_id")
+          .getQuery();
+        return `rec.date = ${subQuery}`;
+      })
+      .getRawMany();
+
+    // Create a map for quick lookup: "vehicleId-maintenanceId" -> { date, kilometers }
+    const lastRecordByKey = new Map(
+      lastRecordsRaw.map((r) => [
+        `${r.vehicleId}-${r.maintenanceId}`,
+        { date: r.date, kilometers: r.kilometers },
+      ]),
+    );
+
     // Collect all overdue vehicles across all requirements
     const allOverdueVehicles: OverdueMaintenanceVehicleFlat[] = [];
 
@@ -443,15 +492,10 @@ export class RisksRepository {
       );
 
       for (const vehicle of vehiclesForModel) {
-        // Get last maintenance record for this vehicle and maintenance type
-        const lastRecord = await this.maintenanceRecordRepo
-          .createQueryBuilder("rec")
-          .where("rec.vehicle_id = :vehicleId", { vehicleId: vehicle.id })
-          .andWhere("rec.maintenance_id = :maintenanceId", {
-            maintenanceId: req.maintenance.id,
-          })
-          .orderBy("rec.date", "DESC")
-          .getOne();
+        // Get last maintenance record from the pre-fetched map
+        const lastRecord = lastRecordByKey.get(
+          `${vehicle.id}-${req.maintenance.id}`,
+        );
 
         const currentKm = kmByVehicle.get(vehicle.id) || 0;
         let isOverdue = false;
@@ -484,11 +528,12 @@ export class RisksRepository {
           }
 
           // Check by km
-          if (req.kilometersFrequency) {
-            dueKilometers = lastRecord.kilometers + req.kilometersFrequency;
-            if (currentKm > dueKilometers) {
+          if (req.kilometersFrequency && lastRecord.kilometers != null) {
+            const due = lastRecord.kilometers + req.kilometersFrequency;
+            dueKilometers = due;
+            if (currentKm > due) {
               isOverdue = true;
-              kilometersOverdue = currentKm - dueKilometers;
+              kilometersOverdue = currentKm - due;
             }
           }
         } else {
