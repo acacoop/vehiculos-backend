@@ -13,6 +13,7 @@ export class AddVehicleRegistrationDate1764600000000
     `);
 
     // Set default value for existing records
+    // Using application release date as the default
     await queryRunner.query(`
       UPDATE vehicles
       SET registration_date = '2026-01-01'
