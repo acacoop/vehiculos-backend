@@ -216,7 +216,7 @@ export class RisksRepository {
   }
 
   /**
-   * Get overdue quarterly controls (past intended date, not filled)
+   * Get overdue quarterly controls (past intended date, not filled or with pending items)
    */
   async getOverdueQuarterlyControls(
     filters: OverdueQuarterlyControlsFilters,
@@ -228,67 +228,84 @@ export class RisksRepository {
     toleranceDate.setDate(toleranceDate.getDate() - toleranceDays);
     const toleranceDateStr = toleranceDate.toISOString().split("T")[0];
 
-    // Query con subquery para contar ítems pendientes y totales
-    // Un control está vencido si: fecha vencida Y (no enviado O tiene ítems pendientes)
-    const queryBuilder = this.quarterlyControlRepo
-      .createQueryBuilder("qc")
-      .leftJoinAndSelect("qc.vehicle", "v")
-      .leftJoinAndSelect("qc.items", "qci")
-      .where("qc.intended_delivery_date < :toleranceDate", {
-        toleranceDate: toleranceDateStr,
-      });
+    // Base query factory for count and data queries
+    // Overdue = past tolerance date AND (not filled OR has pending items)
+    const createBaseQuery = () => {
+      const qb = this.quarterlyControlRepo
+        .createQueryBuilder("qc")
+        .leftJoin("qc.vehicle", "v")
+        .leftJoin(
+          (subQb) =>
+            subQb
+              .select("qci.quarterly_control_id", "qc_id")
+              .addSelect("COUNT(*)", "total_items")
+              .addSelect(
+                `SUM(CASE WHEN qci.status = :pendingStatus THEN 1 ELSE 0 END)`,
+                "pending_items",
+              )
+              .from(QuarterlyControlItem, "qci")
+              .groupBy("qci.quarterly_control_id"),
+          "item_counts",
+          "item_counts.qc_id = qc.id",
+        )
+        .setParameter("pendingStatus", QuarterlyControlItemStatus.PENDIENTE)
+        .where("qc.intended_delivery_date < :toleranceDate", {
+          toleranceDate: toleranceDateStr,
+        })
+        .andWhere(
+          "(qc.filled_at IS NULL OR COALESCE(item_counts.pending_items, 0) > 0)",
+        );
 
-    // Apply optional filters
-    if (filters.year) {
-      queryBuilder.andWhere("qc.year = :year", { year: filters.year });
-    }
-    if (filters.quarter) {
-      queryBuilder.andWhere("qc.quarter = :quarter", {
-        quarter: filters.quarter,
-      });
-    }
-    if (search) {
-      queryBuilder.andWhere("v.licensePlate LIKE :search", {
-        search: `%${search}%`,
-      });
+      if (filters.year) {
+        qb.andWhere("qc.year = :year", { year: filters.year });
+      }
+      if (filters.quarter) {
+        qb.andWhere("qc.quarter = :quarter", { quarter: filters.quarter });
+      }
+      if (search) {
+        qb.andWhere("v.licensePlate LIKE :search", { search: `%${search}%` });
+      }
+
+      return qb;
+    };
+
+    // Count query
+    const total = await createBaseQuery().getCount();
+
+    if (total === 0) {
+      return { items: [], total: 0 };
     }
 
-    const controls = await queryBuilder
+    // Data query with all fields
+    const results = await createBaseQuery()
+      .select("qc.id", "id")
+      .addSelect("v.id", "vehicleId")
+      .addSelect("v.licensePlate", "vehicleLicensePlate")
+      .addSelect("qc.year", "year")
+      .addSelect("qc.quarter", "quarter")
+      .addSelect("qc.intended_delivery_date", "intendedDeliveryDate")
+      .addSelect(
+        `DATEDIFF(DAY, qc.intended_delivery_date, GETDATE())`,
+        "daysOverdue",
+      )
+      .addSelect("COALESCE(item_counts.pending_items, 0)", "pendingItemsCount")
+      .addSelect("COALESCE(item_counts.total_items, 0)", "totalItemsCount")
       .orderBy("qc.intended_delivery_date", "ASC")
-      .getMany();
+      .offset(offset)
+      .limit(limit)
+      .getRawMany();
 
-    // Filtrar: sin filledAt O con ítems pendientes
-    const overdueControls = controls.filter((qc) => {
-      const pendingCount = qc.items.filter(
-        (item) => item.status === QuarterlyControlItemStatus.PENDIENTE,
-      ).length;
-      return qc.filledAt === null || pendingCount > 0;
-    });
-
-    const allItems = overdueControls.map((qc) => {
-      const intendedDate = new Date(qc.intendedDeliveryDate);
-      const daysOverdue = Math.floor(
-        (today.getTime() - intendedDate.getTime()) / (1000 * 60 * 60 * 24),
-      );
-      const pendingItemsCount = qc.items.filter(
-        (item) => item.status === QuarterlyControlItemStatus.PENDIENTE,
-      ).length;
-
-      return {
-        id: qc.id,
-        vehicleId: qc.vehicle.id,
-        vehicleLicensePlate: qc.vehicle.licensePlate,
-        year: qc.year,
-        quarter: qc.quarter,
-        intendedDeliveryDate: qc.intendedDeliveryDate,
-        daysOverdue,
-        pendingItemsCount,
-        totalItemsCount: qc.items.length,
-      };
-    });
-
-    const total = allItems.length;
-    const items = allItems.slice(offset, offset + limit);
+    const items = results.map((r) => ({
+      id: r.id,
+      vehicleId: r.vehicleId,
+      vehicleLicensePlate: r.vehicleLicensePlate,
+      year: r.year,
+      quarter: r.quarter,
+      intendedDeliveryDate: r.intendedDeliveryDate,
+      daysOverdue: parseInt(r.daysOverdue),
+      pendingItemsCount: parseInt(r.pendingItemsCount),
+      totalItemsCount: parseInt(r.totalItemsCount),
+    }));
 
     return { items, total };
   }
@@ -296,14 +313,43 @@ export class RisksRepository {
   async getOverdueQuarterlyControlsCount(
     filters: OverdueQuarterlyControlsFilters,
   ): Promise<number> {
-    // Reutilizamos la lógica de getOverdueQuarterlyControls para mantener consistencia
-    // limit: 1 is sufficient since total is calculated before the slice
-    const { total } = await this.getOverdueQuarterlyControls({
-      ...filters,
-      limit: 1,
-      offset: 0,
-    });
-    return total;
+    const toleranceDays = filters.toleranceDays ?? 0;
+    const toleranceDate = new Date();
+    toleranceDate.setDate(toleranceDate.getDate() - toleranceDays);
+    const toleranceDateStr = toleranceDate.toISOString().split("T")[0];
+
+    // Optimized count-only query
+    const qb = this.quarterlyControlRepo
+      .createQueryBuilder("qc")
+      .leftJoin(
+        (subQb) =>
+          subQb
+            .select("qci.quarterly_control_id", "qc_id")
+            .addSelect(
+              `SUM(CASE WHEN qci.status = :pendingStatus THEN 1 ELSE 0 END)`,
+              "pending_items",
+            )
+            .from(QuarterlyControlItem, "qci")
+            .groupBy("qci.quarterly_control_id"),
+        "item_counts",
+        "item_counts.qc_id = qc.id",
+      )
+      .setParameter("pendingStatus", QuarterlyControlItemStatus.PENDIENTE)
+      .where("qc.intended_delivery_date < :toleranceDate", {
+        toleranceDate: toleranceDateStr,
+      })
+      .andWhere(
+        "(qc.filled_at IS NULL OR COALESCE(item_counts.pending_items, 0) > 0)",
+      );
+
+    if (filters.year) {
+      qb.andWhere("qc.year = :year", { year: filters.year });
+    }
+    if (filters.quarter) {
+      qb.andWhere("qc.quarter = :quarter", { quarter: filters.quarter });
+    }
+
+    return qb.getCount();
   }
 
   /**
@@ -374,17 +420,41 @@ export class RisksRepository {
   async getQuarterlyControlsWithErrorsCount(
     filters: QuarterlyControlsWithErrorsFilters,
   ): Promise<number> {
-    const { total } = await this.getQuarterlyControlsWithErrors({
-      ...filters,
-      limit: 1,
-      offset: 0,
-    });
-    return total;
+    const minRejectedItems = filters.minRejectedItems ?? 1;
+
+    // Count query using subquery with GROUP BY/HAVING
+    const subQuery = this.quarterlyControlItemRepo
+      .createQueryBuilder("qci")
+      .leftJoin("qci.quarterlyControl", "qc")
+      .leftJoin("qc.vehicle", "v")
+      .select("qc.id")
+      .where("qci.status = :status", {
+        status: QuarterlyControlItemStatus.RECHAZADO,
+      });
+
+    if (filters.year) {
+      subQuery.andWhere("qc.year = :year", { year: filters.year });
+    }
+    if (filters.quarter) {
+      subQuery.andWhere("qc.quarter = :quarter", { quarter: filters.quarter });
+    }
+
+    const result = await subQuery
+      .groupBy("qc.id")
+      .having("COUNT(*) >= :minRejected", { minRejected: minRejectedItems })
+      .getRawMany();
+
+    return result.length;
   }
 
   async getOverdueMaintenanceCount(
     filters: OverdueMaintenanceFilters,
   ): Promise<number> {
+    // Note: This count uses the full method because the "overdue" logic
+    // requires complex date/km calculations that involve multiple tables
+    // and conditional logic that's impractical to express in pure SQL.
+    // The method already calculates total before pagination, so limit:1 avoids
+    // building unnecessary result objects.
     const { total } = await this.getOverdueMaintenanceVehicles({
       ...filters,
       limit: 1,
@@ -428,18 +498,43 @@ export class RisksRepository {
 
     const requirements = await reqQueryBuilder.getMany();
 
-    // Get all vehicles with their models and current km
+    if (requirements.length === 0) {
+      return { items: [], total: 0 };
+    }
+
+    // Get unique model IDs from requirements to filter vehicles
+    const modelIds = [...new Set(requirements.map((r) => r.model.id))];
+
+    // Only load vehicles for models that have active requirements
     const vehicles = await this.vehicleRepo
       .createQueryBuilder("v")
       .leftJoinAndSelect("v.model", "model")
+      .where("model.id IN (:...modelIds)", { modelIds })
       .getMany();
 
-    // Get current km for each vehicle
+    if (vehicles.length === 0) {
+      return { items: [], total: 0 };
+    }
+
+    // Pre-group vehicles by model ID for O(1) lookup instead of O(n) filter
+    const vehiclesByModelId = new Map<string, typeof vehicles>();
+    for (const vehicle of vehicles) {
+      if (vehicle.model?.id) {
+        const list = vehiclesByModelId.get(vehicle.model.id) || [];
+        list.push(vehicle);
+        vehiclesByModelId.set(vehicle.model.id, list);
+      }
+    }
+
+    const vehicleIds = vehicles.map((v) => v.id);
+
+    // Get current km only for relevant vehicles
     const vehicleKms = await this.vehicleKilometersRepo
       .createQueryBuilder("vk")
       .select("vk.vehicle_id", "vehicleId")
       .addSelect("vk.kilometers", "kilometers")
-      .where((qb) => {
+      .where("vk.vehicle_id IN (:...vehicleIds)", { vehicleIds })
+      .andWhere((qb) => {
         const subQuery = qb
           .subQuery()
           .select("MAX(vk2.date)")
@@ -454,15 +549,23 @@ export class RisksRepository {
       vehicleKms.map((v) => [v.vehicleId, v.kilometers]),
     );
 
-    // Batch fetch last maintenance records for all (vehicle, maintenance) pairs
-    // Using a subquery to get the latest record per vehicle-maintenance pair
+    // Get maintenance IDs from requirements
+    const maintenanceIds = [
+      ...new Set(requirements.map((r) => r.maintenance.id)),
+    ];
+
+    // Batch fetch last maintenance records only for relevant vehicle-maintenance pairs
     const lastRecordsRaw = await this.maintenanceRecordRepo
       .createQueryBuilder("rec")
       .select("rec.vehicle_id", "vehicleId")
       .addSelect("rec.maintenance_id", "maintenanceId")
       .addSelect("rec.date", "date")
       .addSelect("rec.kilometers", "kilometers")
-      .where((qb) => {
+      .where("rec.vehicle_id IN (:...vehicleIds)", { vehicleIds })
+      .andWhere("rec.maintenance_id IN (:...maintenanceIds)", {
+        maintenanceIds,
+      })
+      .andWhere((qb) => {
         const subQuery = qb
           .subQuery()
           .select("MAX(rec2.date)")
@@ -486,10 +589,8 @@ export class RisksRepository {
     const allOverdueVehicles: OverdueMaintenanceVehicleFlat[] = [];
 
     for (const req of requirements) {
-      // Find vehicles for this model
-      const vehiclesForModel = vehicles.filter(
-        (v) => v.model?.id === req.model.id,
-      );
+      // Get vehicles for this model from pre-grouped map - O(1) lookup
+      const vehiclesForModel = vehiclesByModelId.get(req.model.id) || [];
 
       for (const vehicle of vehiclesForModel) {
         // Get last maintenance record from the pre-fetched map
@@ -623,21 +724,43 @@ export class RisksRepository {
     const daysWithoutUpdate = filters.daysWithoutUpdate ?? 30;
     const { limit, offset, search } = filters;
 
-    // Subquery to get latest km date per vehicle
-    const latestKmSubquery = this.vehicleKilometersRepo
-      .createQueryBuilder("vk")
-      .select("vk.vehicle_id", "vehicle_id")
-      .addSelect("MAX(vk.date)", "last_date")
-      .addSelect("MAX(vk.kilometers)", "last_km")
-      .groupBy("vk.vehicle_id");
+    // Base query factory for count and data queries
+    const createBaseQuery = () => {
+      const latestKmSubquery = this.vehicleKilometersRepo
+        .createQueryBuilder("vk")
+        .select("vk.vehicle_id", "vehicle_id")
+        .addSelect("MAX(vk.date)", "last_date")
+        .addSelect("MAX(vk.kilometers)", "last_km")
+        .groupBy("vk.vehicle_id");
 
-    const queryBuilder = this.vehicleRepo
-      .createQueryBuilder("v")
-      .leftJoin(
-        `(${latestKmSubquery.getQuery()})`,
-        "km",
-        "km.vehicle_id = v.id",
-      )
+      const qb = this.vehicleRepo
+        .createQueryBuilder("v")
+        .leftJoin(
+          `(${latestKmSubquery.getQuery()})`,
+          "km",
+          "km.vehicle_id = v.id",
+        )
+        .where(
+          `(km.last_date IS NULL OR DATEDIFF(DAY, km.last_date, GETDATE()) > :days)`,
+          { days: daysWithoutUpdate },
+        );
+
+      if (search) {
+        qb.andWhere("v.licensePlate LIKE :search", { search: `%${search}%` });
+      }
+
+      return qb;
+    };
+
+    // Count query
+    const total = await createBaseQuery().getCount();
+
+    if (total === 0) {
+      return { items: [], total: 0 };
+    }
+
+    // Data query with pagination
+    const results = await createBaseQuery()
       .select("v.id", "id")
       .addSelect("v.licensePlate", "vehicleLicensePlate")
       .addSelect("km.last_date", "lastKilometerDate")
@@ -645,25 +768,15 @@ export class RisksRepository {
       .addSelect(
         `CASE 
           WHEN km.last_date IS NULL THEN -1 
-          ELSE DATEDIFF(day, km.last_date, GETDATE()) 
+          ELSE DATEDIFF(DAY, km.last_date, GETDATE()) 
         END`,
         "daysSinceLastUpdate",
       )
-      .where(
-        `(km.last_date IS NULL OR DATEDIFF(day, km.last_date, GETDATE()) > :days)`,
-        { days: daysWithoutUpdate },
-      );
+      .offset(offset)
+      .limit(limit)
+      .getRawMany();
 
-    // Apply search filter
-    if (search) {
-      queryBuilder.andWhere("v.licensePlate LIKE :search", {
-        search: `%${search}%`,
-      });
-    }
-
-    const results = await queryBuilder.getRawMany();
-
-    const allItems = results.map((r) => ({
+    const items = results.map((r) => ({
       id: r.id,
       vehicleId: r.id,
       vehicleLicensePlate: r.vehicleLicensePlate,
@@ -674,20 +787,32 @@ export class RisksRepository {
       daysSinceLastUpdate: r.daysSinceLastUpdate,
     }));
 
-    const total = allItems.length;
-    const items = allItems.slice(offset, offset + limit);
-
     return { items, total };
   }
 
   async getVehiclesWithoutRecentKilometersCount(
     filters: VehiclesWithoutRecentKilometersFilters,
   ): Promise<number> {
-    const { total } = await this.getVehiclesWithoutRecentKilometers({
-      ...filters,
-      limit: 1,
-      offset: 0,
-    });
-    return total;
+    const daysWithoutUpdate = filters.daysWithoutUpdate ?? 30;
+
+    // Optimized count-only query
+    const latestKmSubquery = this.vehicleKilometersRepo
+      .createQueryBuilder("vk")
+      .select("vk.vehicle_id", "vehicle_id")
+      .addSelect("MAX(vk.date)", "last_date")
+      .groupBy("vk.vehicle_id");
+
+    return this.vehicleRepo
+      .createQueryBuilder("v")
+      .leftJoin(
+        `(${latestKmSubquery.getQuery()})`,
+        "km",
+        "km.vehicle_id = v.id",
+      )
+      .where(
+        `(km.last_date IS NULL OR DATEDIFF(DAY, km.last_date, GETDATE()) > :days)`,
+        { days: daysWithoutUpdate },
+      )
+      .getCount();
   }
 }
