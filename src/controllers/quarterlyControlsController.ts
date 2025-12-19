@@ -13,9 +13,11 @@ import { AuthenticatedRequest } from "@/middleware/auth";
 import { z } from "zod";
 import { QuarterlyControlItemStatus } from "@/enums/QuarterlyControlItemStatusEnum";
 
+const MAX_YEAR = new Date().getFullYear() + 5;
+
 const CreateControlWithItemsSchema = z.object({
   vehicleId: z.string().uuid(),
-  year: z.number().int().min(2000).max(2100),
+  year: z.number().int().min(2000).max(MAX_YEAR),
   quarter: z.number().int().min(1).max(4),
   intendedDeliveryDate: z.string(),
   items: z.array(

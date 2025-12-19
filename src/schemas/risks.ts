@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+const MAX_YEAR = new Date().getFullYear() + 5;
+
 // ============================================
 // Query Parameters Schemas - Per Endpoint
 // ============================================
@@ -27,14 +29,14 @@ export const OverdueMaintenanceFiltersSchema = z.object({
 export const OverdueQuarterlyControlsFiltersSchema = z.object({
   search: z.string().optional(),
   toleranceDays: z.coerce.number().min(0).optional().default(0),
-  year: z.coerce.number().min(2000).max(2100).optional(),
+  year: z.coerce.number().min(2000).max(MAX_YEAR).optional(),
   quarter: z.coerce.number().min(1).max(4).optional(),
 });
 
 // Quarterly controls with errors filters
 export const QuarterlyControlsWithErrorsFiltersSchema = z.object({
   search: z.string().optional(),
-  year: z.coerce.number().min(2000).max(2100).optional(),
+  year: z.coerce.number().min(2000).max(MAX_YEAR).optional(),
   quarter: z.coerce.number().min(1).max(4).optional(),
   minRejectedItems: z.coerce.number().min(1).optional().default(1),
 });
