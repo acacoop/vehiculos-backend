@@ -48,6 +48,8 @@ export class VehicleRepository implements IVehicleRepository {
       brandId: { field: "b.id" },
       modelId: { field: "m.id" },
       fuelType: { field: "v.fuelType" },
+      registrationDateFrom: { field: "v.registrationDate", operator: ">=" },
+      registrationDateTo: { field: "v.registrationDate", operator: "<=" },
     });
 
     // Apply kilometer range filters using subquery for latest kilometers

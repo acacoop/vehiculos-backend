@@ -39,6 +39,7 @@ describe("MaintenanceRecordsService", () => {
     id: "vehicle-1",
     licensePlate: "ABC123",
     year: 2020,
+    registrationDate: "2020-01-01",
     chassisNumber: "CHASSIS123",
     engineNumber: "ENGINE123",
     transmission: "Manual",

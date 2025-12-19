@@ -44,6 +44,7 @@ export class VehiclesService {
       licensePlate: input.licensePlate,
       model,
       year: input.year,
+      registrationDate: input.registrationDate,
       chassisNumber: input.chassisNumber,
       engineNumber: input.engineNumber,
       transmission: input.transmission,
@@ -67,6 +68,8 @@ export class VehiclesService {
     }
     if (data.licensePlate) existing.licensePlate = data.licensePlate;
     if (typeof data.year === "number") existing.year = data.year;
+    if (data.registrationDate)
+      existing.registrationDate = data.registrationDate;
     if ("chassisNumber" in data) existing.chassisNumber = data.chassisNumber;
     if ("engineNumber" in data) existing.engineNumber = data.engineNumber;
     if ("transmission" in data) existing.transmission = data.transmission;
@@ -87,6 +90,7 @@ function mapEntity(e: VehicleEntity): Vehicle {
     id: e.id,
     licensePlate: e.licensePlate,
     year: e.year,
+    registrationDate: e.registrationDate,
     chassisNumber: e.chassisNumber,
     engineNumber: e.engineNumber,
     transmission: e.transmission,
@@ -97,7 +101,7 @@ function mapEntity(e: VehicleEntity): Vehicle {
       vehicleType: e.model.vehicleType,
       brand: { id: e.model.brand.id, name: e.model.brand.name },
     },
-  } as Vehicle;
+  };
 }
 
 export default VehiclesService;
