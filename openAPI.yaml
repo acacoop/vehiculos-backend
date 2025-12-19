@@ -1950,6 +1950,21 @@ paths:
       summary: Get risk indicators summary
       description: Returns aggregated counts of all risk indicators. Admin only.
       tags: [Risks]
+      parameters:
+        - name: toleranceDays
+          in: query
+          description: Number of tolerance days before considering something overdue
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: daysWithoutUpdate
+          in: query
+          description: Number of days without kilometer update to consider a vehicle at risk
+          schema:
+            type: integer
+            minimum: 1
+            default: 30
       responses:
         "200":
           $ref: "#/components/responses/RiskSummaryResponse"
@@ -1963,6 +1978,14 @@ paths:
       summary: Get vehicles without current responsible
       description: Returns vehicles that have no active responsible assignment. Admin only.
       tags: [Risks]
+      parameters:
+        - name: search
+          in: query
+          description: Filter by vehicle license plate
+          schema:
+            type: string
+        - $ref: "#/components/parameters/limitParam"
+        - $ref: "#/components/parameters/offsetParam"
       responses:
         "200":
           $ref: "#/components/responses/VehiclesWithoutResponsibleResponse"
@@ -1976,6 +1999,33 @@ paths:
       summary: Get vehicles with overdue maintenance
       description: Returns vehicles that have at least one overdue maintenance requirement (by days or kilometers). Admin only.
       tags: [Risks]
+      parameters:
+        - name: search
+          in: query
+          description: Filter by vehicle license plate, maintenance name, model name, or brand name
+          schema:
+            type: string
+        - name: toleranceDays
+          in: query
+          description: Number of tolerance days before considering maintenance overdue
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: maintenanceId
+          in: query
+          description: Filter by specific maintenance type (UUID)
+          schema:
+            type: string
+            format: uuid
+        - name: modelId
+          in: query
+          description: Filter by specific vehicle model (UUID)
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/limitParam"
+        - $ref: "#/components/parameters/offsetParam"
       responses:
         "200":
           $ref: "#/components/responses/OverdueMaintenanceResponse"
@@ -1989,6 +2039,35 @@ paths:
       summary: Get overdue quarterly controls
       description: Returns quarterly controls past their intended delivery date that haven't been filled. Admin only.
       tags: [Risks]
+      parameters:
+        - name: search
+          in: query
+          description: Filter by vehicle license plate
+          schema:
+            type: string
+        - name: toleranceDays
+          in: query
+          description: Number of tolerance days before considering a control overdue
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: year
+          in: query
+          description: Filter by year (2000-2030)
+          schema:
+            type: integer
+            minimum: 2000
+            maximum: 2030
+        - name: quarter
+          in: query
+          description: Filter by quarter (1-4)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4
+        - $ref: "#/components/parameters/limitParam"
+        - $ref: "#/components/parameters/offsetParam"
       responses:
         "200":
           $ref: "#/components/responses/OverdueQuarterlyControlsResponse"
@@ -2002,6 +2081,35 @@ paths:
       summary: Get quarterly controls with rejected items
       description: Returns quarterly controls that have items with RECHAZADO status. Admin only.
       tags: [Risks]
+      parameters:
+        - name: search
+          in: query
+          description: Filter by vehicle license plate
+          schema:
+            type: string
+        - name: year
+          in: query
+          description: Filter by year (2000-2030)
+          schema:
+            type: integer
+            minimum: 2000
+            maximum: 2030
+        - name: quarter
+          in: query
+          description: Filter by quarter (1-4)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4
+        - name: minRejectedItems
+          in: query
+          description: Minimum number of rejected items to include the control
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - $ref: "#/components/parameters/limitParam"
+        - $ref: "#/components/parameters/offsetParam"
       responses:
         "200":
           $ref: "#/components/responses/QuarterlyControlsWithErrorsResponse"
@@ -2015,6 +2123,21 @@ paths:
       summary: Get vehicles without recent kilometer readings
       description: Returns vehicles that have not reported kilometer readings in the configured recent period. Admin only.
       tags: [Risks]
+      parameters:
+        - name: search
+          in: query
+          description: Filter by vehicle license plate
+          schema:
+            type: string
+        - name: daysWithoutUpdate
+          in: query
+          description: Number of days without update to consider a vehicle at risk
+          schema:
+            type: integer
+            minimum: 1
+            default: 30
+        - $ref: "#/components/parameters/limitParam"
+        - $ref: "#/components/parameters/offsetParam"
       responses:
         "200":
           $ref: "#/components/responses/VehiclesWithoutRecentKilometersResponse"
