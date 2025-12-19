@@ -20,6 +20,7 @@ import {
   VehiclesWithoutResponsibleFilters,
   RisksSummaryFilters,
   RisksSummary,
+  RiskSeverity,
 } from "@/schemas/risks";
 
 interface PaginatedResult<T> {
@@ -83,36 +84,41 @@ export class RisksRepository {
       }),
     ]);
 
+    const severity = (
+      count: number,
+      level: Exclude<RiskSeverity, "low">,
+    ): RiskSeverity => (count > 0 ? level : "low");
+
     return [
       {
         key: "vehicles-without-responsible",
         label: "Vehículos sin responsable",
         count: vehiclesWithoutResponsible,
-        severity: vehiclesWithoutResponsible > 0 ? "high" : "low",
+        severity: severity(vehiclesWithoutResponsible, "high"),
       },
       {
         key: "overdue-maintenance",
         label: "Mantenimientos vencidos",
         count: overdueMaintenance,
-        severity: overdueMaintenance > 0 ? "high" : "low",
+        severity: severity(overdueMaintenance, "high"),
       },
       {
         key: "overdue-quarterly-controls",
         label: "Controles trimestrales vencidos",
         count: overdueControls,
-        severity: overdueControls > 0 ? "high" : "low",
+        severity: severity(overdueControls, "high"),
       },
       {
         key: "quarterly-controls-with-errors",
         label: "Controles con rechazos",
         count: controlsWithErrors,
-        severity: controlsWithErrors > 0 ? "medium" : "low",
+        severity: severity(controlsWithErrors, "medium"),
       },
       {
         key: "vehicles-without-recent-kilometers",
         label: "Sin registro de km reciente",
         count: vehiclesWithoutRecentKilometers,
-        severity: vehiclesWithoutRecentKilometers > 0 ? "medium" : "low",
+        severity: severity(vehiclesWithoutRecentKilometers, "medium"),
       },
     ];
   }

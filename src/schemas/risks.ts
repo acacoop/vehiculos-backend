@@ -73,12 +73,14 @@ export type VehiclesWithoutRecentKilometersFilters = z.infer<
 // Risks Interfaces
 // ============================================
 
+export type RiskSeverity = "high" | "medium" | "low";
+
 // Risks summary for dashboard
 export interface RisksSummary {
   key: string;
   label: string;
   count: number;
-  severity: "high" | "medium" | "low";
+  severity: RiskSeverity;
 }
 
 // Overdue maintenance requirement (grouped by requirement, not vehicle)
