@@ -18,6 +18,11 @@ router.get(
 router.get("/overdue-maintenance", risksController.getOverdueMaintenance);
 
 router.get(
+  "/overdue-maintenance-vehicles",
+  risksController.getOverdueMaintenanceVehicles,
+);
+
+router.get(
   "/overdue-quarterly-controls",
   risksController.getOverdueQuarterlyControls,
 );

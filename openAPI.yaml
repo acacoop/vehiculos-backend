@@ -284,6 +284,8 @@ paths:
         - `fuelType` - Exact match by fuel type
         - `minKilometers` - Minimum kilometers (inclusive) based on latest kilometers log
         - `maxKilometers` - Maximum kilometers (exclusive) based on latest kilometers log
+        - `registrationDateFrom` - Minimum registration date (inclusive) for filtering by date range
+        - `registrationDateTo` - Maximum registration date (inclusive) for filtering by date range
       tags: [Vehicles]
       parameters:
         - $ref: "#/components/parameters/PageParam"
@@ -345,6 +347,18 @@ paths:
           schema:
             type: integer
             minimum: 0
+        - name: registrationDateFrom
+          in: query
+          description: Minimum registration date (inclusive) for filtering by date range
+          schema:
+            type: string
+            format: date
+        - name: registrationDateTo
+          in: query
+          description: Maximum registration date (inclusive) for filtering by date range
+          schema:
+            type: string
+            format: date
       responses:
         "200":
           description: List of vehicles
@@ -3039,6 +3053,11 @@ components:
           nullable: true
           description: "Tipo de combustible (nafta, diésel, híbrido, eléctrico, etc.)"
           example: "Nafta"
+        registrationDate:
+          type: string
+          format: date
+          description: "Fecha de alta del vehículo en el sistema"
+          example: "2022-01-15"
         currentResponsible:
           allOf:
             - $ref: "#/components/schemas/VehicleResponsibleWithDetails"
@@ -3049,6 +3068,7 @@ components:
         - licensePlate
         - model
         - year
+        - registrationDate
 
     VehicleInput:
       type: object
@@ -3076,10 +3096,16 @@ components:
         fuelType:
           type: string
           description: "Combustible"
+        registrationDate:
+          type: string
+          format: date
+          description: "Fecha de alta del vehículo"
+          example: "2022-01-15"
       required:
         - licensePlate
         - modelId
         - year
+        - registrationDate
 
     VehicleUpdateInput:
       type: object
@@ -3104,6 +3130,10 @@ components:
           type: string
         fuelType:
           type: string
+        registrationDate:
+          type: string
+          format: date
+          description: "Fecha de alta del vehículo"
       minProperties: 1
 
     # VEHICLE BRAND & MODEL SCHEMAS

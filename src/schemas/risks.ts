@@ -106,6 +106,26 @@ export interface OverdueMaintenanceVehicle {
   kilometersOverdue?: number;
 }
 
+// Flat overdue maintenance vehicle (for disaggregated view)
+export interface OverdueMaintenanceVehicleFlat {
+  id: string; // Composite: vehicleId-maintenanceRequirementId
+  vehicleId: string;
+  vehicleLicensePlate: string;
+  maintenanceRequirementId: string;
+  maintenanceId: string;
+  maintenanceName: string;
+  modelId: string;
+  modelName: string;
+  brandName: string;
+  daysFrequency?: number;
+  kilometersFrequency?: number;
+  dueDate?: string;
+  dueKilometers?: number;
+  currentKilometers?: number;
+  daysOverdue?: number;
+  kilometersOverdue?: number;
+}
+
 // Overdue quarterly control
 export interface OverdueQuarterlyControl {
   id: string;

@@ -28,6 +28,7 @@ function mapEntity(e: VehicleKilometersEntity): VehicleKilometersLogOutput {
       id: e.vehicle.id,
       licensePlate: e.vehicle.licensePlate,
       year: e.vehicle.year,
+      registrationDate: e.vehicle.registrationDate,
       chassisNumber: e.vehicle.chassisNumber,
       engineNumber: e.vehicle.engineNumber,
       transmission: e.vehicle.transmission,

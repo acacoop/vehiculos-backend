@@ -20,6 +20,8 @@ export class VehiclesController extends BaseController<VehicleFilters> {
         "fuelType",
         "minKilometers",
         "maxKilometers",
+        "registrationDateFrom",
+        "registrationDateTo",
       ],
     });
   }

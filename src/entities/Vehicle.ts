@@ -52,4 +52,7 @@ export class Vehicle {
 
   @Column({ name: "fuel_type", type: "nvarchar", nullable: true, length: 50 })
   fuelType?: string;
+
+  @Column({ name: "registration_date", type: "date" })
+  registrationDate!: string;
 }

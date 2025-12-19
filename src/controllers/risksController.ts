@@ -67,6 +67,26 @@ export class RisksController {
     });
   });
 
+  getOverdueMaintenanceVehicles = asyncHandler(
+    async (req: Request, res: Response) => {
+      const { page, limit, offset } = parsePaginationQuery(req.query);
+      const filters = OverdueMaintenanceFiltersSchema.parse(req.query);
+      const { items, total } = await this.service.getOverdueMaintenanceVehicles(
+        {
+          ...filters,
+          limit,
+          offset,
+        },
+      );
+      this.sendResponse(res, items, 200, {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      });
+    },
+  );
+
   getOverdueQuarterlyControls = asyncHandler(
     async (req: Request, res: Response) => {
       const { page, limit, offset } = parsePaginationQuery(req.query);
