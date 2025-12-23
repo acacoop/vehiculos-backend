@@ -33,7 +33,7 @@ export class VehicleResponsiblesController extends BaseController<VehicleRespons
     return await this.service.create(responsibleData);
   }
 
-  protected async updateService(id: string, data: unknown) {
+  protected async updateService(id: string, data: unknown, _req: Request) {
     const responsibleData = data as Partial<VehicleResponsibleInput>;
     return await this.service.update(id, responsibleData);
   }

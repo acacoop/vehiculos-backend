@@ -28,7 +28,11 @@ export class UsersController extends BaseController<UserFilters> {
     return await this.service.create(data as User);
   }
 
-  protected async updateService(id: string, data: Partial<User>) {
+  protected async updateService(
+    id: string,
+    data: Partial<User>,
+    _req: Request,
+  ) {
     return await this.service.update(id, data);
   }
 

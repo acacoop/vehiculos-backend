@@ -29,4 +29,18 @@ router.post(
   maintenanceRecordsController.create,
 );
 
+router.patch(
+  "/:id",
+  validateUUIDParam("id"),
+  requireRole(UserRoleEnum.ADMIN),
+  maintenanceRecordsController.update,
+);
+
+router.delete(
+  "/:id",
+  validateUUIDParam("id"),
+  requireRole(UserRoleEnum.ADMIN),
+  maintenanceRecordsController.delete,
+);
+
 export default router;

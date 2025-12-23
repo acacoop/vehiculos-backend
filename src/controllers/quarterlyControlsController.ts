@@ -81,7 +81,7 @@ export class QuarterlyControlsController extends BaseController<QuarterlyControl
     }
   }
 
-  protected async updateService(id: string, data: unknown) {
+  protected async updateService(id: string, data: unknown, _req: Request) {
     const parsed = QuarterlyControlSchema.partial().parse(data);
     try {
       return await this.service.update(id, parsed);

@@ -5,8 +5,10 @@ import { MaintenanceRecord as MaintenanceRecordEntity } from "@/entities/Mainten
 import { User } from "@/entities/User";
 import { Vehicle } from "@/entities/Vehicle";
 import { Maintenance } from "@/entities/Maintenance";
-import { Repository } from "typeorm";
+import { VehicleKilometers } from "@/entities/VehicleKilometers";
+import { Repository, DataSource } from "typeorm";
 import { AppDataSource } from "@/db";
+import { VehicleKilometersService } from "@/services/vehicleKilometersService";
 
 // Mock AppDataSource
 jest.mock("@/db", () => ({
@@ -24,6 +26,8 @@ describe("MaintenanceRecordsService", () => {
   let mockMaintenanceRepo: jest.Mocked<Repository<Maintenance>>;
   let mockVehicleRepo: jest.Mocked<Repository<Vehicle>>;
   let mockUserRepo: jest.Mocked<Repository<User>>;
+  let mockDataSource: jest.Mocked<DataSource>;
+  let mockVehicleKilometersService: jest.Mocked<VehicleKilometersService>;
 
   const mockUser: User = {
     id: "user-1",
@@ -68,13 +72,22 @@ describe("MaintenanceRecordsService", () => {
     },
   };
 
+  const mockKilometersLog: VehicleKilometers = {
+    id: "km-log-1",
+    vehicle: mockVehicle,
+    user: mockUser,
+    date: new Date("2024-01-15"),
+    kilometers: 5000,
+    createdAt: new Date(),
+  };
+
   const mockRecord: MaintenanceRecordEntity = {
     id: "record-1",
     maintenance: mockMaintenance,
     vehicle: mockVehicle,
     user: mockUser,
     date: "2024-01-15",
-    kilometers: 5000,
+    kilometersLog: mockKilometersLog,
     notes: "Routine check",
   };
 
@@ -107,6 +120,26 @@ describe("MaintenanceRecordsService", () => {
       findOne: jest.fn(),
     } as unknown as jest.Mocked<Repository<User>>;
 
+    const mockQueryRunner = {
+      connect: jest.fn(),
+      startTransaction: jest.fn(),
+      commitTransaction: jest.fn(),
+      rollbackTransaction: jest.fn(),
+      release: jest.fn(),
+      manager: {
+        create: jest.fn().mockImplementation(() => mockKilometersLog),
+        save: jest
+          .fn()
+          .mockImplementation(() => Promise.resolve(mockKilometersLog)),
+      },
+    };
+
+    mockDataSource = {
+      createQueryRunner: jest.fn().mockReturnValue(mockQueryRunner),
+    } as unknown as jest.Mocked<DataSource>;
+
+    mockVehicleKilometersService = {} as jest.Mocked<VehicleKilometersService>;
+
     // Mock AppDataSource.getRepository for validators
     (AppDataSource.getRepository as jest.Mock).mockImplementation(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -124,6 +157,8 @@ describe("MaintenanceRecordsService", () => {
       mockMaintenanceRepo,
       mockVehicleRepo,
       mockUserRepo,
+      mockDataSource,
+      mockVehicleKilometersService,
     );
   });
 
@@ -138,7 +173,7 @@ describe("MaintenanceRecordsService", () => {
       expect(result.total).toBe(1);
       expect(result.items).toHaveLength(1);
       expect(result.items[0].id).toBe("record-1");
-      expect(result.items[0].kilometers).toBe(5000);
+      expect(result.items[0].kilometersLog.kilometers).toBe(5000);
       expect(mockRecordRepo.findAndCount).toHaveBeenCalledWith({
         pagination: { limit: 10, offset: 0 },
       });
@@ -177,7 +212,7 @@ describe("MaintenanceRecordsService", () => {
 
       expect(result).toBeDefined();
       expect(result?.id).toBe("record-1");
-      expect(result?.kilometers).toBe(5000);
+      expect(result?.kilometersLog.kilometers).toBe(5000);
       expect(mockRecordRepo.findOne).toHaveBeenCalledWith("record-1");
     });
 
@@ -229,7 +264,7 @@ describe("MaintenanceRecordsService", () => {
       const result = await service.create(input);
 
       expect(result).toBeDefined();
-      expect(result!.kilometers).toBe(5000);
+      expect(result!.kilometersLog.kilometers).toBe(5000);
       expect(mockMaintenanceRecordEntityRepo.save).toHaveBeenCalled();
     });
 

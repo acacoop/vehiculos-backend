@@ -69,7 +69,7 @@ export class VehicleACLController extends BaseController<VehicleACLFilters> {
     return this.service.create(validated);
   }
 
-  protected async updateService(id: string, data: unknown) {
+  protected async updateService(id: string, data: unknown, _req: Request) {
     const validated = VehicleACLUpdateSchema.parse(data);
     return this.service.update(id, validated);
   }

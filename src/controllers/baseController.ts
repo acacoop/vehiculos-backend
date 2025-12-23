@@ -126,7 +126,7 @@ export abstract class BaseController<TFilters = Record<string, string>> {
       );
     }
 
-    const item = await this.updateService(id, req.body);
+    const item = await this.updateService(id, req.body, req);
 
     if (!item) {
       throw new AppError(
@@ -175,6 +175,7 @@ export abstract class BaseController<TFilters = Record<string, string>> {
   protected abstract updateService(
     id: string,
     data: unknown,
+    req: Request,
   ): Promise<unknown | null>;
 
   protected abstract deleteService(id: string): Promise<boolean>;

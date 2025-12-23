@@ -3,6 +3,7 @@ import { type MaintenanceCategory } from "@/schemas/maintenanceCategory";
 import { MaintenanceCategoriesService } from "@/services/maintenanceCategoriesService";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import { MaintenanceCategoryFilters } from "@/repositories/interfaces/IMaintenanceCategoryRepository";
+import type { Request } from "express";
 
 /**
  * MaintenanceCategoriesController - Manages maintenance categories
@@ -33,7 +34,7 @@ export class MaintenanceCategoriesController extends BaseController<MaintenanceC
     return await this.service.create(categoryData);
   }
 
-  protected async updateService(id: string, data: unknown) {
+  protected async updateService(id: string, data: unknown, _req: Request) {
     const categoryData = data as Partial<MaintenanceCategory>;
     return await this.service.update(id, categoryData);
   }

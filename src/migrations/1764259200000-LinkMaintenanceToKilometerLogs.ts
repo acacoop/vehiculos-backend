@@ -12,9 +12,9 @@ export class LinkMaintenanceToKilometerLogs1764259200000
       ADD [kilometers_log_id] uniqueidentifier NULL
     `);
 
-    // Add kilometers_log_id column to maintenance_checklists table
+    // Add kilometers_log_id column to quarterly_controls table
     await queryRunner.query(`
-      ALTER TABLE [maintenance_checklists] 
+      ALTER TABLE [quarterly_controls] 
       ADD [kilometers_log_id] uniqueidentifier NULL
     `);
 
@@ -27,34 +27,30 @@ export class LinkMaintenanceToKilometerLogs1764259200000
       ON DELETE NO ACTION
     `);
 
-    // Add foreign key constraint for maintenance_checklists -> vehicle_kilometers
+    // Add foreign key constraint for quarterly_controls -> vehicle_kilometers
     await queryRunner.query(`
-      ALTER TABLE [maintenance_checklists]
-      ADD CONSTRAINT [FK_maintenance_checklists_kilometers_log]
+      ALTER TABLE [quarterly_controls]
+      ADD CONSTRAINT [FK_quarterly_controls_kilometers_log]
       FOREIGN KEY ([kilometers_log_id]) 
       REFERENCES [vehicle_kilometers]([id]) 
       ON DELETE NO ACTION
     `);
 
-    // Note: The vehicle_kilometers table uses datetime for the date column,
-    // which means the unique constraint is per vehicle per datetime (not just date).
-    // This allows multiple readings per day for the same vehicle.
-    //
-    // We cannot migrate existing data automatically because:
-    // 1. maintenance_records.kilometers is a plain number, not linked to a log entry
-    // 2. We would need to create new vehicle_kilometers entries for each existing record
-    // 3. This would require knowing the exact date/time of each reading
-    //
-    // Manual migration steps if you have existing data:
-    // 1. For each maintenance_record, create a corresponding vehicle_kilometers entry
-    // 2. Link the maintenance_record to the new vehicle_kilometers entry
-    // 3. Then drop the old kilometers column
-    //
-    // For now, we'll leave the old kilometers column in place to avoid data loss.
-    // In a future migration, once all records are migrated, we can drop it.
+    // Drop the old kilometers column from maintenance_records since entity no longer has it
+    await queryRunner.query(`
+      ALTER TABLE [maintenance_records] DROP CONSTRAINT IF EXISTS [CK__maintenan__kilom__66603565]
+    `);
+    await queryRunner.query(`
+      ALTER TABLE [maintenance_records] DROP COLUMN [kilometers]
+    `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
+    // Add back the kilometers column
+    await queryRunner.query(`
+      ALTER TABLE [maintenance_records] ADD [kilometers] int NOT NULL DEFAULT 0
+    `);
+
     // Drop foreign key constraints
     await queryRunner.query(`
       ALTER TABLE [maintenance_records]
@@ -62,8 +58,8 @@ export class LinkMaintenanceToKilometerLogs1764259200000
     `);
 
     await queryRunner.query(`
-      ALTER TABLE [maintenance_checklists]
-      DROP CONSTRAINT [FK_maintenance_checklists_kilometers_log]
+      ALTER TABLE [quarterly_controls]
+      DROP CONSTRAINT [FK_quarterly_controls_kilometers_log]
     `);
 
     // Drop the columns
@@ -73,7 +69,7 @@ export class LinkMaintenanceToKilometerLogs1764259200000
     `);
 
     await queryRunner.query(`
-      ALTER TABLE [maintenance_checklists] 
+      ALTER TABLE [quarterly_controls] 
       DROP COLUMN [kilometers_log_id]
     `);
   }

@@ -676,7 +676,13 @@ async function createSampleVehicles(
     },
   ];
 
-  const vehicles = vehicleRepo.create(vehiclesData);
+  // Add registrationDate based on vehicle year
+  const vehiclesWithRegistration = vehiclesData.map((v) => ({
+    ...v,
+    registrationDate: `${v.year}-01-15`,
+  }));
+
+  const vehicles = vehicleRepo.create(vehiclesWithRegistration);
   return vehicleRepo.save(vehicles);
 }
 
@@ -1294,6 +1300,7 @@ async function createMaintenanceRecords(
   maintenances: Maintenance[],
 ): Promise<MaintenanceRecord[]> {
   const recordRepo = AppDataSource.getRepository(MaintenanceRecord);
+  const kmLogRepo = AppDataSource.getRepository(VehicleKilometers);
 
   // Helper functions
   const findUser = (email: string) => users.find((u) => u.email === email)!;
@@ -1329,8 +1336,30 @@ async function createMaintenanceRecords(
     },
   ];
 
-  const records = recordRepo.create(recordsData);
-  const savedRecords = await recordRepo.save(records);
+  // Create kilometer logs first, then link to maintenance records
+  const savedRecords: MaintenanceRecord[] = [];
+  for (const data of recordsData) {
+    // Create the kilometer log
+    const kmLog = kmLogRepo.create({
+      vehicle: data.vehicle,
+      user: data.user,
+      date: new Date(data.date),
+      kilometers: data.kilometers,
+    });
+    const savedKmLog = await kmLogRepo.save(kmLog);
+
+    // Create the maintenance record with the km log reference
+    const record = recordRepo.create({
+      maintenance: data.maintenance,
+      vehicle: data.vehicle,
+      user: data.user,
+      date: data.date,
+      kilometersLog: savedKmLog,
+      notes: data.notes,
+    });
+    const savedRecord = await recordRepo.save(record);
+    savedRecords.push(savedRecord);
+  }
 
   return savedRecords;
 }
