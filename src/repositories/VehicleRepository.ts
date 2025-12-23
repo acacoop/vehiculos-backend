@@ -43,11 +43,36 @@ export class VehicleRepository implements IVehicleRepository {
     applyFilters(qb, filters, {
       licensePlate: { field: "v.licensePlate" },
       year: { field: "v.year", transform: (v) => Number(v) },
+      minYear: { field: "v.year", operator: ">=", transform: (v) => Number(v) },
+      maxYear: { field: "v.year", operator: "<=", transform: (v) => Number(v) },
       brandId: { field: "b.id" },
       modelId: { field: "m.id" },
-      brand: { field: "b.name", operator: "LIKE" },
-      model: { field: "m.name", operator: "LIKE" },
+      fuelType: { field: "v.fuelType" },
+      registrationDateFrom: { field: "v.registrationDate", operator: ">=" },
+      registrationDateTo: { field: "v.registrationDate", operator: "<=" },
     });
+
+    // Apply kilometer range filters using subquery for latest kilometers
+    if (filters?.minKilometers || filters?.maxKilometers) {
+      qb.innerJoin(
+        "vehicle_kilometers",
+        "latestKm",
+        `latestKm.vehicle_id = v.id AND latestKm.date = (
+          SELECT MAX(vk2.date) FROM vehicle_kilometers vk2 WHERE vk2.vehicle_id = v.id
+        )`,
+      );
+
+      if (filters.minKilometers) {
+        qb.andWhere("latestKm.kilometers >= :minKilometers", {
+          minKilometers: Number(filters.minKilometers),
+        });
+      }
+      if (filters.maxKilometers) {
+        qb.andWhere("latestKm.kilometers < :maxKilometers", {
+          maxKilometers: Number(filters.maxKilometers),
+        });
+      }
+    }
 
     // Pagination
     const { limit, offset } = resolvePagination(pagination);

@@ -28,6 +28,7 @@ describe("VehicleKilometersService", () => {
     id: "vehicle-1",
     licensePlate: "ABC123",
     year: 2020,
+    registrationDate: "2020-01-01",
     model: {
       id: "model-1",
       name: "Corolla",

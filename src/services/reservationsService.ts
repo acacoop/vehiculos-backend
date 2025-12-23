@@ -6,7 +6,6 @@ import {
   validateUserExists,
   validateVehicleExists,
 } from "@/utils/validation/entity";
-import { validateEndDateAfterStartDate } from "@/utils/validation/date";
 import {
   IReservationRepository,
   ReservationFilters,
@@ -105,13 +104,32 @@ export class ReservationsService {
     return rows.map(mapEntity);
   }
   async getTodayByUserId(userId: string) {
-    const today = new Date().toISOString().split("T")[0];
+    const now = new Date();
+    const startOfDay = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+    const endOfDay = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      23,
+      59,
+      59,
+      999,
+    );
     const rows = await this.repo
       .qb()
       .leftJoinAndSelect("r.user", "user")
       .leftJoinAndSelect("r.vehicle", "vehicle")
       .where("r.user.id = :userId", { userId })
-      .andWhere("r.startDate = :today", { today })
+      .andWhere("r.startDate >= :startOfDay", {
+        startOfDay: startOfDay.toISOString(),
+      })
+      .andWhere("r.startDate <= :endOfDay", {
+        endOfDay: endOfDay.toISOString(),
+      })
       .orderBy("r.startDate", "DESC")
       .getMany();
     return rows.map(mapEntity);
@@ -123,18 +141,13 @@ export class ReservationsService {
     await validateUserExists(userId);
     await validateVehicleExists(vehicleId);
 
-    // Validate date format
-    const startDateStr = startDate.toISOString().split("T")[0];
-    const endDateStr = endDate.toISOString().split("T")[0];
-    validateEndDateAfterStartDate(startDateStr, endDateStr);
-
     // Check for overlapping reservations
     const overlapQuery = this.repo.qb();
     applyOverlapCheck(overlapQuery, {
       entityId: vehicleId,
       entityField: "r.vehicle.id",
-      startDate: startDateStr,
-      endDate: endDateStr,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
       excludeId: undefined,
       startField: "r.startDate",
       endField: "r.endDate",
@@ -152,13 +165,81 @@ export class ReservationsService {
       where: { id: vehicleId },
     });
     if (!user || !vehicle) return null;
+
     const entity = this.repo.create({
       user,
       vehicle,
-      startDate: startDate.toISOString().split("T")[0],
-      endDate: endDate.toISOString().split("T")[0],
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
     });
     const saved = await this.repo.save(entity);
     return mapEntity(saved);
+  }
+
+  async update(
+    id: string,
+    reservation: Partial<Reservation>,
+  ): Promise<ReservationWithDetails | null> {
+    const existing = await this.repo.findOne(id);
+    if (!existing) return null;
+
+    if (reservation.userId) {
+      await validateUserExists(reservation.userId);
+      const user = await this.userRepo.findOne({
+        where: { id: reservation.userId },
+      });
+      if (user) existing.user = user;
+    }
+
+    if (reservation.vehicleId) {
+      await validateVehicleExists(reservation.vehicleId);
+      const vehicle = await this.vehicleRepo.findOne({
+        where: { id: reservation.vehicleId },
+      });
+      if (vehicle) existing.vehicle = vehicle;
+    }
+
+    if (reservation.startDate) {
+      existing.startDate = reservation.startDate.toISOString();
+    }
+
+    if (reservation.endDate) {
+      existing.endDate = reservation.endDate.toISOString();
+    }
+
+    // Check for overlapping reservations
+    const vehicleId = reservation.vehicleId || existing.vehicle.id;
+    const startDate = reservation.startDate
+      ? reservation.startDate.toISOString()
+      : existing.startDate;
+    const endDate = reservation.endDate
+      ? reservation.endDate.toISOString()
+      : existing.endDate;
+
+    const overlapQuery = this.repo.qb();
+    applyOverlapCheck(overlapQuery, {
+      entityId: vehicleId,
+      entityField: "r.vehicle.id",
+      startDate,
+      endDate,
+      excludeId: id,
+      startField: "r.startDate",
+      endField: "r.endDate",
+      idField: "r.id",
+    });
+    const overlap = await overlapQuery.getOne();
+    if (overlap) {
+      throw new Error(
+        `Vehicle already has a reservation overlapping (${overlap.startDate} to ${overlap.endDate})`,
+      );
+    }
+
+    const saved = await this.repo.save(existing);
+    return mapEntity(saved);
+  }
+
+  async delete(id: string): Promise<boolean> {
+    const result = await this.repo.delete(id);
+    return (result.affected ?? 0) > 0;
   }
 }

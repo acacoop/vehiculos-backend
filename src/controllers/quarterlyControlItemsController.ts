@@ -1,23 +1,23 @@
 import { BaseController } from "@/controllers/baseController";
 import { AppError } from "@/middleware/errorHandler";
-import { MaintenanceChecklistItemSchema } from "@/schemas/maintenanceChecklistItem";
-import { MaintenanceChecklistItemsService } from "@/services/maintenanceChecklistItemsService";
-import type { MaintenanceChecklistItem } from "@/schemas/maintenanceChecklistItem";
+import { QuarterlyControlItemSchema } from "@/schemas/quarterlyControlItem";
+import { QuarterlyControlItemsService } from "@/services/quarterlyControlItemsService";
+import type { QuarterlyControlItem } from "@/schemas/quarterlyControlItem";
 import { ServiceFactory } from "@/factories/serviceFactory";
 import { AppDataSource } from "@/db";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
-import { MaintenanceChecklistItemFilters } from "@/repositories/interfaces/IMaintenanceChecklistItemRepository";
+import { QuarterlyControlItemFilters } from "@/repositories/interfaces/IQuarterlyControlItemRepository";
 
-export class MaintenanceChecklistItemsController extends BaseController<MaintenanceChecklistItemFilters> {
-  constructor(private readonly service: MaintenanceChecklistItemsService) {
+export class QuarterlyControlItemsController extends BaseController<QuarterlyControlItemFilters> {
+  constructor(private readonly service: QuarterlyControlItemsService) {
     super({
-      resourceName: "MaintenanceChecklistItem",
-      allowedFilters: ["maintenanceChecklistId", "status"],
+      resourceName: "QuarterlyControlItem",
+      allowedFilters: ["quarterlyControlId", "status"],
     });
   }
 
   protected async getAllService(
-    options: RepositoryFindOptions<Partial<MaintenanceChecklistItemFilters>>,
+    options: RepositoryFindOptions<Partial<QuarterlyControlItemFilters>>,
   ) {
     return this.service.getAll(options);
   }
@@ -27,10 +27,10 @@ export class MaintenanceChecklistItemsController extends BaseController<Maintena
   }
 
   protected async createService(data: unknown) {
-    const maintenanceChecklistItem = MaintenanceChecklistItemSchema.parse(data);
+    const quarterlyControlItem = QuarterlyControlItemSchema.parse(data);
     try {
       return await this.service.create(
-        maintenanceChecklistItem as MaintenanceChecklistItem,
+        quarterlyControlItem as QuarterlyControlItem,
       );
     } catch (error) {
       if (error instanceof Error) {
@@ -46,7 +46,7 @@ export class MaintenanceChecklistItemsController extends BaseController<Maintena
   }
 
   protected async updateService(id: string, data: unknown) {
-    const parsed = MaintenanceChecklistItemSchema.partial().parse(data);
+    const parsed = QuarterlyControlItemSchema.partial().parse(data);
     try {
       return await this.service.update(id, parsed);
     } catch (error) {
@@ -67,11 +67,11 @@ export class MaintenanceChecklistItemsController extends BaseController<Maintena
   }
 }
 
-export function createMaintenanceChecklistItemsController() {
+export function createQuarterlyControlItemsController() {
   const serviceFactory = new ServiceFactory(AppDataSource);
-  const service = serviceFactory.createMaintenanceChecklistItemsService();
-  return new MaintenanceChecklistItemsController(service);
+  const service = serviceFactory.createQuarterlyControlItemsService();
+  return new QuarterlyControlItemsController(service);
 }
 
-export const maintenanceChecklistItemsController =
-  createMaintenanceChecklistItemsController();
+export const quarterlyControlItemsController =
+  createQuarterlyControlItemsController();

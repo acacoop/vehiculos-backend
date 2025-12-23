@@ -32,11 +32,13 @@ import { VehicleModel } from "@/entities/VehicleModel";
 import { VehiclesService } from "@/services/vehiclesService";
 import { UserRolesService } from "@/services/userRolesService";
 import { UserRoleRepository } from "@/repositories/UserRoleRepository";
-import { MaintenanceChecklistRepository } from "@/repositories/MaintenanceChecklistRepository";
-import { MaintenanceChecklistItemRepository } from "@/repositories/MaintenanceChecklistItemRepository";
-import { MaintenanceChecklistsService } from "@/services/maintenanceChecklistsService";
-import { MaintenanceChecklistItemsService } from "@/services/maintenanceChecklistItemsService";
+import { QuarterlyControlRepository } from "@/repositories/QuarterlyControlRepository";
+import { QuarterlyControlItemRepository } from "@/repositories/QuarterlyControlItemRepository";
+import { QuarterlyControlsService } from "@/services/quarterlyControlsService";
+import { QuarterlyControlItemsService } from "@/services/quarterlyControlItemsService";
 import { VehicleKilometersService } from "@/services/vehicleKilometersService";
+import { MetricsRepository } from "@/repositories/MetricsRepository";
+import { MetricsService } from "@/services/metricsService";
 
 /**
  * Service Factory - Centralizes creation of service instances
@@ -162,12 +164,12 @@ export class ServiceFactory {
     return new UserRolesService(userRoleRepo, userRepo);
   }
 
-  createMaintenanceChecklistsService(): MaintenanceChecklistsService {
-    const repo = new MaintenanceChecklistRepository(this.dataSource);
+  createQuarterlyControlsService(): QuarterlyControlsService {
+    const repo = new QuarterlyControlRepository(this.dataSource);
     const userRepo = this.dataSource.getRepository(User);
     const vehicleRepo = this.dataSource.getRepository(Vehicle);
     const vehicleKilometersService = new VehicleKilometersService();
-    return new MaintenanceChecklistsService(
+    return new QuarterlyControlsService(
       repo,
       userRepo,
       vehicleRepo,
@@ -176,10 +178,15 @@ export class ServiceFactory {
     );
   }
 
-  createMaintenanceChecklistItemsService(): MaintenanceChecklistItemsService {
-    const repo = new MaintenanceChecklistItemRepository(this.dataSource);
-    const checklistService = this.createMaintenanceChecklistsService();
-    return new MaintenanceChecklistItemsService(repo, checklistService);
+  createQuarterlyControlItemsService(): QuarterlyControlItemsService {
+    const repo = new QuarterlyControlItemRepository(this.dataSource);
+    const controlService = this.createQuarterlyControlsService();
+    return new QuarterlyControlItemsService(repo, controlService);
+  }
+
+  createMetricsService(): MetricsService {
+    const metricsRepo = new MetricsRepository(this.dataSource);
+    return new MetricsService(metricsRepo);
   }
 
   // Add more service factory methods here as we refactor them

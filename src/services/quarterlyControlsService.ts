@@ -1,66 +1,66 @@
-import { MaintenanceChecklist } from "@/entities/MaintenanceChecklist";
+import { QuarterlyControl } from "@/entities/QuarterlyControl";
 import {
-  IMaintenanceChecklistRepository,
-  MaintenanceChecklistFilters,
-} from "@/repositories/interfaces/IMaintenanceChecklistRepository";
+  IQuarterlyControlRepository,
+  QuarterlyControlFilters,
+} from "@/repositories/interfaces/IQuarterlyControlRepository";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import type {
-  MaintenanceChecklistDTO,
-  MaintenanceChecklist as MaintenanceChecklistSchema,
-} from "@/schemas/maintenanceChecklist";
+  QuarterlyControlDTO,
+  QuarterlyControl as QuarterlyControlSchema,
+} from "@/schemas/quarterlyControl";
 import { validateVehicleExists } from "@/utils/validation/entity";
 import { User } from "@/entities/User";
 import { Vehicle } from "@/entities/Vehicle";
 import { VehicleKilometers } from "@/entities/VehicleKilometers";
 import { Repository, DataSource } from "typeorm";
-import { MaintenanceChecklistItemStatus } from "@/enums/MaintenanceChecklistItemStatusEnum";
-import { MaintenanceChecklistItem } from "@/entities/MaintenanceChecklistItem";
+import { QuarterlyControlItemStatus } from "@/enums/QuarterlyControlItemStatusEnum";
+import { QuarterlyControlItem } from "@/entities/QuarterlyControlItem";
 import { VehicleKilometersService } from "@/services/vehicleKilometersService";
 
-function map(mc: MaintenanceChecklist): MaintenanceChecklistDTO {
+function map(qc: QuarterlyControl): QuarterlyControlDTO {
   return {
-    id: mc.id,
+    id: qc.id,
     vehicle: {
-      id: mc.vehicle.id,
-      licensePlate: mc.vehicle.licensePlate,
-      year: mc.vehicle.year,
-      chassisNumber: mc.vehicle.chassisNumber ?? undefined,
-      engineNumber: mc.vehicle.engineNumber ?? undefined,
-      transmission: mc.vehicle.transmission ?? undefined,
-      fuelType: mc.vehicle.fuelType ?? undefined,
+      id: qc.vehicle.id,
+      licensePlate: qc.vehicle.licensePlate,
+      year: qc.vehicle.year,
+      chassisNumber: qc.vehicle.chassisNumber ?? undefined,
+      engineNumber: qc.vehicle.engineNumber ?? undefined,
+      transmission: qc.vehicle.transmission ?? undefined,
+      fuelType: qc.vehicle.fuelType ?? undefined,
       model: {
-        id: mc.vehicle.model.id,
-        name: mc.vehicle.model.name,
-        vehicleType: mc.vehicle.model.vehicleType ?? undefined,
+        id: qc.vehicle.model.id,
+        name: qc.vehicle.model.name,
+        vehicleType: qc.vehicle.model.vehicleType ?? undefined,
         brand: {
-          id: mc.vehicle.model.brand.id,
-          name: mc.vehicle.model.brand.name,
+          id: qc.vehicle.model.brand.id,
+          name: qc.vehicle.model.brand.name,
         },
       },
     },
-    year: mc.year,
-    quarter: mc.quarter,
-    intendedDeliveryDate: mc.intendedDeliveryDate,
-    filledBy: mc.filledBy
+    year: qc.year,
+    quarter: qc.quarter,
+    intendedDeliveryDate: qc.intendedDeliveryDate,
+    filledBy: qc.filledBy
       ? {
-          id: mc.filledBy.id,
-          firstName: mc.filledBy.firstName,
-          lastName: mc.filledBy.lastName,
-          cuit: mc.filledBy.cuit,
-          email: mc.filledBy.email,
-          entraId: mc.filledBy.entraId,
-          active: mc.filledBy.active,
+          id: qc.filledBy.id,
+          firstName: qc.filledBy.firstName,
+          lastName: qc.filledBy.lastName,
+          cuit: qc.filledBy.cuit,
+          email: qc.filledBy.email,
+          entraId: qc.filledBy.entraId,
+          active: qc.filledBy.active,
         }
       : undefined,
-    filledAt: mc.filledAt ?? undefined,
-    kilometersLog: mc.kilometersLog
+    filledAt: qc.filledAt ?? undefined,
+    kilometersLog: qc.kilometersLog
       ? {
-          id: mc.kilometersLog.id,
-          kilometers: mc.kilometersLog.kilometers,
-          date: mc.kilometersLog.date,
+          id: qc.kilometersLog.id,
+          kilometers: qc.kilometersLog.kilometers,
+          date: qc.kilometersLog.date,
         }
       : undefined,
-    items: (mc.items || []).map((item) => ({
+    items: (qc.items || []).map((item) => ({
       id: item.id,
       category: item.category,
       title: item.title,
@@ -70,9 +70,9 @@ function map(mc: MaintenanceChecklist): MaintenanceChecklistDTO {
   };
 }
 
-export class MaintenanceChecklistsService {
+export class QuarterlyControlsService {
   constructor(
-    private readonly repository: IMaintenanceChecklistRepository,
+    private readonly repository: IQuarterlyControlRepository,
     private readonly userRepo: Repository<User>,
     private readonly vehicleRepo: Repository<Vehicle>,
     private readonly dataSource: DataSource,
@@ -80,21 +80,19 @@ export class MaintenanceChecklistsService {
   ) {}
 
   async getAll(
-    options: RepositoryFindOptions<Partial<MaintenanceChecklistFilters>>,
-  ): Promise<{ items: MaintenanceChecklistDTO[]; total: number }> {
+    options: RepositoryFindOptions<Partial<QuarterlyControlFilters>>,
+  ): Promise<{ items: QuarterlyControlDTO[]; total: number }> {
     const [entities, total] = await this.repository.findAndCount(options);
     const items = entities.map(map);
     return { items, total };
   }
 
-  async getById(id: string): Promise<MaintenanceChecklistDTO | null> {
+  async getById(id: string): Promise<QuarterlyControlDTO | null> {
     const entity = await this.repository.findOne(id);
     return entity ? map(entity) : null;
   }
 
-  async create(
-    data: MaintenanceChecklistSchema,
-  ): Promise<MaintenanceChecklistDTO> {
+  async create(data: QuarterlyControlSchema): Promise<QuarterlyControlDTO> {
     await validateVehicleExists(data.vehicleId);
 
     const vehicle = await this.vehicleRepo.findOne({
@@ -106,7 +104,7 @@ export class MaintenanceChecklistsService {
       ? await this.userRepo.findOne({ where: { id: data.filledBy } })
       : null;
 
-    const entityData: Partial<MaintenanceChecklist> = {
+    const entityData: Partial<QuarterlyControl> = {
       vehicle,
       year: data.year,
       quarter: data.quarter,
@@ -122,8 +120,8 @@ export class MaintenanceChecklistsService {
 
   async update(
     id: string,
-    data: Partial<MaintenanceChecklistSchema>,
-  ): Promise<MaintenanceChecklistDTO | null> {
+    data: Partial<QuarterlyControlSchema>,
+  ): Promise<QuarterlyControlDTO | null> {
     const existing = await this.repository.findOne(id);
     if (!existing) return null;
 
@@ -165,10 +163,10 @@ export class MaintenanceChecklistsService {
     intendedDeliveryDate: string;
     items: {
       title: string;
-      status: MaintenanceChecklistItemStatus;
+      status: QuarterlyControlItemStatus;
       observations: string;
     }[];
-  }): Promise<MaintenanceChecklistDTO> {
+  }): Promise<QuarterlyControlDTO> {
     await validateVehicleExists(data.vehicleId);
 
     const vehicle = await this.vehicleRepo.findOne({
@@ -182,25 +180,22 @@ export class MaintenanceChecklistsService {
     await queryRunner.startTransaction();
 
     try {
-      // Create checklist
-      const checklistData: Partial<MaintenanceChecklist> = {
+      // Create control
+      const controlData: Partial<QuarterlyControl> = {
         vehicle,
         year: data.year,
         quarter: data.quarter,
         intendedDeliveryDate: data.intendedDeliveryDate,
       };
 
-      const checklist = queryRunner.manager.create(
-        MaintenanceChecklist,
-        checklistData,
-      );
-      const savedChecklist = await queryRunner.manager.save(checklist);
+      const control = queryRunner.manager.create(QuarterlyControl, controlData);
+      const savedControl = await queryRunner.manager.save(control);
 
       // Create items
       if (data.items && data.items.length > 0) {
         const items = data.items.map((item) =>
-          queryRunner.manager.create(MaintenanceChecklistItem, {
-            maintenanceChecklist: savedChecklist,
+          queryRunner.manager.create(QuarterlyControlItem, {
+            quarterlyControl: savedControl,
             title: item.title,
             status: item.status,
             observations: item.observations,
@@ -212,8 +207,8 @@ export class MaintenanceChecklistsService {
       await queryRunner.commitTransaction();
 
       // Fetch the complete entity with relations
-      const complete = await this.repository.findOne(savedChecklist.id);
-      if (!complete) throw new Error("Failed to fetch created checklist");
+      const complete = await this.repository.findOne(savedControl.id);
+      if (!complete) throw new Error("Failed to fetch created control");
 
       return map(complete);
     } catch (error) {
@@ -231,11 +226,12 @@ export class MaintenanceChecklistsService {
       kilometers: number;
       items: {
         id: string;
-        status: MaintenanceChecklistItemStatus;
+        status: QuarterlyControlItemStatus;
         observations: string;
       }[];
     },
-  ): Promise<MaintenanceChecklistDTO | null> {
+    userId?: string,
+  ): Promise<QuarterlyControlDTO | null> {
     const existing = await this.repository.findOne(id);
     if (!existing) return null;
 
@@ -244,23 +240,30 @@ export class MaintenanceChecklistsService {
     await queryRunner.startTransaction();
 
     try {
-      // Validate that all items belong to this checklist
+      // Update filledBy and filledAt
+      if (userId) {
+        const user = await this.userRepo.findOne({ where: { id: userId } });
+        if (user) {
+          existing.filledBy = user;
+          existing.filledAt = new Date().toISOString();
+          await queryRunner.manager.save(existing);
+        }
+      }
+
+      // Validate that all items belong to this control
       for (const itemUpdate of data.items) {
-        const item = await queryRunner.manager.findOne(
-          MaintenanceChecklistItem,
-          {
-            where: { id: itemUpdate.id },
-            relations: ["maintenanceChecklist"],
-          },
-        );
+        const item = await queryRunner.manager.findOne(QuarterlyControlItem, {
+          where: { id: itemUpdate.id },
+          relations: ["quarterlyControl"],
+        });
 
         if (!item) {
           throw new Error(`Item with id ${itemUpdate.id} not found`);
         }
 
-        if (item.maintenanceChecklist.id !== id) {
+        if (item.quarterlyControl.id !== id) {
           throw new Error(
-            `Item with id ${itemUpdate.id} does not belong to this checklist`,
+            `Item with id ${itemUpdate.id} does not belong to this control`,
           );
         }
       }
@@ -297,10 +300,9 @@ export class MaintenanceChecklistsService {
 
       // Update items
       for (const itemUpdate of data.items) {
-        const item = await queryRunner.manager.findOne(
-          MaintenanceChecklistItem,
-          { where: { id: itemUpdate.id } },
-        );
+        const item = await queryRunner.manager.findOne(QuarterlyControlItem, {
+          where: { id: itemUpdate.id },
+        });
         if (item) {
           item.status = itemUpdate.status;
           item.observations = itemUpdate.observations;

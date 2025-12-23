@@ -13,6 +13,7 @@ export const VehicleInputSchema = z.object({
   engineNumber: z.string().optional(),
   transmission: z.string().optional(),
   fuelType: z.string().optional(),
+  registrationDate: z.string().date(),
 });
 
 // For updates (PATCH/PUT) all fields optional except none required
@@ -29,6 +30,7 @@ export const VehicleSchema = z.object({
   engineNumber: z.string().optional().nullable(),
   transmission: z.string().optional().nullable(),
   fuelType: z.string().optional().nullable(),
+  registrationDate: z.string(),
   model: z.object({
     id: z.string().uuid(),
     name: z.string(),

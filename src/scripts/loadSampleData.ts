@@ -16,8 +16,8 @@ import { MaintenanceCategory } from "@/entities/MaintenanceCategory";
 import { Maintenance } from "@/entities/Maintenance";
 import { Assignment } from "@/entities/Assignment";
 import { MaintenanceRequirement } from "@/entities/MaintenanceRequirement";
-import { MaintenanceChecklist } from "@/entities/MaintenanceChecklist";
-import { MaintenanceChecklistItem } from "@/entities/MaintenanceChecklistItem";
+import { QuarterlyControl } from "@/entities/QuarterlyControl";
+import { QuarterlyControlItem } from "@/entities/QuarterlyControlItem";
 import { Reservation } from "@/entities/Reservation";
 import { VehicleResponsible } from "@/entities/VehicleResponsible";
 import { VehicleACL } from "@/entities/VehicleACL";
@@ -26,7 +26,7 @@ import { VehicleKilometers } from "@/entities/VehicleKilometers";
 import { MaintenanceRecord } from "@/entities/MaintenanceRecord";
 import { UserRoleEnum } from "@/enums/UserRoleEnum";
 import { PermissionType } from "@/enums/PermissionType";
-import { MaintenanceChecklistItemStatus } from "@/enums/MaintenanceChecklistItemStatusEnum";
+import { QuarterlyControlItemStatus } from "@/enums/QuarterlyControlItemStatusEnum";
 
 type SampleDataStats = {
   users: number;
@@ -41,8 +41,8 @@ type SampleDataStats = {
   vehicleKilometers: number;
   vehicleACLs: number;
   userRoles: number;
-  maintenanceChecklists: number;
-  maintenanceChecklistItems: number;
+  quarterlyControls: number;
+  quarterlyControlItems: number;
 };
 
 async function clearSampleData(): Promise<void> {
@@ -50,10 +50,8 @@ async function clearSampleData(): Promise<void> {
   // Order matters! Delete child records before parents
 
   // 1. Delete records that depend on vehicles, maintenances, and users
-  await AppDataSource.query(
-    "DELETE FROM maintenance_checklist_items WHERE 1=1",
-  );
-  await AppDataSource.query("DELETE FROM maintenance_checklists WHERE 1=1");
+  await AppDataSource.query("DELETE FROM quarterly_control_items WHERE 1=1");
+  await AppDataSource.query("DELETE FROM quarterly_controls WHERE 1=1");
   await AppDataSource.query("DELETE FROM maintenance_records WHERE 1=1");
   await AppDataSource.query("DELETE FROM vehicle_kilometers WHERE 1=1");
   await AppDataSource.query("DELETE FROM reservations WHERE 1=1");
@@ -1337,19 +1335,19 @@ async function createMaintenanceRecords(
   return savedRecords;
 }
 
-async function createSampleMaintenanceChecklists(
+async function createSampleQuarterlyControls(
   users: User[],
   vehicles: Vehicle[],
-): Promise<MaintenanceChecklist[]> {
-  const checklistRepo = AppDataSource.getRepository(MaintenanceChecklist);
+): Promise<QuarterlyControl[]> {
+  const controlRepo = AppDataSource.getRepository(QuarterlyControl);
 
   // Helper functions
   const findUser = (email: string) => users.find((u) => u.email === email)!;
   const findVehicle = (licensePlate: string) =>
     vehicles.find((v) => v.licensePlate === licensePlate)!;
 
-  const checklistsData = [
-    // Checklist for Q4 2024 - ABC123 (Toyota Corolla)
+  const controlsData = [
+    // Control for Q4 2024 - ABC123 (Toyota Corolla)
     {
       vehicle: findVehicle("ABC123"),
       year: 2024,
@@ -1358,7 +1356,7 @@ async function createSampleMaintenanceChecklists(
       filledBy: findUser("roberto.jimenez@sample.test"),
       filledAt: "2024-12-20",
     },
-    // Checklist for Q1 2025 - DEF456 (Honda Civic)
+    // Control for Q1 2025 - DEF456 (Honda Civic)
     {
       vehicle: findVehicle("DEF456"),
       year: 2025,
@@ -1367,7 +1365,7 @@ async function createSampleMaintenanceChecklists(
       filledBy: null,
       filledAt: null,
     },
-    // Checklist for Q4 2024 - MNO345 (Toyota RAV4)
+    // Control for Q4 2024 - MNO345 (Toyota RAV4)
     {
       vehicle: findVehicle("MNO345"),
       year: 2024,
@@ -1376,7 +1374,7 @@ async function createSampleMaintenanceChecklists(
       filledBy: findUser("lucia.castro@sample.test"),
       filledAt: "2024-12-18",
     },
-    // Checklist for Q1 2025 - GHI789 (Nissan Sentra) - pending
+    // Control for Q1 2025 - GHI789 (Nissan Sentra) - pending
     {
       vehicle: findVehicle("GHI789"),
       year: 2025,
@@ -1385,7 +1383,7 @@ async function createSampleMaintenanceChecklists(
       filledBy: null,
       filledAt: null,
     },
-    // Checklist for Q4 2024 - STU901 (Mazda CX-5)
+    // Control for Q4 2024 - STU901 (Mazda CX-5)
     {
       vehicle: findVehicle("STU901"),
       year: 2024,
@@ -1396,20 +1394,20 @@ async function createSampleMaintenanceChecklists(
     },
   ];
 
-  const checklists = checklistRepo.create(checklistsData);
-  const savedChecklists = await checklistRepo.save(checklists);
+  const controls = controlRepo.create(controlsData);
+  const savedControls = await controlRepo.save(controls);
 
-  return savedChecklists;
+  return savedControls;
 }
 
-async function createSampleMaintenanceChecklistItems(
-  checklists: MaintenanceChecklist[],
-): Promise<MaintenanceChecklistItem[]> {
-  const itemRepo = AppDataSource.getRepository(MaintenanceChecklistItem);
+async function createSampleQuarterlyControlItems(
+  controls: QuarterlyControl[],
+): Promise<QuarterlyControlItem[]> {
+  const itemRepo = AppDataSource.getRepository(QuarterlyControlItem);
 
-  // Helper function to find checklist by vehicle license plate and quarter
-  const findChecklist = (licensePlate: string, year: number, quarter: number) =>
-    checklists.find(
+  // Helper function to find control by vehicle license plate and quarter
+  const findControl = (licensePlate: string, year: number, quarter: number) =>
+    controls.find(
       (c) =>
         c.vehicle.licensePlate === licensePlate &&
         c.year === year &&
@@ -1419,133 +1417,133 @@ async function createSampleMaintenanceChecklistItems(
   const itemsData = [
     // Items for ABC123 Q4 2024
     {
-      maintenanceChecklist: findChecklist("ABC123", 2024, 4),
+      quarterlyControl: findControl("ABC123", 2024, 4),
       category: "Mecánico",
       title: "Revisar niveles de fluidos",
-      status: MaintenanceChecklistItemStatus.APROBADO,
+      status: QuarterlyControlItemStatus.APROBADO,
       observations:
         "Todos los niveles correctos. Aceite, refrigerante y frenos OK.",
     },
     {
-      maintenanceChecklist: findChecklist("ABC123", 2024, 4),
+      quarterlyControl: findControl("ABC123", 2024, 4),
       category: "Mecánico",
       title: "Verificar estado de neumáticos",
-      status: MaintenanceChecklistItemStatus.APROBADO,
+      status: QuarterlyControlItemStatus.APROBADO,
       observations: "Presión correcta. Profundidad de dibujo adecuada.",
     },
     {
-      maintenanceChecklist: findChecklist("ABC123", 2024, 4),
+      quarterlyControl: findControl("ABC123", 2024, 4),
       category: "Eléctrico",
       title: "Comprobar sistema de luces",
-      status: MaintenanceChecklistItemStatus.APROBADO,
+      status: QuarterlyControlItemStatus.APROBADO,
       observations: "Todas las luces funcionando correctamente.",
     },
     {
-      maintenanceChecklist: findChecklist("ABC123", 2024, 4),
+      quarterlyControl: findControl("ABC123", 2024, 4),
       category: "Seguridad",
       title: "Inspeccionar frenos",
-      status: MaintenanceChecklistItemStatus.PENDIENTE,
+      status: QuarterlyControlItemStatus.PENDIENTE,
       observations:
         "Se detectó ruido leve en freno delantero derecho. Requiere atención.",
     },
 
-    // Items for DEF456 Q1 2025 (pending checklist)
+    // Items for DEF456 Q1 2025 (pending control)
     {
-      maintenanceChecklist: findChecklist("DEF456", 2025, 1),
+      quarterlyControl: findControl("DEF456", 2025, 1),
       category: "Mecánico",
       title: "Revisar niveles de fluidos",
-      status: MaintenanceChecklistItemStatus.PENDIENTE,
+      status: QuarterlyControlItemStatus.PENDIENTE,
       observations: "",
     },
     {
-      maintenanceChecklist: findChecklist("DEF456", 2025, 1),
+      quarterlyControl: findControl("DEF456", 2025, 1),
       category: "Mecánico",
       title: "Verificar estado de neumáticos",
-      status: MaintenanceChecklistItemStatus.PENDIENTE,
+      status: QuarterlyControlItemStatus.PENDIENTE,
       observations: "",
     },
     {
-      maintenanceChecklist: findChecklist("DEF456", 2025, 1),
+      quarterlyControl: findControl("DEF456", 2025, 1),
       category: "Eléctrico",
       title: "Comprobar sistema de luces",
-      status: MaintenanceChecklistItemStatus.PENDIENTE,
+      status: QuarterlyControlItemStatus.PENDIENTE,
       observations: "",
     },
 
     // Items for MNO345 Q4 2024
     {
-      maintenanceChecklist: findChecklist("MNO345", 2024, 4),
+      quarterlyControl: findControl("MNO345", 2024, 4),
       category: "Mecánico",
       title: "Revisar niveles de fluidos",
-      status: MaintenanceChecklistItemStatus.APROBADO,
+      status: QuarterlyControlItemStatus.APROBADO,
       observations: "Niveles correctos. Se agregó refrigerante menor.",
     },
     {
-      maintenanceChecklist: findChecklist("MNO345", 2024, 4),
+      quarterlyControl: findControl("MNO345", 2024, 4),
       category: "Mecánico",
       title: "Verificar estado de neumáticos",
-      status: MaintenanceChecklistItemStatus.RECHAZADO,
+      status: QuarterlyControlItemStatus.RECHAZADO,
       observations:
         "Neumático trasero izquierdo con presión baja. Inflado y marcado para reemplazo.",
     },
     {
-      maintenanceChecklist: findChecklist("MNO345", 2024, 4),
+      quarterlyControl: findControl("MNO345", 2024, 4),
       category: "Seguridad",
       title: "Inspeccionar frenos",
-      status: MaintenanceChecklistItemStatus.APROBADO,
+      status: QuarterlyControlItemStatus.APROBADO,
       observations: "Pastillas en buen estado. Discos sin desgaste excesivo.",
     },
 
     // Items for GHI789 Q1 2025 (pending)
     {
-      maintenanceChecklist: findChecklist("GHI789", 2025, 1),
+      quarterlyControl: findControl("GHI789", 2025, 1),
       category: "Mecánico",
       title: "Revisar niveles de fluidos",
-      status: MaintenanceChecklistItemStatus.PENDIENTE,
+      status: QuarterlyControlItemStatus.PENDIENTE,
       observations: "",
     },
     {
-      maintenanceChecklist: findChecklist("GHI789", 2025, 1),
+      quarterlyControl: findControl("GHI789", 2025, 1),
       category: "Eléctrico",
       title: "Comprobar batería",
-      status: MaintenanceChecklistItemStatus.PENDIENTE,
+      status: QuarterlyControlItemStatus.PENDIENTE,
       observations: "",
     },
 
     // Items for STU901 Q4 2024
     {
-      maintenanceChecklist: findChecklist("STU901", 2024, 4),
+      quarterlyControl: findControl("STU901", 2024, 4),
       category: "Mecánico",
       title: "Revisar niveles de fluidos",
-      status: MaintenanceChecklistItemStatus.APROBADO,
+      status: QuarterlyControlItemStatus.APROBADO,
       observations: "Todo en orden. Vehículo en excelente estado.",
     },
     {
-      maintenanceChecklist: findChecklist("STU901", 2024, 4),
+      quarterlyControl: findControl("STU901", 2024, 4),
       category: "Mecánico",
       title: "Verificar estado de neumáticos",
-      status: MaintenanceChecklistItemStatus.APROBADO,
+      status: QuarterlyControlItemStatus.APROBADO,
       observations: "Neumáticos nuevos recientemente instalados.",
     },
     {
-      maintenanceChecklist: findChecklist("STU901", 2024, 4),
+      quarterlyControl: findControl("STU901", 2024, 4),
       category: "Eléctrico",
       title: "Comprobar sistema de luces",
-      status: MaintenanceChecklistItemStatus.APROBADO,
+      status: QuarterlyControlItemStatus.APROBADO,
       observations: "Sistema completo funcionando.",
     },
     {
-      maintenanceChecklist: findChecklist("STU901", 2024, 4),
+      quarterlyControl: findControl("STU901", 2024, 4),
       category: "Seguridad",
       title: "Inspeccionar frenos",
-      status: MaintenanceChecklistItemStatus.APROBADO,
+      status: QuarterlyControlItemStatus.APROBADO,
       observations: "Sistema de frenos en perfectas condiciones.",
     },
     {
-      maintenanceChecklist: findChecklist("STU901", 2024, 4),
+      quarterlyControl: findControl("STU901", 2024, 4),
       category: "Carrocería",
       title: "Verificar estado general",
-      status: MaintenanceChecklistItemStatus.APROBADO,
+      status: QuarterlyControlItemStatus.APROBADO,
       observations: "Sin daños visibles. Pintura en buen estado.",
     },
   ];
@@ -1586,13 +1584,12 @@ export async function loadSampleData(): Promise<SampleDataStats> {
     vehicles,
     maintenances,
   );
-  const maintenanceChecklists = await createSampleMaintenanceChecklists(
+  const quarterlyControls = await createSampleQuarterlyControls(
     users,
     vehicles,
   );
-  const maintenanceChecklistItems = await createSampleMaintenanceChecklistItems(
-    maintenanceChecklists,
-  );
+  const quarterlyControlItems =
+    await createSampleQuarterlyControlItems(quarterlyControls);
 
   const stats: SampleDataStats = {
     users: users.length,
@@ -1607,8 +1604,8 @@ export async function loadSampleData(): Promise<SampleDataStats> {
     vehicleKilometers: vehicleKilometers.length,
     vehicleACLs: authStats.vehicleACLs,
     userRoles: authStats.userRoles,
-    maintenanceChecklists: maintenanceChecklists.length,
-    maintenanceChecklistItems: maintenanceChecklistItems.length,
+    quarterlyControls: quarterlyControls.length,
+    quarterlyControlItems: quarterlyControlItems.length,
   };
 
   console.log(`   Brands: ${brands.length}`);
@@ -1627,10 +1624,8 @@ export async function loadSampleData(): Promise<SampleDataStats> {
   console.log(`   Vehicle Kilometers: ${stats.vehicleKilometers}`);
   console.log(`   Vehicle ACLs: ${stats.vehicleACLs}`);
   console.log(`   User Roles: ${stats.userRoles}`);
-  console.log(`   Maintenance Checklists: ${stats.maintenanceChecklists}`);
-  console.log(
-    `   Maintenance Checklist Items: ${stats.maintenanceChecklistItems}`,
-  );
+  console.log(`   Quarterly Controls: ${stats.quarterlyControls}`);
+  console.log(`   Quarterly Control Items: ${stats.quarterlyControlItems}`);
 
   return stats;
 }

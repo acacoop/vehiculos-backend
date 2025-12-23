@@ -29,6 +29,7 @@ describe("VehiclesService", () => {
     id: "vehicle-1",
     licensePlate: "ABC123",
     year: 2020,
+    registrationDate: "2020-01-01",
     chassisNumber: "CHASSIS123",
     engineNumber: "ENGINE123",
     vehicleType: "sedan",
@@ -128,6 +129,7 @@ describe("VehiclesService", () => {
         licensePlate: "ABC123",
         modelId: "model-1",
         year: 2020,
+        registrationDate: "2020-01-01",
         chassisNumber: "CHASSIS123",
         engineNumber: "ENGINE123",
         vehicleType: "sedan",
@@ -153,6 +155,7 @@ describe("VehiclesService", () => {
         licensePlate: "ABC123",
         modelId: "invalid-model",
         year: 2020,
+        registrationDate: "2020-01-01",
       };
 
       const result = await service.create(input);

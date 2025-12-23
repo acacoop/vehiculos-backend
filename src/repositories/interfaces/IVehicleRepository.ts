@@ -7,11 +7,16 @@ import { RepositoryFindOptions } from "@/repositories/interfaces/common";
  */
 export interface VehicleFilters {
   licensePlate?: string;
-  brand?: string;
-  model?: string;
   brandId?: string;
   modelId?: string;
   year?: string;
+  minYear?: string;
+  maxYear?: string;
+  fuelType?: string;
+  minKilometers?: string;
+  maxKilometers?: string;
+  registrationDateFrom?: string;
+  registrationDateTo?: string;
 }
 
 export interface IVehicleRepository {
