@@ -315,21 +315,18 @@ paths:
           schema:
             type: integer
             minimum: 1900
-            maximum: 2030
         - name: minYear
           in: query
           description: Minimum year (inclusive) for filtering by age range
           schema:
             type: integer
             minimum: 1900
-            maximum: 2030
         - name: maxYear
           in: query
           description: Maximum year (inclusive) for filtering by age range
           schema:
             type: integer
             minimum: 1900
-            maximum: 2030
         - name: fuelType
           in: query
           description: Exact match by fuel type (e.g., Nafta, Diésel, Híbrido, Eléctrico)
@@ -2073,11 +2070,10 @@ paths:
             default: 0
         - name: year
           in: query
-          description: Filter by year (2000-2030)
+          description: Filter by year
           schema:
             type: integer
             minimum: 2000
-            maximum: 2030
         - name: quarter
           in: query
           description: Filter by quarter (1-4)
@@ -2108,11 +2104,10 @@ paths:
             type: string
         - name: year
           in: query
-          description: Filter by year (2000-2030)
+          description: Filter by year
           schema:
             type: integer
             minimum: 2000
-            maximum: 2030
         - name: quarter
           in: query
           description: Filter by quarter (1-4)
@@ -3186,7 +3181,6 @@ components:
         year:
           type: integer
           minimum: 1900
-          maximum: 2030
           example: 2022
         chassisNumber:
           type: string
@@ -3238,7 +3232,6 @@ components:
         year:
           type: integer
           minimum: 1900
-          maximum: 2030
         chassisNumber:
           type: string
           description: "Número de chasis"
@@ -3276,7 +3269,6 @@ components:
         year:
           type: integer
           minimum: 1900
-          maximum: 2030
         chassisNumber:
           type: string
         engineNumber:
