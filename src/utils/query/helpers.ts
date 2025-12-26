@@ -9,7 +9,7 @@ export type SearchFilterField = string | string[];
  */
 function validateFieldName(fieldName: string): void {
   // Allow: letters, numbers, underscore, dot, square brackets (for table aliases)
-  const safePattern = /^[a-zA-Z0-9_.\[\]]+$/;
+  const safePattern = /^[a-zA-Z0-9_.[\]]+$/;
   if (!safePattern.test(fieldName)) {
     throw new Error(
       `Invalid field name: "${fieldName}". Field names must only contain alphanumeric characters, underscores, dots, and brackets.`,
