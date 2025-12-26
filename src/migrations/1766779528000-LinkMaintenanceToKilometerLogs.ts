@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class LinkMaintenanceToKilometerLogs1764259200000 implements MigrationInterface {
-  name = "LinkMaintenanceToKilometerLogs1764259200000";
+export class LinkMaintenanceToKilometerLogs1766779528000 implements MigrationInterface {
+  name = "LinkMaintenanceToKilometerLogs1766779528000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Add kilometers_log_id column to maintenance_records table
@@ -17,21 +17,23 @@ export class LinkMaintenanceToKilometerLogs1764259200000 implements MigrationInt
     `);
 
     // Add foreign key constraint for maintenance_records -> vehicle_kilometers
+    // Using NO ACTION instead of SET NULL to avoid multiple cascade paths error in SQL Server
     await queryRunner.query(`
       ALTER TABLE [maintenance_records]
       ADD CONSTRAINT [FK_maintenance_records_kilometers_log]
       FOREIGN KEY ([kilometers_log_id]) 
       REFERENCES [vehicle_kilometers]([id]) 
-      ON DELETE SET NULL
+      ON DELETE NO ACTION
     `);
 
     // Add foreign key constraint for quarterly_controls -> vehicle_kilometers
+    // Using NO ACTION instead of SET NULL to avoid multiple cascade paths error in SQL Server
     await queryRunner.query(`
       ALTER TABLE [quarterly_controls]
       ADD CONSTRAINT [FK_quarterly_controls_kilometers_log]
       FOREIGN KEY ([kilometers_log_id]) 
       REFERENCES [vehicle_kilometers]([id]) 
-      ON DELETE SET NULL
+      ON DELETE NO ACTION
     `);
 
     // Migrate existing kilometers data from maintenance_records to vehicle_kilometers
