@@ -5,10 +5,9 @@ import {
   VehicleKilometersFilters,
 } from "@/repositories/interfaces/IVehicleKilometersRepository";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { applySearchFilter } from "@/utils/index";
 
-export class VehicleKilometersRepository
-  implements IVehicleKilometersRepository
-{
+export class VehicleKilometersRepository implements IVehicleKilometersRepository {
   private readonly repo: Repository<VehicleKilometers>;
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(VehicleKilometers);
@@ -39,10 +38,11 @@ export class VehicleKilometersRepository
 
     // Apply search
     if (options.search) {
-      qb.andWhere(
-        "(vehicle.licensePlate LIKE :search OR user.firstName LIKE :search OR user.lastName LIKE :search)",
-        { search: `%${options.search}%` },
-      );
+      applySearchFilter(qb, options.search, [
+        "vehicle.licensePlate",
+        "user.firstName",
+        "user.lastName",
+      ]);
     }
 
     // Get total count
