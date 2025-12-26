@@ -131,34 +131,6 @@ export function applyOverlapCheck<T extends ObjectLiteral>(
 }
 
 /**
- * Legacy function for backward compatibility - DEPRECATED
- * Use applyOverlapCheck with options object instead
- * @deprecated Use applyOverlapCheck(options) instead
- */
-export function applyOverlapCheckLegacy<T extends ObjectLiteral>(
-  qb: SelectQueryBuilder<T>,
-  vehicleId: string,
-  startDate: Date | string,
-  endDate: Date | string | null,
-  excludeId?: string,
-  vehicleField: string = "vehicle.id",
-  startField: string = "startDate",
-  endField: string = "endDate",
-  idField: string = "id",
-): void {
-  applyOverlapCheck(qb, {
-    entityId: vehicleId,
-    entityField: vehicleField,
-    startDate,
-    endDate,
-    excludeId,
-    startField,
-    endField,
-    idField,
-  });
-}
-
-/**
  * Apply active filter for date ranges
  * Active means: startField <= targetDate AND (endField IS NULL OR endField >= targetDate)
  * @param qb - The query builder
