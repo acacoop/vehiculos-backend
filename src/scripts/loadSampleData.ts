@@ -1369,6 +1369,7 @@ async function createSampleQuarterlyControls(
   vehicles: Vehicle[],
 ): Promise<QuarterlyControl[]> {
   const controlRepo = AppDataSource.getRepository(QuarterlyControl);
+  const kmLogRepo = AppDataSource.getRepository(VehicleKilometers);
 
   // Helper functions
   const findUser = (email: string) => users.find((u) => u.email === email)!;
@@ -1384,6 +1385,7 @@ async function createSampleQuarterlyControls(
       intendedDeliveryDate: "2025-01-15",
       filledBy: findUser("roberto.jimenez@sample.test"),
       filledAt: "2024-12-20",
+      kilometers: 45300,
     },
     // Control for Q1 2025 - DEF456 (Honda Civic)
     {
@@ -1393,6 +1395,7 @@ async function createSampleQuarterlyControls(
       intendedDeliveryDate: "2025-02-10",
       filledBy: null,
       filledAt: null,
+      kilometers: null,
     },
     // Control for Q4 2024 - MNO345 (Toyota RAV4)
     {
@@ -1402,6 +1405,7 @@ async function createSampleQuarterlyControls(
       intendedDeliveryDate: "2025-01-20",
       filledBy: findUser("lucia.castro@sample.test"),
       filledAt: "2024-12-18",
+      kilometers: 35100,
     },
     // Control for Q1 2025 - GHI789 (Nissan Sentra) - pending
     {
@@ -1411,6 +1415,7 @@ async function createSampleQuarterlyControls(
       intendedDeliveryDate: "2025-02-15",
       filledBy: null,
       filledAt: null,
+      kilometers: null,
     },
     // Control for Q4 2024 - STU901 (Mazda CX-5)
     {
@@ -1420,11 +1425,40 @@ async function createSampleQuarterlyControls(
       intendedDeliveryDate: "2025-01-25",
       filledBy: findUser("fernando.romero@sample.test"),
       filledAt: "2024-12-22",
+      kilometers: 28500,
     },
   ];
 
-  const controls = controlRepo.create(controlsData);
-  const savedControls = await controlRepo.save(controls);
+  const savedControls: QuarterlyControl[] = [];
+
+  for (const data of controlsData) {
+    let kilometersLog: VehicleKilometers | null = null;
+
+    // If control is filled, create a kilometer log for it
+    if (data.filledBy && data.filledAt && data.kilometers) {
+      const kmLog = kmLogRepo.create({
+        vehicle: data.vehicle,
+        user: data.filledBy,
+        date: new Date(data.filledAt),
+        kilometers: data.kilometers,
+      });
+      kilometersLog = await kmLogRepo.save(kmLog);
+    }
+
+    // Create the quarterly control with the kilometer log reference
+    const control = controlRepo.create({
+      vehicle: data.vehicle,
+      year: data.year,
+      quarter: data.quarter,
+      intendedDeliveryDate: data.intendedDeliveryDate,
+      filledBy: data.filledBy,
+      filledAt: data.filledAt,
+      kilometersLog,
+    });
+
+    const savedControl = await controlRepo.save(control);
+    savedControls.push(savedControl);
+  }
 
   return savedControls;
 }
