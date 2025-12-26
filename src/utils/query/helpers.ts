@@ -2,6 +2,21 @@ import { Brackets, ObjectLiteral, SelectQueryBuilder } from "typeorm";
 
 export type SearchFilterField = string | string[];
 
+/**
+ * Validates that a field name is safe to use in SQL queries.
+ * Only allows alphanumeric characters, underscores, dots, and brackets.
+ * @throws Error if field name contains potentially dangerous characters
+ */
+function validateFieldName(fieldName: string): void {
+  // Allow: letters, numbers, underscore, dot, square brackets (for table aliases)
+  const safePattern = /^[a-zA-Z0-9_.\[\]]+$/;
+  if (!safePattern.test(fieldName)) {
+    throw new Error(
+      `Invalid field name: "${fieldName}". Field names must only contain alphanumeric characters, underscores, dots, and brackets.`,
+    );
+  }
+}
+
 export function applySearchFilter<T extends ObjectLiteral>(
   qb: SelectQueryBuilder<T>,
   searchTerm: string,
@@ -14,9 +29,13 @@ export function applySearchFilter<T extends ObjectLiteral>(
       fields.forEach((field, index) => {
         let condition: string;
         if (Array.isArray(field)) {
+          // Validate all field names to prevent SQL injection
+          field.forEach(validateFieldName);
           const concatFields = field.join(", ' ', ");
           condition = `CONCAT(${concatFields}) LIKE :search_term`;
         } else {
+          // Validate field name to prevent SQL injection
+          validateFieldName(field);
           condition = `${field} LIKE :search_term`;
         }
 

@@ -395,34 +395,35 @@ export class MaintenanceRecordsService {
       const dateChanged = data.date !== undefined;
 
       if (kmChanged || dateChanged) {
-        const newKilometers =
-          data.kilometers ?? existing.kilometersLog.kilometers;
-        const newDate = data.date ?? existing.kilometersLog.date;
+        if (!existing.kilometersLog) {
+          throw new Error("Kilometers log not found");
+        }
+
+        const currentLog = existing.kilometersLog;
+        const newKilometers = data.kilometers ?? currentLog.kilometers;
+        const newDate = data.date ?? currentLog.date;
 
         // Validate the new km reading (exclude current log from comparison)
         await this.vehicleKilometersService.validateKilometersReading(
           existing.vehicle.id,
           newDate,
           newKilometers,
-          existing.kilometersLog.id, // Exclude this log from validation
+          currentLog.id, // Exclude this log from validation
         );
 
         // Update the existing kilometersLog
-        existing.kilometersLog.kilometers = newKilometers;
-        existing.kilometersLog.date = newDate;
+        currentLog.kilometers = newKilometers;
+        currentLog.date = newDate;
 
         // Also update who made the change
         const updatingUser = await this.userRepo.findOne({
           where: { id: userId },
         });
         if (updatingUser) {
-          existing.kilometersLog.user = updatingUser;
+          currentLog.user = updatingUser;
         }
 
-        await queryRunner.manager.save(
-          VehicleKilometers,
-          existing.kilometersLog,
-        );
+        await queryRunner.manager.save(VehicleKilometers, currentLog);
       }
 
       // Update the maintenance record date if changed
@@ -479,10 +480,10 @@ export class MaintenanceRecordsService {
     try {
       const kilometersLogId = existing.kilometersLog?.id;
 
-      // Delete the maintenance record first (it references the kilometersLog)
+      // Delete the maintenance record (kilometersLog FK will be set to NULL)
       await queryRunner.manager.remove(MaintenanceRecordEntity, existing);
 
-      // Delete the associated kilometersLog if it exists
+      // Delete the associated kilometersLog if it exists and no other records reference it
       if (kilometersLogId) {
         await queryRunner.manager.delete(VehicleKilometers, kilometersLogId);
       }

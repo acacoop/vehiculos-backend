@@ -222,7 +222,7 @@ export class QuarterlyControlsService {
   async patchWithItems(
     id: string,
     data: {
-      userId: string;
+      userId?: string;
       kilometers: number;
       items: {
         id: string;
@@ -240,14 +240,22 @@ export class QuarterlyControlsService {
     await queryRunner.startTransaction();
 
     try {
-      // Update filledBy and filledAt
+      // Fetch user once (prefer userId parameter, fallback to data.userId)
+      const userIdToUse = userId ?? data.userId;
+      if (!userIdToUse) {
+        throw new Error("User ID is required");
+      }
+
+      const user = await queryRunner.manager.findOne(User, {
+        where: { id: userIdToUse },
+      });
+      if (!user) throw new Error("User not found");
+
+      // Update filledBy and filledAt if userId parameter was provided
       if (userId) {
-        const user = await this.userRepo.findOne({ where: { id: userId } });
-        if (user) {
-          existing.filledBy = user;
-          existing.filledAt = new Date().toISOString();
-          await queryRunner.manager.save(existing);
-        }
+        existing.filledBy = user;
+        existing.filledAt = new Date().toISOString();
+        await queryRunner.manager.save(existing);
       }
 
       // Validate that all items belong to this control
@@ -268,24 +276,28 @@ export class QuarterlyControlsService {
         }
       }
 
-      // Create kilometer log inside transaction
-      const user = await queryRunner.manager.findOne(User, {
-        where: { id: data.userId },
-      });
-      if (!user) throw new Error("User not found");
-
+      // Fetch vehicle for kilometer log creation
       const vehicle = await queryRunner.manager.findOne(Vehicle, {
         where: { id: existing.vehicle.id },
         relations: ["model", "model.brand"],
       });
       if (!vehicle) throw new Error("Vehicle not found");
 
+      // Validate kilometers before creating (will throw AppError if invalid)
+      const currentDate = new Date();
+      await this.vehicleKilometersService.validateKilometersReading(
+        existing.vehicle.id,
+        currentDate,
+        data.kilometers,
+      );
+
+      // Create kilometer log inside transaction
       const kilometersLogEntity = queryRunner.manager.create(
         VehicleKilometers,
         {
           vehicle,
           user,
-          date: new Date(),
+          date: currentDate,
           kilometers: data.kilometers,
         },
       );

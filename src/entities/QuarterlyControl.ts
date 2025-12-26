@@ -41,7 +41,7 @@ export class QuarterlyControl {
   @ManyToOne(() => VehicleKilometers, {
     eager: true,
     nullable: true,
-    onDelete: "RESTRICT",
+    onDelete: "SET NULL",
   })
   @JoinColumn({ name: "kilometers_log_id" })
   kilometersLog!: VehicleKilometers | null;

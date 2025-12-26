@@ -141,11 +141,7 @@ export class QuarterlyControlsController extends BaseController<QuarterlyControl
       );
     }
     try {
-      const result = await this.service.patchWithItems(
-        id,
-        { ...data, userId },
-        userId,
-      );
+      const result = await this.service.patchWithItems(id, data, userId);
       if (!result) {
         throw new AppError(
           "Control not found",

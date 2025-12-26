@@ -30,9 +30,13 @@ export class MaintenanceRecord {
   @Column({ name: "date", type: "date" })
   date!: string;
 
-  @ManyToOne(() => VehicleKilometers, { eager: true, onDelete: "RESTRICT" })
+  @ManyToOne(() => VehicleKilometers, {
+    eager: true,
+    nullable: true,
+    onDelete: "SET NULL",
+  })
   @JoinColumn({ name: "kilometers_log_id" })
-  kilometersLog!: VehicleKilometers;
+  kilometersLog!: VehicleKilometers | null;
 
   @Column({ name: "notes", type: "text", nullable: true })
   notes!: string | null;
