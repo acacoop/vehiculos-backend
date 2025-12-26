@@ -10,9 +10,7 @@ import {
 } from "@/repositories/interfaces/common";
 import { applySearchFilter, applyFilters } from "@/utils/index";
 
-export class MaintenanceRecordRepository
-  implements IMaintenanceRecordRepository
-{
+export class MaintenanceRecordRepository implements IMaintenanceRecordRepository {
   private readonly repo: Repository<MaintenanceRecord>;
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(MaintenanceRecord);
@@ -45,10 +43,13 @@ export class MaintenanceRecordRepository
         "mr.notes",
         "u.firstName",
         "u.lastName",
+        ["u.firstName", "u.lastName"],
+        ["u.lastName", "u.firstName"],
         "u.email",
         "v.licensePlate",
         "brand.name",
         "model.name",
+        ["brand.name", "model.name"],
       ]);
     }
 

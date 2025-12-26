@@ -1,19 +1,33 @@
 import { Brackets, ObjectLiteral, SelectQueryBuilder } from "typeorm";
 
+export type SearchFilterField = string | string[];
+
 export function applySearchFilter<T extends ObjectLiteral>(
   qb: SelectQueryBuilder<T>,
-  search: string,
-  fields: string[],
+  searchTerm: string,
+  fields: SearchFilterField[],
 ): void {
-  if (!search || fields.length === 0) return;
+  if (!searchTerm || fields.length === 0) return;
 
   qb.andWhere(
     new Brackets((qb) => {
       fields.forEach((field, index) => {
-        if (index === 0) {
-          qb.where(`${field} LIKE :search`, { search: `%${search}%` });
+        let condition: string;
+        if (Array.isArray(field)) {
+          const concatFields = field.join(", ' ', ");
+          condition = `CONCAT(${concatFields}) LIKE :search_term`;
         } else {
-          qb.orWhere(`${field} LIKE :search`, { search: `%${search}%` });
+          condition = `${field} LIKE :search_term`;
+        }
+
+        if (index === 0) {
+          qb.where(condition, {
+            search_term: `%${searchTerm}%`,
+          });
+        } else {
+          qb.orWhere(condition, {
+            search_term: `%${searchTerm}%`,
+          });
         }
       });
     }),

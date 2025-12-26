@@ -28,7 +28,7 @@ export class MaintenanceRepository implements IMaintenanceRepository {
 
     // Apply search filter across multiple fields
     if (search) {
-      applySearchFilter(qb, search, ["m.name", "c.name"]);
+      applySearchFilter(qb, search, ["m.name", "c.name", ["c.name", "m.name"]]);
     }
 
     // Apply individual filters

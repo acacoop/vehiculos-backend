@@ -42,6 +42,8 @@ export class VehicleKilometersRepository implements IVehicleKilometersRepository
         "vehicle.licensePlate",
         "user.firstName",
         "user.lastName",
+        ["user.firstName", "user.lastName"],
+        ["user.lastName", "user.firstName"],
       ]);
     }
 
