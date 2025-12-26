@@ -28,6 +28,7 @@ export class QuarterlyControlRepository implements IQuarterlyControlRepository {
       .leftJoinAndSelect("model.brand", "brand")
       .leftJoinAndSelect("qc.filledBy", "u")
       .leftJoinAndSelect("qc.items", "items")
+      .leftJoinAndSelect("qc.kilometersLog", "kmLog")
       .orderBy("qc.year", "DESC")
       .addOrderBy("qc.quarter", "DESC");
 
@@ -69,6 +70,7 @@ export class QuarterlyControlRepository implements IQuarterlyControlRepository {
       .leftJoinAndSelect("model.brand", "brand")
       .leftJoinAndSelect("qc.filledBy", "u")
       .leftJoinAndSelect("qc.items", "items")
+      .leftJoinAndSelect("qc.kilometersLog", "kmLog")
       .where("qc.id = :id", { id })
       .getOne();
   }
