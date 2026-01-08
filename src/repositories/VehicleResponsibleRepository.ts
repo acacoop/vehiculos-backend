@@ -14,9 +14,7 @@ import {
   applyActiveFilter,
 } from "@/utils/index";
 
-export class VehicleResponsibleRepository
-  implements IVehicleResponsibleRepository
-{
+export class VehicleResponsibleRepository implements IVehicleResponsibleRepository {
   private readonly repo: Repository<VehicleResponsibleEntity>;
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(VehicleResponsibleEntity);
@@ -59,11 +57,14 @@ export class VehicleResponsibleRepository
       applySearchFilter(qb, search, [
         "user.firstName",
         "user.lastName",
+        ["user.firstName", "user.lastName"],
+        ["user.lastName", "user.firstName"],
         "user.email",
         "vehicle.licensePlate",
         "vehicle.chassisNumber",
         "brand.name",
         "model.name",
+        ["brand.name", "model.name"],
       ]);
     }
 

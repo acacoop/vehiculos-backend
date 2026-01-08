@@ -1,19 +1,52 @@
 import { Brackets, ObjectLiteral, SelectQueryBuilder } from "typeorm";
 
+export type SearchFilterField = string | string[];
+
+/**
+ * Validates that a field name is safe to use in SQL queries.
+ * Only allows alphanumeric characters, underscores, dots, and brackets.
+ * @throws Error if field name contains potentially dangerous characters
+ */
+function validateFieldName(fieldName: string): void {
+  // Allow: letters, numbers, underscore, dot, square brackets (for table aliases)
+  const safePattern = /^[a-zA-Z0-9_.[\]]+$/;
+  if (!safePattern.test(fieldName)) {
+    throw new Error(
+      `Invalid field name: "${fieldName}". Field names must only contain alphanumeric characters, underscores, dots, and brackets.`,
+    );
+  }
+}
+
 export function applySearchFilter<T extends ObjectLiteral>(
   qb: SelectQueryBuilder<T>,
-  search: string,
-  fields: string[],
+  searchTerm: string,
+  fields: SearchFilterField[],
 ): void {
-  if (!search || fields.length === 0) return;
+  if (!searchTerm || fields.length === 0) return;
 
   qb.andWhere(
     new Brackets((qb) => {
       fields.forEach((field, index) => {
-        if (index === 0) {
-          qb.where(`${field} LIKE :search`, { search: `%${search}%` });
+        let condition: string;
+        if (Array.isArray(field)) {
+          // Validate all field names to prevent SQL injection
+          field.forEach(validateFieldName);
+          const concatFields = field.join(", ' ', ");
+          condition = `CONCAT(${concatFields}) LIKE :search_term`;
         } else {
-          qb.orWhere(`${field} LIKE :search`, { search: `%${search}%` });
+          // Validate field name to prevent SQL injection
+          validateFieldName(field);
+          condition = `${field} LIKE :search_term`;
+        }
+
+        if (index === 0) {
+          qb.where(condition, {
+            search_term: `%${searchTerm}%`,
+          });
+        } else {
+          qb.orWhere(condition, {
+            search_term: `%${searchTerm}%`,
+          });
         }
       });
     }),
@@ -128,34 +161,6 @@ export function applyOverlapCheck<T extends ObjectLiteral>(
     `(${startField} < :endDate OR :endDate IS NULL) AND (${endField} > :startDate OR ${endField} IS NULL)`,
     { startDate, endDate },
   );
-}
-
-/**
- * Legacy function for backward compatibility - DEPRECATED
- * Use applyOverlapCheck with options object instead
- * @deprecated Use applyOverlapCheck(options) instead
- */
-export function applyOverlapCheckLegacy<T extends ObjectLiteral>(
-  qb: SelectQueryBuilder<T>,
-  vehicleId: string,
-  startDate: Date | string,
-  endDate: Date | string | null,
-  excludeId?: string,
-  vehicleField: string = "vehicle.id",
-  startField: string = "startDate",
-  endField: string = "endDate",
-  idField: string = "id",
-): void {
-  applyOverlapCheck(qb, {
-    entityId: vehicleId,
-    entityField: vehicleField,
-    startDate,
-    endDate,
-    excludeId,
-    startField,
-    endField,
-    idField,
-  });
 }
 
 /**

@@ -315,21 +315,18 @@ paths:
           schema:
             type: integer
             minimum: 1900
-            maximum: 2030
         - name: minYear
           in: query
           description: Minimum year (inclusive) for filtering by age range
           schema:
             type: integer
             minimum: 1900
-            maximum: 2030
         - name: maxYear
           in: query
           description: Maximum year (inclusive) for filtering by age range
           schema:
             type: integer
             minimum: 1900
-            maximum: 2030
         - name: fuelType
           in: query
           description: Exact match by fuel type (e.g., Nafta, Diésel, Híbrido, Eléctrico)
@@ -522,6 +519,9 @@ paths:
         Create a new kilometer log entry. The kilometers value must be chronologically valid:
         - Must be >= the previous reading (if exists)
         - Must be <= the next reading (if exists)
+
+        **Note:** The unique constraint is per vehicle per datetime (not just date), 
+        allowing multiple readings per day for the same vehicle.
 
         Returns 422 if the kilometers value violates chronological order.
       tags: [Vehicle Kilometers Logs]
@@ -2070,11 +2070,10 @@ paths:
             default: 0
         - name: year
           in: query
-          description: Filter by year (2000-2030)
+          description: Filter by year
           schema:
             type: integer
             minimum: 2000
-            maximum: 2030
         - name: quarter
           in: query
           description: Filter by quarter (1-4)
@@ -2105,11 +2104,10 @@ paths:
             type: string
         - name: year
           in: query
-          description: Filter by year (2000-2030)
+          description: Filter by year
           schema:
             type: integer
             minimum: 2000
-            maximum: 2030
         - name: quarter
           in: query
           description: Filter by quarter (1-4)
@@ -3183,7 +3181,6 @@ components:
         year:
           type: integer
           minimum: 1900
-          maximum: 2030
           example: 2022
         chassisNumber:
           type: string
@@ -3235,7 +3232,6 @@ components:
         year:
           type: integer
           minimum: 1900
-          maximum: 2030
         chassisNumber:
           type: string
           description: "Número de chasis"
@@ -3273,7 +3269,6 @@ components:
         year:
           type: integer
           minimum: 1900
-          maximum: 2030
         chassisNumber:
           type: string
         engineNumber:
@@ -4176,10 +4171,23 @@ components:
           type: string
           format: date-time
           example: "2025-01-10T14:30:00Z"
-        kilometers:
-          type: integer
-          minimum: 0
-          example: 75000
+        kilometersLog:
+          type: object
+          description: "Reference to the kilometer log entry created for this maintenance"
+          properties:
+            id:
+              type: string
+              format: uuid
+            kilometers:
+              type: integer
+              minimum: 0
+            date:
+              type: string
+              format: date-time
+          required:
+            - id
+            - kilometers
+            - date
         notes:
           type: string
           nullable: true
@@ -4190,7 +4198,7 @@ components:
         - vehicle
         - maintenance
         - date
-        - kilometers
+        - kilometersLog
 
     MaintenanceRecordInput:
       type: object
@@ -4210,6 +4218,7 @@ components:
         kilometers:
           type: integer
           minimum: 0
+          description: "Kilometers reading - a new kilometer log entry will be created automatically"
         notes:
           type: string
       required:
@@ -4275,6 +4284,24 @@ components:
           format: date-time
           nullable: true
           example: "2025-01-15T14:30:00Z"
+        kilometersLog:
+          type: object
+          nullable: true
+          description: "Reference to the kilometer log entry created when checklist was filled"
+          properties:
+            id:
+              type: string
+              format: uuid
+            kilometers:
+              type: integer
+              minimum: 0
+            date:
+              type: string
+              format: date-time
+          required:
+            - id
+            - kilometers
+            - date
         items:
           type: array
           items:
@@ -4401,6 +4428,10 @@ components:
     QuarterlyControlPatchWithItemsInput:
       type: object
       properties:
+        kilometers:
+          type: integer
+          minimum: 0
+          description: "Kilometers reading at time of checklist completion - a new kilometer log entry will be created automatically"
         items:
           type: array
           items:
@@ -4419,6 +4450,7 @@ components:
               - status
               - observations
       required:
+        - kilometers
         - items
 
     QuarterlyControlResponse:

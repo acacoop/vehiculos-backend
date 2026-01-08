@@ -3,6 +3,7 @@ import { VehicleModelService } from "@/services/vehicleModelsService";
 import type { VehicleModelInput } from "@/schemas/vehicleModel";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import { VehicleModelFilters } from "@/repositories/interfaces/IVehicleModelRepository";
+import type { Request } from "express";
 
 export class VehicleModelsController extends BaseController<VehicleModelFilters> {
   constructor(private readonly service: VehicleModelService) {
@@ -23,7 +24,11 @@ export class VehicleModelsController extends BaseController<VehicleModelFilters>
   protected async createService(data: unknown) {
     return this.service.create(data as VehicleModelInput);
   }
-  protected async updateService(id: string, data: Partial<VehicleModelInput>) {
+  protected async updateService(
+    id: string,
+    data: Partial<VehicleModelInput>,
+    _req: Request,
+  ) {
     return this.service.update(id, data);
   }
   protected async deleteService(id: string) {

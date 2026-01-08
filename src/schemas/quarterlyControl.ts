@@ -50,6 +50,11 @@ export interface QuarterlyControlDTO {
     active: boolean;
   };
   filledAt?: string;
+  kilometersLog?: {
+    id: string;
+    kilometers: number;
+    date: Date;
+  };
   items: {
     id: string;
     category: string;

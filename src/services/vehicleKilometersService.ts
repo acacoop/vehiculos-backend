@@ -74,7 +74,17 @@ export class VehicleKilometersService {
     return list.map(mapEntity);
   }
 
-  private async validateKilometersReading(
+  /**
+   * Validates that a kilometers reading is consistent with existing readings.
+   * Throws AppError (422) if the reading is invalid:
+   * - Lower than a previous reading on an earlier date
+   * - Higher than a next reading on a later date
+   * @param vehicleId The vehicle ID
+   * @param date The date of the reading
+   * @param kilometers The kilometers value
+   * @param excludeId Optional ID to exclude from comparison (for updates)
+   */
+  async validateKilometersReading(
     vehicleId: string,
     date: Date,
     kilometers: number,

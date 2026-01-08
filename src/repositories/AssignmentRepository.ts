@@ -38,11 +38,14 @@ export class AssignmentRepository implements IAssignmentRepository {
       applySearchFilter(qb, search, [
         "u.firstName",
         "u.lastName",
+        ["u.firstName", "u.lastName"],
+        ["u.lastName", "u.firstName"],
         "u.email",
         "v.licensePlate",
         "v.chassisNumber",
         "brand.name",
         "model.name",
+        ["brand.name", "model.name"],
       ]);
     }
 

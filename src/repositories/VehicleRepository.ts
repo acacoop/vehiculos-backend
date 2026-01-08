@@ -36,6 +36,7 @@ export class VehicleRepository implements IVehicleRepository {
         "v.chassisNumber",
         "b.name",
         "m.name",
+        ["b.name", "m.name"],
       ]);
     }
 

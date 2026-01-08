@@ -7,6 +7,7 @@ import { ServiceFactory } from "@/factories/serviceFactory";
 import { AppDataSource } from "@/db";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import { QuarterlyControlItemFilters } from "@/repositories/interfaces/IQuarterlyControlItemRepository";
+import type { Request } from "express";
 
 export class QuarterlyControlItemsController extends BaseController<QuarterlyControlItemFilters> {
   constructor(private readonly service: QuarterlyControlItemsService) {
@@ -45,7 +46,7 @@ export class QuarterlyControlItemsController extends BaseController<QuarterlyCon
     }
   }
 
-  protected async updateService(id: string, data: unknown) {
+  protected async updateService(id: string, data: unknown, _req: Request) {
     const parsed = QuarterlyControlItemSchema.partial().parse(data);
     try {
       return await this.service.update(id, parsed);

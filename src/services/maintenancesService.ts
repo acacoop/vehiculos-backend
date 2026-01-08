@@ -18,9 +18,11 @@ import type { Maintenance as MaintenanceSchemaType } from "@/schemas/maintenance
 import type { MaintenanceRecordDTO } from "@/schemas/maintenanceRecord";
 import { Vehicle } from "@/entities/Vehicle";
 import { MaintenanceRecord as MaintenanceRecordEntity } from "@/entities/MaintenanceRecord";
-import { Repository } from "typeorm";
+import { VehicleKilometers } from "@/entities/VehicleKilometers";
+import { Repository, DataSource } from "typeorm";
 import { User } from "@/entities/User";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
+import { VehicleKilometersService } from "@/services/vehicleKilometersService";
 
 export type MaintenanceDTO = MaintenanceSchemaType & {
   kilometersFrequency?: number;
@@ -149,6 +151,8 @@ export class MaintenanceRecordsService {
     private readonly maintenanceRepo: Repository<Maintenance>,
     private readonly vehicleRepo: Repository<Vehicle>,
     private readonly userRepo: Repository<User>,
+    private readonly dataSource: DataSource,
+    private readonly vehicleKilometersService: VehicleKilometersService,
   ) {}
 
   private mapEntity(mr: MaintenanceRecordEntity): MaintenanceRecordDTO {
@@ -163,6 +167,11 @@ export class MaintenanceRecordsService {
     }
     if (!mr.vehicle) {
       throw new Error(`MaintenanceRecord ${mr.id} has no associated vehicle`);
+    }
+    if (!mr.kilometersLog) {
+      throw new Error(
+        `MaintenanceRecord ${mr.id} has no associated kilometers log`,
+      );
     }
 
     return {
@@ -205,7 +214,11 @@ export class MaintenanceRecordsService {
         },
       },
       date: new Date(mr.date),
-      kilometers: mr.kilometers,
+      kilometersLog: {
+        id: mr.kilometersLog.id,
+        kilometers: mr.kilometersLog.kilometers,
+        date: mr.kilometersLog.date,
+      },
       notes: mr.notes ?? undefined,
     };
   }
@@ -280,16 +293,209 @@ export class MaintenanceRecordsService {
 
     if (!maintenance || !vehicle || !user) return null;
 
-    const created = this.maintenanceRecordRepo.create({
-      maintenance,
-      vehicle,
-      user,
-      date: data.date.toISOString().split("T")[0],
-      kilometers: data.kilometers,
-      notes: data.notes ?? null,
+    // Validate kilometers before creating (will throw AppError if invalid)
+    await this.vehicleKilometersService.validateKilometersReading(
+      data.vehicleId,
+      data.date,
+      data.kilometers,
+    );
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Create kilometer log first inside transaction
+      const kilometersLogEntity = queryRunner.manager.create(
+        VehicleKilometers,
+        {
+          vehicle,
+          user,
+          date: data.date,
+          kilometers: data.kilometers,
+        },
+      );
+      const savedKilometersLog = await queryRunner.manager.save(
+        VehicleKilometers,
+        kilometersLogEntity,
+      );
+
+      // Create maintenance record with reference to kilometer log
+      const created = this.maintenanceRecordRepo.create({
+        maintenance,
+        vehicle,
+        user,
+        date: data.date.toISOString().split("T")[0],
+        kilometersLog: savedKilometersLog,
+        notes: data.notes ?? null,
+      });
+      const saved = await queryRunner.manager.save(created);
+
+      await queryRunner.commitTransaction();
+
+      // Fetch complete entity with all relations
+      const complete = await this.maintenanceRecordRepo.findOne({
+        where: { id: saved.id },
+        relations: [
+          "maintenance",
+          "maintenance.category",
+          "vehicle",
+          "vehicle.model",
+          "vehicle.model.brand",
+          "user",
+          "kilometersLog",
+          "kilometersLog.user",
+          "kilometersLog.vehicle",
+        ],
+      });
+
+      return complete ? this.mapEntity(complete) : null;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async update(
+    id: string,
+    data: {
+      date?: Date;
+      kilometers?: number;
+      notes?: string | null;
+    },
+    userId: string,
+  ): Promise<MaintenanceRecordDTO | null> {
+    // Fetch the existing record with all relations
+    const existing = await this.maintenanceRecordRepo.findOne({
+      where: { id },
+      relations: [
+        "maintenance",
+        "maintenance.category",
+        "vehicle",
+        "vehicle.model",
+        "vehicle.model.brand",
+        "user",
+        "kilometersLog",
+        "kilometersLog.user",
+        "kilometersLog.vehicle",
+      ],
     });
-    const saved = await this.maintenanceRecordRepo.save(created);
-    return this.mapEntity(saved);
+
+    if (!existing) return null;
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // If kilometers or date changed, we need to update the associated kilometersLog
+      const kmChanged = data.kilometers !== undefined;
+      const dateChanged = data.date !== undefined;
+
+      if (kmChanged || dateChanged) {
+        if (!existing.kilometersLog) {
+          throw new Error("Kilometers log not found");
+        }
+
+        const currentLog = existing.kilometersLog;
+        const newKilometers = data.kilometers ?? currentLog.kilometers;
+        const newDate = data.date ?? currentLog.date;
+
+        // Validate the new km reading (exclude current log from comparison)
+        await this.vehicleKilometersService.validateKilometersReading(
+          existing.vehicle.id,
+          newDate,
+          newKilometers,
+          currentLog.id, // Exclude this log from validation
+        );
+
+        // Update the existing kilometersLog
+        currentLog.kilometers = newKilometers;
+        currentLog.date = newDate;
+
+        // Also update who made the change
+        const updatingUser = await this.userRepo.findOne({
+          where: { id: userId },
+        });
+        if (updatingUser) {
+          currentLog.user = updatingUser;
+        }
+
+        await queryRunner.manager.save(VehicleKilometers, currentLog);
+      }
+
+      // Update the maintenance record date if changed
+      if (dateChanged && data.date) {
+        existing.date = data.date.toISOString().split("T")[0];
+      }
+
+      // Update notes if provided
+      if (data.notes !== undefined) {
+        existing.notes = data.notes;
+      }
+
+      await queryRunner.manager.save(MaintenanceRecordEntity, existing);
+      await queryRunner.commitTransaction();
+
+      // Fetch fresh entity with all relations
+      const complete = await this.maintenanceRecordRepo.findOne({
+        where: { id: existing.id },
+        relations: [
+          "maintenance",
+          "maintenance.category",
+          "vehicle",
+          "vehicle.model",
+          "vehicle.model.brand",
+          "user",
+          "kilometersLog",
+          "kilometersLog.user",
+          "kilometersLog.vehicle",
+        ],
+      });
+
+      return complete ? this.mapEntity(complete) : null;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async delete(id: string): Promise<boolean> {
+    // Fetch the existing record with kilometersLog
+    const existing = await this.maintenanceRecordRepo.findOne({
+      where: { id },
+      relations: ["kilometersLog"],
+    });
+
+    if (!existing) return false;
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const kilometersLogId = existing.kilometersLog?.id;
+
+      // Delete the maintenance record (kilometersLog FK will be set to NULL)
+      await queryRunner.manager.remove(MaintenanceRecordEntity, existing);
+
+      // Delete the associated kilometersLog if it exists and no other records reference it
+      if (kilometersLogId) {
+        await queryRunner.manager.delete(VehicleKilometers, kilometersLogId);
+      }
+
+      await queryRunner.commitTransaction();
+      return true;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async getByMaintenance(

@@ -10,9 +10,7 @@ import {
 } from "@/repositories/interfaces/common";
 import { applySearchFilter, applyFilters } from "@/utils/index";
 
-export class MaintenanceRecordRepository
-  implements IMaintenanceRecordRepository
-{
+export class MaintenanceRecordRepository implements IMaintenanceRecordRepository {
   private readonly repo: Repository<MaintenanceRecord>;
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(MaintenanceRecord);
@@ -33,6 +31,9 @@ export class MaintenanceRecordRepository
       .leftJoinAndSelect("v.model", "model")
       .leftJoinAndSelect("model.brand", "brand")
       .leftJoinAndSelect("mr.user", "u")
+      .leftJoinAndSelect("mr.kilometersLog", "kl")
+      .leftJoinAndSelect("kl.user", "klu")
+      .leftJoinAndSelect("kl.vehicle", "klv")
       .orderBy("mr.date", "DESC");
 
     // Apply search filter across maintenance details, user, and vehicle
@@ -42,10 +43,13 @@ export class MaintenanceRecordRepository
         "mr.notes",
         "u.firstName",
         "u.lastName",
+        ["u.firstName", "u.lastName"],
+        ["u.lastName", "u.firstName"],
         "u.email",
         "v.licensePlate",
         "brand.name",
         "model.name",
+        ["brand.name", "model.name"],
       ]);
     }
 
@@ -72,6 +76,9 @@ export class MaintenanceRecordRepository
       .leftJoinAndSelect("v.model", "model")
       .leftJoinAndSelect("model.brand", "brand")
       .leftJoinAndSelect("mr.user", "u")
+      .leftJoinAndSelect("mr.kilometersLog", "kl")
+      .leftJoinAndSelect("kl.user", "klu")
+      .leftJoinAndSelect("kl.vehicle", "klv")
       .where("mr.id = :id", { id })
       .getOne();
   }
@@ -84,6 +91,9 @@ export class MaintenanceRecordRepository
       .leftJoinAndSelect("v.model", "model")
       .leftJoinAndSelect("model.brand", "brand")
       .leftJoinAndSelect("mr.user", "u")
+      .leftJoinAndSelect("mr.kilometersLog", "kl")
+      .leftJoinAndSelect("kl.user", "klu")
+      .leftJoinAndSelect("kl.vehicle", "klv")
       .where("v.id = :vehicleId", { vehicleId })
       .orderBy("mr.date", "DESC")
       .getMany();
@@ -97,6 +107,9 @@ export class MaintenanceRecordRepository
       .leftJoinAndSelect("v.model", "model")
       .leftJoinAndSelect("model.brand", "brand")
       .leftJoinAndSelect("mr.user", "u")
+      .leftJoinAndSelect("mr.kilometersLog", "kl")
+      .leftJoinAndSelect("kl.user", "klu")
+      .leftJoinAndSelect("kl.vehicle", "klv")
       .where("m.id = :maintenanceId", { maintenanceId })
       .orderBy("mr.date", "DESC")
       .getMany();

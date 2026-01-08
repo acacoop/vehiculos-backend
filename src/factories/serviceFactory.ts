@@ -36,8 +36,10 @@ import { QuarterlyControlRepository } from "@/repositories/QuarterlyControlRepos
 import { QuarterlyControlItemRepository } from "@/repositories/QuarterlyControlItemRepository";
 import { QuarterlyControlsService } from "@/services/quarterlyControlsService";
 import { QuarterlyControlItemsService } from "@/services/quarterlyControlItemsService";
+import { VehicleKilometersService } from "@/services/vehicleKilometersService";
 import { MetricsRepository } from "@/repositories/MetricsRepository";
 import { MetricsService } from "@/services/metricsService";
+import { VehicleKilometersRepository } from "@/repositories/VehicleKilometersRepository";
 
 /**
  * Service Factory - Centralizes creation of service instances
@@ -134,12 +136,20 @@ export class ServiceFactory {
     const maintenanceRepo = this.dataSource.getRepository(Maintenance);
     const vehicleRepo = this.dataSource.getRepository(Vehicle);
     const userRepo = this.dataSource.getRepository(User);
+    const vehicleKilometersRepo = new VehicleKilometersRepository(
+      this.dataSource,
+    );
+    const vehicleKilometersService = new VehicleKilometersService(
+      vehicleKilometersRepo,
+    );
     return new MaintenanceRecordsService(
       recordRepo,
       maintenanceRecordRepo,
       maintenanceRepo,
       vehicleRepo,
       userRepo,
+      this.dataSource,
+      vehicleKilometersService,
     );
   }
 
@@ -164,11 +174,18 @@ export class ServiceFactory {
     const repo = new QuarterlyControlRepository(this.dataSource);
     const userRepo = this.dataSource.getRepository(User);
     const vehicleRepo = this.dataSource.getRepository(Vehicle);
+    const vehicleKilometersRepo = new VehicleKilometersRepository(
+      this.dataSource,
+    );
+    const vehicleKilometersService = new VehicleKilometersService(
+      vehicleKilometersRepo,
+    );
     return new QuarterlyControlsService(
       repo,
       userRepo,
       vehicleRepo,
       this.dataSource,
+      vehicleKilometersService,
     );
   }
 

@@ -12,7 +12,7 @@ import { Vehicle } from "@/entities/Vehicle";
 import { User } from "@/entities/User";
 
 @Entity({ name: "vehicle_kilometers" })
-@Unique(["vehicle", "date"]) // mirror unique (vehicle_id, date)
+@Unique(["vehicle", "date"]) // mirror unique (vehicle_id, date) - date column is datetime type
 @Check("kilometers >= 0")
 @Index(["vehicle", "date"])
 export class VehicleKilometers {

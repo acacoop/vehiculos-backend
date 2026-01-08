@@ -32,6 +32,7 @@ export class ReservationsController extends BaseController<ReservationFilters> {
   protected async updateService(
     id: string,
     data: unknown,
+    _req: Request,
   ): Promise<unknown | null> {
     const parsed = ReservationSchema.partial().parse(
       data,

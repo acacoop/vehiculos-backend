@@ -38,6 +38,7 @@ export class AssignmentsController extends BaseController<AssignmentFilters> {
   protected async updateService(
     id: string,
     data: unknown,
+    _req: Request,
   ): Promise<unknown | null> {
     // Validate data with Zod schema
     const validationResult = AssignmentUpdateSchema.safeParse(data);

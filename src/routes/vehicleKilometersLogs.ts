@@ -8,23 +8,20 @@ const router = express.Router();
 const controller = createVehicleKilometersController();
 
 // GET /vehicle-kilometersLogs - Get all kilometers logs
-router.get("/", requireRole(UserRoleEnum.ADMIN), controller.getAll);
+// Users can list logs (filtered by their assigned vehicles in the service layer)
+router.get("/", requireRole(UserRoleEnum.USER), controller.getAll);
 
 // GET /vehicle-kilometersLogs/:id - Get specific kilometers log
 router.get(
   "/:id",
   validateUUIDParam("id"),
-  requireRole(UserRoleEnum.ADMIN),
+  requireRole(UserRoleEnum.USER),
   controller.getById,
 );
 
 // POST /vehicle-kilometersLogs - Create new kilometers log
-router.post(
-  "/",
-  // TODO: Adjust permissions as needed
-  requireRole(UserRoleEnum.ADMIN),
-  controller.create,
-);
+// Users can create logs for their assigned vehicles
+router.post("/", requireRole(UserRoleEnum.USER), controller.create);
 
 // PATCH /vehicle-kilometersLogs/:id - Update kilometers log
 router.patch(

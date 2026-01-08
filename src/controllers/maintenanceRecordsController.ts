@@ -1,12 +1,17 @@
 import { BaseController } from "@/controllers/baseController";
 import { AppError } from "@/middleware/errorHandler";
-import { MaintenanceRecordSchema } from "@/schemas/maintenanceRecord";
+import {
+  MaintenanceRecordSchema,
+  MaintenanceRecordUpdateSchema,
+} from "@/schemas/maintenanceRecord";
 import { MaintenanceRecordsService } from "@/services/maintenancesService";
 import type { MaintenanceRecord } from "@/schemas/maintenanceRecord";
 import { ServiceFactory } from "@/factories/serviceFactory";
 import { AppDataSource } from "@/db";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import { MaintenanceRecordFilters } from "@/repositories/interfaces/IMaintenanceRecordRepository";
+import type { Request } from "express";
+import type { AuthenticatedRequest } from "@/middleware/auth";
 
 export class MaintenanceRecordsController extends BaseController<MaintenanceRecordFilters> {
   constructor(private readonly service: MaintenanceRecordsService) {
@@ -43,22 +48,43 @@ export class MaintenanceRecordsController extends BaseController<MaintenanceReco
     }
   }
 
-  protected async updateService(): Promise<unknown | null> {
-    throw new AppError(
-      "Update not supported for maintenance records",
-      405,
-      "https://example.com/problems/method-not-allowed",
-      "Method Not Allowed",
-    );
+  protected async updateService(
+    id: string,
+    data: unknown,
+    req: Request,
+  ): Promise<unknown | null> {
+    const updateData = MaintenanceRecordUpdateSchema.parse(data);
+    const userId = (req as AuthenticatedRequest).user?.id;
+
+    if (!userId) {
+      throw new AppError(
+        "User ID is required for updating maintenance records",
+        401,
+        "https://example.com/problems/unauthorized",
+        "Unauthorized",
+      );
+    }
+
+    try {
+      return await this.service.update(id, updateData, userId);
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        throw new AppError(
+          error.message,
+          400,
+          "https://example.com/problems/validation-error",
+          "Validation Error",
+        );
+      }
+      throw error;
+    }
   }
 
-  protected async deleteService(): Promise<boolean> {
-    throw new AppError(
-      "Delete not supported for maintenance records",
-      405,
-      "https://example.com/problems/method-not-allowed",
-      "Method Not Allowed",
-    );
+  protected async deleteService(id: string): Promise<boolean> {
+    return await this.service.delete(id);
   }
 }
 export function createMaintenanceRecordsController() {

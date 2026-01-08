@@ -30,6 +30,7 @@ const CreateControlWithItemsSchema = z.object({
 });
 
 const PatchControlWithItemsSchema = z.object({
+  kilometers: z.number().nonnegative(),
   items: z.array(
     z.object({
       id: z.string().uuid(),
@@ -80,7 +81,7 @@ export class QuarterlyControlsController extends BaseController<QuarterlyControl
     }
   }
 
-  protected async updateService(id: string, data: unknown) {
+  protected async updateService(id: string, data: unknown, _req: Request) {
     const parsed = QuarterlyControlSchema.partial().parse(data);
     try {
       return await this.service.update(id, parsed);
@@ -131,6 +132,14 @@ export class QuarterlyControlsController extends BaseController<QuarterlyControl
     const data = PatchControlWithItemsSchema.parse(req.body);
     const { user } = req as AuthenticatedRequest;
     const userId = user?.id;
+    if (!userId) {
+      throw new AppError(
+        "User not authenticated",
+        401,
+        "https://example.com/problems/unauthorized",
+        "Unauthorized",
+      );
+    }
     try {
       const result = await this.service.patchWithItems(id, data, userId);
       if (!result) {

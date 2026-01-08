@@ -9,6 +9,7 @@ import { ServiceFactory } from "@/factories/serviceFactory";
 import { AppDataSource } from "@/db";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import { MaintenanceFilters } from "@/repositories/interfaces/IMaintenanceRepository";
+import type { Request } from "express";
 
 /**
  * MaintenancePosiblesController - Manages possible maintenances
@@ -54,7 +55,7 @@ export class MaintenancePosiblesController extends BaseController<MaintenanceFil
     }
   }
 
-  protected async updateService(id: string, data: unknown) {
+  protected async updateService(id: string, data: unknown, _req: Request) {
     const maintenanceData = MaintenanceUpdateSchema.parse(data);
 
     try {

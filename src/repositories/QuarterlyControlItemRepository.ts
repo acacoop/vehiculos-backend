@@ -10,9 +10,7 @@ import {
 } from "@/repositories/interfaces/common";
 import { applySearchFilter, applyFilters } from "@/utils/index";
 
-export class QuarterlyControlItemRepository
-  implements IQuarterlyControlItemRepository
-{
+export class QuarterlyControlItemRepository implements IQuarterlyControlItemRepository {
   private readonly repo: Repository<QuarterlyControlItem>;
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(QuarterlyControlItem);
@@ -37,6 +35,8 @@ export class QuarterlyControlItemRepository
         "v.licensePlate",
         "u.firstName",
         "u.lastName",
+        ["u.firstName", "u.lastName"],
+        ["u.lastName", "u.firstName"],
       ]);
     }
 

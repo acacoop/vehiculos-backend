@@ -28,6 +28,8 @@ export class UserRepository implements IUserRepository {
       applySearchFilter(qb, search, [
         "u.firstName",
         "u.lastName",
+        ["u.firstName", "u.lastName"],
+        ["u.lastName", "u.firstName"],
         "u.email",
         "u.cuit",
       ]);

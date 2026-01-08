@@ -9,6 +9,7 @@ import {
 } from "typeorm";
 import { Vehicle } from "@/entities/Vehicle";
 import { User } from "@/entities/User";
+import { VehicleKilometers } from "@/entities/VehicleKilometers";
 import type { QuarterlyControlItem } from "@/entities/QuarterlyControlItem";
 
 @Entity({ name: "quarterly_controls" })
@@ -36,6 +37,14 @@ export class QuarterlyControl {
 
   @Column({ name: "filled_at", type: "date", nullable: true })
   filledAt!: string | null;
+
+  @ManyToOne(() => VehicleKilometers, {
+    eager: true,
+    nullable: true,
+    onDelete: "SET NULL",
+  })
+  @JoinColumn({ name: "kilometers_log_id" })
+  kilometersLog!: VehicleKilometers | null;
 
   @OneToMany("QuarterlyControlItem", "quarterlyControl")
   items!: QuarterlyControlItem[];
