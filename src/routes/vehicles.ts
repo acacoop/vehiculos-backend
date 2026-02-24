@@ -13,8 +13,8 @@ import { PermissionType } from "@/enums/PermissionType";
 const router = Router();
 const vehiclesController = createVehiclesController();
 
-// Admin only access
-router.get("/", requireRole(UserRoleEnum.ADMIN), vehiclesController.getAll);
+// TODO: Change permission to ADMIN in the future
+router.get("/", requireRole(UserRoleEnum.USER), vehiclesController.getAll);
 
 router.get(
   "/:id",

@@ -17,11 +17,13 @@ const serviceFactory = new ServiceFactory(AppDataSource);
 const userRolesService = serviceFactory.createUserRolesService();
 const controller = new UserRolesController(userRolesService);
 
-router.get("/", requireRole(UserRoleEnum.ADMIN), controller.getAll);
+// TODO: Change permission to ADMIN in the future
+router.get("/", requireRole(UserRoleEnum.USER), controller.getAll);
 
+// TODO: Change permission to ADMIN in the future
 router.get(
   "/:id",
-  requireRole(UserRoleEnum.ADMIN),
+  requireRole(UserRoleEnum.USER),
   validateUUIDParam("id"),
   controller.getById,
 );

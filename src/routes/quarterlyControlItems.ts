@@ -8,12 +8,14 @@ const router = express.Router();
 
 router.get(
   "/",
+  // TODO: Change permission to ADMIN in the future
   requireRole(UserRoleEnum.USER), // Permissive for viewing
   quarterlyControlItemsController.getAll,
 );
 
 router.get(
   "/:id",
+  // TODO: Change permission to ADMIN in the future
   validateUUIDParam("id"),
   requireRole(UserRoleEnum.USER), // Permissive for viewing
   quarterlyControlItemsController.getById,

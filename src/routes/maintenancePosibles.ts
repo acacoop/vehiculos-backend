@@ -11,9 +11,16 @@ import { UserRoleEnum } from "@/enums/UserRoleEnum";
 const router = express.Router();
 const controller = createMaintenancePosiblesController();
 
-router.get("/", controller.getAll);
+// TODO: Change permission to ADMIN in the future
+router.get("/", requireRole(UserRoleEnum.USER), controller.getAll);
 
-router.get("/:id", validateUUIDParam("id"), controller.getById);
+// TODO: Change permission to ADMIN in the future
+router.get(
+  "/:id",
+  validateUUIDParam("id"),
+  requireRole(UserRoleEnum.USER),
+  controller.getById,
+);
 
 router.post(
   "/",

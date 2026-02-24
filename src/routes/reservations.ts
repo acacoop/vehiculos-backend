@@ -13,14 +13,14 @@ import { PermissionType } from "@/enums/PermissionType";
 const router = express.Router();
 const controller = createReservationsController();
 
-router.get("/", requireRole(UserRoleEnum.ADMIN), controller.getAll);
+// TODO: Change permission to ADMIN in the future
+router.get("/", requireRole(UserRoleEnum.USER), controller.getAll);
 
+// TODO: Change permission to ADMIN in the future
 router.get(
   "/:id",
   validateUUIDParam("id"),
-  // TODO: Implement proper vehicle permission checking for reservations
-  // Currently using admin-only access until vehicle permission logic is implemented
-  requireRole(UserRoleEnum.ADMIN),
+  requireRole(UserRoleEnum.USER),
   controller.getById,
 );
 
