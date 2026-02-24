@@ -7,7 +7,8 @@ import { UserRoleEnum } from "@/enums/UserRoleEnum";
 const router = express.Router();
 const controller = createAssignmentsController();
 
-router.get("/", requireRole(UserRoleEnum.ADMIN), controller.getAll);
+// TODO: Implement proper vehicle permission checking for assignments
+router.get("/", requireRole(UserRoleEnum.USER), controller.getAll);
 
 router.get(
   "/:id",

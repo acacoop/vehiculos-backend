@@ -177,7 +177,7 @@ export function applyActiveFilter<T extends ObjectLiteral>(
   startField: string = "startDate",
   endField: string = "endDate",
 ): void {
-  const date = targetDate || new Date().toISOString();
+  const date = targetDate || new Date().toISOString().split("T")[0];
   qb.andWhere(
     `(${startField} <= :activeDate AND (${endField} IS NULL OR ${endField} >= :activeDate))`,
     { activeDate: date },
