@@ -10,12 +10,11 @@ const controller = createAssignmentsController();
 // TODO: Implement proper vehicle permission checking for assignments
 router.get("/", requireRole(UserRoleEnum.USER), controller.getAll);
 
+// TODO: Change permission to ADMIN in the future
 router.get(
   "/:id",
   validateUUIDParam("id"),
-  // TODO: Implement proper vehicle permission checking for assignments
-  // Currently using admin-only access until vehicle permission logic is implemented
-  requireRole(UserRoleEnum.ADMIN),
+  requireRole(UserRoleEnum.USER),
   controller.getById,
 );
 

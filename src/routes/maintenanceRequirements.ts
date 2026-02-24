@@ -11,16 +11,18 @@ import { maintenanceRequirementsController } from "@/controllers/maintenanceRequ
 
 const router = express.Router();
 
+// TODO: Change permission to ADMIN in the future
 router.get(
   "/",
-  requireRole(UserRoleEnum.ADMIN),
+  requireRole(UserRoleEnum.USER),
   maintenanceRequirementsController.getAll,
 );
 
+// TODO: Change permission to ADMIN in the future
 router.get(
   "/:maintenanceRequirementId",
   validateUUIDParam("maintenanceRequirementId"),
-  requireRole(UserRoleEnum.ADMIN),
+  requireRole(UserRoleEnum.USER),
   maintenanceRequirementsController.getById,
 );
 
