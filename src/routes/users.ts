@@ -14,9 +14,16 @@ const serviceFactory = new ServiceFactory(AppDataSource);
 const usersService = serviceFactory.createUsersService();
 const usersController = new UsersController(usersService);
 
-router.get("/", usersController.getAll);
+// TODO: Change permission to ADMIN in the future
+router.get("/", requireRole(UserRoleEnum.USER), usersController.getAll);
 
-router.get("/:id", validateUUIDParam("id"), usersController.getById);
+// TODO: Change permission to ADMIN in the future
+router.get(
+  "/:id",
+  validateUUIDParam("id"),
+  requireRole(UserRoleEnum.USER),
+  usersController.getById,
+);
 
 router.post(
   "/",

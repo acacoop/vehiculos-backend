@@ -7,11 +7,26 @@ export const MaintenanceRecordSchema = z.object({
   vehicleId: z.string().uuid(),
   userId: z.string().uuid(),
   date: z.coerce.date(),
-  kilometers: z.number().nonnegative(),
+  kilometers: z.number().nonnegative(), // This will be used to create a kilometer log
   notes: z.string().optional(),
 });
 
 export type MaintenanceRecord = z.infer<typeof MaintenanceRecordSchema>;
+
+// Schema for updating a maintenance record (all fields optional except we need at least one)
+export const MaintenanceRecordUpdateSchema = z
+  .object({
+    date: z.coerce.date().optional(),
+    kilometers: z.number().nonnegative().optional(),
+    notes: z.string().nullable().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "At least one field must be provided for update",
+  });
+
+export type MaintenanceRecordUpdate = z.infer<
+  typeof MaintenanceRecordUpdateSchema
+>;
 
 // DTO for maintenance record with full nested objects
 export interface MaintenanceRecordDTO {
@@ -54,6 +69,10 @@ export interface MaintenanceRecordDTO {
     };
   };
   date: Date;
-  kilometers: number;
+  kilometersLog: {
+    id: string;
+    kilometers: number;
+    date: Date;
+  };
   notes?: string;
 }

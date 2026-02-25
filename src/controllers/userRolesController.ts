@@ -63,7 +63,7 @@ export class UserRolesController extends BaseController<UserRoleFilters> {
     return this.service.create(parsed);
   }
 
-  protected async updateService(id: string, data: unknown) {
+  protected async updateService(id: string, data: unknown, _req: Request) {
     const parsed = UserRoleUpdateSchema.partial().parse(data);
     return this.service.update(id, parsed);
   }

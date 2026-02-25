@@ -1,11 +1,13 @@
 import { z } from "zod";
 import { QuarterlyControlItemStatus } from "@/enums/QuarterlyControlItemStatusEnum";
 
+const MAX_YEAR = new Date().getFullYear() + 5;
+
 // Define the schema for quarterly control object
 export const QuarterlyControlSchema = z.object({
   id: z.string().uuid().optional(), // UUID, optional for creation
   vehicleId: z.string().uuid(),
-  year: z.number().int().min(2000).max(2100),
+  year: z.number().int().min(2000).max(MAX_YEAR),
   quarter: z.number().int().min(1).max(4),
   intendedDeliveryDate: z.string(), // ISO date string
   filledBy: z.string().uuid().optional(),
@@ -48,6 +50,11 @@ export interface QuarterlyControlDTO {
     active: boolean;
   };
   filledAt?: string;
+  kilometersLog?: {
+    id: string;
+    kilometers: number;
+    date: Date;
+  };
   items: {
     id: string;
     category: string;

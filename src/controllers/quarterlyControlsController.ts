@@ -13,9 +13,11 @@ import { AuthenticatedRequest } from "@/middleware/auth";
 import { z } from "zod";
 import { QuarterlyControlItemStatus } from "@/enums/QuarterlyControlItemStatusEnum";
 
+const MAX_YEAR = new Date().getFullYear() + 5;
+
 const CreateControlWithItemsSchema = z.object({
   vehicleId: z.string().uuid(),
-  year: z.number().int().min(2000).max(2100),
+  year: z.number().int().min(2000).max(MAX_YEAR),
   quarter: z.number().int().min(1).max(4),
   intendedDeliveryDate: z.string(),
   items: z.array(
@@ -28,6 +30,7 @@ const CreateControlWithItemsSchema = z.object({
 });
 
 const PatchControlWithItemsSchema = z.object({
+  kilometers: z.number().nonnegative(),
   items: z.array(
     z.object({
       id: z.string().uuid(),
@@ -78,7 +81,7 @@ export class QuarterlyControlsController extends BaseController<QuarterlyControl
     }
   }
 
-  protected async updateService(id: string, data: unknown) {
+  protected async updateService(id: string, data: unknown, _req: Request) {
     const parsed = QuarterlyControlSchema.partial().parse(data);
     try {
       return await this.service.update(id, parsed);
@@ -129,6 +132,14 @@ export class QuarterlyControlsController extends BaseController<QuarterlyControl
     const data = PatchControlWithItemsSchema.parse(req.body);
     const { user } = req as AuthenticatedRequest;
     const userId = user?.id;
+    if (!userId) {
+      throw new AppError(
+        "User not authenticated",
+        401,
+        "https://example.com/problems/unauthorized",
+        "Unauthorized",
+      );
+    }
     try {
       const result = await this.service.patchWithItems(id, data, userId);
       if (!result) {

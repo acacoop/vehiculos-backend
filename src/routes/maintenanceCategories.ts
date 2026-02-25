@@ -12,9 +12,16 @@ const serviceFactory = new ServiceFactory(AppDataSource);
 const service = serviceFactory.createMaintenanceCategoriesService();
 const controller = new MaintenanceCategoriesController(service);
 
-router.get("/", controller.getAll);
+// TODO: Change permission to ADMIN in the future
+router.get("/", requireRole(UserRoleEnum.USER), controller.getAll);
 
-router.get("/:id", validateUUIDParam("id"), controller.getById);
+// TODO: Change permission to ADMIN in the future
+router.get(
+  "/:id",
+  validateUUIDParam("id"),
+  requireRole(UserRoleEnum.USER),
+  controller.getById,
+);
 
 router.post(
   "/",

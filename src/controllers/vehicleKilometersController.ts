@@ -39,7 +39,7 @@ export class VehicleKilometersController extends BaseController<VehicleKilometer
     return await this.service.create(parsedBody as VehicleKilometersLog);
   }
 
-  protected async updateService(id: string, data: unknown) {
+  protected async updateService(id: string, data: unknown, _req: Request) {
     const parsedBody = VehicleKilometersLogUpdateSchema.parse(data);
     return await this.service.update(
       id,

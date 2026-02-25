@@ -12,16 +12,17 @@ import { PermissionType } from "@/enums/PermissionType";
 const router = express.Router();
 const vehicleResponsiblesController = createVehicleResponsiblesController();
 
-// Admin only access
+// TODO: Change permission to ADMIN in the future
 router.get(
   "/",
-  requireRole(UserRoleEnum.ADMIN),
+  requireRole(UserRoleEnum.USER),
   vehicleResponsiblesController.getAll,
 );
 
+// TODO: Change permission to ADMIN in the future
 router.get(
   "/:id",
-  requireRole(UserRoleEnum.ADMIN),
+  requireRole(UserRoleEnum.USER),
   vehicleResponsiblesController.getById,
 );
 

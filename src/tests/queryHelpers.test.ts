@@ -78,9 +78,9 @@ describe("queryHelpers", () => {
       const query = qb.getQuery();
       const params = qb.getParameters();
 
-      expect(query).toContain("entity.name LIKE :search");
-      expect(query).toContain("OR entity.email LIKE :search");
-      expect(params.search).toBe("%john%");
+      expect(query).toContain("entity.name LIKE :search_term");
+      expect(query).toContain("OR entity.email LIKE :search_term");
+      expect(params.search_term).toBe("%john%");
     });
 
     it("should not apply filter when search is empty", () => {
@@ -103,9 +103,9 @@ describe("queryHelpers", () => {
       const query = qb.getQuery();
       const params = qb.getParameters();
 
-      expect(query).toContain("entity.name LIKE :search");
+      expect(query).toContain("entity.name LIKE :search_term");
       expect(query).not.toContain("OR");
-      expect(params.search).toBe("%test%");
+      expect(params.search_term).toBe("%test%");
     });
 
     it("should handle multiple fields search", () => {
@@ -118,10 +118,10 @@ describe("queryHelpers", () => {
       const query = qb.getQuery();
       const params = qb.getParameters();
 
-      expect(query).toContain("entity.name LIKE :search");
-      expect(query).toContain("OR entity.email LIKE :search");
-      expect(query).toContain("OR entity.description LIKE :search");
-      expect(params.search).toBe("%search term%");
+      expect(query).toContain("entity.name LIKE :search_term");
+      expect(query).toContain("OR entity.email LIKE :search_term");
+      expect(query).toContain("OR entity.description LIKE :search_term");
+      expect(params.search_term).toBe("%search term%");
     });
 
     it("should work with existing WHERE conditions", () => {
@@ -131,8 +131,22 @@ describe("queryHelpers", () => {
       const query = qb.getQuery();
 
       expect(query).toContain("entity.active = :active");
-      expect(query).toContain("entity.name LIKE :search");
+      expect(query).toContain("entity.name LIKE :search_term");
       expect(query).toContain("AND");
+    });
+
+    it("should concatenate fields when passed as array", () => {
+      applySearchFilter(qb, "john doe", [
+        ["entity.firstName", "entity.lastName"],
+      ]);
+
+      const query = qb.getQuery();
+      const params = qb.getParameters();
+
+      expect(query).toContain(
+        "CONCAT(entity.firstName, ' ', entity.lastName) LIKE :search_term",
+      );
+      expect(params.search_term).toBe("%john doe%");
     });
   });
 
@@ -404,12 +418,12 @@ describe("queryHelpers", () => {
       const params = qb.getParameters();
 
       // Check all conditions are present
-      expect(query).toContain("entity.name LIKE :search");
+      expect(query).toContain("entity.name LIKE :search_term");
       expect(query).toContain("entity.email = :email");
       expect(query).toContain("entity.active = :active");
 
       // Check parameters
-      expect(params.search).toBe("%john%");
+      expect(params.search_term).toBe("%john%");
       expect(params.email).toBe("john@test.com");
       expect(params.active).toBe(true);
     });
@@ -431,7 +445,7 @@ describe("queryHelpers", () => {
 
       const query = qb.getQuery();
 
-      expect(query).toContain("entity.name LIKE :search");
+      expect(query).toContain("entity.name LIKE :search_term");
       expect(query).toContain("entity.active = :active");
       expect(query).toContain("LIMIT");
     });

@@ -11,9 +11,11 @@ import type {
 import { validateVehicleExists } from "@/utils/validation/entity";
 import { User } from "@/entities/User";
 import { Vehicle } from "@/entities/Vehicle";
+import { VehicleKilometers } from "@/entities/VehicleKilometers";
 import { Repository, DataSource } from "typeorm";
 import { QuarterlyControlItemStatus } from "@/enums/QuarterlyControlItemStatusEnum";
 import { QuarterlyControlItem } from "@/entities/QuarterlyControlItem";
+import { VehicleKilometersService } from "@/services/vehicleKilometersService";
 
 function map(qc: QuarterlyControl): QuarterlyControlDTO {
   return {
@@ -51,6 +53,13 @@ function map(qc: QuarterlyControl): QuarterlyControlDTO {
         }
       : undefined,
     filledAt: qc.filledAt ?? undefined,
+    kilometersLog: qc.kilometersLog
+      ? {
+          id: qc.kilometersLog.id,
+          kilometers: qc.kilometersLog.kilometers,
+          date: qc.kilometersLog.date,
+        }
+      : undefined,
     items: (qc.items || []).map((item) => ({
       id: item.id,
       category: item.category,
@@ -67,6 +76,7 @@ export class QuarterlyControlsService {
     private readonly userRepo: Repository<User>,
     private readonly vehicleRepo: Repository<Vehicle>,
     private readonly dataSource: DataSource,
+    private readonly vehicleKilometersService: VehicleKilometersService,
   ) {}
 
   async getAll(
@@ -212,6 +222,8 @@ export class QuarterlyControlsService {
   async patchWithItems(
     id: string,
     data: {
+      userId?: string;
+      kilometers: number;
       items: {
         id: string;
         status: QuarterlyControlItemStatus;
@@ -228,14 +240,22 @@ export class QuarterlyControlsService {
     await queryRunner.startTransaction();
 
     try {
-      // Update filledBy and filledAt
+      // Fetch user once (prefer userId parameter, fallback to data.userId)
+      const userIdToUse = userId ?? data.userId;
+      if (!userIdToUse) {
+        throw new Error("User ID is required");
+      }
+
+      const user = await queryRunner.manager.findOne(User, {
+        where: { id: userIdToUse },
+      });
+      if (!user) throw new Error("User not found");
+
+      // Update filledBy and filledAt if userId parameter was provided
       if (userId) {
-        const user = await this.userRepo.findOne({ where: { id: userId } });
-        if (user) {
-          existing.filledBy = user;
-          existing.filledAt = new Date().toISOString();
-          await queryRunner.manager.save(existing);
-        }
+        existing.filledBy = user;
+        existing.filledAt = new Date().toISOString();
+        await queryRunner.manager.save(existing);
       }
 
       // Validate that all items belong to this control
@@ -255,6 +275,40 @@ export class QuarterlyControlsService {
           );
         }
       }
+
+      // Fetch vehicle for kilometer log creation
+      const vehicle = await queryRunner.manager.findOne(Vehicle, {
+        where: { id: existing.vehicle.id },
+        relations: ["model", "model.brand"],
+      });
+      if (!vehicle) throw new Error("Vehicle not found");
+
+      // Validate kilometers before creating (will throw AppError if invalid)
+      const currentDate = new Date();
+      await this.vehicleKilometersService.validateKilometersReading(
+        existing.vehicle.id,
+        currentDate,
+        data.kilometers,
+      );
+
+      // Create kilometer log inside transaction
+      const kilometersLogEntity = queryRunner.manager.create(
+        VehicleKilometers,
+        {
+          vehicle,
+          user,
+          date: currentDate,
+          kilometers: data.kilometers,
+        },
+      );
+      const savedKilometersLog = await queryRunner.manager.save(
+        VehicleKilometers,
+        kilometersLogEntity,
+      );
+
+      // Update checklist with kilometer log reference
+      existing.kilometersLog = savedKilometersLog;
+      await queryRunner.manager.save(existing);
 
       // Update items
       for (const itemUpdate of data.items) {

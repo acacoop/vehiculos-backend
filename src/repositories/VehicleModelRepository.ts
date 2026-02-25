@@ -28,7 +28,7 @@ export class VehicleModelRepository implements IVehicleModelRepository {
 
     // Apply search filter
     if (search) {
-      applySearchFilter(qb, search, ["m.name", "b.name"]);
+      applySearchFilter(qb, search, ["m.name", "b.name", ["b.name", "m.name"]]);
     }
 
     // Apply filters

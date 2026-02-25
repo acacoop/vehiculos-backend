@@ -143,11 +143,11 @@ async function ensureDatabase(retries = 3, delayMs = 2000) {
         .query<{ name: string }>("SELECT name FROM sys.databases;");
       const exists = dbs.recordset.some((r) => r.name === DB_NAME);
       if (!exists) {
-        console.log(`ℹ️ Creating database '${DB_NAME}' (attempt ${attempt})`);
+        console.log(`✅ Creating database '${DB_NAME}' (attempt ${attempt})`);
         await pool.request().query(`CREATE DATABASE [${DB_NAME}]`);
         console.log(`✅ Database '${DB_NAME}' created`);
       } else if (attempt === 1) {
-        console.log(`ℹ️ Database '${DB_NAME}' already exists`);
+        console.log(`✅ Database '${DB_NAME}' already exists`);
       }
       await pool.close();
       return;
@@ -165,12 +165,12 @@ async function ensureDatabase(retries = 3, delayMs = 2000) {
         );
       } else {
         console.log(
-          `⚠️  DB ensure attempt ${attempt}/${retries} failed (code=${code}) ${msg}. Retrying in ${delayMs}ms...`,
+          `⚠️ DB ensure attempt ${attempt}/${retries} failed (code=${code}) ${msg}. Retrying in ${delayMs}ms...`,
         );
       }
       if (attempt === retries) {
         console.warn(
-          "⚠️  Exhausted retries ensuring database; continuing anyway",
+          "⚠️ Exhausted retries ensuring database; continuing anyway",
         );
         return;
       }

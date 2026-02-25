@@ -32,6 +32,7 @@ import vehicleKilometersLogsRoutes from "@/routes/vehicleKilometersLogs";
 import quarterlyControlsRoutes from "@/routes/quarterlyControls";
 import quarterlyControlItemsRoutes from "@/routes/quarterlyControlItems";
 import metricsRoutes from "@/routes/metrics";
+import risksRoutes from "@/routes/risks";
 
 import { SERVER_PORT } from "@/config/env.config";
 import { AppDataSource, initializeDatabase } from "@/db";
@@ -96,6 +97,7 @@ app.use("/maintenance/records", maintenanceRecordsRoutes);
 app.use("/quarterly-controls", quarterlyControlsRoutes);
 app.use("/quarterly-control-items", quarterlyControlItemsRoutes);
 app.use("/metrics", metricsRoutes);
+app.use("/risks", risksRoutes);
 
 // 404 handler
 app.use("*", (req: Request, res: Response) => {

@@ -5,6 +5,8 @@ import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 export interface ReservationFilters {
   userId?: string;
   vehicleId?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface IReservationRepository {

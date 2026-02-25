@@ -15,6 +15,8 @@ export interface VehicleFilters {
   fuelType?: string;
   minKilometers?: string;
   maxKilometers?: string;
+  registrationDateFrom?: string;
+  registrationDateTo?: string;
 }
 
 export interface IVehicleRepository {

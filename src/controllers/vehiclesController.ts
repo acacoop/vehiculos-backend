@@ -5,6 +5,7 @@ import { ServiceFactory } from "@/factories/serviceFactory";
 import { AppDataSource } from "@/db";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import { VehicleFilters } from "@/repositories/interfaces/IVehicleRepository";
+import type { Request } from "express";
 
 export class VehiclesController extends BaseController<VehicleFilters> {
   constructor(private readonly service: VehiclesService) {
@@ -20,6 +21,8 @@ export class VehiclesController extends BaseController<VehicleFilters> {
         "fuelType",
         "minKilometers",
         "maxKilometers",
+        "registrationDateFrom",
+        "registrationDateTo",
       ],
     });
   }
@@ -38,7 +41,11 @@ export class VehiclesController extends BaseController<VehicleFilters> {
     return await this.service.create(data as VehicleInput);
   }
 
-  protected async updateService(id: string, data: VehicleUpdate) {
+  protected async updateService(
+    id: string,
+    data: VehicleUpdate,
+    _req: Request,
+  ) {
     return await this.service.update(id, data);
   }
 

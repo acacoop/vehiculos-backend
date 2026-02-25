@@ -284,6 +284,8 @@ paths:
         - `fuelType` - Exact match by fuel type
         - `minKilometers` - Minimum kilometers (inclusive) based on latest kilometers log
         - `maxKilometers` - Maximum kilometers (exclusive) based on latest kilometers log
+        - `registrationDateFrom` - Minimum registration date (inclusive) for filtering by date range
+        - `registrationDateTo` - Maximum registration date (inclusive) for filtering by date range
       tags: [Vehicles]
       parameters:
         - $ref: "#/components/parameters/PageParam"
@@ -313,21 +315,18 @@ paths:
           schema:
             type: integer
             minimum: 1900
-            maximum: 2030
         - name: minYear
           in: query
           description: Minimum year (inclusive) for filtering by age range
           schema:
             type: integer
             minimum: 1900
-            maximum: 2030
         - name: maxYear
           in: query
           description: Maximum year (inclusive) for filtering by age range
           schema:
             type: integer
             minimum: 1900
-            maximum: 2030
         - name: fuelType
           in: query
           description: Exact match by fuel type (e.g., Nafta, Diésel, Híbrido, Eléctrico)
@@ -345,6 +344,18 @@ paths:
           schema:
             type: integer
             minimum: 0
+        - name: registrationDateFrom
+          in: query
+          description: Minimum registration date (inclusive) for filtering by date range
+          schema:
+            type: string
+            format: date
+        - name: registrationDateTo
+          in: query
+          description: Maximum registration date (inclusive) for filtering by date range
+          schema:
+            type: string
+            format: date
       responses:
         "200":
           description: List of vehicles
@@ -509,6 +520,9 @@ paths:
         - Must be >= the previous reading (if exists)
         - Must be <= the next reading (if exists)
 
+        **Note:** The unique constraint is per vehicle per datetime (not just date), 
+        allowing multiple readings per day for the same vehicle.
+
         Returns 422 if the kilometers value violates chronological order.
       tags: [Vehicle Kilometers Logs]
       requestBody:
@@ -639,6 +653,10 @@ paths:
         **Filters:**
         - `userId` - Filter by specific user ID
         - `vehicleId` - Filter by specific vehicle ID
+        - `startDate` - Filter reservations active on or after this date (reservations that haven't ended before this date)
+        - `endDate` - Filter reservations active on or before this date (reservations that haven't started after this date)
+
+        **Date Range Overlap:** When both `startDate` and `endDate` are provided, returns reservations that overlap with the date range [startDate, endDate]. A reservation overlaps if it hasn't ended before the filter's startDate AND hasn't started after the filter's endDate.
       tags: [Reservations]
       parameters:
         - $ref: "#/components/parameters/PageParam"
@@ -656,6 +674,18 @@ paths:
             type: string
             format: uuid
           description: Filter by vehicle ID
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter reservations active on or after this date (finds reservations where endDate >= this value)
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter reservations active on or before this date (finds reservations where startDate <= this value)
       responses:
         "200":
           description: List of reservations retrieved successfully
@@ -1930,6 +1960,206 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
+  # RISK INDICATORS
+  /risks/summary:
+    get:
+      summary: Get risk indicators summary
+      description: Returns aggregated counts of all risk indicators. Admin only.
+      tags: [Risks]
+      parameters:
+        - name: toleranceDays
+          in: query
+          description: Number of tolerance days before considering something overdue
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: daysWithoutUpdate
+          in: query
+          description: Number of days without kilometer update to consider a vehicle at risk
+          schema:
+            type: integer
+            minimum: 1
+            default: 30
+      responses:
+        "200":
+          $ref: "#/components/responses/RiskSummaryResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /risks/vehicles-without-responsible:
+    get:
+      summary: Get vehicles without current responsible
+      description: Returns vehicles that have no active responsible assignment. Admin only.
+      tags: [Risks]
+      parameters:
+        - name: search
+          in: query
+          description: Filter by vehicle license plate
+          schema:
+            type: string
+        - $ref: "#/components/parameters/limitParam"
+        - $ref: "#/components/parameters/offsetParam"
+      responses:
+        "200":
+          $ref: "#/components/responses/VehiclesWithoutResponsibleResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /risks/overdue-maintenance-vehicles:
+    get:
+      summary: Get vehicles with overdue maintenance
+      description: Returns vehicles that have at least one overdue maintenance requirement (by days or kilometers). Admin only.
+      tags: [Risks]
+      parameters:
+        - name: search
+          in: query
+          description: Filter by vehicle license plate, maintenance name, model name, or brand name
+          schema:
+            type: string
+        - name: toleranceDays
+          in: query
+          description: Number of tolerance days before considering maintenance overdue
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: maintenanceId
+          in: query
+          description: Filter by specific maintenance type (UUID)
+          schema:
+            type: string
+            format: uuid
+        - name: modelId
+          in: query
+          description: Filter by specific vehicle model (UUID)
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/limitParam"
+        - $ref: "#/components/parameters/offsetParam"
+      responses:
+        "200":
+          $ref: "#/components/responses/OverdueMaintenanceResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /risks/overdue-quarterly-controls:
+    get:
+      summary: Get overdue quarterly controls
+      description: Returns quarterly controls past their intended delivery date that haven't been filled. Admin only.
+      tags: [Risks]
+      parameters:
+        - name: search
+          in: query
+          description: Filter by vehicle license plate
+          schema:
+            type: string
+        - name: toleranceDays
+          in: query
+          description: Number of tolerance days before considering a control overdue
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: year
+          in: query
+          description: Filter by year
+          schema:
+            type: integer
+            minimum: 2000
+        - name: quarter
+          in: query
+          description: Filter by quarter (1-4)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4
+        - $ref: "#/components/parameters/limitParam"
+        - $ref: "#/components/parameters/offsetParam"
+      responses:
+        "200":
+          $ref: "#/components/responses/OverdueQuarterlyControlsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /risks/quarterly-controls-with-errors:
+    get:
+      summary: Get quarterly controls with rejected items
+      description: Returns quarterly controls that have items with RECHAZADO status. Admin only.
+      tags: [Risks]
+      parameters:
+        - name: search
+          in: query
+          description: Filter by vehicle license plate
+          schema:
+            type: string
+        - name: year
+          in: query
+          description: Filter by year
+          schema:
+            type: integer
+            minimum: 2000
+        - name: quarter
+          in: query
+          description: Filter by quarter (1-4)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4
+        - name: minRejectedItems
+          in: query
+          description: Minimum number of rejected items to include the control
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - $ref: "#/components/parameters/limitParam"
+        - $ref: "#/components/parameters/offsetParam"
+      responses:
+        "200":
+          $ref: "#/components/responses/QuarterlyControlsWithErrorsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /risks/vehicles-without-recent-kilometers:
+    get:
+      summary: Get vehicles without recent kilometer readings
+      description: Returns vehicles that have not reported kilometer readings in the configured recent period. Admin only.
+      tags: [Risks]
+      parameters:
+        - name: search
+          in: query
+          description: Filter by vehicle license plate
+          schema:
+            type: string
+        - name: daysWithoutUpdate
+          in: query
+          description: Number of days without update to consider a vehicle at risk
+          schema:
+            type: integer
+            minimum: 1
+            default: 30
+        - $ref: "#/components/parameters/limitParam"
+        - $ref: "#/components/parameters/offsetParam"
+      responses:
+        "200":
+          $ref: "#/components/responses/VehiclesWithoutRecentKilometersResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
   # VEHICLE RESPONSIBLES
   /vehicle-responsibles:
     get:
@@ -2951,7 +3181,6 @@ components:
         year:
           type: integer
           minimum: 1900
-          maximum: 2030
           example: 2022
         chassisNumber:
           type: string
@@ -2973,6 +3202,11 @@ components:
           nullable: true
           description: "Tipo de combustible (nafta, diésel, híbrido, eléctrico, etc.)"
           example: "Nafta"
+        registrationDate:
+          type: string
+          format: date
+          description: "Fecha de alta del vehículo en el sistema"
+          example: "2022-01-15"
         currentResponsible:
           allOf:
             - $ref: "#/components/schemas/VehicleResponsibleWithDetails"
@@ -2983,6 +3217,7 @@ components:
         - licensePlate
         - model
         - year
+        - registrationDate
 
     VehicleInput:
       type: object
@@ -2997,7 +3232,6 @@ components:
         year:
           type: integer
           minimum: 1900
-          maximum: 2030
         chassisNumber:
           type: string
           description: "Número de chasis"
@@ -3010,10 +3244,16 @@ components:
         fuelType:
           type: string
           description: "Combustible"
+        registrationDate:
+          type: string
+          format: date
+          description: "Fecha de alta del vehículo"
+          example: "2022-01-15"
       required:
         - licensePlate
         - modelId
         - year
+        - registrationDate
 
     VehicleUpdateInput:
       type: object
@@ -3029,7 +3269,6 @@ components:
         year:
           type: integer
           minimum: 1900
-          maximum: 2030
         chassisNumber:
           type: string
         engineNumber:
@@ -3038,6 +3277,10 @@ components:
           type: string
         fuelType:
           type: string
+        registrationDate:
+          type: string
+          format: date
+          description: "Fecha de alta del vehículo"
       minProperties: 1
 
     # VEHICLE BRAND & MODEL SCHEMAS
@@ -3928,10 +4171,23 @@ components:
           type: string
           format: date-time
           example: "2025-01-10T14:30:00Z"
-        kilometers:
-          type: integer
-          minimum: 0
-          example: 75000
+        kilometersLog:
+          type: object
+          description: "Reference to the kilometer log entry created for this maintenance"
+          properties:
+            id:
+              type: string
+              format: uuid
+            kilometers:
+              type: integer
+              minimum: 0
+            date:
+              type: string
+              format: date-time
+          required:
+            - id
+            - kilometers
+            - date
         notes:
           type: string
           nullable: true
@@ -3942,7 +4198,7 @@ components:
         - vehicle
         - maintenance
         - date
-        - kilometers
+        - kilometersLog
 
     MaintenanceRecordInput:
       type: object
@@ -3962,6 +4218,7 @@ components:
         kilometers:
           type: integer
           minimum: 0
+          description: "Kilometers reading - a new kilometer log entry will be created automatically"
         notes:
           type: string
       required:
@@ -4027,6 +4284,24 @@ components:
           format: date-time
           nullable: true
           example: "2025-01-15T14:30:00Z"
+        kilometersLog:
+          type: object
+          nullable: true
+          description: "Reference to the kilometer log entry created when checklist was filled"
+          properties:
+            id:
+              type: string
+              format: uuid
+            kilometers:
+              type: integer
+              minimum: 0
+            date:
+              type: string
+              format: date-time
+          required:
+            - id
+            - kilometers
+            - date
         items:
           type: array
           items:
@@ -4153,6 +4428,10 @@ components:
     QuarterlyControlPatchWithItemsInput:
       type: object
       properties:
+        kilometers:
+          type: integer
+          minimum: 0
+          description: "Kilometers reading at time of checklist completion - a new kilometer log entry will be created automatically"
         items:
           type: array
           items:
@@ -4171,6 +4450,7 @@ components:
               - status
               - observations
       required:
+        - kilometers
         - items
 
     QuarterlyControlResponse:
@@ -4368,6 +4648,152 @@ components:
           items:
             $ref: "#/components/schemas/TimelineItem"
 
+    RiskSummary:
+      type: object
+      properties:
+        key:
+          type: string
+          description: Machine-readable risk category key
+          example: "vehicles-without-responsible"
+        label:
+          type: string
+          description: Human-readable risk category label
+          example: "Vehículos sin responsable"
+        count:
+          type: integer
+          description: Number of items in this risk category
+          example: 5
+        severity:
+          type: string
+          enum: [low, medium, high]
+          description: Risk severity level
+          example: "high"
+
+    VehicleWithoutResponsible:
+      type: object
+      properties:
+        vehicleId:
+          type: string
+          format: uuid
+        vehicleLicensePlate:
+          type: string
+          example: "ABC123"
+        lastResponsibleEndDate:
+          type: string
+          format: date
+          nullable: true
+
+    OverdueMaintenanceItem:
+      type: object
+      properties:
+        vehicleId:
+          type: string
+          format: uuid
+        vehicleLicensePlate:
+          type: string
+          example: "ABC123"
+        maintenanceId:
+          type: string
+          format: uuid
+        maintenanceName:
+          type: string
+          example: "Cambio de aceite"
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        dueKilometers:
+          type: integer
+          nullable: true
+          example: 50000
+        currentKilometers:
+          type: integer
+          example: 52000
+        daysOverdue:
+          type: integer
+          nullable: true
+          example: 30
+        kilometersOverdue:
+          type: integer
+          nullable: true
+          example: 2000
+
+    OverdueQuarterlyControl:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        vehicleId:
+          type: string
+          format: uuid
+        vehicleLicensePlate:
+          type: string
+          example: "ABC123"
+        year:
+          type: integer
+          example: 2024
+        quarter:
+          type: integer
+          minimum: 1
+          maximum: 4
+          example: 2
+        intendedDeliveryDate:
+          type: string
+          format: date
+        daysOverdue:
+          type: integer
+          example: 15
+
+    QuarterlyControlWithErrors:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        vehicleId:
+          type: string
+          format: uuid
+        vehicleLicensePlate:
+          type: string
+          example: "ABC123"
+        year:
+          type: integer
+          example: 2024
+        quarter:
+          type: integer
+          minimum: 1
+          maximum: 4
+          example: 2
+        rejectedItemsCount:
+          type: integer
+          example: 3
+
+    VehicleWithoutRecentKilometers:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        vehicleId:
+          type: string
+          format: uuid
+        vehicleLicensePlate:
+          type: string
+          example: "ABC123"
+        lastKilometerDate:
+          type: string
+          format: date
+          nullable: true
+        lastKilometers:
+          type: integer
+          nullable: true
+          example: 45000
+        daysSinceLastUpdate:
+          type: integer
+          description: Days since last kilometer update, -1 if never updated
+          example: 45
+
   responses:
     # Common error responses using RFC 7807
     BadRequest:
@@ -4514,6 +4940,96 @@ components:
                 example: "success"
               data:
                 $ref: "#/components/schemas/PersonnelMetric"
+
+    RiskSummaryResponse:
+      description: Risk indicators summary
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              data:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RiskSummary"
+
+    VehiclesWithoutResponsibleResponse:
+      description: Vehicles without current responsible
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              data:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VehicleWithoutResponsible"
+
+    OverdueMaintenanceResponse:
+      description: Overdue maintenance items
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              data:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OverdueMaintenanceItem"
+
+    OverdueQuarterlyControlsResponse:
+      description: Overdue quarterly controls
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              data:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OverdueQuarterlyControl"
+
+    QuarterlyControlsWithErrorsResponse:
+      description: Quarterly controls with rejected items
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              data:
+                type: array
+                items:
+                  $ref: "#/components/schemas/QuarterlyControlWithErrors"
+
+    VehiclesWithoutRecentKilometersResponse:
+      description: Vehicles without recent kilometer readings
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              data:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VehicleWithoutRecentKilometers"
 
   securitySchemes:
     BearerAuth:
