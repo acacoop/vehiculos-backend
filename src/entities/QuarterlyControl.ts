@@ -28,14 +28,14 @@ export class QuarterlyControl {
   @Column({ name: "quarter", type: "int" })
   quarter!: number;
 
-  @Column({ name: "intended_delivery_date", type: "date" })
+  @Column({ name: "intended_delivery_date", type: "datetime" })
   intendedDeliveryDate!: string;
 
   @ManyToOne(() => User, { nullable: true, onDelete: "SET NULL" })
   @JoinColumn({ name: "filled_by" })
   filledBy!: User | null;
 
-  @Column({ name: "filled_at", type: "date", nullable: true })
+  @Column({ name: "filled_at", type: "datetime", nullable: true })
   filledAt!: string | null;
 
   @ManyToOne(() => VehicleKilometers, {

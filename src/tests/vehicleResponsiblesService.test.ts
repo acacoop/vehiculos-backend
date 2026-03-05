@@ -70,7 +70,8 @@ describe("VehicleResponsiblesService", () => {
   const createMockVehicleResponsible = (): VehicleResponsible =>
     ({
       id: "1",
-      startDate: "2024-01-01",
+      ceco: "99999999",
+      startDate: "2024-01-01T00:00:00Z",
       endDate: null,
       user: {
         id: "u1",
@@ -169,8 +170,9 @@ describe("VehicleResponsiblesService", () => {
       const result = await service.create({
         userId: "u1",
         vehicleId: "v1",
-        startDate: "2024-01-01",
-        endDate: "2024-12-31",
+        ceco: "12345678",
+        startDate: "2024-01-01T00:00:00Z",
+        endDate: "2024-12-31T23:59:59Z",
       });
 
       expect(result).not.toBeNull();
@@ -188,7 +190,8 @@ describe("VehicleResponsiblesService", () => {
       const result = await service.create({
         userId: "u1",
         vehicleId: "v1",
-        startDate: "2024-01-01",
+        ceco: "12345678",
+        startDate: "2024-01-01T00:00:00Z",
       });
 
       expect(result).toBeNull();
@@ -217,7 +220,8 @@ describe("VehicleResponsiblesService", () => {
       await service.create({
         userId: "u1",
         vehicleId: "v1",
-        startDate: "2024-01-01",
+        ceco: "12345678",
+        startDate: "2024-01-01T00:00:00Z",
       });
 
       expect(mockRepo.save).toHaveBeenCalledWith(
