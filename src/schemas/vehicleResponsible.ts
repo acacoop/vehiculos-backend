@@ -5,6 +5,7 @@ export const VehicleResponsibleSchema = z.object({
   id: z.string().uuid().optional(),
   vehicleId: z.string().uuid(),
   userId: z.string().uuid(),
+  ceco: z.string().length(8, "CECO debe tener exactamente 8 caracteres"),
   startDate: z.string(), // stored as YYYY-MM-DD
   endDate: z.string().nullable().optional(),
   createdAt: z.coerce.date().optional(),

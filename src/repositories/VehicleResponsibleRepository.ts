@@ -14,7 +14,9 @@ import {
   applyActiveFilter,
 } from "@/utils/index";
 
-export class VehicleResponsibleRepository implements IVehicleResponsibleRepository {
+export class VehicleResponsibleRepository
+  implements IVehicleResponsibleRepository
+{
   private readonly repo: Repository<VehicleResponsibleEntity>;
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(VehicleResponsibleEntity);
@@ -60,6 +62,7 @@ export class VehicleResponsibleRepository implements IVehicleResponsibleReposito
         ["user.firstName", "user.lastName"],
         ["user.lastName", "user.firstName"],
         "user.email",
+        "vr.ceco",
         "vehicle.licensePlate",
         "vehicle.chassisNumber",
         "brand.name",
@@ -72,6 +75,7 @@ export class VehicleResponsibleRepository implements IVehicleResponsibleReposito
     applyFilters(qb, filters, {
       vehicleId: { field: "vehicle.id" },
       userId: { field: "user.id" },
+      ceco: { field: "vr.ceco" },
     });
 
     // Apply active filter for date filtering

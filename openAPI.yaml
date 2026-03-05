@@ -3399,6 +3399,12 @@ components:
           type: string
           format: uuid
           example: "550e8400-e29b-41d4-a716-446655440000"
+        ceco:
+          type: string
+          minLength: 8
+          maxLength: 8
+          example: "12345678"
+          description: "Cost center code (8 digits)"
         startDate:
           type: string
           format: date
@@ -3422,6 +3428,7 @@ components:
         - id
         - vehicleId
         - userId
+        - ceco
         - startDate
 
     VehicleResponsibleWithDetails:
@@ -3431,6 +3438,12 @@ components:
           type: string
           format: uuid
           example: "d50e8400-e29b-41d4-a716-446655440008"
+        ceco:
+          type: string
+          minLength: 8
+          maxLength: 8
+          example: "12345678"
+          description: "Cost center code (8 digits)"
         startDate:
           type: string
           format: date
@@ -3448,6 +3461,7 @@ components:
           $ref: "#/components/schemas/Vehicle"
       required:
         - id
+        - ceco
         - startDate
         - user
         - vehicle
@@ -3461,6 +3475,12 @@ components:
         userId:
           type: string
           format: uuid
+        ceco:
+          type: string
+          minLength: 8
+          maxLength: 8
+          example: "12345678"
+          description: "Cost center code (8 digits)"
         startDate:
           type: string
           format: date
@@ -3473,6 +3493,7 @@ components:
       required:
         - vehicleId
         - userId
+        - ceco
 
     VehicleResponsibleResponse:
       allOf:
