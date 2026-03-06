@@ -833,19 +833,19 @@ async function createAssignments(
     {
       user: findUser("ana.martinez@sample.test"),
       vehicle: findVehicle("ABC123"),
-      startDate: "2024-01-01",
+      startDate: "2024-01-01T00:00:00.000Z",
       endDate: null,
     },
     {
       user: findUser("diego.garcia@sample.test"),
       vehicle: findVehicle("DEF456"),
-      startDate: "2024-03-01",
+      startDate: "2024-03-01T00:00:00.000Z",
       endDate: null,
     },
     {
       user: findUser("valentina.silva@sample.test"),
       vehicle: findVehicle("MNO345"),
-      startDate: "2024-02-01",
+      startDate: "2024-02-01T00:00:00.000Z",
       endDate: null,
     },
 
@@ -853,63 +853,63 @@ async function createAssignments(
     {
       user: findUser("juan.perez@sample.test"),
       vehicle: findVehicle("ABC123"),
-      startDate: "2023-01-01",
-      endDate: "2023-12-31", // ended
+      startDate: "2023-01-01T00:00:00.000Z",
+      endDate: "2023-12-31T23:59:59.999Z", // ended
     },
     {
       user: findUser("sofia.hernandez@sample.test"),
       vehicle: findVehicle("MNO345"),
-      startDate: "2023-06-01",
-      endDate: "2024-05-31", // ended
+      startDate: "2023-06-01T00:00:00.000Z",
+      endDate: "2024-05-31T23:59:59.999Z", // ended
     },
 
     // Other assignments
     {
       user: findUser("carlos.rodriguez@sample.test"),
       vehicle: findVehicle("QRS345"),
-      startDate: "2024-01-01",
+      startDate: "2024-01-01T00:00:00.000Z",
       endDate: null,
     },
     {
       user: findUser("maria.gonzalez@sample.test"),
       vehicle: findVehicle("STU901"),
-      startDate: "2024-02-01",
+      startDate: "2024-02-01T00:00:00.000Z",
       endDate: null,
     },
     {
       user: findUser("andres.morales@sample.test"),
       vehicle: findVehicle("YZA567"),
-      startDate: "2024-06-01",
+      startDate: "2024-06-01T00:00:00.000Z",
       endDate: null,
     },
     {
       user: findUser("miguel.vargas@sample.test"),
       vehicle: findVehicle("EFG123"),
-      startDate: "2024-07-01",
+      startDate: "2024-07-01T00:00:00.000Z",
       endDate: null,
     },
     {
       user: findUser("isabella.ruiz@sample.test"),
       vehicle: findVehicle("HIJ456"),
-      startDate: "2024-08-01",
+      startDate: "2024-08-01T00:00:00.000Z",
       endDate: null,
     },
     {
       user: findUser("roberto.jimenez@sample.test"),
       vehicle: findVehicle("KLM789"),
-      startDate: "2024-09-01",
+      startDate: "2024-09-01T00:00:00.000Z",
       endDate: null,
     },
     {
       user: findUser("lucia.castro@sample.test"),
       vehicle: findVehicle("NOP012"),
-      startDate: "2024-10-01",
+      startDate: "2024-10-01T00:00:00.000Z",
       endDate: null,
     },
     {
       user: findUser("fernando.romero@sample.test"),
       vehicle: findVehicle("TUV678"),
-      startDate: "2024-11-01",
+      startDate: "2024-11-01T00:00:00.000Z",
       endDate: null,
     },
   ];
@@ -936,7 +936,7 @@ async function createMaintenanceRequirements(
     {
       model: findModel("Civic"),
       maintenance: findMaintenance("Oil Change"),
-      startDate: "2024-01-01",
+      startDate: "2024-01-01T00:00:00.000Z",
       endDate: null,
       kilometersFrequency: 5000,
       daysFrequency: 90,
@@ -944,7 +944,7 @@ async function createMaintenanceRequirements(
     {
       model: findModel("Corolla"),
       maintenance: findMaintenance("Oil Change"),
-      startDate: "2024-01-01",
+      startDate: "2024-01-01T00:00:00.000Z",
       endDate: null,
       kilometersFrequency: 5000,
       daysFrequency: 90,
@@ -952,7 +952,7 @@ async function createMaintenanceRequirements(
     {
       model: findModel("Sentra"),
       maintenance: findMaintenance("Oil Change"),
-      startDate: "2024-01-01",
+      startDate: "2024-01-01T00:00:00.000Z",
       endDate: null,
       kilometersFrequency: 5000,
       daysFrequency: 90,
@@ -962,7 +962,7 @@ async function createMaintenanceRequirements(
     {
       model: findModel("CR-V"),
       maintenance: findMaintenance("Tire Rotation"),
-      startDate: "2024-01-01",
+      startDate: "2024-01-01T00:00:00.000Z",
       endDate: null,
       kilometersFrequency: 10000,
       daysFrequency: 180,
@@ -970,7 +970,7 @@ async function createMaintenanceRequirements(
     {
       model: findModel("RAV4"),
       maintenance: findMaintenance("Tire Rotation"),
-      startDate: "2024-01-01",
+      startDate: "2024-01-01T00:00:00.000Z",
       endDate: null,
       kilometersFrequency: 10000,
       daysFrequency: 180,
@@ -980,7 +980,7 @@ async function createMaintenanceRequirements(
     {
       model: findModel("Civic"),
       maintenance: findMaintenance("Brake Inspection"),
-      startDate: "2024-01-01",
+      startDate: "2024-01-01T00:00:00.000Z",
       endDate: null,
       kilometersFrequency: 20000,
       daysFrequency: 365,
@@ -988,7 +988,7 @@ async function createMaintenanceRequirements(
     {
       model: findModel("Golf"),
       maintenance: findMaintenance("Brake Inspection"),
-      startDate: "2024-01-01",
+      startDate: "2024-01-01T00:00:00.000Z",
       endDate: null,
       kilometersFrequency: 20000,
       daysFrequency: 365,
@@ -998,7 +998,7 @@ async function createMaintenanceRequirements(
     {
       model: findModel("Civic"),
       maintenance: findMaintenance("Annual Safety Inspection"),
-      startDate: "2024-01-01",
+      startDate: "2024-01-01T00:00:00.000Z",
       endDate: null,
       kilometersFrequency: null,
       daysFrequency: 365,
@@ -1006,7 +1006,7 @@ async function createMaintenanceRequirements(
     {
       model: findModel("Corolla"),
       maintenance: findMaintenance("Annual Safety Inspection"),
-      startDate: "2024-01-01",
+      startDate: "2024-01-01T00:00:00.000Z",
       endDate: null,
       kilometersFrequency: null,
       daysFrequency: 365,
@@ -1014,7 +1014,7 @@ async function createMaintenanceRequirements(
     {
       model: findModel("CR-V"),
       maintenance: findMaintenance("Annual Safety Inspection"),
-      startDate: "2024-01-01",
+      startDate: "2024-01-01T00:00:00.000Z",
       endDate: null,
       kilometersFrequency: null,
       daysFrequency: 365,
@@ -1022,7 +1022,7 @@ async function createMaintenanceRequirements(
     {
       model: findModel("Model 3"),
       maintenance: findMaintenance("Annual Safety Inspection"),
-      startDate: "2024-01-01",
+      startDate: "2024-01-01T00:00:00.000Z",
       endDate: null,
       kilometersFrequency: null,
       daysFrequency: 365,
@@ -1050,20 +1050,20 @@ async function createSampleReservations(
     {
       user: findUser("valentina.silva@sample.test"),
       vehicle: findVehicle("GHI789"),
-      startDate: "2025-01-15",
-      endDate: "2025-01-20",
+      startDate: "2025-01-15T08:00:00.000Z",
+      endDate: "2025-01-20T18:00:00.000Z",
     },
     {
       user: findUser("diego.garcia@sample.test"),
       vehicle: findVehicle("JKL012"),
-      startDate: "2025-01-18",
-      endDate: "2025-01-25",
+      startDate: "2025-01-18T09:00:00.000Z",
+      endDate: "2025-01-25T17:00:00.000Z",
     },
     {
       user: findUser("sofia.hernandez@sample.test"),
       vehicle: findVehicle("KLM789"),
-      startDate: "2025-01-22",
-      endDate: "2025-01-24",
+      startDate: "2025-01-22T10:00:00.000Z",
+      endDate: "2025-01-24T16:00:00.000Z",
     },
   ];
 
@@ -1090,14 +1090,14 @@ async function createVehicleResponsibles(
       vehicle: findVehicle("DEF456"), // V2
       user: findUser("maria.gonzalez@sample.test"),
       ceco: "23000000", // in range 23000000-23999999
-      startDate: "2024-01-01",
+      startDate: "2024-01-01T00:00:00.000Z",
       endDate: null,
     },
     {
       vehicle: findVehicle("MNO345"), // V3
       user: findUser("valentina.silva@sample.test"),
       ceco: "17001234", // in range 17000000-17999999
-      startDate: "2024-02-01",
+      startDate: "2024-02-01T00:00:00.000Z",
       endDate: null,
     },
 
@@ -1106,15 +1106,15 @@ async function createVehicleResponsibles(
       vehicle: findVehicle("ABC123"), // V1
       user: findUser("juan.perez@sample.test"),
       ceco: "12003456", // in range 12000000-12999999
-      startDate: "2023-01-01",
-      endDate: "2023-12-31", // ended
+      startDate: "2023-01-01T00:00:00.000Z",
+      endDate: "2023-12-31T23:59:59.999Z", // ended
     },
     {
       vehicle: findVehicle("DEF456"), // V2
       user: findUser("diego.garcia@sample.test"),
       ceco: "23000000",
-      startDate: "2023-06-01",
-      endDate: "2024-05-31", // ended
+      startDate: "2023-06-01T00:00:00.000Z",
+      endDate: "2024-05-31T23:59:59.999Z", // ended
     },
 
     // Other responsibles
@@ -1122,21 +1122,21 @@ async function createVehicleResponsibles(
       vehicle: findVehicle("YZA567"),
       user: findUser("andres.morales@sample.test"),
       ceco: "18000123",
-      startDate: "2024-06-01",
+      startDate: "2024-06-01T00:00:00.000Z",
       endDate: null,
     },
     {
       vehicle: findVehicle("EFG123"),
       user: findUser("miguel.vargas@sample.test"),
       ceco: "15000000",
-      startDate: "2024-07-01",
+      startDate: "2024-07-01T00:00:00.000Z",
       endDate: null,
     },
     {
       vehicle: findVehicle("HIJ456"),
       user: findUser("isabella.ruiz@sample.test"),
       ceco: "30000000", // outside ranges
-      startDate: "2024-08-01",
+      startDate: "2024-08-01T00:00:00.000Z",
       endDate: null,
     },
   ];
@@ -1314,7 +1314,7 @@ async function createMaintenanceRecords(
       maintenance: findMaintenance("Oil Change"),
       vehicle: findVehicle("ABC123"),
       user: findUser("roberto.jimenez@sample.test"),
-      date: "2024-12-15",
+      date: "2024-12-15T10:30:00.000Z",
       kilometers: 45000,
       notes: "Regular oil change. Used synthetic 5W-30. All levels checked.",
     },
@@ -1322,7 +1322,7 @@ async function createMaintenanceRecords(
       maintenance: findMaintenance("Oil Change"),
       vehicle: findVehicle("DEF456"),
       user: findUser("lucia.castro@sample.test"),
-      date: "2024-12-10",
+      date: "2024-12-10T14:15:00.000Z",
       kilometers: 38000,
       notes: "Oil change completed. Minor leak detected and repaired.",
     },
@@ -1330,7 +1330,7 @@ async function createMaintenanceRecords(
       maintenance: findMaintenance("Tire Rotation"),
       vehicle: findVehicle("ABC123"),
       user: findUser("fernando.romero@sample.test"),
-      date: "2024-11-20",
+      date: "2024-11-20T09:00:00.000Z",
       kilometers: 42000,
       notes: "Tire rotation completed. Front tires showing slight wear.",
     },
@@ -1382,9 +1382,9 @@ async function createSampleQuarterlyControls(
       vehicle: findVehicle("ABC123"),
       year: 2024,
       quarter: 4,
-      intendedDeliveryDate: "2025-01-15",
+      intendedDeliveryDate: "2025-01-15T09:00:00.000Z",
       filledBy: findUser("roberto.jimenez@sample.test"),
-      filledAt: "2024-12-20",
+      filledAt: "2024-12-20T11:30:00.000Z",
       kilometers: 45300,
     },
     // Control for Q1 2025 - DEF456 (Honda Civic)
@@ -1392,7 +1392,7 @@ async function createSampleQuarterlyControls(
       vehicle: findVehicle("DEF456"),
       year: 2025,
       quarter: 1,
-      intendedDeliveryDate: "2025-02-10",
+      intendedDeliveryDate: "2025-02-10T09:00:00.000Z",
       filledBy: null,
       filledAt: null,
       kilometers: null,
@@ -1402,9 +1402,9 @@ async function createSampleQuarterlyControls(
       vehicle: findVehicle("MNO345"),
       year: 2024,
       quarter: 4,
-      intendedDeliveryDate: "2025-01-20",
+      intendedDeliveryDate: "2025-01-20T09:00:00.000Z",
       filledBy: findUser("lucia.castro@sample.test"),
-      filledAt: "2024-12-18",
+      filledAt: "2024-12-18T14:45:00.000Z",
       kilometers: 35100,
     },
     // Control for Q1 2025 - GHI789 (Nissan Sentra) - pending
@@ -1412,7 +1412,7 @@ async function createSampleQuarterlyControls(
       vehicle: findVehicle("GHI789"),
       year: 2025,
       quarter: 1,
-      intendedDeliveryDate: "2025-02-15",
+      intendedDeliveryDate: "2025-02-15T09:00:00.000Z",
       filledBy: null,
       filledAt: null,
       kilometers: null,
@@ -1422,9 +1422,9 @@ async function createSampleQuarterlyControls(
       vehicle: findVehicle("STU901"),
       year: 2024,
       quarter: 4,
-      intendedDeliveryDate: "2025-01-25",
+      intendedDeliveryDate: "2025-01-25T09:00:00.000Z",
       filledBy: findUser("fernando.romero@sample.test"),
-      filledAt: "2024-12-22",
+      filledAt: "2024-12-22T10:15:00.000Z",
       kilometers: 28500,
     },
   ];

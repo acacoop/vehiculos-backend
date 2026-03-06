@@ -37,9 +37,9 @@ export class MaintenanceRequirement {
   @Column({ name: "instructions", type: "text", nullable: true })
   instructions!: string | null;
 
-  @Column({ name: "start_date", type: "date" })
+  @Column({ name: "start_date", type: "datetime" })
   startDate!: string;
 
-  @Column({ name: "end_date", type: "date", nullable: true })
+  @Column({ name: "end_date", type: "datetime", nullable: true })
   endDate!: string | null;
 }

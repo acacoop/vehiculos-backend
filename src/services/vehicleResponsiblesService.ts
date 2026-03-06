@@ -18,6 +18,7 @@ import { applyOverlapCheck } from "@/utils/query/helpers";
 // Composite detail view (was in ../types)
 export interface VehicleResponsibleWithDetails {
   id: string;
+  ceco: string;
   startDate: string;
   endDate: string | null;
   user: {
@@ -40,6 +41,7 @@ export interface VehicleResponsibleWithDetails {
 function mapEntity(e: VehicleResponsibleEntity): VehicleResponsibleWithDetails {
   return {
     id: e.id,
+    ceco: e.ceco,
     startDate: e.startDate,
     endDate: e.endDate,
     user: {
@@ -132,7 +134,7 @@ export class VehicleResponsiblesService {
     data: VehicleResponsibleInput,
     //): Promise<VehicleResponsible | null> {
   ): Promise<VehicleResponsibleWithDetails | null> {
-    const { vehicleId, userId, startDate, endDate = null } = data;
+    const { vehicleId, userId, ceco, startDate, endDate = null } = data;
     await validateUserExists(userId);
     await validateVehicleExists(vehicleId);
     const vehicle = await this.vehicleRepo.findOne({
@@ -157,7 +159,13 @@ export class VehicleResponsiblesService {
         await this.repo.save(a);
       }
     }
-    const created = this.repo.create({ vehicle, user, startDate, endDate });
+    const created = this.repo.create({
+      vehicle,
+      user,
+      ceco,
+      startDate,
+      endDate,
+    });
     const saved = await this.repo.save(created);
     // Reload with model + brand for consistency
     const full = await this.repo.findDetailedById(saved.id);
@@ -179,6 +187,7 @@ export class VehicleResponsiblesService {
       const u = await this.userRepo.findOne({ where: { id: data.userId } });
       if (u) ent.user = u;
     }
+    if (data.ceco !== undefined) ent.ceco = data.ceco;
     if (data.startDate !== undefined) ent.startDate = data.startDate;
     if (data.endDate !== undefined) ent.endDate = data.endDate ?? null;
     if (ent.endDate === null) {

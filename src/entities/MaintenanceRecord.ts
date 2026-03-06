@@ -27,7 +27,7 @@ export class MaintenanceRecord {
   @JoinColumn({ name: "user_id" })
   user!: User;
 
-  @Column({ name: "date", type: "date" })
+  @Column({ name: "date", type: "datetime" })
   date!: string;
 
   @ManyToOne(() => VehicleKilometers, {
