@@ -42,6 +42,8 @@ export const validateEndDateAfterStartDate = (
   endDate: string,
 ): void => {
   if (new Date(endDate) <= new Date(startDate)) {
-    throw new Error("End date must be after start date.");
+    throw new Error(
+      "End date must be after start date (exclusive interval: [start, end)).",
+    );
   }
 };

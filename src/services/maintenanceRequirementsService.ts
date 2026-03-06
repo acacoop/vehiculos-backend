@@ -213,7 +213,7 @@ export class MaintenanceRequirementsService {
 
     if (overlapping.length > 0) {
       throw new AppError(
-        `Cannot update: overlapping dates with another maintenance requirement`,
+        `Cannot update: overlapping period ([${overlapping[0].startDate}, ${overlapping[0].endDate || "∞"})) with another maintenance requirement`,
         409,
         "https://example.com/problems/overlapping-requirement",
         "Overlapping Requirement",

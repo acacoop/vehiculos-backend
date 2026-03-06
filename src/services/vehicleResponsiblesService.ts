@@ -83,10 +83,9 @@ export class VehicleResponsiblesService {
     const [rows, total] = await this.repo.find(options);
     return { items: rows.map(mapEntity), total };
   }
-  getById(id: string): Promise<VehicleResponsibleWithDetails | null> {
-    return this.repo
-      .findDetailedById(id)
-      .then((e) => (e ? mapEntity(e) : null));
+  async getById(id: string): Promise<VehicleResponsibleWithDetails | null> {
+    const e = await this.repo.findDetailedById(id);
+    return e ? mapEntity(e) : null;
   }
   async getCurrentForVehicle(vehicleId: string) {
     const ent = await this.repo.findCurrentByVehicle(vehicleId);
@@ -122,7 +121,7 @@ export class VehicleResponsiblesService {
     const overlap = await qb.getOne();
     if (overlap) {
       throw new AppError(
-        `Vehicle already has a responsible overlapping (${overlap.startDate} to ${overlap.endDate || "present"})`,
+        `Vehicle already has a responsible with an overlapping period ([${overlap.startDate}, ${overlap.endDate || "∞"}))`,
         400,
         "https://example.com/problems/overlap-error",
         "Vehicle Responsibility Overlap",
@@ -145,11 +144,8 @@ export class VehicleResponsiblesService {
     if (endDate !== null)
       await this.assertNoOverlap(vehicleId, startDate, endDate);
     if (endDate === null) {
-      const previousEnd = new Date(
-        new Date(startDate).getTime() - 24 * 60 * 60 * 1000,
-      )
-        .toISOString()
-        .split("T")[0];
+      // Set previous endDate to exactly the new startDate (exclusive interval, continuous, no gap)
+      const previousEnd = startDate;
       const active = await this.vehicleResponsibleRepo.find({
         where: { vehicle: { id: vehicleId }, endDate: IsNull() },
       });
@@ -191,11 +187,8 @@ export class VehicleResponsiblesService {
     if (data.startDate !== undefined) ent.startDate = data.startDate;
     if (data.endDate !== undefined) ent.endDate = data.endDate ?? null;
     if (ent.endDate === null) {
-      const previousEnd = new Date(
-        new Date(ent.startDate).getTime() - 24 * 60 * 60 * 1000,
-      )
-        .toISOString()
-        .split("T")[0];
+      // Set previous endDate to exactly the new startDate (exclusive interval, continuous, no gap)
+      const previousEnd = ent.startDate;
       const others = await this.vehicleResponsibleRepo.find({
         where: { vehicle: { id: ent.vehicle.id }, endDate: IsNull() },
       });

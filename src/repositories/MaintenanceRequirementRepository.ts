@@ -10,9 +10,7 @@ import {
 } from "@/repositories/interfaces/common";
 import { applySearchFilter, applyFilters } from "@/utils/index";
 
-export class MaintenanceRequirementRepository
-  implements IMaintenanceRequirementRepository
-{
+export class MaintenanceRequirementRepository implements IMaintenanceRequirementRepository {
   private readonly repo: Repository<MaintenanceRequirement>;
   constructor(ds: DataSource) {
     this.repo = ds.getRepository(MaintenanceRequirement);
@@ -115,18 +113,16 @@ export class MaintenanceRequirementRepository
       .where("mr.model.id = :modelId", { modelId })
       .andWhere("mr.maintenance.id = :maintenanceId", { maintenanceId });
 
-    // Overlap logic:
-    // Two date ranges [start1, end1] and [start2, end2] overlap if:
-    // start1 <= end2 (or end2 is NULL) AND (end1 is NULL OR end1 >= start2)
+    // Overlap logic for [start, end) intervals (end exclusive):
+    // Two intervals [a, b) and [c, d) overlap if a < d AND b > c
     if (endDate) {
-      // New requirement has an end date
       qb.andWhere(
-        "(mr.startDate <= :endDate AND (mr.endDate IS NULL OR mr.endDate >= :startDate))",
+        "(mr.startDate < :endDate AND (mr.endDate IS NULL OR mr.endDate > :startDate))",
         { startDate, endDate },
       );
     } else {
       // New requirement has no end date (open-ended)
-      qb.andWhere("(mr.endDate IS NULL OR mr.endDate >= :startDate)", {
+      qb.andWhere("(mr.endDate IS NULL OR mr.endDate > :startDate)", {
         startDate,
       });
     }

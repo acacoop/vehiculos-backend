@@ -225,7 +225,10 @@ describe("VehicleResponsiblesService", () => {
       });
 
       expect(mockRepo.save).toHaveBeenCalledWith(
-        expect.objectContaining({ id: "prev" }),
+        expect.objectContaining({
+          id: "prev",
+          endDate: "2024-12-31T23:59:59Z",
+        }),
       );
     });
   });

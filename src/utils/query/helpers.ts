@@ -152,11 +152,10 @@ export function applyOverlapCheck<T extends ObjectLiteral>(
     qb.andWhere(`${field} = :${paramName}`, { [paramName]: value });
   });
 
-  // Check for overlap: ranges overlap if start1 < end2 AND end1 > start2
-  // When end is null, it means no end (infinite), so:
-  // - If checking endDate is null: startField < endDate is always false, but we need to check other conditions
-  // - If existing endField is null: endField > startDate is always true
-  // Simplified: (startField < :endDate OR :endDate IS NULL) AND (endField > :startDate OR endField IS NULL)
+  // Overlap logic for [start, end) intervals (end exclusive):
+  // Two intervals [a, b) and [c, d) overlap if a < d AND b > c
+  // If end is null, treat as infinite (open interval)
+  // So: (startField < :endDate OR :endDate IS NULL) AND (endField > :startDate OR endField IS NULL)
   qb.andWhere(
     `(${startField} < :endDate OR :endDate IS NULL) AND (${endField} > :startDate OR ${endField} IS NULL)`,
     { startDate, endDate },

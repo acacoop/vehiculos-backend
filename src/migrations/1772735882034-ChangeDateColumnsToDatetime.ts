@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class ChangeDateColumnsToDatetime1772735882034
-  implements MigrationInterface
-{
+export class ChangeDateColumnsToDatetime1772735882034 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
       DECLARE @ConstraintName nvarchar(200)
