@@ -156,7 +156,7 @@ export class ReservationsService {
     const overlap = await overlapQuery.getOne();
     if (overlap) {
       throw new Error(
-        `Vehicle already has a reservation overlapping (${overlap.startDate} to ${overlap.endDate})`,
+        `Vehicle already has a reservation with an overlapping period ([${overlap.startDate}, ${overlap.endDate || "∞"}))`,
       );
     }
 
@@ -230,7 +230,7 @@ export class ReservationsService {
     const overlap = await overlapQuery.getOne();
     if (overlap) {
       throw new Error(
-        `Vehicle already has a reservation overlapping (${overlap.startDate} to ${overlap.endDate})`,
+        `Vehicle already has a reservation with an overlapping period ([${overlap.startDate}, ${overlap.endDate || "∞"}))`,
       );
     }
 

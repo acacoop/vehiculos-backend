@@ -124,7 +124,7 @@ export class UserRolesService {
     const overlap = await overlapQuery.getOne();
     if (overlap) {
       throw new AppError(
-        `User already has this role overlapping (${overlap.startTime.toISOString()} to ${overlap.endTime?.toISOString() || "present"})`,
+        `User already has this role with an overlapping period ([${overlap.startTime.toISOString()}, ${overlap.endTime?.toISOString() || "∞"}))`,
         409,
         "https://example.com/problems/conflict",
         "Role Overlap",
