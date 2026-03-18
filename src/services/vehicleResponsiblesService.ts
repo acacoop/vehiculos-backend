@@ -18,6 +18,7 @@ import { applyOverlapCheck } from "@/utils/query/helpers";
 // Composite detail view (was in ../types)
 export interface VehicleResponsibleWithDetails {
   id: string;
+  ceco: string;
   startDate: string;
   endDate: string | null;
   user: {
@@ -40,6 +41,7 @@ export interface VehicleResponsibleWithDetails {
 function mapEntity(e: VehicleResponsibleEntity): VehicleResponsibleWithDetails {
   return {
     id: e.id,
+    ceco: e.ceco,
     startDate: e.startDate,
     endDate: e.endDate,
     user: {
@@ -81,10 +83,9 @@ export class VehicleResponsiblesService {
     const [rows, total] = await this.repo.find(options);
     return { items: rows.map(mapEntity), total };
   }
-  getById(id: string): Promise<VehicleResponsibleWithDetails | null> {
-    return this.repo
-      .findDetailedById(id)
-      .then((e) => (e ? mapEntity(e) : null));
+  async getById(id: string): Promise<VehicleResponsibleWithDetails | null> {
+    const e = await this.repo.findDetailedById(id);
+    return e ? mapEntity(e) : null;
   }
   async getCurrentForVehicle(vehicleId: string) {
     const ent = await this.repo.findCurrentByVehicle(vehicleId);
@@ -120,7 +121,7 @@ export class VehicleResponsiblesService {
     const overlap = await qb.getOne();
     if (overlap) {
       throw new AppError(
-        `Vehicle already has a responsible overlapping (${overlap.startDate} to ${overlap.endDate || "present"})`,
+        `Vehicle already has a responsible with an overlapping period ([${overlap.startDate}, ${overlap.endDate || "∞"}))`,
         400,
         "https://example.com/problems/overlap-error",
         "Vehicle Responsibility Overlap",
@@ -132,7 +133,7 @@ export class VehicleResponsiblesService {
     data: VehicleResponsibleInput,
     //): Promise<VehicleResponsible | null> {
   ): Promise<VehicleResponsibleWithDetails | null> {
-    const { vehicleId, userId, startDate, endDate = null } = data;
+    const { vehicleId, userId, ceco, startDate, endDate = null } = data;
     await validateUserExists(userId);
     await validateVehicleExists(vehicleId);
     const vehicle = await this.vehicleRepo.findOne({
@@ -143,11 +144,8 @@ export class VehicleResponsiblesService {
     if (endDate !== null)
       await this.assertNoOverlap(vehicleId, startDate, endDate);
     if (endDate === null) {
-      const previousEnd = new Date(
-        new Date(startDate).getTime() - 24 * 60 * 60 * 1000,
-      )
-        .toISOString()
-        .split("T")[0];
+      // Set previous endDate to exactly the new startDate (exclusive interval, continuous, no gap)
+      const previousEnd = startDate;
       const active = await this.vehicleResponsibleRepo.find({
         where: { vehicle: { id: vehicleId }, endDate: IsNull() },
       });
@@ -157,7 +155,13 @@ export class VehicleResponsiblesService {
         await this.repo.save(a);
       }
     }
-    const created = this.repo.create({ vehicle, user, startDate, endDate });
+    const created = this.repo.create({
+      vehicle,
+      user,
+      ceco,
+      startDate,
+      endDate,
+    });
     const saved = await this.repo.save(created);
     // Reload with model + brand for consistency
     const full = await this.repo.findDetailedById(saved.id);
@@ -179,14 +183,12 @@ export class VehicleResponsiblesService {
       const u = await this.userRepo.findOne({ where: { id: data.userId } });
       if (u) ent.user = u;
     }
+    if (data.ceco !== undefined) ent.ceco = data.ceco;
     if (data.startDate !== undefined) ent.startDate = data.startDate;
     if (data.endDate !== undefined) ent.endDate = data.endDate ?? null;
     if (ent.endDate === null) {
-      const previousEnd = new Date(
-        new Date(ent.startDate).getTime() - 24 * 60 * 60 * 1000,
-      )
-        .toISOString()
-        .split("T")[0];
+      // Set previous endDate to exactly the new startDate (exclusive interval, continuous, no gap)
+      const previousEnd = ent.startDate;
       const others = await this.vehicleResponsibleRepo.find({
         where: { vehicle: { id: ent.vehicle.id }, endDate: IsNull() },
       });

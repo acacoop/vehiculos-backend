@@ -5,6 +5,7 @@ import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 export interface VehicleResponsibleFilters {
   vehicleId?: string;
   userId?: string;
+  ceco?: string;
   active?: boolean; // true = apply active filter, false/undefined = don't apply
 }
 

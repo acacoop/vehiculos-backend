@@ -3,15 +3,14 @@ import { QuarterlyControlItemStatus } from "@/enums/QuarterlyControlItemStatusEn
 
 const MAX_YEAR = new Date().getFullYear() + 5;
 
-// Define the schema for quarterly control object
 export const QuarterlyControlSchema = z.object({
-  id: z.string().uuid().optional(), // UUID, optional for creation
+  id: z.string().uuid().optional(),
   vehicleId: z.string().uuid(),
   year: z.number().int().min(2000).max(MAX_YEAR),
   quarter: z.number().int().min(1).max(4),
-  intendedDeliveryDate: z.string(), // ISO date string
+  intendedDeliveryDate: z.string().datetime(),
   filledBy: z.string().uuid().optional(),
-  filledAt: z.string().optional(),
+  filledAt: z.string().datetime().optional(),
 });
 
 export type QuarterlyControl = z.infer<typeof QuarterlyControlSchema>;

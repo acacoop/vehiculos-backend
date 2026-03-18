@@ -557,10 +557,11 @@ export class RisksRepository {
     // Batch fetch last maintenance records only for relevant vehicle-maintenance pairs
     const lastRecordsRaw = await this.maintenanceRecordRepo
       .createQueryBuilder("rec")
+      .leftJoin("rec.kilometersLog", "kl")
       .select("rec.vehicle_id", "vehicleId")
       .addSelect("rec.maintenance_id", "maintenanceId")
       .addSelect("rec.date", "date")
-      .addSelect("rec.kilometers", "kilometers")
+      .addSelect("kl.kilometers", "kilometers")
       .where("rec.vehicle_id IN (:...vehicleIds)", { vehicleIds })
       .andWhere("rec.maintenance_id IN (:...maintenanceIds)", {
         maintenanceIds,

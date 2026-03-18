@@ -10,7 +10,7 @@ import { User } from "@/entities/User";
 import { Vehicle } from "@/entities/Vehicle";
 
 @Entity({ name: "assignments" })
-@Unique(["user", "vehicle"]) // mirrors unique (user_id, vehicle_id)
+@Unique(["user", "vehicle"])
 export class Assignment {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
@@ -23,9 +23,9 @@ export class Assignment {
   @JoinColumn({ name: "vehicle_id" })
   vehicle!: Vehicle;
 
-  @Column({ name: "start_date", type: "date", default: () => "GETDATE()" })
-  startDate!: string; // ISO date
+  @Column({ name: "start_date", type: "datetime", default: () => "GETDATE()" })
+  startDate!: string;
 
-  @Column({ name: "end_date", type: "date", nullable: true })
+  @Column({ name: "end_date", type: "datetime", nullable: true })
   endDate!: string | null;
 }

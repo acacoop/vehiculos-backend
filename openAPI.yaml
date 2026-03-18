@@ -3399,16 +3399,22 @@ components:
           type: string
           format: uuid
           example: "550e8400-e29b-41d4-a716-446655440000"
+        ceco:
+          type: string
+          minLength: 8
+          maxLength: 8
+          example: "12345678"
+          description: "Cost center code (8 digits)"
         startDate:
           type: string
-          format: date
-          example: "2025-01-15"
+          format: date-time
+          example: "2025-01-15T09:00:00Z"
           description: "Start date of the responsibility period"
         endDate:
           type: string
-          format: date
+          format: date-time
           nullable: true
-          example: "2025-12-31"
+          example: "2025-12-31T17:00:00Z"
           description: "End date of the responsibility period (null means currently active)"
         createdAt:
           type: string
@@ -3422,6 +3428,7 @@ components:
         - id
         - vehicleId
         - userId
+        - ceco
         - startDate
 
     VehicleResponsibleWithDetails:
@@ -3431,16 +3438,22 @@ components:
           type: string
           format: uuid
           example: "d50e8400-e29b-41d4-a716-446655440008"
+        ceco:
+          type: string
+          minLength: 8
+          maxLength: 8
+          example: "12345678"
+          description: "Cost center code (8 digits)"
         startDate:
           type: string
-          format: date
-          example: "2025-01-15"
+          format: date-time
+          example: "2025-01-15T09:00:00Z"
           description: "Start date of the responsibility period"
         endDate:
           type: string
-          format: date
+          format: date-time
           nullable: true
-          example: "2025-12-31"
+          example: "2025-12-31T17:00:00Z"
           description: "End date of the responsibility period (null means currently active)"
         user:
           $ref: "#/components/schemas/User"
@@ -3448,6 +3461,7 @@ components:
           $ref: "#/components/schemas/Vehicle"
       required:
         - id
+        - ceco
         - startDate
         - user
         - vehicle
@@ -3461,18 +3475,25 @@ components:
         userId:
           type: string
           format: uuid
+        ceco:
+          type: string
+          minLength: 8
+          maxLength: 8
+          example: "12345678"
+          description: "Cost center code (8 digits)"
         startDate:
           type: string
-          format: date
+          format: date-time
           description: "Start date of the responsibility period (defaults to today if not provided)"
         endDate:
           type: string
-          format: date
+          format: date-time
           nullable: true
           description: "End date of the responsibility period (null means indefinite)"
       required:
         - vehicleId
         - userId
+        - ceco
 
     VehicleResponsibleResponse:
       allOf:
@@ -4053,15 +4074,15 @@ components:
           description: UUID of the maintenance type
         startDate:
           type: string
-          format: date
-          description: Start date of the requirement (YYYY-MM-DD)
-          example: "2024-01-01"
+          format: date-time
+          description: Start date and time of the requirement
+          example: "2024-01-01T09:00:00Z"
         endDate:
           type: string
-          format: date
+          format: date-time
           nullable: true
-          description: End date of the requirement (YYYY-MM-DD). Null means ongoing.
-          example: "2025-12-31"
+          description: End date and time of the requirement. Null means ongoing.
+          example: "2025-12-31T17:00:00Z"
         kilometersFrequency:
           type: integer
           minimum: 0
@@ -4089,13 +4110,13 @@ components:
           $ref: "#/components/schemas/Maintenance"
         startDate:
           type: string
-          format: date
-          description: Start date of the requirement
+          format: date-time
+          description: Start date and time of the requirement
         endDate:
           type: string
-          format: date
+          format: date-time
           nullable: true
-          description: End date of the requirement (null means ongoing)
+          description: End date and time of the requirement (null means ongoing)
         kilometersFrequency:
           type: integer
           nullable: true
@@ -4133,13 +4154,13 @@ components:
       properties:
         startDate:
           type: string
-          format: date
-          description: Start date of the requirement
+          format: date-time
+          description: Start date and time of the requirement
         endDate:
           type: string
-          format: date
+          format: date-time
           nullable: true
-          description: End date of the requirement (null means ongoing)
+          description: End date and time of the requirement (null means ongoing)
         kilometersFrequency:
           type: integer
           minimum: 0
@@ -4273,8 +4294,8 @@ components:
           example: 1
         intendedDeliveryDate:
           type: string
-          format: date
-          example: "2025-03-31"
+          format: date-time
+          example: "2025-03-31T09:00:00Z"
         filledBy:
           allOf:
             - $ref: "#/components/schemas/User"
@@ -4345,8 +4366,8 @@ components:
           description: Quarter of the year (1-4)
         intendedDeliveryDate:
           type: string
-          format: date
-          description: Intended delivery date (YYYY-MM-DD)
+          format: date-time
+          description: Intended delivery date and time
         filledBy:
           type: string
           format: uuid
@@ -4376,14 +4397,14 @@ components:
           maximum: 4
         intendedDeliveryDate:
           type: string
-          format: date
+          format: date-time
         filledBy:
           type: string
           format: uuid
           nullable: true
         filledAt:
           type: string
-          format: date
+          format: date-time
           nullable: true
 
     QuarterlyControlWithItemsInput:
@@ -4402,7 +4423,7 @@ components:
           maximum: 4
         intendedDeliveryDate:
           type: string
-          format: date
+          format: date-time
         items:
           type: array
           items:

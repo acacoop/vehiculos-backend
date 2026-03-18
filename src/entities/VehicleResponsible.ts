@@ -28,10 +28,10 @@ export class VehicleResponsible {
   @Column({ name: "ceco", type: "nvarchar", length: 8, default: DEFAULT_CECO })
   ceco!: string;
 
-  @Column({ name: "start_date", type: "date", default: () => "GETDATE()" })
+  @Column({ name: "start_date", type: "datetime", default: () => "GETDATE()" })
   startDate!: string;
 
-  @Column({ name: "end_date", type: "date", nullable: true })
+  @Column({ name: "end_date", type: "datetime", nullable: true })
   endDate!: string | null;
 
   @Column({ name: "created_at", type: "datetime", default: () => "GETDATE()" })

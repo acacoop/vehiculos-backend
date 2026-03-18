@@ -1,19 +1,17 @@
 import { z } from "zod";
 
-// Define the schema for maintenance record object
 export const MaintenanceRecordSchema = z.object({
-  id: z.string().uuid().optional(), // UUID, optional for creation
+  id: z.string().uuid().optional(),
   maintenanceId: z.string().uuid(),
   vehicleId: z.string().uuid(),
   userId: z.string().uuid(),
   date: z.coerce.date(),
-  kilometers: z.number().nonnegative(), // This will be used to create a kilometer log
+  kilometers: z.number().nonnegative(),
   notes: z.string().optional(),
 });
 
 export type MaintenanceRecord = z.infer<typeof MaintenanceRecordSchema>;
 
-// Schema for updating a maintenance record (all fields optional except we need at least one)
 export const MaintenanceRecordUpdateSchema = z
   .object({
     date: z.coerce.date().optional(),
