@@ -27,6 +27,9 @@ const envSchema = z.object({
   ENTRA_EXPECTED_ISSUER: z.string().optional(),
   ENTRA_REQUIRED_SCOPE: z.string().optional(),
   ADMIN: z.string().optional(),
+  FILE_STORAGE_PROVIDER: z.enum(["local", "azure"]).default("local"),
+  DOCUMENTS_BASE_PATH: z.string().default("./app_data/documents"),
+  DOCUMENT_MAX_FILE_SIZE_MB: z.coerce.number().default(10),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -59,6 +62,9 @@ export const {
   ENTRA_EXPECTED_ISSUER,
   ENTRA_REQUIRED_SCOPE,
   ADMIN,
+  FILE_STORAGE_PROVIDER,
+  DOCUMENTS_BASE_PATH,
+  DOCUMENT_MAX_FILE_SIZE_MB,
 } = parsed.data;
 
 export const SERVER_PORT =

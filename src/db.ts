@@ -27,6 +27,8 @@ import { VehicleACL } from "@/entities/VehicleACL";
 import { UserRole } from "@/entities/UserRole";
 import { QuarterlyControl } from "@/entities/QuarterlyControl";
 import { QuarterlyControlItem } from "@/entities/QuarterlyControlItem";
+import { DocumentType } from "@/entities/DocumentType";
+import { Document } from "@/entities/Document";
 
 // Determine if running from dist folder
 // In tests, NODE_ENV is usually 'test' and we're always in src/
@@ -75,6 +77,8 @@ const createDataSourceConfig = () => {
       UserRole,
       QuarterlyControl,
       QuarterlyControlItem,
+      DocumentType,
+      Document,
     ],
     migrations: isRunningFromDist
       ? ["dist/migrations/*.js"]

@@ -31,6 +31,10 @@ EXPOSE 3000
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && adduser -S nodeuser -u 1001
+
+# Create app_data directory with proper permissions
+RUN mkdir -p app_data/documents && chown -R nodeuser:nodejs app_data
+
 USER nodeuser
 
 CMD ["node", "dist/index.js"]
