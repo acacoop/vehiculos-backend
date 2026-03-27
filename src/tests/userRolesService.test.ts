@@ -378,7 +378,9 @@ describe("UserRolesService", () => {
           startTime: new Date("2024-06-01"),
           endTime: new Date("2024-12-31"),
         }),
-      ).rejects.toThrow("User already has this role overlapping");
+      ).rejects.toThrow(
+        "User already has this role with an overlapping period",
+      );
     });
   });
 
