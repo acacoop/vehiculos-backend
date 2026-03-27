@@ -326,7 +326,9 @@ describe("ReservationsService", () => {
           startDate: new Date("2024-01-01"),
           endDate: new Date("2024-01-05"),
         }),
-      ).rejects.toThrow("Vehicle already has a reservation overlapping");
+      ).rejects.toThrow(
+        "Vehicle already has a reservation with an overlapping period",
+      );
     });
   });
 });
