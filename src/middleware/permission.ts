@@ -10,6 +10,7 @@ import { UserRoleRepository } from "@/repositories/UserRoleRepository";
 import { UserRoleEnum, USER_ROLES_WEIGHT } from "@/enums/UserRoleEnum";
 import { AppDataSource } from "@/db";
 import { AssignmentRepository } from "@/repositories/AssignmentRepository";
+import { ReservationRepository } from "@/repositories/ReservationRepository";
 
 interface VehiclePermissionCheckOptions {
   type: "vehicle";
@@ -44,12 +45,26 @@ export class PermissionChecker {
   private vehicleResponsiblesRepo: VehicleResponsibleRepository;
   private userRoleRepo: UserRoleRepository;
   private assignmentRepo: AssignmentRepository;
+  private reservationRepo: ReservationRepository;
 
   constructor(dataSource: DataSource) {
     this.vehicleACLRepo = new VehicleACLRepository(dataSource);
     this.vehicleResponsiblesRepo = new VehicleResponsibleRepository(dataSource);
     this.userRoleRepo = new UserRoleRepository(dataSource);
     this.assignmentRepo = new AssignmentRepository(dataSource);
+    this.reservationRepo = new ReservationRepository(dataSource);
+  }
+
+  async getReservationOwnerAndVehicle(
+    reservationId: string,
+  ): Promise<{ userId: string; vehicleId: string } | null> {
+    const reservation = await this.reservationRepo.findOne(reservationId);
+    if (!reservation) return null;
+
+    return {
+      userId: reservation.user.id,
+      vehicleId: reservation.vehicle.id,
+    };
   }
 
   async checkUserIsResponsible(
@@ -304,5 +319,69 @@ export const requireVehiclePermissionFromBody = (
     }
 
     return requireVehiclePermission(vehicleId, permission)(req, res, next);
+  };
+};
+
+export const requireReservationOwnerOrResponsibleFromParam = (
+  reservationIdParam: string = "id",
+) => {
+  return async (req: PermissionRequest, _res: Response, next: NextFunction) => {
+    try {
+      const checker = getPermissionChecker();
+      const user = req.user;
+
+      if (!user) {
+        throw new AppError(
+          "Authentication required",
+          401,
+          "https://example.com/problems/unauthorized",
+          "Unauthorized",
+        );
+      }
+
+      const reservationId = req.params[reservationIdParam];
+      if (!reservationId) {
+        throw new AppError(
+          `Reservation ID parameter '${reservationIdParam}' is required`,
+          400,
+          "https://example.com/problems/bad-request",
+          "Bad Request",
+        );
+      }
+
+      const reservation =
+        await checker.getReservationOwnerAndVehicle(reservationId);
+      if (!reservation) {
+        throw new AppError(
+          "Reservation not found",
+          404,
+          "https://example.com/problems/not-found",
+          "Not Found",
+        );
+      }
+
+      const isOwner = reservation.userId === user.id;
+      if (isOwner) {
+        return next();
+      }
+
+      const isResponsible = await checker.checkUserIsResponsible(
+        user.id,
+        reservation.vehicleId,
+      );
+
+      if (!isResponsible) {
+        throw new AppError(
+          "Only the reservation creator or vehicle responsible can update this reservation",
+          403,
+          "https://example.com/problems/forbidden",
+          "Forbidden",
+        );
+      }
+
+      next();
+    } catch (err) {
+      next(err);
+    }
   };
 };
