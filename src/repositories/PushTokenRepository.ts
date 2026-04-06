@@ -14,7 +14,10 @@ export class PushTokenRepository implements IPushTokenRepository {
   }
 
   findByToken(token: string): Promise<PushToken | null> {
-    return this.repo.findOne({ where: { token } });
+    return this.repo.findOne({
+      where: { token },
+      relations: ["user"],
+    });
   }
 
   findByUsers(userIds: string[]): Promise<PushToken[]> {

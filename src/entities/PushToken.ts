@@ -16,7 +16,7 @@ export class PushToken {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @ManyToOne(() => User, { eager: true, onDelete: "CASCADE" })
+  @ManyToOne(() => User, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user!: User;
 

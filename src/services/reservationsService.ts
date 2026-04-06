@@ -6,10 +6,7 @@ import {
   validateUserExists,
   validateVehicleExists,
 } from "@/utils/validation/entity";
-import {
-  NotificationService,
-  NotificationPayload,
-} from "@/services/notificationService";
+import { NotificationService } from "@/services/notificationService";
 import {
   IReservationRepository,
   ReservationFilters,

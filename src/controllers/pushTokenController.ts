@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { AuthenticatedRequest } from "@/middleware/auth";
 import { asyncHandler } from "@/middleware/errorHandler";
 import { PushTokenService } from "@/services/pushTokenService";
@@ -34,8 +34,9 @@ export class PushTokenController {
   public unregister = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
       const { token } = PushTokenDeleteSchema.parse(req.body);
+      const userId = req.user!.id;
 
-      const deleted = await this.service.unregisterToken(token);
+      const deleted = await this.service.unregisterToken(token, userId);
       if (!deleted) {
         res.status(404).json({
           status: "error",
