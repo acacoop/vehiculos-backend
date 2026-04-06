@@ -13,6 +13,7 @@ export default {
   ],
   testTimeout: 30000, // 30 seconds for database operations
   setupFilesAfterEnv: ["<rootDir>/src/tests/setup.ts"],
+  extensionsToTreatAsEsm: [".ts"],
   transform: {
     "^.+\\.ts$": [
       "ts-jest",
@@ -26,8 +27,9 @@ export default {
       },
     ],
   },
-  extensionsToTreatAsEsm: [".ts"],
   moduleNameMapper: {
+    // Stub out the real ESM-only package with a TypeScript mock ts-jest can process
+    "^expo-server-sdk$": "<rootDir>/src/scripts/expo-server-sdk.ts",
     "^@/(.*)$": "<rootDir>/src/$1",
   },
 };

@@ -80,7 +80,7 @@ export class NotificationService {
                 ? chunk[i].to[0]
                 : chunk[i].to;
               if (typeof tokenStr === "string") {
-                await this.pushTokenService.unregisterToken(tokenStr);
+                await this.pushTokenService.deleteTokenByValue(tokenStr);
               }
             }
           }

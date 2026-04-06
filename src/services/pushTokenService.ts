@@ -64,6 +64,15 @@ export class PushTokenService {
     return this.pushTokenRepo.findByUsers(userIds);
   }
 
+  /**
+   * Internal server-side cleanup of a token (e.g. DeviceNotRegistered from Expo).
+   * No ownership check — do NOT expose this through a user-facing HTTP endpoint.
+   */
+  async deleteTokenByValue(token: string): Promise<boolean> {
+    const result = await this.pushTokenRepo.deleteByToken(token);
+    return (result.affected ?? 0) > 0;
+  }
+
   async deleteByUser(userId: string): Promise<boolean> {
     const result = await this.pushTokenRepo.deleteByUser(userId);
     return (result.affected ?? 0) > 0;
