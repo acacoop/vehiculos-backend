@@ -48,7 +48,7 @@ export class PushTokenController {
         return;
       }
       const userId = req.user.id;
-      const { token } = PushTokenDeleteSchema.parse(req.body);
+      const { token } = PushTokenDeleteSchema.parse(req.params);
 
       const deleted = await this.service.unregisterToken(token, userId);
       if (!deleted) {
