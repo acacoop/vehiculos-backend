@@ -5,6 +5,9 @@ import { IPushTokenRepository } from "@/repositories/interfaces/IPushTokenReposi
 import { Repository } from "typeorm";
 
 export class PushTokenService {
+  private static readonly EXPO_TOKEN_REGEX =
+    /^Expo(nent)?PushToken\[[A-Za-z0-9_\-]+\]$/;
+
   constructor(
     private readonly pushTokenRepo: IPushTokenRepository,
     private readonly userRepo: Repository<User>,
@@ -15,6 +18,10 @@ export class PushTokenService {
     token: string,
     platform: string,
   ): Promise<PushToken> {
+    if (!PushTokenService.EXPO_TOKEN_REGEX.test(token)) {
+      throw new AppError("Invalid Expo push token format", 400);
+    }
+
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new AppError("User not found", 404);
 

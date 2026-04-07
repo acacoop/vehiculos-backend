@@ -11,8 +11,15 @@ export class PushTokenController {
 
   public register = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
+      if (!req.user) {
+        res.status(401).json({
+          status: "error",
+          message: "Unauthorized",
+        });
+        return;
+      }
+      const userId = req.user.id;
       const { token, platform } = PushTokenSchema.parse(req.body);
-      const userId = req.user!.id;
 
       const pushToken = await this.service.registerToken(
         userId,
@@ -33,8 +40,15 @@ export class PushTokenController {
 
   public unregister = asyncHandler(
     async (req: AuthenticatedRequest, res: Response) => {
+      if (!req.user) {
+        res.status(401).json({
+          status: "error",
+          message: "Unauthorized",
+        });
+        return;
+      }
+      const userId = req.user.id;
       const { token } = PushTokenDeleteSchema.parse(req.body);
-      const userId = req.user!.id;
 
       const deleted = await this.service.unregisterToken(token, userId);
       if (!deleted) {

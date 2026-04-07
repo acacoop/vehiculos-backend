@@ -42,7 +42,10 @@ export class NotificationService {
 
     for (const token of pushTokens) {
       if (!Expo.isExpoPushToken(token)) {
-        console.warn(`Invalid Expo push token: ${token}`);
+        const t = token as string;
+        const masked =
+          t.length > 8 ? `${t.slice(0, 4)}...${t.slice(-4)}` : "****";
+        console.warn(`Invalid Expo push token: ${masked}`);
         continue;
       }
 

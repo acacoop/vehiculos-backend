@@ -182,7 +182,7 @@ export class ReservationsService {
       this.notificationService
         .sendToUser(userId, {
           title: "Nueva reserva",
-          body: `Tenés una nueva reserva del vehículo ${result.vehicle.licensePlate} desde ${result.startDate.toLocaleDateString()} hasta ${result.endDate.toLocaleDateString()}`,
+          body: `Tenés una nueva reserva del vehículo ${result.vehicle.licensePlate} desde ${result.startDate.toISOString().slice(0, 10)} hasta ${result.endDate.toISOString().slice(0, 10)}`,
           data: { type: "reservation_created", reservationId: result.id },
         })
         .catch((err) => console.error("Notification send error:", err));
@@ -267,9 +267,10 @@ export class ReservationsService {
   }
 
   async delete(id: string): Promise<boolean> {
-    // Fetch reservation before deleting to notify user
-    const existing = await this.repo.findOne(id);
-
+    // Fetch reservation before deleting only when notifications are enabled
+    const existing = this.notificationService
+      ? await this.repo.findOne(id)
+      : null;
     const result = await this.repo.delete(id);
     const deleted = (result.affected ?? 0) > 0;
 
