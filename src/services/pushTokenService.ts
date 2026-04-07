@@ -6,7 +6,7 @@ import { Repository } from "typeorm";
 
 export class PushTokenService {
   private static readonly EXPO_TOKEN_REGEX =
-    /^Expo(nent)?PushToken\[[A-Za-z0-9_\-]+\]$/;
+    /^Expo(nent)?PushToken\[[A-Za-z0-9_-]+\]$/;
 
   constructor(
     private readonly pushTokenRepo: IPushTokenRepository,
