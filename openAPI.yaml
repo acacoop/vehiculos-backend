@@ -2916,6 +2916,85 @@ paths:
         "404":
           description: User role not found
 
+  # PUSH TOKENS
+  /push-tokens:
+    post:
+      summary: Register a push token
+      description: |
+        Registers an Expo push token for the authenticated user.
+        The token must be a valid Expo push token (`ExponentPushToken[...]` or `ExpoPushToken[...]`).
+        If the token already belongs to the same user, the platform is updated. If it
+        belongs to a different user a 409 conflict is returned.
+      tags: [Push Notifications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushTokenInput"
+      responses:
+        "201":
+          description: Push token registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: "#/components/schemas/PushToken"
+                  message:
+                    type: string
+                    example: Push token registered
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: Token already registered to another user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /push-tokens/{token}:
+    delete:
+      summary: Unregister a push token
+      description: |
+        Removes the given push token. The token must belong to the authenticated user;
+        attempting to remove another user's token returns 403.
+      tags: [Push Notifications]
+      parameters:
+        - name: token
+          in: path
+          required: true
+          description: The Expo push token to unregister
+          schema:
+            type: string
+            example: "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]"
+      responses:
+        "200":
+          description: Push token unregistered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Push token unregistered
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
 components:
   schemas:
     VehicleKilometersLog:
@@ -3596,6 +3675,33 @@ components:
                     type: string
                   message:
                     type: string
+
+    # PUSH NOTIFICATION SCHEMAS
+    PushTokenInput:
+      type: object
+      required: [token, platform]
+      properties:
+        token:
+          type: string
+          description: A valid Expo push token
+          example: "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]"
+        platform:
+          type: string
+          enum: [ios, android]
+          description: The device platform
+
+    PushToken:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        token:
+          type: string
+          example: "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]"
+        platform:
+          type: string
+          enum: [ios, android]
 
     # RESERVATION SCHEMAS
     Reservation:
