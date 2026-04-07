@@ -79,6 +79,15 @@ export class ReservationsService {
     private readonly notificationService?: NotificationService,
   ) {}
 
+  private safeNotify(
+    userId: string,
+    payload: Parameters<NotificationService["sendToUser"]>[1],
+  ): void {
+    this.notificationService
+      ?.sendToUser(userId, payload)
+      .catch((err) => console.error("Notification send error:", err));
+  }
+
   async getAll(
     options?: RepositoryFindOptions<ReservationFilters>,
   ): Promise<{ items: ReservationWithDetails[]; total: number }> {
@@ -177,16 +186,11 @@ export class ReservationsService {
     const saved = await this.repo.save(entity);
     const result = mapEntity(saved);
 
-    // Notify the user about the new reservation
-    if (this.notificationService) {
-      this.notificationService
-        .sendToUser(userId, {
-          title: "Nueva reserva",
-          body: `Tenés una nueva reserva del vehículo ${result.vehicle.licensePlate} desde ${result.startDate.toISOString().slice(0, 10)} hasta ${result.endDate.toISOString().slice(0, 10)}`,
-          data: { type: "reservation_created", reservationId: result.id },
-        })
-        .catch((err) => console.error("Notification send error:", err));
-    }
+    this.safeNotify(userId, {
+      title: "Nueva reserva",
+      body: `Tenés una nueva reserva del vehículo ${result.vehicle.licensePlate} desde ${result.startDate.toISOString().slice(0, 10)} hasta ${result.endDate.toISOString().slice(0, 10)}`,
+      data: { type: "reservation_created", reservationId: result.id },
+    });
 
     return result;
   }
@@ -252,16 +256,11 @@ export class ReservationsService {
     const saved = await this.repo.save(existing);
     const result = mapEntity(saved);
 
-    // Notify the user about the updated reservation
-    if (this.notificationService) {
-      this.notificationService
-        .sendToUser(result.user.id, {
-          title: "Reserva actualizada",
-          body: `Tu reserva del vehículo ${result.vehicle.licensePlate} fue actualizada`,
-          data: { type: "reservation_updated", reservationId: result.id },
-        })
-        .catch((err) => console.error("Notification send error:", err));
-    }
+    this.safeNotify(result.user.id, {
+      title: "Reserva actualizada",
+      body: `Tu reserva del vehículo ${result.vehicle.licensePlate} fue actualizada`,
+      data: { type: "reservation_updated", reservationId: result.id },
+    });
 
     return result;
   }
@@ -274,15 +273,13 @@ export class ReservationsService {
     const result = await this.repo.delete(id);
     const deleted = (result.affected ?? 0) > 0;
 
-    if (deleted && existing && this.notificationService) {
+    if (deleted && existing) {
       const mapped = mapEntity(existing);
-      this.notificationService
-        .sendToUser(mapped.user.id, {
-          title: "Reserva cancelada",
-          body: `Tu reserva del vehículo ${mapped.vehicle.licensePlate} fue cancelada`,
-          data: { type: "reservation_cancelled", reservationId: id },
-        })
-        .catch((err) => console.error("Notification send error:", err));
+      this.safeNotify(mapped.user.id, {
+        title: "Reserva cancelada",
+        body: `Tu reserva del vehículo ${mapped.vehicle.licensePlate} fue cancelada`,
+        data: { type: "reservation_cancelled", reservationId: id },
+      });
     }
 
     return deleted;
