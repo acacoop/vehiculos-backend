@@ -2959,38 +2959,38 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-delete:
-  summary: Unregister a push token
-  description: |
-    Removes the given push token. The token must belong to the authenticated user;
-    attempting to remove another user's token returns 403.
-  tags: [Push Notifications]
-  requestBody:
-    required: true
-    content:
-      application/json:
-        schema:
-          $ref: "#/components/schemas/PushTokenInput"
-  responses:
-    "200":
-      description: Push token unregistered
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              status:
-                type: string
-                example: success
-              message:
-                type: string
-                example: Push token unregistered
-    "401":
-      $ref: "#/components/responses/Unauthorized"
-    "403":
-      $ref: "#/components/responses/Forbidden"
-    "404":
-      $ref: "#/components/responses/NotFound"
+    delete:
+      summary: Unregister a push token
+      description: |
+        Removes the given push token. The token must belong to the authenticated user;
+        attempting to remove another user's token returns 403.
+      tags: [Push Notifications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushTokenInput"
+      responses:
+        "200":
+          description: Push token unregistered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Push token unregistered
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
 components:
   schemas:
@@ -3686,7 +3686,15 @@ components:
           type: string
           enum: [ios, android]
           description: The device platform
-
+          
+      PushTokenDeleteInput:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          description: A valid Expo push token to delete
+          example: "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]"
     PushToken:
       type: object
       properties:
