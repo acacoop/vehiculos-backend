@@ -4,6 +4,9 @@ import { AppError } from "@/middleware/errorHandler";
 import { IPushTokenRepository } from "@/repositories/interfaces/IPushTokenRepository";
 import { Repository } from "typeorm";
 
+export type Platform = "ios" | "android";
+const VALID_PLATFORMS: Platform[] = ["ios", "android"];
+
 export class PushTokenService {
   private static readonly EXPO_TOKEN_REGEX =
     /^Expo(nent)?PushToken\[[A-Za-z0-9_-]+\]$/;
@@ -22,6 +25,14 @@ export class PushTokenService {
       throw new AppError("Invalid Expo push token format", 400);
     }
 
+    if (!(VALID_PLATFORMS as string[]).includes(platform)) {
+      throw new AppError(
+        `Invalid platform "${platform}". Allowed values: ${VALID_PLATFORMS.join(", ")}.`,
+        400,
+      );
+    }
+    const validatedPlatform = platform as Platform;
+
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new AppError("User not found", 404);
 
@@ -36,12 +47,16 @@ export class PushTokenService {
         );
       }
       // Update platform only
-      existing.platform = platform;
+      existing.platform = validatedPlatform;
       return this.pushTokenRepo.save(existing);
     }
 
     // Create new
-    const entity = this.pushTokenRepo.create({ user, token, platform });
+    const entity = this.pushTokenRepo.create({
+      user,
+      token,
+      platform: validatedPlatform,
+    });
     return this.pushTokenRepo.save(entity);
   }
 
