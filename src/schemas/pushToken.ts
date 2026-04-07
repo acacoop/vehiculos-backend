@@ -5,7 +5,7 @@ const ExpoPushTokenSchema = z
   .min(1)
   .max(255)
   .regex(
-    /^ExponentPushToken\[[A-Za-z0-9-_]+\]$/,
+    /^(Expo|Exponent)PushToken\[[A-Za-z0-9_-]+\]$/,
     "Invalid Expo push token format",
   );
 export const PushTokenSchema = z.object({

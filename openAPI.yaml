@@ -2970,7 +2970,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PushTokenInput"
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+                  description: Expo push token to unregister
+                  example: ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]
       responses:
         "200":
           description: Push token unregistered
@@ -3686,8 +3692,8 @@ components:
           type: string
           enum: [ios, android]
           description: The device platform
-          
-      PushTokenDeleteInput:
+
+    PushTokenDeleteInput:
       type: object
       required: [token]
       properties:
