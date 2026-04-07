@@ -88,7 +88,7 @@ export abstract class BaseController<TFilters = Record<string, string>> {
 
     if (!isValidUUID(id)) {
       throw new AppError(
-        `Invalid UUID format provided: ${id}`,
+        `Invalid UUID format`,
         400,
         "https://example.com/problems/invalid-uuid",
         "Invalid UUID Format",
@@ -99,7 +99,7 @@ export abstract class BaseController<TFilters = Record<string, string>> {
 
     if (!item) {
       throw new AppError(
-        `${this.resourceName} with ID ${id} was not found`,
+        `Resource not found`,
         404,
         "https://example.com/problems/resource-not-found",
         "Resource Not Found",
@@ -119,7 +119,7 @@ export abstract class BaseController<TFilters = Record<string, string>> {
 
     if (!isValidUUID(id)) {
       throw new AppError(
-        `Invalid UUID format provided: ${id}`,
+        `Invalid UUID format`,
         400,
         "https://example.com/problems/invalid-uuid",
         "Invalid UUID Format",
@@ -130,7 +130,7 @@ export abstract class BaseController<TFilters = Record<string, string>> {
 
     if (!item) {
       throw new AppError(
-        `${this.resourceName} with ID ${id} was not found`,
+        `Resource not found`,
         404,
         "https://example.com/problems/resource-not-found",
         "Resource Not Found",
@@ -145,7 +145,7 @@ export abstract class BaseController<TFilters = Record<string, string>> {
 
     if (!isValidUUID(id)) {
       throw new AppError(
-        `Invalid UUID format provided: ${id}`,
+        `Invalid UUID format`,
         400,
         "https://example.com/problems/invalid-uuid",
         "Invalid UUID Format",
@@ -156,7 +156,7 @@ export abstract class BaseController<TFilters = Record<string, string>> {
 
     if (!success) {
       throw new AppError(
-        `${this.resourceName} with ID ${id} was not found`,
+        `Resource not found`,
         404,
         "https://example.com/problems/resource-not-found",
         "Resource Not Found",

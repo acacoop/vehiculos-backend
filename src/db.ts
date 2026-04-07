@@ -128,6 +128,13 @@ async function ensureDatabase(retries = 3, delayMs = 2000) {
     return;
   }
 
+  // Validate DB_NAME to prevent SQL injection in CREATE DATABASE
+  if (!/^[a-zA-Z0-9_]+$/.test(DB_NAME)) {
+    throw new Error(
+      `Invalid database name: "${DB_NAME}". Only alphanumeric and underscores allowed.`,
+    );
+  }
+
   const masterConfig: sql.config = {
     user: DB_USER,
     password: DB_PASSWORD,

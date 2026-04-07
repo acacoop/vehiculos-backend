@@ -102,11 +102,12 @@ app.use("/risks", risksRoutes);
 app.use("/push-tokens", pushTokenRoutes);
 
 // 404 handler
-app.use("*", (req: Request, res: Response) => {
+app.use("*", (_req: Request, res: Response) => {
   res.status(404).json({
-    status: "error",
-    message: `Route ${req.originalUrl} not found`,
-    documentation: "/docs",
+    type: "https://httpstatuses.com/404",
+    title: "Not Found",
+    status: 404,
+    detail: "The requested resource does not exist.",
   });
 });
 

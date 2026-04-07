@@ -1,6 +1,9 @@
 import { z } from "zod";
 
 const envSchema = z.object({
+  NODE_ENV: z
+    .enum(["development", "production", "test"])
+    .default("development"),
   APP_PORT: z.coerce.number().default(3000),
   DB_HOST: z.string().default("localhost"),
   DB_PORT: z.coerce.number().default(1433),
@@ -38,6 +41,17 @@ if (!parsed.success) {
   process.exit(1);
 }
 
+// SECURITY: Force AUTH_BYPASS=false in production regardless of env var
+const _AUTH_BYPASS_RAW = parsed.data.AUTH_BYPASS;
+export const AUTH_BYPASS =
+  parsed.data.NODE_ENV === "production" ? false : _AUTH_BYPASS_RAW;
+
+if (_AUTH_BYPASS_RAW && parsed.data.NODE_ENV === "production") {
+  console.error(
+    "SECURITY: AUTH_BYPASS=true is FORBIDDEN in production. Forcing to false.",
+  );
+}
+
 export const {
   APP_PORT,
   DB_HOST,
@@ -46,7 +60,6 @@ export const {
   DB_PASSWORD,
   DB_NAME,
   DB_LOGGING,
-  AUTH_BYPASS,
   SQL_AAD_CONNECTION_STRING,
   RATE_LIMIT_WINDOW_MS,
   RATE_LIMIT_MAX,
