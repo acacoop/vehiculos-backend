@@ -189,7 +189,11 @@ export class ReservationsService {
     this.safeNotify(userId, {
       title: "Nueva reserva",
       body: `Tenés una nueva reserva del vehículo ${result.vehicle.licensePlate} desde ${result.startDate.toISOString().slice(0, 10)} hasta ${result.endDate.toISOString().slice(0, 10)}`,
-      data: { type: "reservation_created", reservationId: result.id },
+      data: {
+        type: "reservation_created",
+        reservationId: result.id,
+        vehicleId: result.vehicle.id,
+      },
     });
 
     return result;
@@ -259,7 +263,11 @@ export class ReservationsService {
     this.safeNotify(result.user.id, {
       title: "Reserva actualizada",
       body: `Tu reserva del vehículo ${result.vehicle.licensePlate} fue actualizada`,
-      data: { type: "reservation_updated", reservationId: result.id },
+      data: {
+        type: "reservation_updated",
+        reservationId: result.id,
+        vehicleId: result.vehicle.id,
+      },
     });
 
     return result;
@@ -278,7 +286,11 @@ export class ReservationsService {
       this.safeNotify(mapped.user.id, {
         title: "Reserva cancelada",
         body: `Tu reserva del vehículo ${mapped.vehicle.licensePlate} fue cancelada`,
-        data: { type: "reservation_cancelled", reservationId: id },
+        data: {
+          type: "reservation_cancelled",
+          reservationId: id,
+          vehicleId: mapped.vehicle.id,
+        },
       });
     }
 
