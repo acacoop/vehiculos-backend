@@ -6,6 +6,7 @@ import {
   requireRole,
   requireVehiclePermissionFromParam,
   requireVehiclePermissionFromBody,
+  requireReservationOwnerOrResponsibleFromParam,
 } from "@/middleware/permission";
 import { UserRoleEnum } from "@/enums/UserRoleEnum";
 import { PermissionType } from "@/enums/PermissionType";
@@ -62,9 +63,7 @@ router.post(
 router.patch(
   "/:id",
   validateUUIDParam("id"),
-  // TODO: Implement proper vehicle permission checking for reservations
-  // Currently using admin-only access until vehicle permission logic is implemented
-  requireRole(UserRoleEnum.ADMIN),
+  requireReservationOwnerOrResponsibleFromParam("id"),
   validateBody(ReservationSchema.partial()),
   controller.update,
 );

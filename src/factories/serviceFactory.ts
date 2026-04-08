@@ -40,6 +40,9 @@ import { VehicleKilometersService } from "@/services/vehicleKilometersService";
 import { MetricsRepository } from "@/repositories/MetricsRepository";
 import { MetricsService } from "@/services/metricsService";
 import { VehicleKilometersRepository } from "@/repositories/VehicleKilometersRepository";
+import { PushTokenService } from "@/services/pushTokenService";
+import { PushTokenRepository } from "@/repositories/PushTokenRepository";
+import { NotificationService } from "@/services/notificationService";
 
 /**
  * Service Factory - Centralizes creation of service instances
@@ -76,7 +79,13 @@ export class ServiceFactory {
     const reservationRepo = new ReservationRepository(this.dataSource);
     const userRepo = this.dataSource.getRepository(User);
     const vehicleRepo = this.dataSource.getRepository(Vehicle);
-    return new ReservationsService(reservationRepo, userRepo, vehicleRepo);
+    const notificationService = this.createNotificationService();
+    return new ReservationsService(
+      reservationRepo,
+      userRepo,
+      vehicleRepo,
+      notificationService,
+    );
   }
 
   createAssignmentsService(): AssignmentsService {
@@ -198,6 +207,17 @@ export class ServiceFactory {
   createMetricsService(): MetricsService {
     const metricsRepo = new MetricsRepository(this.dataSource);
     return new MetricsService(metricsRepo);
+  }
+
+  createPushTokenService(): PushTokenService {
+    const pushTokenRepo = new PushTokenRepository(this.dataSource);
+    const userRepo = this.dataSource.getRepository(User);
+    return new PushTokenService(pushTokenRepo, userRepo);
+  }
+
+  createNotificationService(): NotificationService {
+    const pushTokenService = this.createPushTokenService();
+    return new NotificationService(pushTokenService);
   }
 
   // Add more service factory methods here as we refactor them

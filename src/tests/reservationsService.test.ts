@@ -4,6 +4,7 @@ import { IReservationRepository } from "@/repositories/interfaces/IReservationRe
 import { Reservation } from "@/entities/Reservation";
 import { User } from "@/entities/User";
 import { Vehicle } from "@/entities/Vehicle";
+import { NotificationService } from "@/services/notificationService";
 import { Repository, SelectQueryBuilder } from "typeorm";
 import * as validators from "@/utils/validation/entity";
 
@@ -14,6 +15,8 @@ describe("ReservationsService", () => {
   let mockReservationRepo: jest.Mocked<IReservationRepository>;
   let mockUserRepo: jest.Mocked<Repository<User>>;
   let mockVehicleRepo: jest.Mocked<Repository<Vehicle>>;
+  let mockNotificationService: Pick<NotificationService, "sendToUser">;
+  let mockSendToUser: jest.MockedFunction<NotificationService["sendToUser"]>;
 
   beforeEach(() => {
     mockReservationRepo = {
@@ -36,10 +39,18 @@ describe("ReservationsService", () => {
       findOne: jest.fn(),
     } as unknown as jest.Mocked<Repository<Vehicle>>;
 
+    mockSendToUser = jest
+      .fn<NotificationService["sendToUser"]>()
+      .mockResolvedValue(undefined);
+    mockNotificationService = {
+      sendToUser: mockSendToUser,
+    };
+
     service = new ReservationsService(
       mockReservationRepo,
       mockUserRepo,
       mockVehicleRepo,
+      mockNotificationService as unknown as NotificationService,
     );
   });
 
@@ -227,6 +238,16 @@ describe("ReservationsService", () => {
       expect(result).not.toBeNull();
       expect(mockReservationRepo.create).toHaveBeenCalled();
       expect(mockReservationRepo.save).toHaveBeenCalled();
+      expect(mockSendToUser).toHaveBeenCalledWith(
+        "u1",
+        expect.objectContaining({
+          title: "Nueva reserva",
+          data: expect.objectContaining({
+            type: "reservation_created",
+            reservationId: "1",
+          }),
+        }),
+      );
     });
 
     it("should return null if user not found", async () => {
@@ -259,6 +280,7 @@ describe("ReservationsService", () => {
       });
 
       expect(result).toBeNull();
+      expect(mockSendToUser).not.toHaveBeenCalled();
     });
 
     it("should return null if vehicle not found", async () => {
@@ -291,6 +313,7 @@ describe("ReservationsService", () => {
       });
 
       expect(result).toBeNull();
+      expect(mockSendToUser).not.toHaveBeenCalled();
     });
 
     it("should throw error if reservation overlaps with existing one", async () => {
@@ -326,7 +349,103 @@ describe("ReservationsService", () => {
           startDate: new Date("2024-01-01"),
           endDate: new Date("2024-01-05"),
         }),
-      ).rejects.toThrow("Vehicle already has a reservation overlapping");
+      ).rejects.toThrow(
+        "Vehicle already has a reservation with an overlapping period",
+      );
+
+      expect(mockSendToUser).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("update", () => {
+    it("should notify user after updating reservation", async () => {
+      const existing = createMockReservation();
+      const updated = {
+        ...existing,
+        endDate: "2024-01-06",
+      } as Reservation;
+
+      mockReservationRepo.findOne.mockResolvedValue(existing);
+      mockReservationRepo.save.mockResolvedValue(updated);
+
+      const mockQb = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getOne: jest
+          .fn<() => Promise<Reservation | null>>()
+          .mockResolvedValue(null),
+      } as jest.Mocked<
+        Pick<SelectQueryBuilder<Reservation>, "where" | "andWhere" | "getOne">
+      >;
+      mockReservationRepo.qb.mockReturnValue(
+        mockQb as unknown as SelectQueryBuilder<Reservation>,
+      );
+
+      const result = await service.update("1", {
+        endDate: new Date("2024-01-06"),
+      });
+
+      expect(result).not.toBeNull();
+      expect(mockSendToUser).toHaveBeenCalledWith(
+        "u1",
+        expect.objectContaining({
+          title: "Reserva actualizada",
+          data: expect.objectContaining({
+            type: "reservation_updated",
+            reservationId: "1",
+          }),
+        }),
+      );
+    });
+
+    it("should return null and not notify when reservation does not exist", async () => {
+      mockReservationRepo.findOne.mockResolvedValue(null);
+
+      const result = await service.update("missing-id", {
+        endDate: new Date("2024-01-06"),
+      });
+
+      expect(result).toBeNull();
+      expect(mockSendToUser).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("delete", () => {
+    it("should notify user after deleting reservation", async () => {
+      const existing = createMockReservation();
+      mockReservationRepo.findOne.mockResolvedValue(existing);
+      mockReservationRepo.delete.mockResolvedValue({
+        affected: 1,
+        raw: {},
+      });
+
+      const deleted = await service.delete("1");
+
+      expect(deleted).toBe(true);
+      expect(mockSendToUser).toHaveBeenCalledWith(
+        "u1",
+        expect.objectContaining({
+          title: "Reserva cancelada",
+          data: expect.objectContaining({
+            type: "reservation_cancelled",
+            reservationId: "1",
+          }),
+        }),
+      );
+    });
+
+    it("should not notify when delete affects no rows", async () => {
+      const existing = createMockReservation();
+      mockReservationRepo.findOne.mockResolvedValue(existing);
+      mockReservationRepo.delete.mockResolvedValue({
+        affected: 0,
+        raw: {},
+      });
+
+      const deleted = await service.delete("1");
+
+      expect(deleted).toBe(false);
+      expect(mockSendToUser).not.toHaveBeenCalled();
     });
   });
 });

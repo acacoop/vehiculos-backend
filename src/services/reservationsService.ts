@@ -6,6 +6,7 @@ import {
   validateUserExists,
   validateVehicleExists,
 } from "@/utils/validation/entity";
+import { NotificationService } from "@/services/notificationService";
 import {
   IReservationRepository,
   ReservationFilters,
@@ -75,7 +76,17 @@ export class ReservationsService {
     private readonly repo: IReservationRepository,
     private readonly userRepo: Repository<User>,
     private readonly vehicleRepo: Repository<Vehicle>,
+    private readonly notificationService?: NotificationService,
   ) {}
+
+  private safeNotify(
+    userId: string,
+    payload: Parameters<NotificationService["sendToUser"]>[1],
+  ): void {
+    this.notificationService
+      ?.sendToUser(userId, payload)
+      .catch((err) => console.error("Notification send error:", err));
+  }
 
   async getAll(
     options?: RepositoryFindOptions<ReservationFilters>,
@@ -173,7 +184,19 @@ export class ReservationsService {
       endDate: endDate.toISOString(),
     });
     const saved = await this.repo.save(entity);
-    return mapEntity(saved);
+    const result = mapEntity(saved);
+
+    this.safeNotify(userId, {
+      title: "Nueva reserva",
+      body: `Tenés una nueva reserva del vehículo ${result.vehicle.licensePlate} desde ${result.startDate.toISOString().slice(0, 10)} hasta ${result.endDate.toISOString().slice(0, 10)}`,
+      data: {
+        type: "reservation_created",
+        reservationId: result.id,
+        vehicleId: result.vehicle.id,
+      },
+    });
+
+    return result;
   }
 
   async update(
@@ -235,11 +258,42 @@ export class ReservationsService {
     }
 
     const saved = await this.repo.save(existing);
-    return mapEntity(saved);
+    const result = mapEntity(saved);
+
+    this.safeNotify(result.user.id, {
+      title: "Reserva actualizada",
+      body: `Tu reserva del vehículo ${result.vehicle.licensePlate} fue actualizada`,
+      data: {
+        type: "reservation_updated",
+        reservationId: result.id,
+        vehicleId: result.vehicle.id,
+      },
+    });
+
+    return result;
   }
 
   async delete(id: string): Promise<boolean> {
+    // Fetch reservation before deleting only when notifications are enabled
+    const existing = this.notificationService
+      ? await this.repo.findOne(id)
+      : null;
     const result = await this.repo.delete(id);
-    return (result.affected ?? 0) > 0;
+    const deleted = (result.affected ?? 0) > 0;
+
+    if (deleted && existing) {
+      const mapped = mapEntity(existing);
+      this.safeNotify(mapped.user.id, {
+        title: "Reserva cancelada",
+        body: `Tu reserva del vehículo ${mapped.vehicle.licensePlate} fue cancelada`,
+        data: {
+          type: "reservation_cancelled",
+          reservationId: id,
+          vehicleId: mapped.vehicle.id,
+        },
+      });
+    }
+
+    return deleted;
   }
 }
