@@ -1,10 +1,7 @@
-import {
-  Expo,
-  ExpoPushMessage,
-  ExpoPushTicket,
-  ExpoPushErrorReceipt,
-} from "expo-server-sdk";
+import { Expo, ExpoPushMessage, ExpoPushTicket } from "expo-server-sdk";
 import { PushTokenService } from "@/services/pushTokenService";
+
+type ExpoPushErrorTicket = Extract<ExpoPushTicket, { status: "error" }>;
 
 const expo = new Expo();
 
@@ -105,7 +102,7 @@ export class NotificationService {
 
   private async removeUnregisteredToken(
     message: ExpoPushMessage | undefined,
-    ticket: ExpoPushErrorReceipt,
+    ticket: ExpoPushErrorTicket,
   ): Promise<void> {
     if (ticket.details?.error !== "DeviceNotRegistered" || !message?.to) return;
 
