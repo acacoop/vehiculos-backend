@@ -1,6 +1,8 @@
 import { Expo, ExpoPushMessage, ExpoPushTicket } from "expo-server-sdk";
 import { PushTokenService } from "@/services/pushTokenService";
 
+type ExpoPushErrorTicket = Extract<ExpoPushTicket, { status: "error" }>;
+
 const expo = new Expo();
 
 export interface NotificationPayload {
@@ -38,59 +40,75 @@ export class NotificationService {
     pushTokens: string[],
     payload: NotificationPayload,
   ): Promise<void> {
-    const messages: ExpoPushMessage[] = [];
+    const messages = this.buildMessages(pushTokens, payload);
+    if (!messages.length) return;
 
-    for (const token of pushTokens) {
+    for (const chunk of expo.chunkPushNotifications(messages)) {
+      await this.sendChunk(chunk);
+    }
+  }
+
+  private buildMessages(
+    pushTokens: string[],
+    payload: NotificationPayload,
+  ): ExpoPushMessage[] {
+    return pushTokens.reduce<ExpoPushMessage[]>((acc, token) => {
       if (!Expo.isExpoPushToken(token)) {
-        const t = token as string;
-        const masked =
-          t.length > 8 ? `${t.slice(0, 4)}...${t.slice(-4)}` : "****";
-        console.warn(`Invalid Expo push token: ${masked}`);
-        continue;
+        this.logInvalidToken(token);
+        return acc;
       }
 
-      messages.push({
+      acc.push({
         to: token,
         sound: "default",
         title: payload.title,
         body: payload.body,
         data: payload.data ?? {},
       });
+      return acc;
+    }, []);
+  }
+
+  private logInvalidToken(token: string): void {
+    const masked =
+      token.length > 8 ? `${token.slice(0, 4)}...${token.slice(-4)}` : "****";
+    console.warn(`Invalid Expo push token: ${masked}`);
+  }
+
+  private async sendChunk(chunk: ExpoPushMessage[]): Promise<void> {
+    try {
+      const tickets = await expo.sendPushNotificationsAsync(chunk);
+      await this.handleTicketErrors(chunk, tickets);
+    } catch (error) {
+      console.error("Failed to send push notification chunk:", error);
     }
+  }
 
-    if (!messages.length) return;
+  private async handleTicketErrors(
+    chunk: ExpoPushMessage[],
+    tickets: ExpoPushTicket[],
+  ): Promise<void> {
+    for (let i = 0; i < tickets.length; i++) {
+      const ticket = tickets[i];
+      if (ticket.status !== "error") continue;
 
-    const chunks = expo.chunkPushNotifications(messages);
+      console.error(
+        `Push notification error: ${ticket.message}`,
+        ticket.details,
+      );
+      await this.removeUnregisteredToken(chunk[i], ticket);
+    }
+  }
 
-    for (const chunk of chunks) {
-      try {
-        const tickets: ExpoPushTicket[] =
-          await expo.sendPushNotificationsAsync(chunk);
+  private async removeUnregisteredToken(
+    message: ExpoPushMessage | undefined,
+    ticket: ExpoPushErrorTicket,
+  ): Promise<void> {
+    if (ticket.details?.error !== "DeviceNotRegistered" || !message?.to) return;
 
-        // Handle errors — remove invalid tokens
-        for (let i = 0; i < tickets.length; i++) {
-          const ticket = tickets[i];
-          if (ticket.status === "error") {
-            console.error(
-              `Push notification error: ${ticket.message}`,
-              ticket.details,
-            );
-            if (
-              ticket.details?.error === "DeviceNotRegistered" &&
-              chunk[i]?.to
-            ) {
-              const tokenStr = Array.isArray(chunk[i].to)
-                ? chunk[i].to[0]
-                : chunk[i].to;
-              if (typeof tokenStr === "string") {
-                await this.pushTokenService.deleteTokenByValue(tokenStr);
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Failed to send push notification chunk:", error);
-      }
+    const token = Array.isArray(message.to) ? message.to[0] : message.to;
+    if (typeof token === "string") {
+      await this.pushTokenService.deleteTokenByValue(token);
     }
   }
 }
