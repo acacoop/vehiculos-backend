@@ -385,3 +385,54 @@ export const requireReservationOwnerOrResponsibleFromParam = (
     }
   };
 };
+
+/**
+ * Requires that req.body[bodyField] matches the authenticated user's ID,
+ * OR that the caller is an admin (bypasses the check).
+ * Prevents a user from creating records on behalf of other users.
+ */
+export const requireUserIdMatchesBody = (bodyField: string = "userId") => {
+  return async (req: PermissionRequest, _res: Response, next: NextFunction) => {
+    try {
+      const checker = getPermissionChecker();
+      const user = req.user;
+
+      if (!user) {
+        throw new AppError(
+          "Authentication required",
+          401,
+          "https://example.com/problems/unauthorized",
+          "Unauthorized",
+        );
+      }
+
+      const bodyUserId = req.body?.[bodyField];
+      if (!bodyUserId) {
+        throw new AppError(
+          `Field '${bodyField}' is required in request body`,
+          400,
+          "https://example.com/problems/bad-request",
+          "Bad Request",
+        );
+      }
+
+      const isAdmin = await checker.checkUserRolePermission(
+        user.id,
+        UserRoleEnum.ADMIN,
+      );
+
+      if (!isAdmin && user.id !== bodyUserId) {
+        throw new AppError(
+          "You can only create records for yourself",
+          403,
+          "https://example.com/problems/forbidden",
+          "Forbidden",
+        );
+      }
+
+      next();
+    } catch (err) {
+      next(err);
+    }
+  };
+};

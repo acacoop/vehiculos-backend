@@ -1,8 +1,13 @@
 import express from "express";
 import { validateUUIDParam } from "@/middleware/validation";
 import { maintenanceRecordsController } from "@/controllers/maintenanceRecordsController";
-import { requireRole } from "@/middleware/permission";
+import {
+  requireRole,
+  requireVehiclePermissionFromBody,
+  requireUserIdMatchesBody,
+} from "@/middleware/permission";
 import { UserRoleEnum } from "@/enums/UserRoleEnum";
+import { PermissionType } from "@/enums/PermissionType";
 
 const router = express.Router();
 
@@ -22,6 +27,8 @@ router.get(
 router.post(
   "/",
   requireRole(UserRoleEnum.USER),
+  requireUserIdMatchesBody("userId"),
+  requireVehiclePermissionFromBody(PermissionType.DRIVER, "vehicleId"),
   maintenanceRecordsController.create,
 );
 
