@@ -339,6 +339,15 @@ export const requireReservationOwnerOrResponsibleFromParam = (
         );
       }
 
+      // Admin bypass - admins can update any reservation
+      const isAdmin = await checker.checkUserRolePermission(
+        user.id,
+        UserRoleEnum.ADMIN,
+      );
+      if (isAdmin) {
+        return next();
+      }
+
       const reservationId = req.params[reservationIdParam];
       if (!reservationId) {
         throw new AppError(
