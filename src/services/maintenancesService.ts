@@ -294,10 +294,12 @@ export class MaintenanceRecordsService {
 
     if (!maintenance || !vehicle || !user) return null;
 
+    // Get date strings for consistent comparison (using ISO format, UTC-based)
+    const inputDateStr = data.date.toISOString().split("T")[0];
+    const todayStr = new Date().toISOString().split("T")[0];
+
     // Validate that date is not in the future (today is allowed)
-    const today = new Date();
-    today.setHours(23, 59, 59, 999); // End of today
-    if (data.date > today) {
+    if (inputDateStr > todayStr) {
       throw new AppError(
         "La fecha no puede ser posterior al día de hoy",
         422,
@@ -307,53 +309,74 @@ export class MaintenanceRecordsService {
     }
 
     // Check if there are existing kilometers logs on the same day for this vehicle
-    const dateStr = data.date.toISOString().split("T")[0];
+    // Use range query for index efficiency and database compatibility
+    const startOfDay = new Date(inputDateStr + "T00:00:00.000Z");
+    const startOfNextDay = new Date(inputDateStr + "T00:00:00.000Z");
+    startOfNextDay.setUTCDate(startOfNextDay.getUTCDate() + 1);
+
     const existingLogsOnSameDay = await this.dataSource
       .getRepository(VehicleKilometers)
       .createQueryBuilder("vk")
+      .leftJoinAndSelect("vk.vehicle", "vehicle")
+      .leftJoinAndSelect("vk.user", "user")
       .where("vk.vehicle.id = :vehicleId", { vehicleId: data.vehicleId })
-      .andWhere("CAST(vk.date AS DATE) = :dateStr", { dateStr })
+      .andWhere("vk.date >= :startOfDay AND vk.date < :startOfNextDay", {
+        startOfDay,
+        startOfNextDay,
+      })
       .getMany();
 
     // If there are existing logs on the same day, validate kilometers match
+    let existingKilometersLog: VehicleKilometers | null = null;
     if (existingLogsOnSameDay.length > 0) {
       const existingKilometers = existingLogsOnSameDay[0].kilometers;
       if (data.kilometers !== existingKilometers) {
         throw new AppError(
-          `Ya existe un registro de kilometraje para este vehículo en la fecha ${dateStr} con ${existingKilometers} km. El kilometraje debe ser el mismo para agregar otro registro de mantenimiento en el mismo día.`,
+          `Ya existe un registro de kilometraje para este vehículo en la fecha ${inputDateStr} con ${existingKilometers} km. El kilometraje debe ser el mismo para agregar otro registro de mantenimiento en el mismo día.`,
           422,
           "https://example.com/problems/kilometers-mismatch",
           "Kilometers Mismatch",
         );
       }
+      // Reuse the existing kilometers log
+      existingKilometersLog = existingLogsOnSameDay[0];
     }
 
-    // Validate kilometers before creating (will throw AppError if invalid)
-    await this.vehicleKilometersService.validateKilometersReading(
-      data.vehicleId,
-      data.date,
-      data.kilometers,
-    );
+    // Only validate kilometers reading if creating a new log
+    if (!existingKilometersLog) {
+      await this.vehicleKilometersService.validateKilometersReading(
+        data.vehicleId,
+        data.date,
+        data.kilometers,
+      );
+    }
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      // Create kilometer log first inside transaction
-      const kilometersLogEntity = queryRunner.manager.create(
-        VehicleKilometers,
-        {
-          vehicle,
-          user,
-          date: data.date,
-          kilometers: data.kilometers,
-        },
-      );
-      const savedKilometersLog = await queryRunner.manager.save(
-        VehicleKilometers,
-        kilometersLogEntity,
-      );
+      let kilometersLogToUse: VehicleKilometers;
+
+      if (existingKilometersLog) {
+        // Reuse existing kilometers log for same-day records
+        kilometersLogToUse = existingKilometersLog;
+      } else {
+        // Create new kilometer log inside transaction
+        const kilometersLogEntity = queryRunner.manager.create(
+          VehicleKilometers,
+          {
+            vehicle,
+            user,
+            date: data.date,
+            kilometers: data.kilometers,
+          },
+        );
+        kilometersLogToUse = await queryRunner.manager.save(
+          VehicleKilometers,
+          kilometersLogEntity,
+        );
+      }
 
       // Create maintenance record with reference to kilometer log
       const created = this.maintenanceRecordRepo.create({
@@ -361,7 +384,7 @@ export class MaintenanceRecordsService {
         vehicle,
         user,
         date: data.date.toISOString().split("T")[0],
-        kilometersLog: savedKilometersLog,
+        kilometersLog: kilometersLogToUse,
         notes: data.notes ?? null,
       });
       const saved = await queryRunner.manager.save(created);
