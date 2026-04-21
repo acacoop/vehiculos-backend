@@ -23,6 +23,7 @@ import { Repository, DataSource } from "typeorm";
 import { User } from "@/entities/User";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import { VehicleKilometersService } from "@/services/vehicleKilometersService";
+import { AppError } from "@/middleware/errorHandler";
 
 export type MaintenanceDTO = MaintenanceSchemaType & {
   kilometersFrequency?: number;
@@ -292,6 +293,40 @@ export class MaintenanceRecordsService {
     const user = await this.userRepo.findOne({ where: { id: data.userId } });
 
     if (!maintenance || !vehicle || !user) return null;
+
+    // Validate that date is not in the future (today is allowed)
+    const today = new Date();
+    today.setHours(23, 59, 59, 999); // End of today
+    if (data.date > today) {
+      throw new AppError(
+        "La fecha no puede ser posterior al día de hoy",
+        422,
+        "https://example.com/problems/invalid-date",
+        "Invalid Date",
+      );
+    }
+
+    // Check if there are existing kilometers logs on the same day for this vehicle
+    const dateStr = data.date.toISOString().split("T")[0];
+    const existingLogsOnSameDay = await this.dataSource
+      .getRepository(VehicleKilometers)
+      .createQueryBuilder("vk")
+      .where("vk.vehicle.id = :vehicleId", { vehicleId: data.vehicleId })
+      .andWhere("CAST(vk.date AS DATE) = :dateStr", { dateStr })
+      .getMany();
+
+    // If there are existing logs on the same day, validate kilometers match
+    if (existingLogsOnSameDay.length > 0) {
+      const existingKilometers = existingLogsOnSameDay[0].kilometers;
+      if (data.kilometers !== existingKilometers) {
+        throw new AppError(
+          `Ya existe un registro de kilometraje para este vehículo en la fecha ${dateStr} con ${existingKilometers} km. El kilometraje debe ser el mismo para agregar otro registro de mantenimiento en el mismo día.`,
+          422,
+          "https://example.com/problems/kilometers-mismatch",
+          "Kilometers Mismatch",
+        );
+      }
+    }
 
     // Validate kilometers before creating (will throw AppError if invalid)
     await this.vehicleKilometersService.validateKilometersReading(

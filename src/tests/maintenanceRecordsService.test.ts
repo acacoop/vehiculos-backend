@@ -159,8 +159,22 @@ describe("MaintenanceRecordsService", () => {
       },
     };
 
+    // Default mock for getRepository returning empty results for same-day check
+    const defaultMockCreateQueryBuilder = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getMany: jest
+        .fn<() => Promise<VehicleKilometers[]>>()
+        .mockResolvedValue([]),
+    };
+
     mockDataSource = {
       createQueryRunner: jest.fn().mockReturnValue(mockQueryRunner),
+      getRepository: jest.fn().mockReturnValue({
+        createQueryBuilder: jest
+          .fn()
+          .mockReturnValue(defaultMockCreateQueryBuilder),
+      }),
     } as unknown as jest.Mocked<DataSource>;
 
     mockVehicleKilometersService = {
@@ -365,6 +379,146 @@ describe("MaintenanceRecordsService", () => {
       await expect(service.create(input)).rejects.toThrow("DB Error");
       expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
       expect(mockQueryRunner.release).toHaveBeenCalled();
+    });
+
+    it("should reject future dates", async () => {
+      mockMaintenanceRepo.findOne.mockResolvedValue(mockMaintenance);
+      mockVehicleRepo.findOne.mockResolvedValue(mockVehicle);
+      mockUserRepo.findOne.mockResolvedValue(mockUser);
+
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1); // Tomorrow
+
+      const input = {
+        maintenanceId: "maintenance-1",
+        vehicleId: "vehicle-1",
+        userId: "user-1",
+        date: futureDate,
+        kilometers: 5000,
+      };
+
+      await expect(service.create(input)).rejects.toThrow(
+        "La fecha no puede ser posterior al día de hoy",
+      );
+    });
+
+    it("should allow today's date", async () => {
+      mockMaintenanceRepo.findOne.mockResolvedValue(mockMaintenance);
+      mockVehicleRepo.findOne.mockResolvedValue(mockVehicle);
+      mockUserRepo.findOne.mockResolvedValue(mockUser);
+      mockMaintenanceRecordEntityRepo.findOne.mockResolvedValue(mockRecord);
+
+      // Mock getRepository for VehicleKilometers
+      const mockCreateQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getMany: jest
+          .fn<() => Promise<VehicleKilometers[]>>()
+          .mockResolvedValue([]),
+      };
+      (
+        mockDataSource as unknown as { getRepository: jest.Mock }
+      ).getRepository = jest.fn().mockReturnValue({
+        createQueryBuilder: jest.fn().mockReturnValue(mockCreateQueryBuilder),
+      });
+
+      const today = new Date();
+      today.setHours(12, 0, 0, 0); // Midday today
+
+      const input = {
+        maintenanceId: "maintenance-1",
+        vehicleId: "vehicle-1",
+        userId: "user-1",
+        date: today,
+        kilometers: 5000,
+      };
+
+      const result = await service.create(input);
+
+      expect(result).toBeDefined();
+    });
+
+    it("should reject same-day record with different kilometers", async () => {
+      mockMaintenanceRepo.findOne.mockResolvedValue(mockMaintenance);
+      mockVehicleRepo.findOne.mockResolvedValue(mockVehicle);
+      mockUserRepo.findOne.mockResolvedValue(mockUser);
+
+      // Mock existing kilometers log on the same day with different km
+      const existingKmLog: VehicleKilometers = {
+        id: "existing-km-log",
+        vehicle: mockVehicle,
+        user: mockUser,
+        date: new Date("2024-01-15"),
+        kilometers: 6000, // Different from input (5000)
+        createdAt: new Date(),
+      };
+
+      const mockCreateQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getMany: jest
+          .fn<() => Promise<VehicleKilometers[]>>()
+          .mockResolvedValue([existingKmLog]),
+      };
+      (
+        mockDataSource as unknown as { getRepository: jest.Mock }
+      ).getRepository = jest.fn().mockReturnValue({
+        createQueryBuilder: jest.fn().mockReturnValue(mockCreateQueryBuilder),
+      });
+
+      const input = {
+        maintenanceId: "maintenance-1",
+        vehicleId: "vehicle-1",
+        userId: "user-1",
+        date: new Date("2024-01-15"),
+        kilometers: 5000, // Different from existing (6000)
+      };
+
+      await expect(service.create(input)).rejects.toThrow(
+        /Ya existe un registro de kilometraje para este vehículo/,
+      );
+    });
+
+    it("should allow same-day record with matching kilometers", async () => {
+      mockMaintenanceRepo.findOne.mockResolvedValue(mockMaintenance);
+      mockVehicleRepo.findOne.mockResolvedValue(mockVehicle);
+      mockUserRepo.findOne.mockResolvedValue(mockUser);
+      mockMaintenanceRecordEntityRepo.findOne.mockResolvedValue(mockRecord);
+
+      // Mock existing kilometers log on the same day with SAME km
+      const existingKmLog: VehicleKilometers = {
+        id: "existing-km-log",
+        vehicle: mockVehicle,
+        user: mockUser,
+        date: new Date("2024-01-15"),
+        kilometers: 5000, // Same as input
+        createdAt: new Date(),
+      };
+
+      const mockCreateQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getMany: jest
+          .fn<() => Promise<VehicleKilometers[]>>()
+          .mockResolvedValue([existingKmLog]),
+      };
+      (
+        mockDataSource as unknown as { getRepository: jest.Mock }
+      ).getRepository = jest.fn().mockReturnValue({
+        createQueryBuilder: jest.fn().mockReturnValue(mockCreateQueryBuilder),
+      });
+
+      const input = {
+        maintenanceId: "maintenance-1",
+        vehicleId: "vehicle-1",
+        userId: "user-1",
+        date: new Date("2024-01-15"),
+        kilometers: 5000, // Same as existing
+      };
+
+      const result = await service.create(input);
+
+      expect(result).toBeDefined();
     });
   });
 
