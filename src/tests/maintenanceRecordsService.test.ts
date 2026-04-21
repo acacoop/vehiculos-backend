@@ -1,7 +1,6 @@
 import { describe, it, expect, jest, beforeEach } from "@jest/globals";
 import { MaintenanceRecordsService } from "@/services/maintenancesService";
 import { IMaintenanceRecordRepository } from "@/repositories/interfaces/IMaintenanceRecordRepository";
-import { IVehicleKilometersRepository } from "@/repositories/interfaces/IVehicleKilometersRepository";
 import { MaintenanceRecord as MaintenanceRecordEntity } from "@/entities/MaintenanceRecord";
 import { User } from "@/entities/User";
 import { Vehicle } from "@/entities/Vehicle";
@@ -170,19 +169,6 @@ describe("MaintenanceRecordsService", () => {
         .mockResolvedValue(undefined),
     } as unknown as jest.Mocked<VehicleKilometersService>;
 
-    const mockVehicleKilometersRepo = {
-      findAll: jest.fn(),
-      findById: jest.fn(),
-      findByVehicle: jest.fn(),
-      qb: jest.fn(),
-      findPrev: jest.fn(),
-      findNext: jest.fn(),
-      findByVehicleAndDate: jest.fn(),
-      create: jest.fn(),
-      save: jest.fn(),
-      delete: jest.fn(),
-    } as unknown as jest.Mocked<IVehicleKilometersRepository>;
-
     // Mock AppDataSource.getRepository for validators
     (AppDataSource.getRepository as jest.Mock).mockImplementation(
       (entity: unknown) => {
@@ -201,7 +187,6 @@ describe("MaintenanceRecordsService", () => {
       mockUserRepo,
       mockDataSource,
       mockVehicleKilometersService,
-      mockVehicleKilometersRepo as unknown as IVehicleKilometersRepository,
     );
   });
 

@@ -103,11 +103,12 @@ export class VehicleKilometersRepository implements IVehicleKilometersRepository
   }
 
   /**
-   * Find a kilometer log for an exact vehicle + date combination.
-   * Normalizes the date comparison to match calendar date (stored as midnight).
+   * Find a kilometer log for a vehicle on a specific calendar day.
+   * Searches the entire day range and returns the most recent log if multiple exist.
+   * Used for validation purposes, not for reusing logs (each MaintenanceRecord owns its own log).
    */
   findByVehicleAndDate(vehicleId: string, date: Date) {
-    // Normalize to midnight to match the stored datetime
+    // Normalize to day boundaries for calendar-day lookup
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(date);
@@ -117,6 +118,7 @@ export class VehicleKilometersRepository implements IVehicleKilometersRepository
       .where("vehicle.id = :vehicleId", { vehicleId })
       .andWhere("vk.date >= :startOfDay", { startOfDay })
       .andWhere("vk.date <= :endOfDay", { endOfDay })
+      .orderBy("vk.date", "DESC") // Return most recent log if multiple exist
       .getOne();
   }
 

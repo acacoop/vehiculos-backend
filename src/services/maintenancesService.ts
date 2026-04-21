@@ -23,7 +23,6 @@ import { Repository, DataSource } from "typeorm";
 import { User } from "@/entities/User";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import { VehicleKilometersService } from "@/services/vehicleKilometersService";
-import { IVehicleKilometersRepository } from "@/repositories/interfaces/IVehicleKilometersRepository";
 
 export type MaintenanceDTO = MaintenanceSchemaType & {
   kilometersFrequency?: number;
@@ -154,7 +153,6 @@ export class MaintenanceRecordsService {
     private readonly userRepo: Repository<User>,
     private readonly dataSource: DataSource,
     private readonly vehicleKilometersService: VehicleKilometersService,
-    private readonly vehicleKilometersRepo: IVehicleKilometersRepository,
   ) {}
 
   private mapEntity(mr: MaintenanceRecordEntity): MaintenanceRecordDTO {
@@ -295,63 +293,33 @@ export class MaintenanceRecordsService {
 
     if (!maintenance || !vehicle || !user) return null;
 
-    // Check if a kilometer log already exists for this vehicle + date
-    const existingKilometersLog =
-      await this.vehicleKilometersRepo.findByVehicleAndDate(
-        data.vehicleId,
-        data.date,
-      );
-
-    // Validate kilometers only if we need to create/update the log
-    // If log exists with same kilometers, skip validation (reuse existing)
-    if (
-      !existingKilometersLog ||
-      existingKilometersLog.kilometers !== data.kilometers
-    ) {
-      await this.vehicleKilometersService.validateKilometersReading(
-        data.vehicleId,
-        data.date,
-        data.kilometers,
-        existingKilometersLog?.id, // Exclude existing log from validation
-      );
-    }
+    // Validate the kilometers reading against existing logs for this vehicle
+    await this.vehicleKilometersService.validateKilometersReading(
+      data.vehicleId,
+      data.date,
+      data.kilometers,
+    );
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      let savedKilometersLog: VehicleKilometers;
-
-      if (existingKilometersLog) {
-        // Existing log found - update if kilometers differ, otherwise reuse
-        if (existingKilometersLog.kilometers !== data.kilometers) {
-          existingKilometersLog.kilometers = data.kilometers;
-          existingKilometersLog.user = user;
-          savedKilometersLog = await queryRunner.manager.save(
-            VehicleKilometers,
-            existingKilometersLog,
-          );
-        } else {
-          // Kilometers match - reuse existing log
-          savedKilometersLog = existingKilometersLog;
-        }
-      } else {
-        // No existing log - create a new one
-        const kilometersLogEntity = queryRunner.manager.create(
-          VehicleKilometers,
-          {
-            vehicle,
-            user,
-            date: data.date,
-            kilometers: data.kilometers,
-          },
-        );
-        savedKilometersLog = await queryRunner.manager.save(
-          VehicleKilometers,
-          kilometersLogEntity,
-        );
-      }
+      // Always create a new VehicleKilometers log for each MaintenanceRecord (1:1 ownership)
+      // This prevents issues where deleting/updating one record affects others
+      const kilometersLogEntity = queryRunner.manager.create(
+        VehicleKilometers,
+        {
+          vehicle,
+          user,
+          date: data.date,
+          kilometers: data.kilometers,
+        },
+      );
+      const savedKilometersLog = await queryRunner.manager.save(
+        VehicleKilometers,
+        kilometersLogEntity,
+      );
 
       // Create maintenance record with reference to kilometer log
       const created = this.maintenanceRecordRepo.create({
