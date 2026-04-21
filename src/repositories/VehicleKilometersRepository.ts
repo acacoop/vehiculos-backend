@@ -102,6 +102,24 @@ export class VehicleKilometersRepository implements IVehicleKilometersRepository
       .getOne();
   }
 
+  /**
+   * Find a kilometer log for an exact vehicle + date combination.
+   * Normalizes the date comparison to match calendar date (stored as midnight).
+   */
+  findByVehicleAndDate(vehicleId: string, date: Date) {
+    // Normalize to midnight to match the stored datetime
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    return this.qb()
+      .where("vehicle.id = :vehicleId", { vehicleId })
+      .andWhere("vk.date >= :startOfDay", { startOfDay })
+      .andWhere("vk.date <= :endOfDay", { endOfDay })
+      .getOne();
+  }
+
   create(data: Partial<VehicleKilometers>) {
     return this.repo.create(data);
   }

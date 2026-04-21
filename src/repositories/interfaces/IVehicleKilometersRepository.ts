@@ -18,6 +18,10 @@ export interface IVehicleKilometersRepository {
   qb(): SelectQueryBuilder<VehicleKilometers>;
   findPrev(vehicleId: string, date: Date): Promise<VehicleKilometers | null>;
   findNext(vehicleId: string, date: Date): Promise<VehicleKilometers | null>;
+  findByVehicleAndDate(
+    vehicleId: string,
+    date: Date,
+  ): Promise<VehicleKilometers | null>;
   create(data: Partial<VehicleKilometers>): VehicleKilometers;
   save(entity: VehicleKilometers): Promise<VehicleKilometers>;
   delete(id: string): Promise<boolean>;

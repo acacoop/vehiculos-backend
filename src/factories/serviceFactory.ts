@@ -159,6 +159,7 @@ export class ServiceFactory {
       userRepo,
       this.dataSource,
       vehicleKilometersService,
+      vehicleKilometersRepo,
     );
   }
 
