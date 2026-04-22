@@ -23,6 +23,7 @@ import { Repository, DataSource } from "typeorm";
 import { User } from "@/entities/User";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import { VehicleKilometersService } from "@/services/vehicleKilometersService";
+import { AppError } from "@/middleware/errorHandler";
 
 export type MaintenanceDTO = MaintenanceSchemaType & {
   kilometersFrequency?: number;
@@ -281,6 +282,19 @@ export class MaintenanceRecordsService {
     await validateMaintenanceExists(data.maintenanceId);
     await validateVehicleExists(data.vehicleId);
 
+    // Validate date is not in the future
+    const inputDateStr = data.date.toISOString().split("T")[0];
+    const todayStr = new Date().toISOString().split("T")[0];
+
+    if (inputDateStr > todayStr) {
+      throw new AppError(
+        "No se puede registrar un mantenimiento con fecha futura",
+        400,
+        "https://example.com/problems/invalid-date",
+        "Fecha Inválida",
+      );
+    }
+
     const maintenance = await this.maintenanceRepo.findOne({
       where: { id: data.maintenanceId },
       relations: ["category"],
@@ -293,7 +307,55 @@ export class MaintenanceRecordsService {
 
     if (!maintenance || !vehicle || !user) return null;
 
-    // Validate kilometers before creating (will throw AppError if invalid)
+    // Check if there's already a KM log for this vehicle on the same date
+    const existingKmLog =
+      await this.vehicleKilometersService.findByVehicleAndDate(
+        data.vehicleId,
+        inputDateStr,
+      );
+
+    if (existingKmLog) {
+      // If there's an existing KM log for today, the kilometers must match
+      if (existingKmLog.kilometers !== data.kilometers) {
+        throw new AppError(
+          `Ya existe un registro de kilómetros para esta fecha con ${existingKmLog.kilometers} km. Los nuevos registros del mismo día deben tener el mismo kilometraje.`,
+          400,
+          "https://example.com/problems/kilometers-mismatch",
+          "Kilometraje Inconsistente",
+        );
+      }
+
+      // Reuse the existing KM log - no need to create a new one
+      const created = this.maintenanceRecordRepo.create({
+        maintenance,
+        vehicle,
+        user,
+        date: inputDateStr,
+        kilometersLog: existingKmLog,
+        notes: data.notes ?? null,
+      });
+      const saved = await this.maintenanceRecordRepo.save(created);
+
+      // Fetch complete entity with all relations
+      const complete = await this.maintenanceRecordRepo.findOne({
+        where: { id: saved.id },
+        relations: [
+          "maintenance",
+          "maintenance.category",
+          "vehicle",
+          "vehicle.model",
+          "vehicle.model.brand",
+          "user",
+          "kilometersLog",
+          "kilometersLog.user",
+          "kilometersLog.vehicle",
+        ],
+      });
+
+      return complete ? this.mapEntity(complete) : null;
+    }
+
+    // No existing KM log for this date - validate and create new one
     await this.vehicleKilometersService.validateKilometersReading(
       data.vehicleId,
       data.date,
@@ -325,7 +387,7 @@ export class MaintenanceRecordsService {
         maintenance,
         vehicle,
         user,
-        date: data.date.toISOString().split("T")[0],
+        date: inputDateStr,
         kilometersLog: savedKilometersLog,
         notes: data.notes ?? null,
       });

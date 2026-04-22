@@ -94,6 +94,17 @@ export class VehicleKilometersRepository implements IVehicleKilometersRepository
       .getOne();
   }
 
+  /**
+   * Find KM log for a vehicle on a specific date (date string format: YYYY-MM-DD)
+   */
+  findByVehicleAndDate(vehicleId: string, dateStr: string) {
+    return this.qb()
+      .where("vehicle.id = :vehicleId", { vehicleId })
+      .andWhere("CONVERT(DATE, vk.date) = :dateStr", { dateStr })
+      .orderBy("vk.date", "DESC")
+      .getOne();
+  }
+
   findNext(vehicleId: string, date: Date) {
     return this.qb()
       .where("vehicle.id = :vehicleId", { vehicleId })

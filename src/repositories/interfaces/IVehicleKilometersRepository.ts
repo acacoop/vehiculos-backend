@@ -15,6 +15,10 @@ export interface IVehicleKilometersRepository {
   ): Promise<{ items: VehicleKilometers[]; total: number }>;
   findById(id: string): Promise<VehicleKilometers | null>;
   findByVehicle(vehicleId: string): Promise<VehicleKilometers[]>;
+  findByVehicleAndDate(
+    vehicleId: string,
+    dateStr: string,
+  ): Promise<VehicleKilometers | null>;
   qb(): SelectQueryBuilder<VehicleKilometers>;
   findPrev(vehicleId: string, date: Date): Promise<VehicleKilometers | null>;
   findNext(vehicleId: string, date: Date): Promise<VehicleKilometers | null>;

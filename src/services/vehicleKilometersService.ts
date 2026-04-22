@@ -75,6 +75,17 @@ export class VehicleKilometersService {
   }
 
   /**
+   * Find KM log for a vehicle on a specific date (date string format: YYYY-MM-DD)
+   * Returns the raw entity to allow reusing it in transactions
+   */
+  async findByVehicleAndDate(
+    vehicleId: string,
+    dateStr: string,
+  ): Promise<VehicleKilometersEntity | null> {
+    return this.repo.findByVehicleAndDate(vehicleId, dateStr);
+  }
+
+  /**
    * Validates that a kilometers reading is consistent with existing readings.
    * Throws AppError (422) if the reading is invalid:
    * - Lower than a previous reading on an earlier date
