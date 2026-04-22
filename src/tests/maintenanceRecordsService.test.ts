@@ -167,6 +167,9 @@ describe("MaintenanceRecordsService", () => {
       validateKilometersReading: jest
         .fn<() => Promise<void>>()
         .mockResolvedValue(undefined),
+      findByVehicleAndDate: jest
+        .fn<() => Promise<VehicleKilometers | null>>()
+        .mockResolvedValue(null),
     } as unknown as jest.Mocked<VehicleKilometersService>;
 
     // Mock AppDataSource.getRepository for validators
@@ -365,6 +368,87 @@ describe("MaintenanceRecordsService", () => {
       await expect(service.create(input)).rejects.toThrow("DB Error");
       expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
       expect(mockQueryRunner.release).toHaveBeenCalled();
+    });
+
+    it("should throw error when date is in the future", async () => {
+      // Mock validators to pass
+      mockMaintenanceRepo.findOne.mockResolvedValue(mockMaintenance);
+      mockVehicleRepo.findOne.mockResolvedValue(mockVehicle);
+
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1); // Tomorrow
+
+      const input = {
+        maintenanceId: "maintenance-1",
+        vehicleId: "vehicle-1",
+        userId: "user-1",
+        date: futureDate,
+        kilometers: 5000,
+      };
+
+      await expect(service.create(input)).rejects.toThrow(
+        "No se puede registrar un mantenimiento con fecha futura",
+      );
+    });
+
+    it("should reuse existing KM log when same kilometers on same day", async () => {
+      mockMaintenanceRepo.findOne.mockResolvedValue(mockMaintenance);
+      mockVehicleRepo.findOne.mockResolvedValue(mockVehicle);
+      mockUserRepo.findOne.mockResolvedValue(mockUser);
+
+      // Mock existing KM log with same kilometers
+      mockVehicleKilometersService.findByVehicleAndDate.mockResolvedValue(
+        mockKilometersLog,
+      );
+
+      // Mock the create/save/findOne on maintenanceRecordEntityRepo for the reuse path
+      const createdRecord = { ...mockRecord };
+      mockMaintenanceRecordEntityRepo.create.mockReturnValue(createdRecord);
+      mockMaintenanceRecordEntityRepo.save.mockResolvedValue(createdRecord);
+      mockMaintenanceRecordEntityRepo.findOne.mockResolvedValue(mockRecord);
+
+      const input = {
+        maintenanceId: "maintenance-1",
+        vehicleId: "vehicle-1",
+        userId: "user-1",
+        date: new Date("2024-01-15"),
+        kilometers: 5000, // Same as mockKilometersLog.kilometers
+        notes: "Routine check",
+      };
+
+      const result = await service.create(input);
+
+      expect(result).toBeDefined();
+      // Should NOT call validateKilometersReading when reusing existing log
+      expect(
+        mockVehicleKilometersService.validateKilometersReading,
+      ).not.toHaveBeenCalled();
+      // Should NOT start a transaction when reusing existing log
+      expect(mockQueryRunner.startTransaction).not.toHaveBeenCalled();
+    });
+
+    it("should throw error when existing KM log has different kilometers", async () => {
+      mockMaintenanceRepo.findOne.mockResolvedValue(mockMaintenance);
+      mockVehicleRepo.findOne.mockResolvedValue(mockVehicle);
+      mockUserRepo.findOne.mockResolvedValue(mockUser);
+
+      // Mock existing KM log with DIFFERENT kilometers
+      const existingKmLog = { ...mockKilometersLog, kilometers: 6000 };
+      mockVehicleKilometersService.findByVehicleAndDate.mockResolvedValue(
+        existingKmLog,
+      );
+
+      const input = {
+        maintenanceId: "maintenance-1",
+        vehicleId: "vehicle-1",
+        userId: "user-1",
+        date: new Date("2024-01-15"),
+        kilometers: 5000, // Different from existingKmLog (6000)
+      };
+
+      await expect(service.create(input)).rejects.toThrow(
+        "Ya existe un registro de kilómetros para esta fecha con 6000 km",
+      );
     });
   });
 

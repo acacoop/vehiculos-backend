@@ -94,6 +94,25 @@ export class VehicleKilometersRepository implements IVehicleKilometersRepository
       .getOne();
   }
 
+  /**
+   * Find KM log for a vehicle on a specific date.
+   * Uses sargable range predicate to allow index usage on (vehicle, date)
+   */
+  findByVehicleAndDate(vehicleId: string, date: Date) {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
+    const startOfDay = new Date(year, month, day, 0, 0, 0, 0);
+    const startOfNextDay = new Date(year, month, day + 1, 0, 0, 0, 0);
+    return this.qb()
+      .where("vehicle.id = :vehicleId", { vehicleId })
+      .andWhere("vk.date >= :startOfDay AND vk.date < :startOfNextDay", {
+        startOfDay,
+        startOfNextDay,
+      })
+      .getOne();
+  }
+
   findNext(vehicleId: string, date: Date) {
     return this.qb()
       .where("vehicle.id = :vehicleId", { vehicleId })

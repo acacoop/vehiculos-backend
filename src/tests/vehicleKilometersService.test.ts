@@ -58,6 +58,7 @@ describe("VehicleKilometersService", () => {
       findAll: jest.fn(),
       findById: jest.fn(),
       findByVehicle: jest.fn(),
+      findByVehicleAndDate: jest.fn(),
       qb: jest.fn(),
       findPrev: jest.fn(),
       findNext: jest.fn(),

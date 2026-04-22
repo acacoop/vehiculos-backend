@@ -47,3 +47,24 @@ export const validateEndDateAfterStartDate = (
     );
   }
 };
+
+/**
+ * Converts a Date object to a YYYY-MM-DD string using local time components.
+ * Unlike toISOString().split("T")[0], this preserves the local date without UTC conversion.
+ * @param date The Date object to convert
+ * @returns A string in YYYY-MM-DD format representing the local date
+ */
+export const toLocalDateString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+/**
+ * Gets today's date as a YYYY-MM-DD string using local time.
+ * @returns A string in YYYY-MM-DD format representing today's local date
+ */
+export const getTodayLocalDateString = (): string => {
+  return toLocalDateString(new Date());
+};
