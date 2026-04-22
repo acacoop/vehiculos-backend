@@ -14,6 +14,10 @@ import {
   validateMaintenanceExists,
   validateVehicleExists,
 } from "@/utils/validation/entity";
+import {
+  toLocalDateString,
+  getTodayLocalDateString,
+} from "@/utils/validation/date";
 import type { Maintenance as MaintenanceSchemaType } from "@/schemas/maintenance";
 import type { MaintenanceRecordDTO } from "@/schemas/maintenanceRecord";
 import { Vehicle } from "@/entities/Vehicle";
@@ -282,9 +286,9 @@ export class MaintenanceRecordsService {
     await validateMaintenanceExists(data.maintenanceId);
     await validateVehicleExists(data.vehicleId);
 
-    // Validate date is not in the future
-    const inputDateStr = data.date.toISOString().split("T")[0];
-    const todayStr = new Date().toISOString().split("T")[0];
+    // Validate date is not in the future (using local time to avoid timezone issues)
+    const inputDateStr = toLocalDateString(data.date);
+    const todayStr = getTodayLocalDateString();
 
     if (inputDateStr > todayStr) {
       throw new AppError(
@@ -311,7 +315,7 @@ export class MaintenanceRecordsService {
     const existingKmLog =
       await this.vehicleKilometersService.findByVehicleAndDate(
         data.vehicleId,
-        inputDateStr,
+        data.date,
       );
 
     if (existingKmLog) {
@@ -490,7 +494,7 @@ export class MaintenanceRecordsService {
 
       // Update the maintenance record date if changed
       if (dateChanged && data.date) {
-        existing.date = data.date.toISOString().split("T")[0];
+        existing.date = toLocalDateString(data.date);
       }
 
       // Update notes if provided

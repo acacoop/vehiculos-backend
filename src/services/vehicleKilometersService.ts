@@ -75,14 +75,16 @@ export class VehicleKilometersService {
   }
 
   /**
-   * Find KM log for a vehicle on a specific date (date string format: YYYY-MM-DD)
-   * Returns the raw entity to allow reusing it in transactions
+   * Find KM log for a vehicle on a specific date.
+   * Returns the raw entity so it can be attached/referenced in other records
+   * (e.g., linking an existing KM log to a new MaintenanceRecord).
+   * Note: This queries via the default DataSource, not a transaction-scoped manager.
    */
   async findByVehicleAndDate(
     vehicleId: string,
-    dateStr: string,
+    date: Date,
   ): Promise<VehicleKilometersEntity | null> {
-    return this.repo.findByVehicleAndDate(vehicleId, dateStr);
+    return this.repo.findByVehicleAndDate(vehicleId, date);
   }
 
   /**
