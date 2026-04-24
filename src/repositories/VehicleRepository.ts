@@ -58,6 +58,7 @@ export class VehicleRepository implements IVehicleRepository {
       qb,
       sorting,
       VEHICLE_SORT_FIELD_MAPPING,
+      "v.id",
     );
     if (!sortingApplied) {
       // Default ordering when no sorting is specified

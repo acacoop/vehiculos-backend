@@ -69,6 +69,7 @@ export function applySorting<T extends ObjectLiteral>(
   qb: SelectQueryBuilder<T>,
   sorting: SortParams | undefined,
   fieldMapping: SortFieldMapping,
+  tieBreaker?: string,
 ): boolean {
   if (!sorting?.sortBy) {
     return false;
@@ -85,16 +86,22 @@ export function applySorting<T extends ObjectLiteral>(
   const sortOrder = sorting.sortOrder ?? "ASC";
   qb.orderBy(columnPath, sortOrder);
 
+  // Add deterministic tie-breaker for stable pagination
+  if (tieBreaker) {
+    validateColumnPath(tieBreaker);
+    qb.addOrderBy(tieBreaker, "ASC");
+  }
+
   return true;
 }
 
 /**
  * Extracts sorting parameters from query string.
- * Validates that sortBy is in the allowed fields list.
+ * If allowedSortFields is provided, validates that sortBy is in the allowed fields list.
  *
  * @param query - The request query object
- * @param allowedSortFields - Array of allowed field names for sorting
- * @returns SortParams object or undefined if invalid/not provided
+ * @param allowedSortFields - Optional array of allowed field names for sorting
+ * @returns SortParams object or undefined if not provided, if sortOrder is invalid, or if sortBy is not allowed when allowedSortFields is provided
  */
 export function extractSorting(
   query: Record<string, unknown>,
