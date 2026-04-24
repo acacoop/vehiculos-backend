@@ -101,7 +101,7 @@ export function applySorting<T extends ObjectLiteral>(
  *
  * @param query - The request query object
  * @param allowedSortFields - Optional array of allowed field names for sorting
- * @returns SortParams object or undefined if not provided, if sortOrder is invalid, or if sortBy is not allowed when allowedSortFields is provided
+ * @returns A SortParams object when sortBy is provided (and allowed, if allowedSortFields is specified); returns undefined when sortBy is missing or not allowed. Invalid sortOrder values are normalized to undefined in the returned object.
  */
 export function extractSorting(
   query: Record<string, unknown>,
