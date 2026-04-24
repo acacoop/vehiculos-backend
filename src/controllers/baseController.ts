@@ -4,6 +4,7 @@ import {
   isValidUUID,
   extractFilters,
   extractSearch,
+  extractSorting,
   parsePaginationQuery,
 } from "@/utils/index";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
@@ -23,15 +24,18 @@ export interface ApiResponse<T = unknown> {
 export interface BaseControllerConfig<TFilters = Record<string, string>> {
   resourceName: string;
   allowedFilters?: (keyof TFilters)[];
+  allowedSortFields?: string[];
 }
 
 export abstract class BaseController<TFilters = Record<string, string>> {
   protected readonly resourceName: string;
   protected readonly allowedFilters?: (keyof TFilters)[];
+  protected readonly allowedSortFields?: string[];
 
   constructor(config: BaseControllerConfig<TFilters>) {
     this.resourceName = config.resourceName;
     this.allowedFilters = config.allowedFilters;
+    this.allowedSortFields = config.allowedSortFields;
   }
 
   protected sendResponse<T>(
@@ -67,10 +71,16 @@ export abstract class BaseController<TFilters = Record<string, string>> {
       ? extractFilters<TFilters>(req.query, this.allowedFilters)
       : extractFilters<TFilters>(req.query);
 
+    const sorting = extractSorting(
+      req.query as Record<string, unknown>,
+      this.allowedSortFields,
+    );
+
     const options: RepositoryFindOptions<Partial<TFilters>> = {
       pagination: { limit, offset },
       filters,
       search,
+      sorting,
     };
 
     const { items, total } = await this.getAllService(options);

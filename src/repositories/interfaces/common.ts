@@ -7,11 +7,24 @@ export const DEFAULT_PAGINATION = {
 } as const;
 
 /**
+ * Default sorting values
+ */
+export const DEFAULT_SORT_ORDER = "ASC" as const;
+
+/**
  * Pagination parameters for repository queries
  */
 export interface PaginationParams {
   limit?: number;
   offset?: number;
+}
+
+/**
+ * Sorting parameters for repository queries
+ */
+export interface SortParams {
+  sortBy?: string;
+  sortOrder?: "ASC" | "DESC";
 }
 
 /**
@@ -23,6 +36,21 @@ export function resolvePagination(pagination?: PaginationParams) {
   return {
     limit: pagination?.limit ?? DEFAULT_PAGINATION.limit,
     offset: pagination?.offset ?? DEFAULT_PAGINATION.offset,
+  };
+}
+
+/**
+ * Resolve sorting parameters with defaults
+ * @param sorting - Optional sorting parameters
+ * @returns Resolved sorting with defaults applied (sortOrder defaults to ASC)
+ */
+export function resolveSorting(sorting?: SortParams): SortParams {
+  if (!sorting?.sortBy) {
+    return {};
+  }
+  return {
+    sortBy: sorting.sortBy,
+    sortOrder: sorting.sortOrder ?? DEFAULT_SORT_ORDER,
   };
 }
 
@@ -41,4 +69,5 @@ export interface RepositoryFindOptions<TFilters = Record<string, string>> {
   pagination?: PaginationParams;
   filters?: TFilters;
   search?: string;
+  sorting?: SortParams;
 }

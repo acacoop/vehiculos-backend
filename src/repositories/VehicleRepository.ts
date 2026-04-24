@@ -8,7 +8,34 @@ import {
   RepositoryFindOptions,
   resolvePagination,
 } from "@/repositories/interfaces/common";
-import { applySearchFilter, applyFilters } from "@/utils/index";
+import {
+  applySearchFilter,
+  applyFilters,
+  applySorting,
+  SortFieldMapping,
+} from "@/utils/index";
+
+/**
+ * Mapping of API field names to database column paths for sorting.
+ * Used to validate and translate sortBy query parameter.
+ */
+export const VEHICLE_SORT_FIELD_MAPPING: SortFieldMapping = {
+  licensePlate: "v.licensePlate",
+  year: "v.year",
+  brand: "b.name",
+  model: "m.name",
+  fuelType: "v.fuelType",
+  registrationDate: "v.registrationDate",
+  chassisNumber: "v.chassisNumber",
+};
+
+/**
+ * List of allowed sort fields for the Vehicle entity.
+ * Export for use in controller configuration.
+ */
+export const VEHICLE_ALLOWED_SORT_FIELDS = Object.keys(
+  VEHICLE_SORT_FIELD_MAPPING,
+);
 
 export class VehicleRepository implements IVehicleRepository {
   private readonly repo: Repository<VehicleEntity>;
@@ -20,14 +47,24 @@ export class VehicleRepository implements IVehicleRepository {
   async findAndCount(
     options?: RepositoryFindOptions<VehicleFilters>,
   ): Promise<[VehicleEntity[], number]> {
-    const { filters, search, pagination } = options || {};
+    const { filters, search, pagination, sorting } = options || {};
     const qb = this.repo
       .createQueryBuilder("v")
       .leftJoinAndSelect("v.model", "m")
-      .leftJoinAndSelect("m.brand", "b")
-      .orderBy("b.name", "ASC")
-      .addOrderBy("m.name", "ASC")
-      .addOrderBy("v.licensePlate", "ASC");
+      .leftJoinAndSelect("m.brand", "b");
+
+    // Apply dynamic sorting or fallback to default ordering
+    const sortingApplied = applySorting(
+      qb,
+      sorting,
+      VEHICLE_SORT_FIELD_MAPPING,
+    );
+    if (!sortingApplied) {
+      // Default ordering when no sorting is specified
+      qb.orderBy("b.name", "ASC")
+        .addOrderBy("m.name", "ASC")
+        .addOrderBy("v.licensePlate", "ASC");
+    }
 
     // Apply search filter across multiple fields
     if (search) {

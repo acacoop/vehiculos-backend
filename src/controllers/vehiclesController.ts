@@ -5,6 +5,7 @@ import { ServiceFactory } from "@/factories/serviceFactory";
 import { AppDataSource } from "@/db";
 import { RepositoryFindOptions } from "@/repositories/interfaces/common";
 import { VehicleFilters } from "@/repositories/interfaces/IVehicleRepository";
+import { VEHICLE_ALLOWED_SORT_FIELDS } from "@/repositories/VehicleRepository";
 import type { Request } from "express";
 
 export class VehiclesController extends BaseController<VehicleFilters> {
@@ -24,6 +25,7 @@ export class VehiclesController extends BaseController<VehicleFilters> {
         "registrationDateFrom",
         "registrationDateTo",
       ],
+      allowedSortFields: VEHICLE_ALLOWED_SORT_FIELDS,
     });
   }
 
