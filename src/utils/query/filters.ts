@@ -3,17 +3,17 @@ export function extractFilters<T>(
   allowedKeys?: (keyof T)[],
 ): Partial<T> {
   const filters: Partial<T> = {};
-  const reservedKeys = [
+  const reservedKeys = new Set([
     "page",
     "limit",
     "offset",
     "search",
     "sortBy",
     "sortOrder",
-  ];
+  ]);
 
   for (const [key, value] of Object.entries(query)) {
-    if (reservedKeys.includes(key)) continue;
+    if (reservedKeys.has(key)) continue;
     if (typeof value !== "string") continue;
     if (allowedKeys && !allowedKeys.includes(key as keyof T)) continue;
 
@@ -21,10 +21,4 @@ export function extractFilters<T>(
   }
 
   return filters;
-}
-
-export function extractSearch(
-  query: Record<string, unknown>,
-): string | undefined {
-  return typeof query.search === "string" ? query.search : undefined;
 }
