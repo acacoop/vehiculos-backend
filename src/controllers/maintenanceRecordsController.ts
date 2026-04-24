@@ -36,6 +36,9 @@ export class MaintenanceRecordsController extends BaseController<MaintenanceReco
     try {
       return await this.service.create(maintenanceRecord as MaintenanceRecord);
     } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
       if (error instanceof Error) {
         throw new AppError(
           error.message,

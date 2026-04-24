@@ -15,6 +15,14 @@ export interface PaginationParams {
 }
 
 /**
+ * Sorting parameters for repository queries
+ */
+export interface SortParams {
+  sortBy?: string;
+  sortOrder?: "ASC" | "DESC";
+}
+
+/**
  * Resolve pagination parameters with defaults
  * @param pagination - Optional pagination parameters
  * @returns Resolved pagination with defaults applied
@@ -41,4 +49,5 @@ export interface RepositoryFindOptions<TFilters = Record<string, string>> {
   pagination?: PaginationParams;
   filters?: TFilters;
   search?: string;
+  sorting?: SortParams;
 }

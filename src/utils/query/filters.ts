@@ -3,9 +3,17 @@ export function extractFilters<T>(
   allowedKeys?: (keyof T)[],
 ): Partial<T> {
   const filters: Partial<T> = {};
+  const reservedKeys = new Set([
+    "page",
+    "limit",
+    "offset",
+    "search",
+    "sortBy",
+    "sortOrder",
+  ]);
 
   for (const [key, value] of Object.entries(query)) {
-    if (key === "page" || key === "limit" || key === "search") continue;
+    if (reservedKeys.has(key)) continue;
     if (typeof value !== "string") continue;
     if (allowedKeys && !allowedKeys.includes(key as keyof T)) continue;
 
