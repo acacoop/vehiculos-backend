@@ -4,7 +4,7 @@ import {
   extractSorting,
   applySorting,
   SortFieldMapping,
-} from "@/utils/query/sorting";
+} from "@/utils/index";
 
 // Mock entity for testing
 class TestEntity {
