@@ -22,3 +22,9 @@ export function extractFilters<T>(
 
   return filters;
 }
+
+export function extractSearch(
+  query: Record<string, unknown>,
+): string | undefined {
+  return typeof query.search === "string" ? query.search : undefined;
+}
